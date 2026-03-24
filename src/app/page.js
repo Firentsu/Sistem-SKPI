@@ -3,6 +3,7 @@
 import { useState } from "react";
 import styles from "./page.module.css";
 import { User, Lock, Mail } from "lucide-react";
+import Image from "next/image";
 
 export default function Home() {
   const [mode, setMode] = useState("login");
@@ -15,7 +16,14 @@ export default function Home() {
         <div className={styles.leftContent}>
           <h1>SKPI ISB</h1>
 
-          <img src="/logo.png" alt="logo" className={styles.logo} />
+          {/* Pakai next/image */}
+          <Image 
+            src="/logo.png" 
+            alt="logo" 
+            width={120} 
+            height={120} 
+            className={styles.logo} 
+          />
 
           <h2>
             Selamat Datang di <br />
