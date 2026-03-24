@@ -18,12 +18,13 @@ export default function Home() {
 
           {/* Pakai next/image */}
           <Image 
-            src="/logo.png" 
+            src="/img/logo_isb.png" 
             alt="logo" 
-            width={120} 
-            height={120} 
+            width={180} 
+            height={180} 
             className={styles.logo} 
           />
+
 
           <h2>
             Selamat Datang di <br />
@@ -51,7 +52,7 @@ export default function Home() {
           )}
 
           <div className={styles.input}>
-            <User size={18} />
+            <User size={20} color="#7b3f00" />   {/* ikon username */}
             <input placeholder="Username" />
           </div>
 
@@ -63,7 +64,7 @@ export default function Home() {
           )}
 
           <div className={styles.input}>
-            <Lock size={18} />
+            <Lock size={20} color="#7b3f00" />   {/* ikon password */}
             <input type="password" placeholder="Password" />
           </div>
 
