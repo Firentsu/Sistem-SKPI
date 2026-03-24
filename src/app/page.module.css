@@ -1,8 +1,26 @@
+/* LATAR BELAKANG ANIMASI */
 .container {
   display: flex;
   height: 100vh;
   font-family: "Segoe UI", sans-serif;
+  background: linear-gradient(-45deg, #7b3f00, #a0522d, #ffd700, #f4f6f8);
+  background-size: 400% 400%;
+  animation: gradientBG 3s ease infinite;
 }
+
+/* Animasi gradasi bergerak */
+@keyframes gradientBG {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
 
 /* LEFT */
 .left {
@@ -54,9 +72,12 @@
 }
 
 /* RIGHT */
+/* Overlay transparan untuk sisi kanan */
 .right {
   flex: 1;
-  background: #fdfdfd; /* lebih terang, elegan */
+  background: rgba(255,255,255,0.85);
+  -webkit-backdrop-filter: blur(6px); /* dukungan Safari */
+  backdrop-filter: blur(6px);
   display: flex;
   align-items: center;
   justify-content: center;

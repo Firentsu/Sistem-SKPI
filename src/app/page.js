@@ -46,7 +46,7 @@ export default function Home() {
 
           {mode === "register" && (
             <div className={styles.input}>
-              <User size={18} />
+              <User size={20} color="#7b3f00" />
               <input placeholder="Nama Lengkap" />
             </div>
           )}
@@ -58,7 +58,7 @@ export default function Home() {
 
           {mode === "register" && (
             <div className={styles.input}>
-              <Mail size={18} />
+              <Mail size={20} color="#7b3f00" />
               <input placeholder="Email" />
             </div>
           )}
