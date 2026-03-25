@@ -5,12 +5,12 @@ import styles from "./page.module.css";
 import { 
   User, Lock, Mail, Info, ArrowLeft, ArrowRight, 
   GraduationCap, Award, Briefcase, ChevronRight,
-  Eye, EyeOff, CheckCircle
+  Eye, EyeOff, CheckCircle, FileText, BookOpen, Users
 } from "lucide-react";
 import Image from "next/image";
 
 export default function Home() {
-  const [currentIndex, setCurrentIndex] = useState(1);
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [translateX, setTranslateX] = useState(0);
@@ -18,51 +18,6 @@ export default function Home() {
   const containerRef = useRef(null);
 
   const slides = [
-    {
-      id: "register",
-      title: "Daftar",
-      subtitle: "Buat akun baru untuk mengakses SKPI",
-      content: (
-        <>
-          <div className={styles.inputGroup}>
-            <div className={styles.input}>
-              <User size={18} />
-              <input type="text" placeholder="Nama Lengkap" />
-            </div>
-            <div className={styles.input}>
-              <User size={18} />
-              <input type="text" placeholder="Username / NIM" />
-            </div>
-            <div className={styles.input}>
-              <Mail size={18} />
-              <input type="email" placeholder="Email" />
-            </div>
-            <div className={styles.input}>
-              <Lock size={18} />
-              <input 
-                type={showPassword ? "text" : "password"} 
-                placeholder="Password" 
-              />
-              <button 
-                type="button" 
-                className={styles.eyeButton}
-                onClick={() => setShowPassword(!showPassword)}
-              >
-                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-              </button>
-            </div>
-          </div>
-          <button className={styles.button}>
-            Daftar
-            <ChevronRight size={16} />
-          </button>
-          <p className={styles.switchText}>
-            Sudah punya akun?{" "}
-            <span onClick={() => setCurrentIndex(1)}>Login</span>
-          </p>
-        </>
-      ),
-    },
     {
       id: "login",
       title: "Login",
@@ -100,9 +55,8 @@ export default function Home() {
             Login
             <ChevronRight size={16} />
           </button>
-          <p className={styles.switchText}>
-            Belum punya akun?{" "}
-            <span onClick={() => setCurrentIndex(0)}>Daftar</span>
+          <p className={styles.noteText}>
+            * Gunakan username dan password SIAKAD Anda
           </p>
         </>
       ),
@@ -111,6 +65,56 @@ export default function Home() {
       id: "about",
       title: "Tentang SKPI",
       subtitle: "Surat Keterangan Pendamping Ijazah",
+      content: (
+        <>
+          <div className={styles.aboutContent}>
+            <div className={styles.aboutCards}>
+              <div className={styles.aboutCard}>
+                <div className={styles.aboutIcon}>
+                  <FileText size={22} />
+                </div>
+                <div>
+                  <strong>Dokumen Resmi</strong>
+                  <span>Pendamping ijazah yang diakui</span>
+                </div>
+              </div>
+              <div className={styles.aboutCard}>
+                <div className={styles.aboutIcon}>
+                  <GraduationCap size={22} />
+                </div>
+                <div>
+                  <strong>Capaian Akademik</strong>
+                  <span>IPK & prestasi akademik</span>
+                </div>
+              </div>
+              <div className={styles.aboutCard}>
+                <div className={styles.aboutIcon}>
+                  <Award size={22} />
+                </div>
+                <div>
+                  <strong>Sertifikasi</strong>
+                  <span>Kompetensi & keahlian</span>
+                </div>
+              </div>
+              <div className={styles.aboutCard}>
+                <div className={styles.aboutIcon}>
+                  <Users size={22} />
+                </div>
+                <div>
+                  <strong>Pengalaman</strong>
+                  <span>Organisasi & magang</span>
+                </div>
+              </div>
+            </div>
+            <div className={styles.aboutFooter}>
+              <div className={styles.infoBox}>
+                <Info size={14} />
+                <span>Diakui oleh Dunia Industri & Pendidikan</span>
+              </div>
+            </div>
+          </div>
+        </>
+      ),
     },
   ];
 
@@ -150,8 +154,8 @@ export default function Home() {
             <Image
               src="/img/logo_isb.png"
               alt="ISB Logo"
-              width={160}
-              height={100}
+              width={150}
+              height={90}
               className={styles.logo}
             />
           </div>
@@ -159,14 +163,14 @@ export default function Home() {
           <h1>SKPI ISB</h1>
           
           <h2>
-            Selamat Datang di <br />
-            Sistem SKPI
+            Surat Keterangan<br />
+            Pendamping Ijazah
           </h2>
           
           <p>
-            Surat Keterangan Pendamping Ijazah (SKPI) merupakan dokumen resmi
-            yang menjelaskan capaian akademik, kegiatan, dan kompetensi lulusan
-            Institut Sains dan Bisnis.
+            Dokumen resmi yang menjelaskan capaian akademik,<br />
+            kegiatan, dan kompetensi lulusan<br />
+            Institut Shanti Bhuana.
           </p>
           
           <div className={styles.infoBadges}>
