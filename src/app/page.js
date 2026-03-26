@@ -155,18 +155,12 @@ export default function Home() {
             <Image
               src="/img/logo_isb.png"
               alt="ISB Logo"
-              width={40}
-              height={40}
+              width={60}
+              height={30}
               className={styles.headerLogoImg}
             />
             <span className={styles.headerTitle}>SKPI ISB</span>
           </div>
-          <nav className={styles.headerNav}>
-            <a href="#" className={styles.navLink}>Beranda</a>
-            <a href="#" className={styles.navLink}>Tentang</a>
-            <a href="#" className={styles.navLink}>FAQ</a>
-            <a href="#" className={styles.navLink}>Kontak</a>
-          </nav>
         </div>
       </header>
 
