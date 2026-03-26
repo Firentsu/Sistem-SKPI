@@ -6,7 +6,10 @@
 
 datasource db {
   provider = "mysql"
+<<<<<<< HEAD
   url      = env("DATABASE_URL")
+=======
+>>>>>>> 792a914ae0e02e6746b992ca1390f3650eeaf88a
 }
 
 generator client {
@@ -67,13 +70,25 @@ enum StatusSKPI {
 
 model Admin {
   id_admin   Int    @id @default(autoincrement())
+<<<<<<< HEAD
   id_user    Int?
   nama_admin String?
   email      String?
+=======
+  id_user    Int?   @unique
+  nama_admin String?
+  email      String?
+  avatar     String?   // path atau URL file avatar
+  is_active  Boolean  @default(true)
+>>>>>>> 792a914ae0e02e6746b992ca1390f3650eeaf88a
 
   user Users? @relation(fields: [id_user], references: [user_id])
 }
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 792a914ae0e02e6746b992ca1390f3650eeaf88a
 model ProgramStudi {
   id_prodi   Int         @id @default(autoincrement())
   nama_prodi String
