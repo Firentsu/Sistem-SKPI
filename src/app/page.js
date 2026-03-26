@@ -148,22 +148,24 @@ export default function Home() {
 
   return (
     <div className={styles.container}>
-      {/* HEADER */}
-      <header className={styles.header}>
-        <div className={styles.headerContent}>
-          <div className={styles.headerLogo}>
-            <Image
-              src="/img/logo_isb.png"
-              alt="ISB Logo"
-              width={60}
-              height={30}
-              className={styles.headerLogoImg}
-            />
-            <span className={styles.headerTitle}>SKPI ISB</span>
-          </div>
-        </div>
-      </header>
-
+{/* HEADER */}
+<header className={styles.header}>
+  <div className={styles.headerContent}>
+    <div className={styles.headerLogo}>
+      <Image
+        src="/img/logo_isb.png"
+        alt="ISB Logo"
+        width={70}
+        height={40}
+        className={styles.headerLogoImg}
+      />
+      <div className={styles.headerTitle}>
+        <span>INSTITUT</span>
+        <span>SHANTI BHUANA</span>
+      </div>
+    </div>
+  </div>
+</header>
       {/* MAIN CONTENT */}
       <div className={styles.mainContent}>
         {/* LEFT SIDE - BRAND AREA */}
@@ -266,56 +268,8 @@ export default function Home() {
 
       {/* FOOTER */}
       <footer className={styles.footer}>
-        <div className={styles.footerContent}>
-          <div className={styles.footerSection}>
-            <div className={styles.footerLogo}>
-              <Image
-                src="/img/logo_isb.png"
-                alt="ISB Logo"
-                width={32}
-                height={32}
-                className={styles.footerLogoImg}
-              />
-              <span>Institut Shanti Bhuana</span>
-            </div>
-            <p className={styles.footerDesc}>
-              Membangun generasi unggul dengan kompetensi global dan karakter yang kuat.
-            </p>
-          </div>
-          <div className={styles.footerSection}>
-            <h4>Kontak</h4>
-            <div className={styles.contactInfo}>
-              <div className={styles.contactItem}>
-                <MapPin size={14} />
-                <span>Jl. Bukit Kemuliaan, Bengkayang, Kalbar</span>
-              </div>
-              <div className={styles.contactItem}>
-                <Phone size={14} />
-                <span>(0562) 1234567</span>
-              </div>
-              <div className={styles.contactItem}>
-                <MailIcon size={14} />
-                <span>info@shantibhuana.ac.id</span>
-              </div>
-            </div>
-          </div>
-          <div className={styles.footerSection}>
-            <h4>Ikuti Kami</h4>
-            <div className={styles.socialLinks}>
-              <a href="#" className={styles.socialLink}>
-                <Facebook size={18} />
-              </a>
-              <a href="#" className={styles.socialLink}>
-                <Twitter size={18} />
-              </a>
-              <a href="#" className={styles.socialLink}>
-                <Instagram size={18} />
-              </a>
-            </div>
-          </div>
-        </div>
         <div className={styles.footerBottom}>
-          <p>&copy; 2024 Institut Shanti Bhuana. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} Institut Shanti Bhuana. All rights reserved.</p>
         </div>
       </footer>
     </div>

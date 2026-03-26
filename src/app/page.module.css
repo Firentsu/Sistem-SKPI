@@ -9,6 +9,28 @@
   overflow: hidden;
 }
 
+.headerTitle span:first-child {
+  font-family: 'Georgia', 'Times New Roman', serif;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+  color: #765439;
+  background: none;
+  -webkit-text-fill-color: #765439;
+}
+
+.headerTitle span:last-child {
+  font-family: 'Segoe UI', 'Poppins', 'Arial', sans-serif;
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  background: linear-gradient(135deg, #5a3e2a 0%, #9b6e4c 50%, #c89a6e 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
 /* HEADER */
 .header {
   position: fixed;
@@ -22,9 +44,8 @@
 }
 
 .headerContent {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 12px 32px;
+  width: 100%;
+  padding: 12px 24px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -33,7 +54,7 @@
 .headerLogo {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 0px;
 }
 
 .headerLogoImg {
@@ -41,6 +62,23 @@
 }
 
 .headerTitle {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+  gap: 2px;
+}
+
+/* Font berbeda untuk setiap baris */
+.headerTitle span:first-child {
+  font-family: 'Georgia', 'Times New Roman', serif;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 1px;
+  color: #765439;
+}
+
+.headerTitle span:last-child {
+  font-family: 'Arial', 'Helvetica', sans-serif;
   font-size: 18px;
   font-weight: 700;
   background: linear-gradient(135deg, #765439 0%, #ad8461 100%);
@@ -49,21 +87,23 @@
   background-clip: text;
 }
 
-.headerNav {
-  display: flex;
-  gap: 32px;
-}
-
-.navLink {
-  text-decoration: none;
-  color: #765439;
-  font-weight: 500;
-  font-size: 14px;
-  transition: all 0.3s ease;
-}
-
-.navLink:hover {
-  color: #ad8461;
+/* Responsif untuk layar kecil */
+@media (max-width: 768px) {
+  .headerContent {
+    padding: 10px 16px;
+  }
+  
+  .headerLogo {
+    gap: 10px;
+  }
+  
+  .headerTitle span:first-child {
+    font-size: 11px;
+  }
+  
+  .headerTitle span:last-child {
+    font-size: 15px;
+  }
 }
 
 /* MAIN CONTENT */
@@ -596,102 +636,18 @@
   box-shadow: 0 -2px 20px rgba(0, 0, 0, 0.1);
 }
 
-.footerContent {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 20px 32px;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 40px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-}
-
-.footerSection {
-  flex: 1;
-}
-
-.footerLogo {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 12px;
-  font-weight: 700;
-  color: #765439;
-  font-size: 14px;
-}
-
-.footerLogoImg {
-  border-radius: 6px;
-}
-
-.footerDesc {
-  font-size: 12px;
-  color: #666;
-  line-height: 1.5;
-  margin: 0;
-}
-
-.footerSection h4 {
-  font-size: 14px;
-  font-weight: 700;
-  color: #765439;
-  margin-bottom: 12px;
-  margin-top: 0;
-}
-
-.contactInfo {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.contactItem {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 11px;
-  color: #666;
-}
-
-.contactItem svg {
-  flex-shrink: 0;
-  color: #765439;
-}
-
-.socialLinks {
-  display: flex;
-  gap: 12px;
-}
-
-.socialLink {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  background: #f5f5f5;
-  border-radius: 50%;
-  color: #765439;
-  transition: all 0.3s ease;
-  text-decoration: none;
-}
-
-.socialLink:hover {
-  background: linear-gradient(135deg, #765439 0%, #ad8461 100%);
-  color: white;
-  transform: translateY(-2px);
-}
-
 .footerBottom {
   text-align: center;
-  padding: 12px 32px;
-  font-size: 10px;
+  padding: 23px 32px;
   color: #999;
 }
 
 .footerBottom p {
   margin: 0;
+  font-size: 14px;
+  color: #7a4b0c;
+  font-style: italic;
+  font-weight: 300;
 }
 
 /* RESPONSIVE */
@@ -758,40 +714,13 @@
     padding: 36px 28px;
   }
 
-  .headerContent {
-    padding: 8px 20px;
-  }
-
-  .headerNav {
-    gap: 20px;
-  }
-
-  .navLink {
-    font-size: 12px;
-  }
-
   .footer {
     position: relative;
     margin-top: auto;
-  }
-
-  .footerContent {
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    gap: 20px;
-    padding: 20px;
-  }
-
-  .footerLogo {
-    justify-content: center;
   }
 
   .contactItem {
     justify-content: center;
   }
 
-  .socialLinks {
-    justify-content: center;
-  }
 }
