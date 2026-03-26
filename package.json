@@ -9,29 +9,17 @@
     "lint": "eslint"
   },
   "dependencies": {
-<<<<<<< HEAD
     "@prisma/client": "^5.22.0",
-    "axios": "^1.13.6",
-    "lucide-react": "^0.577.0",
-    "next": "16.2.1",
-    "prisma": "^5.22.0",
-=======
-    "@prisma/client": "^7.5.0",
     "axios": "^1.13.6",
     "bcryptjs": "^3.0.3",
     "lucide-react": "^0.577.0",
     "next": "16.2.1",
->>>>>>> 792a914ae0e02e6746b992ca1390f3650eeaf88a
     "react": "19.2.4",
     "react-dom": "19.2.4"
   },
   "devDependencies": {
     "eslint": "^9",
-<<<<<<< HEAD
-    "eslint-config-next": "16.2.1"
-=======
     "eslint-config-next": "16.2.1",
-    "prisma": "^7.5.0"
->>>>>>> 792a914ae0e02e6746b992ca1390f3650eeaf88a
+    "prisma": "^5.22.0"
   }
 }
