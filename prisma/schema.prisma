@@ -1,0 +1,291 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Users {
+  user_id     Int       @id @default(autoincrement())
+  username    String
+  password    String
+  role        Role
+  email       String?
+  status_akun StatusAkun @default(aktif)
+  created_at  DateTime   @default(now())
+  updated_at  DateTime   @updatedAt
+
+  mahasiswa   Mahasiswa[]
+  admin       Admin[]
+  notifikasi  Notifikasi[]
+}
+
+enum Role {
+  mahasiswa
+  admin
+}
+
+enum StatusAkun {
+  aktif
+  nonaktif
+}
+
+model Mahasiswa {
+  id_mahasiswa Int      @id @default(autoincrement())
+  id_user      Int?
+  nim          String
+  nama         String
+  id_prodi     Int?
+  angkatan     Int?
+  email        String?
+  foto_profil  String?
+  status_skpi  StatusSKPI @default(belum)
+
+  user   Users?        @relation(fields: [id_user], references: [user_id])
+  prodi  ProgramStudi? @relation(fields: [id_prodi], references: [id_prodi])
+  skpi   Skpi[]
+  kegiatan KegiatanMahasiswa[]
+  pengajuan PengajuanSkpi[]
+  riwayat RiwayatSkpi[]
+  icpMahasiswa IcpMahasiswa[]
+}
+
+enum StatusSKPI {
+  belum
+  diajukan
+  direvisi
+  diterbitkan
+}
+
+model Admin {
+  id_admin   Int    @id @default(autoincrement())
+  id_user    Int?
+  nama_admin String?
+  email      String?
+
+  user Users? @relation(fields: [id_user], references: [user_id])
+}
+
+model ProgramStudi {
+  id_prodi   Int         @id @default(autoincrement())
+  nama_prodi String
+  fakultas   String
+
+  mahasiswa  Mahasiswa[]
+}
+
+model JenisAktivitas {
+  id_jenis Int @id @default(autoincrement())
+  nama_indo String
+  nama_eng  String
+  status    Boolean @default(true)
+
+  kegiatan KegiatanMahasiswa[]
+}
+
+model KategoriAktivitas {
+  id_kategori Int @id @default(autoincrement())
+  nama_indo String
+  nama_eng  String
+  status    Boolean @default(true)
+
+  kegiatan KegiatanMahasiswa[]
+}
+
+model KelompokAktivitas {
+  id_kelompok Int @id @default(autoincrement())
+  nama_indo String
+  nama_eng  String
+  status    Boolean @default(true)
+
+  kegiatan KegiatanMahasiswa[]
+}
+
+model LevelKegiatan {
+  id_level Int @id @default(autoincrement())
+  nama_level String
+
+  kegiatan KegiatanMahasiswa[]
+}
+
+model PosisiKegiatan {
+  id_posisi Int @id @default(autoincrement())
+  nama_posisi String
+
+  kegiatan KegiatanMahasiswa[]
+}
+
+model PeriodeAkademik {
+  id_periode Int @id @default(autoincrement())
+  nama_periode String
+  semester Semester
+  status Boolean @default(true)
+}
+
+enum Semester {
+  Ganjil
+  Genap
+}
+
+model KegiatanMahasiswa {
+  id_kegiatan Int @id @default(autoincrement())
+  id_mahasiswa Int?
+  id_jenis Int?
+  id_kategori Int?
+  id_kelompok Int?
+  id_level Int?
+  id_posisi Int?
+  nama_kegiatan String
+  nama_kegiatan_eng String?
+  penyelenggara String?
+  lokasi String?
+  tanggal_kegiatan DateTime?
+  periode_kegiatan String?
+  tingkat_prestasi String?
+  peringkat String?
+  status_verifikasi StatusVerifikasi @default(diproses)
+  catatan_admin String?
+
+  mahasiswa Mahasiswa? @relation(fields: [id_mahasiswa], references: [id_mahasiswa])
+  jenis     JenisAktivitas? @relation(fields: [id_jenis], references: [id_jenis])
+  kategori  KategoriAktivitas? @relation(fields: [id_kategori], references: [id_kategori])
+  kelompok  KelompokAktivitas? @relation(fields: [id_kelompok], references: [id_kelompok])
+  level     LevelKegiatan? @relation(fields: [id_level], references: [id_level])
+  posisi    PosisiKegiatan? @relation(fields: [id_posisi], references: [id_posisi])
+  bukti     BuktiKegiatan[]
+}
+
+enum StatusVerifikasi {
+  diproses
+  disetujui
+  ditolak
+  revisi
+}
+
+model BuktiKegiatan {
+  id_bukti Int @id @default(autoincrement())
+  id_kegiatan Int?
+  file_path String
+  tipe_file String?
+  ukuran_file Int?
+  upload_at DateTime @default(now())
+
+  kegiatan KegiatanMahasiswa? @relation(fields: [id_kegiatan], references: [id_kegiatan])
+}
+
+model IcpKategori {
+  id_icp Int @id @default(autoincrement())
+  nama_indo String
+  nama_eng  String
+  bobot_poin Int
+
+  icpMahasiswa IcpMahasiswa[]
+}
+
+model IcpMahasiswa {
+  id_icp_mahasiswa Int @id @default(autoincrement())
+  id_mahasiswa Int?
+  id_icp Int?
+  total_poin Int?
+
+  mahasiswa Mahasiswa? @relation(fields: [id_mahasiswa], references: [id_mahasiswa])
+  icp       IcpKategori? @relation(fields: [id_icp], references: [id_icp])
+}
+
+model Notifikasi {
+  id_notifikasi Int @id @default(autoincrement())
+  id_user Int?
+  judul String
+  pesan String
+  status_baca Boolean @default(false)
+  created_at DateTime @default(now())
+
+  user Users? @relation(fields: [id_user], references: [user_id])
+}
+
+model PengajuanSkpi {
+  id_pengajuan Int @id @default(autoincrement())
+  id_mahasiswa Int?
+  tanggal_pengajuan DateTime?
+  status_pengajuan StatusPengajuan @default(menunggu)
+  catatan_admin String?
+
+  mahasiswa Mahasiswa? @relation(fields: [id_mahasiswa], references: [id_mahasiswa])
+}
+
+enum StatusPengajuan {
+  menunggu
+  disetujui
+  ditolak
+}
+
+model Skpi {
+  id_skpi Int @id @default(autoincrement())
+  id_mahasiswa Int?
+  nomor_skpi String?
+  tanggal_terbit DateTime?
+  file_skpi String?
+  versi Int?
+  status StatusSkpi @default(draft)
+
+  mahasiswa Mahasiswa? @relation(fields: [id_mahasiswa], references: [id_mahasiswa])
+  riwayat RiwayatSkpi[]
+}
+
+enum StatusSkpi {
+  draft
+  resmi
+}
+
+model RiwayatSkpi {
+  id_riwayat Int @id @default(autoincrement())
+  id_skpi Int?
+  id_mahasiswa Int?
+  tanggal_generate DateTime?
+  keterangan String?
+
+  skpi Skpi? @relation(fields: [id_skpi], references: [id_skpi])
+  mahasiswa Mahasiswa? @relation(fields: [id_mahasiswa], references: [id_mahasiswa])
+}
+
+model Cpl {
+  id_cpl Int @id @default(autoincrement())
+  kode_cpl String
+  deskripsi String?
+}
+
+model TemplateSkpi {
+  id_template Int @id @default(autoincrement())
+  nama_template String
+  status Boolean @default(true)
+  created_at DateTime @default(now())
+
+  sections SectionTemplate[]
+}
+
+model SectionTemplate {
+  id_section Int @id @default(autoincrement())
+  id_template Int?
+  judul_indo String
+  judul_eng  String
+  urutan Int
+  status Boolean @default(true)
+
+  template TemplateSkpi? @relation(fields: [id_template], references: [id_template])
+}
+
+model TandaTanganDigital {
+  id_ttd Int @id @default(autoincrement())
+  nama_pejabat String
+  jabatan String
+  file_ttd String
+  status Boolean @default(true)
+}
