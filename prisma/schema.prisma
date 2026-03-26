@@ -66,12 +66,15 @@ enum StatusSKPI {
 
 model Admin {
   id_admin   Int    @id @default(autoincrement())
-  id_user    Int?
+  id_user    Int?   @unique
   nama_admin String?
   email      String?
+  avatar     String?   // path atau URL file avatar
+  is_active  Boolean  @default(true)
 
   user Users? @relation(fields: [id_user], references: [user_id])
 }
+
 
 model ProgramStudi {
   id_prodi   Int         @id @default(autoincrement())
