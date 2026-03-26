@@ -5,7 +5,8 @@ import styles from "./page.module.css";
 import { 
   User, Lock, Mail, Info, ArrowLeft, ArrowRight, 
   GraduationCap, Award, Briefcase, ChevronRight,
-  Eye, EyeOff, CheckCircle, FileText, BookOpen, Users
+  Eye, EyeOff, CheckCircle, FileText, BookOpen, Users,
+  Phone, MapPin, Mail as MailIcon, Facebook, Twitter, Instagram
 } from "lucide-react";
 import Image from "next/image";
 
@@ -147,102 +148,182 @@ export default function Home() {
 
   return (
     <div className={styles.container}>
-      {/* LEFT SIDE - BRAND AREA */}
-      <div className={styles.left}>
-        <div className={styles.leftContent}>
-          <div className={styles.logoWrapper}>
+      {/* HEADER */}
+      <header className={styles.header}>
+        <div className={styles.headerContent}>
+          <div className={styles.headerLogo}>
             <Image
               src="/img/logo_isb.png"
               alt="ISB Logo"
-              width={150}
-              height={90}
-              className={styles.logo}
+              width={40}
+              height={40}
+              className={styles.headerLogoImg}
             />
+            <span className={styles.headerTitle}>SKPI ISB</span>
           </div>
-          
-          <h1>SKPI ISB</h1>
-          
-          <h2>
-            Surat Keterangan<br />
-            Pendamping Ijazah
-          </h2>
-          
-          <p>
-            Dokumen resmi yang menjelaskan capaian akademik,<br />
-            kegiatan, dan kompetensi lulusan<br />
-            Institut Shanti Bhuana.
-          </p>
-          
-          <div className={styles.infoBadges}>
-            <div className={styles.badge}>
-              <CheckCircle size={12} />
-              <span>Terakreditasi</span>
+          <nav className={styles.headerNav}>
+            <a href="#" className={styles.navLink}>Beranda</a>
+            <a href="#" className={styles.navLink}>Tentang</a>
+            <a href="#" className={styles.navLink}>FAQ</a>
+            <a href="#" className={styles.navLink}>Kontak</a>
+          </nav>
+        </div>
+      </header>
+
+      {/* MAIN CONTENT */}
+      <div className={styles.mainContent}>
+        {/* LEFT SIDE - BRAND AREA */}
+        <div className={styles.left}>
+          <div className={styles.leftContent}>
+            <div className={styles.logoWrapper}>
+              <Image
+                src="/img/logo_isb.png"
+                alt="ISB Logo"
+                width={150}
+                height={90}
+                className={styles.logo}
+              />
             </div>
-            <div className={styles.badge}>
-              <CheckCircle size={12} />
-              <span>Resmi</span>
-            </div>
-            <div className={styles.badge}>
-              <CheckCircle size={12} />
-              <span>Terpercaya</span>
+            
+            <h1>SKPI ISB</h1>
+            
+            <h2>
+              Surat Keterangan<br />
+              Pendamping Ijazah
+            </h2>
+            
+            <p>
+              Dokumen resmi yang menjelaskan capaian akademik,<br />
+              kegiatan, dan kompetensi lulusan<br />
+              Institut Shanti Bhuana.
+            </p>
+            
+            <div className={styles.infoBadges}>
+              <div className={styles.badge}>
+                <CheckCircle size={12} />
+                <span>Terakreditasi</span>
+              </div>
+              <div className={styles.badge}>
+                <CheckCircle size={12} />
+                <span>Resmi</span>
+              </div>
+              <div className={styles.badge}>
+                <CheckCircle size={12} />
+                <span>Terpercaya</span>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* RIGHT SIDE - SLIDER */}
-      <div className={styles.right}>
-        <div className={styles.sliderContainer}>
-          {/* Navigation Arrows */}
-          {currentIndex > 0 && (
-            <button className={`${styles.navArrow} ${styles.prevArrow}`} onClick={() => setCurrentIndex(currentIndex - 1)}>
-              <ArrowLeft size={20} />
-            </button>
-          )}
-          {currentIndex < slides.length - 1 && (
-            <button className={`${styles.navArrow} ${styles.nextArrow}`} onClick={() => setCurrentIndex(currentIndex + 1)}>
-              <ArrowRight size={20} />
-            </button>
-          )}
+        {/* RIGHT SIDE - SLIDER */}
+        <div className={styles.right}>
+          <div className={styles.sliderContainer}>
+            {/* Navigation Arrows */}
+            {currentIndex > 0 && (
+              <button className={`${styles.navArrow} ${styles.prevArrow}`} onClick={() => setCurrentIndex(currentIndex - 1)}>
+                <ArrowLeft size={20} />
+              </button>
+            )}
+            {currentIndex < slides.length - 1 && (
+              <button className={`${styles.navArrow} ${styles.nextArrow}`} onClick={() => setCurrentIndex(currentIndex + 1)}>
+                <ArrowRight size={20} />
+              </button>
+            )}
 
-          <div
-            className={styles.sliderWrapper}
-            onMouseDown={handleDragStart}
-            onMouseMove={handleDragMove}
-            onMouseUp={handleDragEnd}
-            onMouseLeave={handleDragEnd}
-          >
             <div
-              className={styles.sliderTrack}
-              style={{
-                transform: `translateX(calc(-${currentIndex * 100}% + ${translateX}px))`,
-                transition: isDragging ? "none" : "transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
-              }}
+              className={styles.sliderWrapper}
+              onMouseDown={handleDragStart}
+              onMouseMove={handleDragMove}
+              onMouseUp={handleDragEnd}
+              onMouseLeave={handleDragEnd}
             >
-              {slides.map((slide) => (
-                <div key={slide.id} className={styles.slide}>
-                  <div className={styles.card}>
-                    <h2>{slide.title}</h2>
-                    <p className={styles.cardSubtitle}>{slide.subtitle}</p>
-                    {slide.content}
+              <div
+                className={styles.sliderTrack}
+                style={{
+                  transform: `translateX(calc(-${currentIndex * 100}% + ${translateX}px))`,
+                  transition: isDragging ? "none" : "transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
+                }}
+              >
+                {slides.map((slide) => (
+                  <div key={slide.id} className={styles.slide}>
+                    <div className={styles.card}>
+                      <h2>{slide.title}</h2>
+                      <p className={styles.cardSubtitle}>{slide.subtitle}</p>
+                      {slide.content}
+                    </div>
                   </div>
-                </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Dots Indicator */}
+            <div className={styles.dots}>
+              {slides.map((_, index) => (
+                <button
+                  key={index}
+                  className={`${styles.dot} ${currentIndex === index ? styles.activeDot : ""}`}
+                  onClick={() => goToSlide(index)}
+                />
               ))}
             </div>
           </div>
-
-          {/* Dots Indicator */}
-          <div className={styles.dots}>
-            {slides.map((_, index) => (
-              <button
-                key={index}
-                className={`${styles.dot} ${currentIndex === index ? styles.activeDot : ""}`}
-                onClick={() => goToSlide(index)}
-              />
-            ))}
-          </div>
         </div>
       </div>
+
+      {/* FOOTER */}
+      <footer className={styles.footer}>
+        <div className={styles.footerContent}>
+          <div className={styles.footerSection}>
+            <div className={styles.footerLogo}>
+              <Image
+                src="/img/logo_isb.png"
+                alt="ISB Logo"
+                width={32}
+                height={32}
+                className={styles.footerLogoImg}
+              />
+              <span>Institut Shanti Bhuana</span>
+            </div>
+            <p className={styles.footerDesc}>
+              Membangun generasi unggul dengan kompetensi global dan karakter yang kuat.
+            </p>
+          </div>
+          <div className={styles.footerSection}>
+            <h4>Kontak</h4>
+            <div className={styles.contactInfo}>
+              <div className={styles.contactItem}>
+                <MapPin size={14} />
+                <span>Jl. Bukit Kemuliaan, Bengkayang, Kalbar</span>
+              </div>
+              <div className={styles.contactItem}>
+                <Phone size={14} />
+                <span>(0562) 1234567</span>
+              </div>
+              <div className={styles.contactItem}>
+                <MailIcon size={14} />
+                <span>info@shantibhuana.ac.id</span>
+              </div>
+            </div>
+          </div>
+          <div className={styles.footerSection}>
+            <h4>Ikuti Kami</h4>
+            <div className={styles.socialLinks}>
+              <a href="#" className={styles.socialLink}>
+                <Facebook size={18} />
+              </a>
+              <a href="#" className={styles.socialLink}>
+                <Twitter size={18} />
+              </a>
+              <a href="#" className={styles.socialLink}>
+                <Instagram size={18} />
+              </a>
+            </div>
+          </div>
+        </div>
+        <div className={styles.footerBottom}>
+          <p>&copy; 2024 Institut Shanti Bhuana. All rights reserved.</p>
+        </div>
+      </footer>
     </div>
   );
 }
