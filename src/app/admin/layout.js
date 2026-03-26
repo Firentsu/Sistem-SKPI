@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Grid,
   Users,
@@ -15,9 +15,26 @@ import {
   Bell
 } from "lucide-react";
 import styles from "./admin.module.css";
+import { useRouter } from 'next/navigation';
 
 export default function AdminLayout({ children }) {
   const [collapsed, setCollapsed] = useState(false);
+  const router = useRouter();
+
+  useEffect(() => {
+    // basic auth guard: check /api/auth/me, if not authenticated redirect to login
+    (async () => {
+      try {
+        const res = await fetch('/api/auth/me');
+        if (!res.ok) {
+          // redirect to login
+          router.push('/admin/login');
+        }
+      } catch (e) {
+        router.push('/admin/login');
+      }
+    })();
+  }, [router]);
 
   const navItems = [
     { href: "/admin/dashboard", label: "Dashboard", icon: Grid },
@@ -86,9 +103,13 @@ export default function AdminLayout({ children }) {
                 <div className={styles.userName}>Admin Utama</div>
                 <div className={styles.userRole}>Administrator</div>
               </div>
-              <button className={styles.logoutBtn} title="Logout">
-                <LogOut size={16} />
-              </button>
+                <button className={styles.logoutBtn} title="Logout" onClick={async ()=>{
+                  // call logout API then redirect to login
+                  await fetch('/api/auth/logout', { method: 'POST' });
+                  window.location.href = '/admin/login';
+                }}>
+                  <LogOut size={16} />
+                </button>
             </div>
           </div>
         </header>
