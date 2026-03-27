@@ -18,6 +18,12 @@ export default function Home() {
   const [showPassword, setShowPassword] = useState(false);
   const containerRef = useRef(null);
 
+  // Login state
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [loadingLogin, setLoadingLogin] = useState(false);
+  const [message, setMessage] = useState("");
+
   const slides = [
     {
       id: "login",
@@ -25,26 +31,46 @@ export default function Home() {
       subtitle: "Masuk ke akun SKPI Anda",
       content: (
         <>
-          <div className={styles.inputGroup}>
+          <form
+            className={styles.inputGroup}
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleLogin();
+            }}
+            onMouseDown={(e) => e.stopPropagation()}
+          >
             <div className={styles.input}>
               <User size={18} />
-              <input type="text" placeholder="Username / NIM" />
+              <input
+                type="text"
+                placeholder="Username / NIM"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                onFocus={() => setIsDragging(false)}
+                required
+              />
             </div>
             <div className={styles.input}>
               <Lock size={18} />
-              <input 
-                type={showPassword ? "text" : "password"} 
-                placeholder="Password" 
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                onFocus={() => setIsDragging(false)}
+                required
               />
-              <button 
-                type="button" 
+              <button
+                type="button"
                 className={styles.eyeButton}
                 onClick={() => setShowPassword(!showPassword)}
+                aria-label="Toggle password visibility"
               >
                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
-          </div>
+          </form>
+
           <div className={styles.loginOptions}>
             <label className={styles.checkbox}>
               <input type="checkbox" />
@@ -52,10 +78,21 @@ export default function Home() {
             </label>
             <a href="#" className={styles.forgotPassword}>Lupa password?</a>
           </div>
-          <button className={styles.button}>
-            Login
-            <ChevronRight size={16} />
-          </button>
+
+          <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 12 }}>
+            <button
+              className={styles.button}
+              onClick={(e) => { e.preventDefault(); handleLogin(); }}
+              disabled={loadingLogin}
+            >
+              {loadingLogin ? "Memproses..." : "Login"}
+              <ChevronRight size={16} />
+            </button>
+            <div style={{ color: "#dc2626", minHeight: 20 }}>
+              {message}
+            </div>
+          </div>
+
           <p className={styles.noteText}>
             * Gunakan username dan password SIAKAD Anda
           </p>
@@ -120,6 +157,9 @@ export default function Home() {
   ];
 
   const handleDragStart = (e) => {
+    // disable dragging when interacting with inputs or buttons
+    const tag = e.target.tagName;
+    if (tag === "INPUT" || tag === "BUTTON" || tag === "TEXTAREA") return;
     setIsDragging(true);
     setStartX(e.clientX);
   };
@@ -146,26 +186,53 @@ export default function Home() {
     setCurrentIndex(index);
   };
 
+  // Login handler
+  async function handleLogin() {
+    setMessage("");
+    setLoadingLogin(true);
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: username.trim(), password }),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        // server sets HttpOnly cookie (skpi_auth). Redirect to dashboard.
+        window.location.href = "/admin/dashboard";
+      } else {
+        setMessage(data.error || "Login gagal. Periksa username dan password.");
+      }
+    } catch (err) {
+      console.error("Login error:", err);
+      setMessage("Terjadi kesalahan jaringan. Coba lagi.");
+    } finally {
+      setLoadingLogin(false);
+    }
+  }
+
   return (
     <div className={styles.container}>
-{/* HEADER */}
-<header className={styles.header}>
-  <div className={styles.headerContent}>
-    <div className={styles.headerLogo}>
-      <Image
-        src="/img/logo_isb.png"
-        alt="ISB Logo"
-        width={70}
-        height={40}
-        className={styles.headerLogoImg}
-      />
-      <div className={styles.headerTitle}>
-        <span>INSTITUT</span>
-        <span>SHANTI BHUANA</span>
-      </div>
-    </div>
-  </div>
-</header>
+      {/* HEADER */}
+      <header className={styles.header}>
+        <div className={styles.headerContent}>
+          <div className={styles.headerLogo}>
+            <Image
+              src="/img/logo_isb.png"
+              alt="ISB Logo"
+              width={70}
+              height={40}
+              className={styles.headerLogoImg}
+            />
+            <div className={styles.headerTitle}>
+              <span>INSTITUT</span>
+              <span>SHANTI BHUANA</span>
+            </div>
+          </div>
+        </div>
+      </header>
+
       {/* MAIN CONTENT */}
       <div className={styles.mainContent}>
         {/* LEFT SIDE - BRAND AREA */}
@@ -180,20 +247,20 @@ export default function Home() {
                 className={styles.logo}
               />
             </div>
-            
+
             <h1>SKPI ISB</h1>
-            
+
             <h2>
               Surat Keterangan<br />
               Pendamping Ijazah
             </h2>
-            
+
             <p>
               Dokumen resmi yang menjelaskan capaian akademik,<br />
               kegiatan, dan kompetensi lulusan<br />
               Institut Shanti Bhuana.
             </p>
-            
+
             <div className={styles.infoBadges}>
               <div className={styles.badge}>
                 <CheckCircle size={12} />
