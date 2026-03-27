@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Grid,
   Users,
@@ -15,9 +15,46 @@ import {
   Bell
 } from "lucide-react";
 import styles from "./admin.module.css";
+import { useRouter, usePathname } from "next/navigation";
 
 export default function AdminLayout({ children }) {
   const [collapsed, setCollapsed] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
+  const [checking, setChecking] = useState(true);
+  const router = useRouter();
+  const pathname = usePathname();
+
+  useEffect(() => {
+    let mounted = true;
+
+    (async () => {
+      try {
+        const res = await fetch('/api/auth/me', {
+          method: 'GET',
+          credentials: 'same-origin',
+          cache: 'no-store'
+        });
+
+        if (!mounted) return;
+
+        if (res.ok) {
+          setChecking(false);
+          return;
+        }
+
+        if (pathname !== '/') {
+          router.replace('/');
+        }
+      } catch (err) {
+        if (!mounted) return;
+        if (pathname !== '/') {
+          router.replace('/');
+        }
+      }
+    })();
+
+    return () => { mounted = false; };
+  }, [router, pathname]);
 
   const navItems = [
     { href: "/admin/dashboard", label: "Dashboard", icon: Grid },
@@ -28,12 +65,43 @@ export default function AdminLayout({ children }) {
     { href: "/admin/template-skpi", label: "Template SKPI", icon: FileText },
   ];
 
+  async function handleLogout() {
+    if (loggingOut) return;
+    setLoggingOut(true);
+    try {
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'same-origin'
+      });
+
+      router.replace('/');
+
+      setTimeout(() => {
+        try { window.location.replace('/'); } catch (e) {}
+      }, 200);
+    } catch (err) {
+      console.error('Logout error', err);
+      router.replace('/');
+      try { window.location.replace('/'); } catch (e) {}
+    } finally {
+      setLoggingOut(false);
+    }
+  }
+
+  if (checking) {
+    return (
+      <div className={styles.wrapper}>
+        <div className={styles.loading}>Memeriksa autentikasi…</div>
+      </div>
+    );
+  }
+
   return (
     <div className={styles.wrapper}>
       <aside className={`${styles.sidebar} ${collapsed ? styles.collapsed : ""}`}>
         <div className={styles.brand}>
           <div className={styles.logo}>
-            <Image src="/img/logo_isb.png" alt="logo" width={36} height={36} />
+            <Image src="/img/logo_isb.png" alt="logo" width={36} height={36} loading="eager" />
           </div>
           {!collapsed && <div className={styles.brandText}>
             <strong>SKPI</strong>
@@ -86,9 +154,14 @@ export default function AdminLayout({ children }) {
                 <div className={styles.userName}>Admin Utama</div>
                 <div className={styles.userRole}>Administrator</div>
               </div>
-              <button className={styles.logoutBtn} title="Logout">
-                <LogOut size={16} />
-              </button>
+                <button
+                  className={styles.logoutBtn}
+                  title="Logout"
+                  onClick={handleLogout}
+                  disabled={loggingOut}
+                >
+                  <LogOut size={16} />
+                </button>
             </div>
           </div>
         </header>

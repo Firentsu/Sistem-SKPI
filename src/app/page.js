@@ -30,6 +30,7 @@ export default function Home() {
   const [translateX, setTranslateX] = useState(0);
   const containerRef = useRef(null);
 
+<<<<<<< HEAD
   const handleLogin = async () => {
     try {
       setLoading(true);
@@ -57,6 +58,13 @@ export default function Home() {
       setLoading(false);
     }
   };
+=======
+  // Login state
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [loadingLogin, setLoadingLogin] = useState(false);
+  const [message, setMessage] = useState("");
+>>>>>>> e5ba4205670fdca799298da09a938f7208a4ea67
 
   const slides = [
     {
@@ -65,13 +73,27 @@ export default function Home() {
       subtitle: "Masuk ke akun SKPI Anda",
       content: (
         <>
-          <div className={styles.inputGroup}>
+          <form
+            className={styles.inputGroup}
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleLogin();
+            }}
+            onMouseDown={(e) => e.stopPropagation()}
+          >
             <div className={styles.input}>
               <User size={18} />
               <input
                 type="text"
                 placeholder="Username / NIM"
+<<<<<<< HEAD
                 onChange={(e) => setUsername(e.target.value)}
+=======
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                onFocus={() => setIsDragging(false)}
+                required
+>>>>>>> e5ba4205670fdca799298da09a938f7208a4ea67
               />
             </div>
             <div className={styles.input}>
@@ -79,17 +101,26 @@ export default function Home() {
               <input
                 type={showPassword ? "text" : "password"}
                 placeholder="Password"
+<<<<<<< HEAD
                 onChange={(e) => setPassword(e.target.value)}
+=======
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                onFocus={() => setIsDragging(false)}
+                required
+>>>>>>> e5ba4205670fdca799298da09a938f7208a4ea67
               />
               <button
                 type="button"
                 className={styles.eyeButton}
                 onClick={() => setShowPassword(!showPassword)}
+                aria-label="Toggle password visibility"
               >
                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
-          </div>
+          </form>
+
           <div className={styles.loginOptions}>
             <label className={styles.checkbox}>
               <input type="checkbox" />
@@ -99,6 +130,7 @@ export default function Home() {
               Lupa password?
             </a>
           </div>
+<<<<<<< HEAD
           <button
             className={styles.button}
             onClick={handleLogin}
@@ -107,6 +139,23 @@ export default function Home() {
             {loading ? "Loading..." : "Login"}
             <ChevronRight size={16} />
           </button>
+=======
+
+          <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 12 }}>
+            <button
+              className={styles.button}
+              onClick={(e) => { e.preventDefault(); handleLogin(); }}
+              disabled={loadingLogin}
+            >
+              {loadingLogin ? "Memproses..." : "Login"}
+              <ChevronRight size={16} />
+            </button>
+            <div style={{ color: "#dc2626", minHeight: 20 }}>
+              {message}
+            </div>
+          </div>
+
+>>>>>>> e5ba4205670fdca799298da09a938f7208a4ea67
           <p className={styles.noteText}>
             * Gunakan username dan password SIAKAD Anda
           </p>
@@ -171,6 +220,9 @@ export default function Home() {
   ];
 
   const handleDragStart = (e) => {
+    // disable dragging when interacting with inputs or buttons
+    const tag = e.target.tagName;
+    if (tag === "INPUT" || tag === "BUTTON" || tag === "TEXTAREA") return;
     setIsDragging(true);
     setStartX(e.clientX);
   };
@@ -196,6 +248,32 @@ export default function Home() {
   const goToSlide = (index) => {
     setCurrentIndex(index);
   };
+
+  // Login handler
+  async function handleLogin() {
+    setMessage("");
+    setLoadingLogin(true);
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: username.trim(), password }),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        // server sets HttpOnly cookie (skpi_auth). Redirect to dashboard.
+        window.location.href = "/admin/dashboard";
+      } else {
+        setMessage(data.error || "Login gagal. Periksa username dan password.");
+      }
+    } catch (err) {
+      console.error("Login error:", err);
+      setMessage("Terjadi kesalahan jaringan. Coba lagi.");
+    } finally {
+      setLoadingLogin(false);
+    }
+  }
 
   return (
     <div className={styles.container}>

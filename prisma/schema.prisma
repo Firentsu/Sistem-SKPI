@@ -3,13 +3,9 @@
 
 // Get a free hosted Postgres database in seconds: `npx create-db`
 
-
 datasource db {
   provider = "mysql"
-<<<<<<< HEAD
   url      = env("DATABASE_URL")
-=======
->>>>>>> 792a914ae0e02e6746b992ca1390f3650eeaf88a
 }
 
 generator client {
@@ -17,7 +13,7 @@ generator client {
 }
 
 model Users {
-  user_id     Int       @id @default(autoincrement())
+  user_id     Int        @id @default(autoincrement())
   username    String
   password    String
   role        Role
@@ -26,9 +22,9 @@ model Users {
   created_at  DateTime   @default(now())
   updated_at  DateTime   @updatedAt
 
-  mahasiswa   Mahasiswa[]
-  admin       Admin[]
-  notifikasi  Notifikasi[]
+  mahasiswa  Mahasiswa[]
+  admin      Admin[]
+  notifikasi Notifikasi[]
 }
 
 enum Role {
@@ -42,7 +38,7 @@ enum StatusAkun {
 }
 
 model Mahasiswa {
-  id_mahasiswa Int      @id @default(autoincrement())
+  id_mahasiswa Int        @id @default(autoincrement())
   id_user      Int?
   nim          String
   nama         String
@@ -52,12 +48,12 @@ model Mahasiswa {
   foto_profil  String?
   status_skpi  StatusSKPI @default(belum)
 
-  user   Users?        @relation(fields: [id_user], references: [user_id])
-  prodi  ProgramStudi? @relation(fields: [id_prodi], references: [id_prodi])
-  skpi   Skpi[]
-  kegiatan KegiatanMahasiswa[]
-  pengajuan PengajuanSkpi[]
-  riwayat RiwayatSkpi[]
+  user         Users?              @relation(fields: [id_user], references: [user_id])
+  prodi        ProgramStudi?       @relation(fields: [id_prodi], references: [id_prodi])
+  skpi         Skpi[]
+  kegiatan     KegiatanMahasiswa[]
+  pengajuan    PengajuanSkpi[]
+  riwayat      RiwayatSkpi[]
   icpMahasiswa IcpMahasiswa[]
 }
 
@@ -69,36 +65,26 @@ enum StatusSKPI {
 }
 
 model Admin {
-  id_admin   Int    @id @default(autoincrement())
-<<<<<<< HEAD
-  id_user    Int?
+  id_admin   Int     @id @default(autoincrement())
+  id_user    Int?    @unique
   nama_admin String?
   email      String?
-=======
-  id_user    Int?   @unique
-  nama_admin String?
-  email      String?
-  avatar     String?   // path atau URL file avatar
-  is_active  Boolean  @default(true)
->>>>>>> 792a914ae0e02e6746b992ca1390f3650eeaf88a
+  avatar     String? // path atau URL file avatar
+  is_active  Boolean @default(true)
 
   user Users? @relation(fields: [id_user], references: [user_id])
 }
 
-<<<<<<< HEAD
-=======
-
->>>>>>> 792a914ae0e02e6746b992ca1390f3650eeaf88a
 model ProgramStudi {
-  id_prodi   Int         @id @default(autoincrement())
+  id_prodi   Int    @id @default(autoincrement())
   nama_prodi String
   fakultas   String
 
-  mahasiswa  Mahasiswa[]
+  mahasiswa Mahasiswa[]
 }
 
 model JenisAktivitas {
-  id_jenis Int @id @default(autoincrement())
+  id_jenis  Int     @id @default(autoincrement())
   nama_indo String
   nama_eng  String
   status    Boolean @default(true)
@@ -107,42 +93,42 @@ model JenisAktivitas {
 }
 
 model KategoriAktivitas {
-  id_kategori Int @id @default(autoincrement())
-  nama_indo String
-  nama_eng  String
-  status    Boolean @default(true)
+  id_kategori Int     @id @default(autoincrement())
+  nama_indo   String
+  nama_eng    String
+  status      Boolean @default(true)
 
   kegiatan KegiatanMahasiswa[]
 }
 
 model KelompokAktivitas {
-  id_kelompok Int @id @default(autoincrement())
-  nama_indo String
-  nama_eng  String
-  status    Boolean @default(true)
+  id_kelompok Int     @id @default(autoincrement())
+  nama_indo   String
+  nama_eng    String
+  status      Boolean @default(true)
 
   kegiatan KegiatanMahasiswa[]
 }
 
 model LevelKegiatan {
-  id_level Int @id @default(autoincrement())
+  id_level   Int    @id @default(autoincrement())
   nama_level String
 
   kegiatan KegiatanMahasiswa[]
 }
 
 model PosisiKegiatan {
-  id_posisi Int @id @default(autoincrement())
+  id_posisi   Int    @id @default(autoincrement())
   nama_posisi String
 
   kegiatan KegiatanMahasiswa[]
 }
 
 model PeriodeAkademik {
-  id_periode Int @id @default(autoincrement())
+  id_periode   Int      @id @default(autoincrement())
   nama_periode String
-  semester Semester
-  status Boolean @default(true)
+  semester     Semester
+  status       Boolean  @default(true)
 }
 
 enum Semester {
@@ -151,30 +137,30 @@ enum Semester {
 }
 
 model KegiatanMahasiswa {
-  id_kegiatan Int @id @default(autoincrement())
-  id_mahasiswa Int?
-  id_jenis Int?
-  id_kategori Int?
-  id_kelompok Int?
-  id_level Int?
-  id_posisi Int?
-  nama_kegiatan String
+  id_kegiatan       Int              @id @default(autoincrement())
+  id_mahasiswa      Int?
+  id_jenis          Int?
+  id_kategori       Int?
+  id_kelompok       Int?
+  id_level          Int?
+  id_posisi         Int?
+  nama_kegiatan     String
   nama_kegiatan_eng String?
-  penyelenggara String?
-  lokasi String?
-  tanggal_kegiatan DateTime?
-  periode_kegiatan String?
-  tingkat_prestasi String?
-  peringkat String?
+  penyelenggara     String?
+  lokasi            String?
+  tanggal_kegiatan  DateTime?
+  periode_kegiatan  String?
+  tingkat_prestasi  String?
+  peringkat         String?
   status_verifikasi StatusVerifikasi @default(diproses)
-  catatan_admin String?
+  catatan_admin     String?
 
-  mahasiswa Mahasiswa? @relation(fields: [id_mahasiswa], references: [id_mahasiswa])
-  jenis     JenisAktivitas? @relation(fields: [id_jenis], references: [id_jenis])
+  mahasiswa Mahasiswa?         @relation(fields: [id_mahasiswa], references: [id_mahasiswa])
+  jenis     JenisAktivitas?    @relation(fields: [id_jenis], references: [id_jenis])
   kategori  KategoriAktivitas? @relation(fields: [id_kategori], references: [id_kategori])
   kelompok  KelompokAktivitas? @relation(fields: [id_kelompok], references: [id_kelompok])
-  level     LevelKegiatan? @relation(fields: [id_level], references: [id_level])
-  posisi    PosisiKegiatan? @relation(fields: [id_posisi], references: [id_posisi])
+  level     LevelKegiatan?     @relation(fields: [id_level], references: [id_level])
+  posisi    PosisiKegiatan?    @relation(fields: [id_posisi], references: [id_posisi])
   bukti     BuktiKegiatan[]
 }
 
@@ -186,52 +172,52 @@ enum StatusVerifikasi {
 }
 
 model BuktiKegiatan {
-  id_bukti Int @id @default(autoincrement())
+  id_bukti    Int      @id @default(autoincrement())
   id_kegiatan Int?
-  file_path String
-  tipe_file String?
+  file_path   String
+  tipe_file   String?
   ukuran_file Int?
-  upload_at DateTime @default(now())
+  upload_at   DateTime @default(now())
 
   kegiatan KegiatanMahasiswa? @relation(fields: [id_kegiatan], references: [id_kegiatan])
 }
 
 model IcpKategori {
-  id_icp Int @id @default(autoincrement())
-  nama_indo String
-  nama_eng  String
+  id_icp     Int    @id @default(autoincrement())
+  nama_indo  String
+  nama_eng   String
   bobot_poin Int
 
   icpMahasiswa IcpMahasiswa[]
 }
 
 model IcpMahasiswa {
-  id_icp_mahasiswa Int @id @default(autoincrement())
-  id_mahasiswa Int?
-  id_icp Int?
-  total_poin Int?
+  id_icp_mahasiswa Int  @id @default(autoincrement())
+  id_mahasiswa     Int?
+  id_icp           Int?
+  total_poin       Int?
 
-  mahasiswa Mahasiswa? @relation(fields: [id_mahasiswa], references: [id_mahasiswa])
+  mahasiswa Mahasiswa?   @relation(fields: [id_mahasiswa], references: [id_mahasiswa])
   icp       IcpKategori? @relation(fields: [id_icp], references: [id_icp])
 }
 
 model Notifikasi {
-  id_notifikasi Int @id @default(autoincrement())
-  id_user Int?
-  judul String
-  pesan String
-  status_baca Boolean @default(false)
-  created_at DateTime @default(now())
+  id_notifikasi Int      @id @default(autoincrement())
+  id_user       Int?
+  judul         String
+  pesan         String
+  status_baca   Boolean  @default(false)
+  created_at    DateTime @default(now())
 
   user Users? @relation(fields: [id_user], references: [user_id])
 }
 
 model PengajuanSkpi {
-  id_pengajuan Int @id @default(autoincrement())
-  id_mahasiswa Int?
+  id_pengajuan      Int             @id @default(autoincrement())
+  id_mahasiswa      Int?
   tanggal_pengajuan DateTime?
-  status_pengajuan StatusPengajuan @default(menunggu)
-  catatan_admin String?
+  status_pengajuan  StatusPengajuan @default(menunggu)
+  catatan_admin     String?
 
   mahasiswa Mahasiswa? @relation(fields: [id_mahasiswa], references: [id_mahasiswa])
 }
@@ -243,16 +229,16 @@ enum StatusPengajuan {
 }
 
 model Skpi {
-  id_skpi Int @id @default(autoincrement())
-  id_mahasiswa Int?
-  nomor_skpi String?
+  id_skpi        Int        @id @default(autoincrement())
+  id_mahasiswa   Int?
+  nomor_skpi     String?
   tanggal_terbit DateTime?
-  file_skpi String?
-  versi Int?
-  status StatusSkpi @default(draft)
+  file_skpi      String?
+  versi          Int?
+  status         StatusSkpi @default(draft)
 
-  mahasiswa Mahasiswa? @relation(fields: [id_mahasiswa], references: [id_mahasiswa])
-  riwayat RiwayatSkpi[]
+  mahasiswa Mahasiswa?    @relation(fields: [id_mahasiswa], references: [id_mahasiswa])
+  riwayat   RiwayatSkpi[]
 }
 
 enum StatusSkpi {
@@ -261,46 +247,46 @@ enum StatusSkpi {
 }
 
 model RiwayatSkpi {
-  id_riwayat Int @id @default(autoincrement())
-  id_skpi Int?
-  id_mahasiswa Int?
+  id_riwayat       Int       @id @default(autoincrement())
+  id_skpi          Int?
+  id_mahasiswa     Int?
   tanggal_generate DateTime?
-  keterangan String?
+  keterangan       String?
 
-  skpi Skpi? @relation(fields: [id_skpi], references: [id_skpi])
+  skpi      Skpi?      @relation(fields: [id_skpi], references: [id_skpi])
   mahasiswa Mahasiswa? @relation(fields: [id_mahasiswa], references: [id_mahasiswa])
 }
 
 model Cpl {
-  id_cpl Int @id @default(autoincrement())
-  kode_cpl String
+  id_cpl    Int     @id @default(autoincrement())
+  kode_cpl  String
   deskripsi String?
 }
 
 model TemplateSkpi {
-  id_template Int @id @default(autoincrement())
+  id_template   Int      @id @default(autoincrement())
   nama_template String
-  status Boolean @default(true)
-  created_at DateTime @default(now())
+  status        Boolean  @default(true)
+  created_at    DateTime @default(now())
 
   sections SectionTemplate[]
 }
 
 model SectionTemplate {
-  id_section Int @id @default(autoincrement())
+  id_section  Int     @id @default(autoincrement())
   id_template Int?
-  judul_indo String
-  judul_eng  String
-  urutan Int
-  status Boolean @default(true)
+  judul_indo  String
+  judul_eng   String
+  urutan      Int
+  status      Boolean @default(true)
 
   template TemplateSkpi? @relation(fields: [id_template], references: [id_template])
 }
 
 model TandaTanganDigital {
-  id_ttd Int @id @default(autoincrement())
+  id_ttd       Int     @id @default(autoincrement())
   nama_pejabat String
-  jabatan String
-  file_ttd String
-  status Boolean @default(true)
+  jabatan      String
+  file_ttd     String
+  status       Boolean @default(true)
 }
