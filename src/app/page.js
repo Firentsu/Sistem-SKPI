@@ -219,7 +219,7 @@ export default function Home() {
         <div className={styles.headerContent}>
           <div className={styles.headerLogo}>
             <Image
-              src="/img/logo_isb.png"
+              src="/img/Logo_isb.png"
               alt="ISB Logo"
               width={70}
               height={40}
