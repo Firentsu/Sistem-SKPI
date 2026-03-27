@@ -2,69 +2,27 @@
 
 import { useState, useRef } from "react";
 import styles from "./page.module.css";
-import {
-  User,
-  Lock,
-  Eye,
-  EyeOff,
-  ChevronRight,
-  FileText,
-  GraduationCap,
-  Award,
-  Users,
-  Info,
-  CheckCircle,
-  ArrowLeft,
-  ArrowRight,
+import { 
+  User, Lock, Mail, Info, ArrowLeft, ArrowRight, 
+  GraduationCap, Award, Briefcase, ChevronRight,
+  Eye, EyeOff, CheckCircle, FileText, BookOpen, Users,
+  Phone, MapPin, Mail as MailIcon, Facebook, Twitter, Instagram
 } from "lucide-react";
 import Image from "next/image";
 
 export default function Home() {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [translateX, setTranslateX] = useState(0);
+  const [showPassword, setShowPassword] = useState(false);
   const containerRef = useRef(null);
 
-<<<<<<< HEAD
-  const handleLogin = async () => {
-    try {
-      setLoading(true);
-
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ username, password }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) throw new Error(data.message);
-
-      alert("Login berhasil");
-
-      console.log(data);
-
-      // nanti kita redirect di step berikutnya
-    } catch (err) {
-      alert(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-=======
   // Login state
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loadingLogin, setLoadingLogin] = useState(false);
   const [message, setMessage] = useState("");
->>>>>>> e5ba4205670fdca799298da09a938f7208a4ea67
 
   const slides = [
     {
@@ -86,14 +44,10 @@ export default function Home() {
               <input
                 type="text"
                 placeholder="Username / NIM"
-<<<<<<< HEAD
-                onChange={(e) => setUsername(e.target.value)}
-=======
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 onFocus={() => setIsDragging(false)}
                 required
->>>>>>> e5ba4205670fdca799298da09a938f7208a4ea67
               />
             </div>
             <div className={styles.input}>
@@ -101,14 +55,10 @@ export default function Home() {
               <input
                 type={showPassword ? "text" : "password"}
                 placeholder="Password"
-<<<<<<< HEAD
-                onChange={(e) => setPassword(e.target.value)}
-=======
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 onFocus={() => setIsDragging(false)}
                 required
->>>>>>> e5ba4205670fdca799298da09a938f7208a4ea67
               />
               <button
                 type="button"
@@ -126,20 +76,8 @@ export default function Home() {
               <input type="checkbox" />
               <span>Ingat saya</span>
             </label>
-            <a href="#" className={styles.forgotPassword}>
-              Lupa password?
-            </a>
+            <a href="#" className={styles.forgotPassword}>Lupa password?</a>
           </div>
-<<<<<<< HEAD
-          <button
-            className={styles.button}
-            onClick={handleLogin}
-            disabled={loading}
-          >
-            {loading ? "Loading..." : "Login"}
-            <ChevronRight size={16} />
-          </button>
-=======
 
           <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 12 }}>
             <button
@@ -147,7 +85,7 @@ export default function Home() {
               onClick={(e) => { e.preventDefault(); handleLogin(); }}
               disabled={loadingLogin}
             >
-              {loadingLogin ? "Memproses..." : "Login"}
+              {loadingLogin ? "Loading..." : "Login"}
               <ChevronRight size={16} />
             </button>
             <div style={{ color: "#dc2626", minHeight: 20 }}>
@@ -155,7 +93,6 @@ export default function Home() {
             </div>
           </div>
 
->>>>>>> e5ba4205670fdca799298da09a938f7208a4ea67
           <p className={styles.noteText}>
             * Gunakan username dan password SIAKAD Anda
           </p>
@@ -314,16 +251,13 @@ export default function Home() {
             <h1>SKPI ISB</h1>
 
             <h2>
-              Surat Keterangan
-              <br />
+              Surat Keterangan<br />
               Pendamping Ijazah
             </h2>
 
             <p>
-              Dokumen resmi yang menjelaskan capaian akademik,
-              <br />
-              kegiatan, dan kompetensi lulusan
-              <br />
+              Dokumen resmi yang menjelaskan capaian akademik,<br />
+              kegiatan, dan kompetensi lulusan<br />
               Institut Shanti Bhuana.
             </p>
 
@@ -349,18 +283,12 @@ export default function Home() {
           <div className={styles.sliderContainer}>
             {/* Navigation Arrows */}
             {currentIndex > 0 && (
-              <button
-                className={`${styles.navArrow} ${styles.prevArrow}`}
-                onClick={() => setCurrentIndex(currentIndex - 1)}
-              >
+              <button className={`${styles.navArrow} ${styles.prevArrow}`} onClick={() => setCurrentIndex(currentIndex - 1)}>
                 <ArrowLeft size={20} />
               </button>
             )}
             {currentIndex < slides.length - 1 && (
-              <button
-                className={`${styles.navArrow} ${styles.nextArrow}`}
-                onClick={() => setCurrentIndex(currentIndex + 1)}
-              >
+              <button className={`${styles.navArrow} ${styles.nextArrow}`} onClick={() => setCurrentIndex(currentIndex + 1)}>
                 <ArrowRight size={20} />
               </button>
             )}
@@ -376,9 +304,7 @@ export default function Home() {
                 className={styles.sliderTrack}
                 style={{
                   transform: `translateX(calc(-${currentIndex * 100}% + ${translateX}px))`,
-                  transition: isDragging
-                    ? "none"
-                    : "transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
+                  transition: isDragging ? "none" : "transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
                 }}
               >
                 {slides.map((slide) => (
@@ -398,9 +324,7 @@ export default function Home() {
               {slides.map((_, index) => (
                 <button
                   key={index}
-                  className={`${styles.dot} ${
-                    currentIndex === index ? styles.activeDot : ""
-                  }`}
+                  className={`${styles.dot} ${currentIndex === index ? styles.activeDot : ""}`}
                   onClick={() => goToSlide(index)}
                 />
               ))}
@@ -412,10 +336,7 @@ export default function Home() {
       {/* FOOTER */}
       <footer className={styles.footer}>
         <div className={styles.footerBottom}>
-          <p>
-            &copy; {new Date().getFullYear()} Institut Shanti Bhuana. All rights
-            reserved.
-          </p>
+          <p>&copy; {new Date().getFullYear()} Institut Shanti Bhuana. All rights reserved.</p>
         </div>
       </footer>
     </div>

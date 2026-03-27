@@ -5,7 +5,6 @@ import bcrypt from "bcryptjs";
 const prisma = new PrismaClient();
 
 async function ensureAdmin({ username, plainPassword, nama_admin, email }) {
-  // check existing user by username
   let user = await prisma.users.findFirst({ where: { username } });
 
   if (!user) {
@@ -14,13 +13,12 @@ async function ensureAdmin({ username, plainPassword, nama_admin, email }) {
       data: {
         username,
         password: hashed,
-        role: 'admin',
+        role: "admin",
         email,
       },
     });
   }
 
-  // create admin row if missing (id_user is unique)
   let admin = await prisma.admin.findFirst({ where: { id_user: user.user_id } });
   if (!admin) {
     admin = await prisma.admin.create({
@@ -38,17 +36,21 @@ async function ensureAdmin({ username, plainPassword, nama_admin, email }) {
 }
 
 async function main() {
-  // Only create a single admin account (role 'admin').
-  const admin = { username: "superadmin", plainPassword: "SuperAdmin123!", nama_admin: "Admin Utama", email: "superadmin@campus.id" };
-  const res = await ensureAdmin(admin);
-  console.log(`Admin siap: username=${admin.username}, id_user=${res.user.user_id}, id_admin=${res.admin.id_admin}`);
+  const admin = {
+    username: "superadmin",
+    plainPassword: "SuperAdmin123!",
+    nama_admin: "Admin Utama",
+    email: "superadmin@campus.id",
+  };
 
-  console.log("Admin telah dibuat/tersedia.");
+  const res = await ensureAdmin(admin);
+  console.log(`✅ Admin siap: username=${admin.username}, id_user=${res.user.user_id}, id_admin=${res.admin.id_admin}`);
+  console.log("✅ Seeding selesai.");
 }
 
 main()
   .catch((e) => {
-    console.error(e);
+    console.error("❌ Error:", e);
     process.exit(1);
   })
   .finally(async () => {
