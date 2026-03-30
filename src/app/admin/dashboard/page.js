@@ -1,7 +1,14 @@
 "use client";
+
+import { useEffect } from "react";
 import styles from "./dashboard.module.css";
 
+
 export default function DashboardPage() {
+  useEffect(() => {
+    document.title = "Dashboard | SKPI";
+  }, []);
+  
   return (
     <div className={styles.dashboard}>
       <h1>Dashboard Admin</h1>

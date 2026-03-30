@@ -1,9 +1,10 @@
 "use client";
 
+import { useEffect } from "react";
 import { useState, useRef } from "react";
 import styles from "./page.module.css";
-import { 
-  User, Lock, Mail, Info, ArrowLeft, ArrowRight, 
+import {
+  User, Lock, Mail, Info, ArrowLeft, ArrowRight,
   GraduationCap, Award, Briefcase, ChevronRight,
   Eye, EyeOff, CheckCircle, FileText, BookOpen, Users,
   Phone, MapPin, Mail as MailIcon, Facebook, Twitter, Instagram
@@ -11,6 +12,10 @@ import {
 import Image from "next/image";
 
 export default function Home() {
+  useEffect(() => {
+    document.title = "Landing Page | SKPI";
+  }, []);
+
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
