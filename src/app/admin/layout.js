@@ -1,5 +1,10 @@
 "use client";
 
+export const metadata = {
+  title: "Dashboard Admin SKPI",
+  description: "Halaman khusus admin SKPI",
+};
+
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect } from "react";
