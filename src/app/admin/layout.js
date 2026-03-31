@@ -4,28 +4,16 @@ import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect, useRef, useCallback } from "react";
 import {
-  LayoutDashboard,
-  Users,
-  FileText,
-  Settings,
-  LogOut,
-  Menu,
-  ChevronLeft,
-  ChevronRight,
-  Bell,
-  Shield,
-  BookOpen,
-  Award,
-  Camera,
-  X,
-  Check,
-  Upload,
+  LayoutDashboard, Users, FileText, Settings, LogOut, Menu,
+  ChevronLeft, ChevronRight, Bell, Shield, BookOpen, Award,
+  Camera, X, Check, Upload,
 } from "lucide-react";
 import styles from "./admin.module.css";
 import { useRouter, usePathname } from "next/navigation";
 
 /* ─────────────────────────────────────────
-   Avatar Editor Modal
+   Avatar Editor Modal (tetap ada untuk
+   keperluan lain / akses cepat dari topbar)
 ───────────────────────────────────────── */
 function AvatarEditorModal({ currentSrc, onClose, onSave }) {
   const [preview, setPreview] = useState(null);
@@ -60,20 +48,20 @@ function AvatarEditorModal({ currentSrc, onClose, onSave }) {
     if (!preview) return;
     setSaving(true);
     try {
-      const blob   = await fetch(preview).then(r => r.blob());
-      const base64 = await new Promise((res) => {
-        const reader = new FileReader();
-        reader.onload = () => res(reader.result);
-        reader.readAsDataURL(blob);
-      });
+      const blob = await fetch(preview).then(r => r.blob());
 
-      // ── Swap in your real upload API call here ──────────────────────────
-      // const form = new FormData();
-      // form.append("avatar", blob, "avatar.jpg");
-      // await fetch("/api/auth/avatar", { method: "POST", body: form, credentials: "same-origin" });
-      // ────────────────────────────────────────────────────────────────────
+      // Upload ke API
+      const form = new FormData();
+      form.append("avatar", blob, "avatar.jpg");
+      const res  = await fetch("/api/auth/avatar", { method: "POST", body: form, credentials: "same-origin" });
+      const data = await res.json();
 
-      onSave(base64);
+      if (!res.ok) {
+        setError(data.error ?? "Gagal menyimpan foto.");
+        return;
+      }
+
+      onSave(data.avatar);
     } catch {
       setError("Gagal menyimpan foto. Coba lagi.");
     } finally {
@@ -81,10 +69,8 @@ function AvatarEditorModal({ currentSrc, onClose, onSave }) {
     }
   }
 
-  // cleanup object URL on unmount
   useEffect(() => () => { if (preview) URL.revokeObjectURL(preview); }, [preview]);
 
-  // close on ESC
   useEffect(() => {
     function onKey(e) { if (e.key === "Escape") onClose(); }
     window.addEventListener("keydown", onKey);
@@ -94,88 +80,66 @@ function AvatarEditorModal({ currentSrc, onClose, onSave }) {
   return (
     <div className={styles.modalOverlay} onClick={onClose}>
       <div className={styles.modal} onClick={e => e.stopPropagation()}>
-
-        {/* Header */}
         <div className={styles.modalHeader}>
-          <span className={styles.modalTitle}>Edit Foto Profil</span>
-          <button className={styles.modalClose} onClick={onClose} aria-label="Tutup">
-            <X size={16} />
-          </button>
+          <div className={styles.modalHeaderLeft}>
+            <div className={styles.modalHeaderIcon}><Camera size={15} /></div>
+            <span className={styles.modalTitle}>Edit Foto Profil</span>
+          </div>
+          <button className={styles.modalClose} onClick={onClose} aria-label="Tutup"><X size={15} /></button>
         </div>
 
-        {/* Current / preview */}
         <div className={styles.modalPreviewRow}>
           <div className={styles.modalPreviewWrap}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={preview || currentSrc}
-              alt="Preview"
-              className={styles.modalPreviewImg}
-            />
+            <img src={preview || currentSrc} alt="Preview" className={styles.modalPreviewImg} />
             {preview && (
-              <button
-                className={styles.modalPreviewClear}
-                onClick={() => { setPreview(null); setError(""); }}
-                aria-label="Hapus pilihan"
-              >
-                <X size={11} />
+              <button className={styles.modalPreviewClear}
+                onClick={() => { setPreview(null); setError(""); }} aria-label="Hapus pilihan">
+                <X size={10} />
               </button>
             )}
+            {preview && <div className={styles.modalPreviewBadge}><Check size={10} /> Baru</div>}
           </div>
           <div className={styles.modalPreviewInfo}>
-            <p className={styles.modalPreviewLabel}>
-              {preview ? "Foto baru dipilih" : "Foto saat ini"}
-            </p>
-            <p className={styles.modalPreviewHint}>
-              JPG, PNG, WebP, GIF · maks. 2 MB
-            </p>
+            <p className={styles.modalPreviewLabel}>{preview ? "Foto baru dipilih" : "Foto saat ini"}</p>
+            <p className={styles.modalPreviewHint}>JPG, PNG, WebP, GIF · maks. 2 MB</p>
+            {!preview && <p className={styles.modalPreviewTip}>Seret foto atau klik area di bawah untuk memilih</p>}
           </div>
         </div>
 
-        {/* Drop zone */}
         <div
           className={`${styles.dropZone} ${dragging ? styles.dropZoneActive : ""}`}
           onDragOver={e => { e.preventDefault(); setDragging(true); }}
           onDragLeave={() => setDragging(false)}
           onDrop={e => { e.preventDefault(); setDragging(false); const f = e.dataTransfer.files?.[0]; if (f) processFile(f); }}
           onClick={() => inputRef.current?.click()}
-          role="button"
-          tabIndex={0}
+          role="button" tabIndex={0}
           onKeyDown={e => e.key === "Enter" && inputRef.current?.click()}
           aria-label="Upload foto"
         >
-          <Upload size={18} className={styles.dropIcon} />
-          <span className={styles.dropText}>
-            {dragging ? "Lepaskan di sini…" : "Klik atau seret foto ke sini"}
-          </span>
-          <input
-            ref={inputRef}
-            type="file"
+          <div className={styles.dropIconWrap}><Upload size={20} className={styles.dropIcon} /></div>
+          <span className={styles.dropText}>{dragging ? "Lepaskan di sini…" : "Klik atau seret foto ke sini"}</span>
+          <span className={styles.dropSubText}>PNG, JPG, WebP hingga 2MB</span>
+          <input ref={inputRef} type="file"
             accept="image/jpeg,image/png,image/webp,image/gif"
-            className={styles.fileInput}
-            onChange={handleFileChange}
-          />
+            className={styles.fileInput} onChange={handleFileChange} />
         </div>
 
-        {error && <p className={styles.modalError}>{error}</p>}
+        {error && (
+          <div className={styles.modalErrorBox}>
+            <X size={13} />
+            <p className={styles.modalError}>{error}</p>
+          </div>
+        )}
 
-        {/* Actions */}
         <div className={styles.modalActions}>
-          <button className={styles.modalBtnCancel} onClick={onClose}>
-            Batal
-          </button>
-          <button
-            className={styles.modalBtnSave}
-            onClick={handleSave}
-            disabled={!preview || saving}
-          >
+          <button className={styles.modalBtnCancel} onClick={onClose}>Batal</button>
+          <button className={styles.modalBtnSave} onClick={handleSave} disabled={!preview || saving}>
             {saving
               ? <><span className={styles.savingSpinner} /> Menyimpan…</>
-              : <><Check size={14} /> Simpan Foto</>
-            }
+              : <><Check size={14} /> Simpan Foto</>}
           </button>
         </div>
-
       </div>
     </div>
   );
@@ -188,11 +152,17 @@ export default function AdminLayout({ children }) {
   const [collapsed,  setCollapsed]  = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const [checking,   setChecking]   = useState(true);
-  const [avatarSrc,  setAvatarSrc]  = useState("/img/avatar_placeholder.png");
   const [showEditor, setShowEditor] = useState(false);
+
+  /* ── Data dari /api/auth/me ── */
+  const [avatarSrc,   setAvatarSrc]   = useState("/img/avatar.jpg");
+  const [adminName,   setAdminName]   = useState("Admin");
+  const [adminRole,   setAdminRole]   = useState("Administrator");
+
   const router   = useRouter();
   const pathname = usePathname();
 
+  /* ── Auth check + load profil ── */
   useEffect(() => {
     let mounted = true;
     (async () => {
@@ -203,7 +173,15 @@ export default function AdminLayout({ children }) {
           cache: "no-store",
         });
         if (!mounted) return;
-        if (res.ok) { setChecking(false); return; }
+        if (res.ok) {
+          const data = await res.json();
+          // set nama dari admin record, fallback ke username
+          setAdminName(data.admin?.nama_admin ?? data.user?.username ?? "Admin");
+          // set avatar jika ada
+          if (data.admin?.avatar) setAvatarSrc(data.admin.avatar);
+          setChecking(false);
+          return;
+        }
         if (pathname !== "/") router.replace("/");
       } catch {
         if (!mounted) return;
@@ -238,18 +216,19 @@ export default function AdminLayout({ children }) {
     }
   }
 
-  const handleAvatarSave = useCallback((dataUrl) => {
-    setAvatarSrc(dataUrl);
+  const handleAvatarSave = useCallback((newAvatarUrl) => {
+    setAvatarSrc(newAvatarUrl);
     setShowEditor(false);
   }, []);
 
   const activeNav  = navItems.find((n) => pathname.startsWith(n.href));
-  const breadcrumb = activeNav ? activeNav.label : "Dashboard";
+  const isProfile  = pathname.startsWith("/admin/profile");
+  const breadcrumb = isProfile ? "Profil Saya" : (activeNav ? activeNav.label : "Dashboard");
 
   if (checking) {
     return (
       <div className={styles.loadingWrapper}>
-        <div className={styles.spinner} />
+        <div className={styles.loadingLogo}><div className={styles.spinner} /></div>
         <span>Memeriksa autentikasi…</span>
       </div>
     );
@@ -258,7 +237,7 @@ export default function AdminLayout({ children }) {
   return (
     <div className={styles.wrapper}>
 
-      {/* Avatar Editor Modal */}
+      {/* Avatar Editor Modal (akses cepat dari topbar) */}
       {showEditor && (
         <AvatarEditorModal
           currentSrc={avatarSrc}
@@ -269,7 +248,6 @@ export default function AdminLayout({ children }) {
 
       {/* ── Sidebar ── */}
       <aside className={`${styles.sidebar} ${collapsed ? styles.collapsed : ""}`}>
-
         <div className={styles.brand}>
           <div className={styles.logo}>
             <Image src="/img/logo_isb.png" alt="logo" width={34} height={34} loading="eager" />
@@ -280,11 +258,8 @@ export default function AdminLayout({ children }) {
               <span>Admin Panel</span>
             </div>
           )}
-          <button
-            aria-label="Toggle sidebar"
-            className={styles.collapseBtn}
-            onClick={() => setCollapsed(!collapsed)}
-          >
+          <button aria-label="Toggle sidebar" className={styles.collapseBtn}
+            onClick={() => setCollapsed(!collapsed)}>
             {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
           </button>
         </div>
@@ -295,12 +270,9 @@ export default function AdminLayout({ children }) {
             const Icon     = item.icon;
             const isActive = pathname.startsWith(item.href);
             return (
-              <Link
-                key={item.href}
-                href={item.href}
+              <Link key={item.href} href={item.href}
                 className={`${styles.navItem} ${isActive ? styles.navItemActive : ""}`}
-                title={collapsed ? item.label : undefined}
-              >
+                title={collapsed ? item.label : undefined}>
                 {isActive && <span className={styles.activeAccent} />}
                 <span className={styles.iconWrap}><Icon size={17} /></span>
                 {!collapsed && <span className={styles.navLabel}>{item.label}</span>}
@@ -339,12 +311,12 @@ export default function AdminLayout({ children }) {
             <span className={styles.divider} />
 
             <div className={styles.userBlock}>
-              {/* Clickable avatar */}
+              {/* Avatar → klik buka halaman profil */}
               <button
                 className={styles.avatarBtn}
-                onClick={() => setShowEditor(true)}
-                aria-label="Edit foto profil"
-                title="Edit foto profil"
+                onClick={() => router.push("/admin/profile")}
+                aria-label="Lihat profil"
+                title="Lihat profil saya"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={avatarSrc} alt="avatar" className={styles.avatar} />
@@ -352,18 +324,19 @@ export default function AdminLayout({ children }) {
                 <span className={styles.avatarOverlay}><Camera size={11} /></span>
               </button>
 
-              <div className={styles.userInfo}>
-                <span className={styles.userName}>Admin Utama</span>
-                <span className={styles.userRole}>Administrator</span>
-              </div>
-
+              {/* Nama → klik buka halaman profil */}
               <button
-                className={styles.logoutBtn}
-                title="Logout"
-                onClick={handleLogout}
-                disabled={loggingOut}
+                className={styles.userInfoBtn}
+                onClick={() => router.push("/admin/profile")}
+                title="Lihat profil saya"
               >
-                <LogOut size={14} />
+                <span className={styles.userName}>{adminName}</span>
+                <span className={styles.userRole}>{adminRole}</span>
+              </button>
+
+              <button className={styles.logoutBtn} title="Logout"
+                onClick={handleLogout} disabled={loggingOut}>
+                {loggingOut ? <span className={styles.logoutSpinner} /> : <LogOut size={14} />}
               </button>
             </div>
           </div>

@@ -17,7 +17,7 @@ export async function POST(req) {
 
     const user = await prisma.users.findFirst({ where: { username } });
     if (!user || user.role !== "admin") {
-      return new Response(JSON.stringify({ error: "Invalid credentials" }), {
+      return new Response(JSON.stringify({ error: "Invalid username" }), {
         status: 401,
         headers: { "Content-Type": "application/json" },
       });
@@ -25,7 +25,7 @@ export async function POST(req) {
 
     const ok = await bcrypt.compare(password, user.password);
     if (!ok) {
-      return new Response(JSON.stringify({ error: "Invalid credentials" }), {
+      return new Response(JSON.stringify({ error: "Invalid password" }), {
         status: 401,
         headers: { "Content-Type": "application/json" },
       });

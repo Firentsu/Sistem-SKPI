@@ -7,9 +7,34 @@ import {
   User, Lock, Mail, Info, ArrowLeft, ArrowRight,
   GraduationCap, Award, Briefcase, ChevronRight,
   Eye, EyeOff, CheckCircle, FileText, BookOpen, Users,
-  Phone, MapPin, Mail as MailIcon, Facebook, Twitter, Instagram
+  Phone, MapPin, Mail as MailIcon, Facebook, Twitter, Instagram,
+  AlertCircle, X
 } from "lucide-react";
 import Image from "next/image";
+
+// ─── Toast Notification Component ────────────────────────────────────────────
+function Toast({ message, onClose }) {
+  useEffect(() => {
+    if (!message) return;
+    const t = setTimeout(onClose, 4000);
+    return () => clearTimeout(t);
+  }, [message, onClose]);
+
+  if (!message) return null;
+
+  return (
+    <div className={styles.toast}>
+      <div className={styles.toastIcon}>
+        <AlertCircle size={18} />
+      </div>
+      <span className={styles.toastMessage}>{message}</span>
+      <button className={styles.toastClose} onClick={onClose} aria-label="Tutup notifikasi">
+        <X size={14} />
+      </button>
+      <div className={styles.toastProgress} />
+    </div>
+  );
+}
 
 export default function Home() {
   useEffect(() => {
@@ -29,6 +54,24 @@ export default function Home() {
   const [loadingLogin, setLoadingLogin] = useState(false);
   const [message, setMessage] = useState("");
 
+  // Error shake state
+  const [shake, setShake] = useState(false);
+
+  // Trigger shake animation on new error
+  const triggerError = (msg) => {
+    setMessage(msg);
+    setShake(false);
+    // Re-trigger shake via rAF to restart animation
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => setShake(true));
+    });
+  };
+
+  const clearError = () => {
+    setMessage("");
+    setShake(false);
+  };
+
   const slides = [
     {
       id: "login",
@@ -37,31 +80,32 @@ export default function Home() {
       content: (
         <>
           <form
-            className={styles.inputGroup}
+            className={`${styles.inputGroup} ${shake ? styles.shakeForm : ""}`}
             onSubmit={(e) => {
               e.preventDefault();
               handleLogin();
             }}
             onMouseDown={(e) => e.stopPropagation()}
+            onAnimationEnd={() => setShake(false)}
           >
-            <div className={styles.input}>
+            <div className={`${styles.input} ${message ? styles.inputError : ""}`}>
               <User size={18} />
               <input
                 type="text"
                 placeholder="Username / NIM"
                 value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                onChange={(e) => { setUsername(e.target.value); clearError(); }}
                 onFocus={() => setIsDragging(false)}
                 required
               />
             </div>
-            <div className={styles.input}>
+            <div className={`${styles.input} ${message ? styles.inputError : ""}`}>
               <Lock size={18} />
               <input
                 type={showPassword ? "text" : "password"}
                 placeholder="Password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => { setPassword(e.target.value); clearError(); }}
                 onFocus={() => setIsDragging(false)}
                 required
               />
@@ -90,17 +134,26 @@ export default function Home() {
               onClick={(e) => { e.preventDefault(); handleLogin(); }}
               disabled={loadingLogin}
             >
-              {loadingLogin ? "Loading..." : "Login"}
-              <ChevronRight size={16} />
+              {loadingLogin ? (
+                <>
+                  <span className={styles.spinner} />
+                  Memproses...
+                </>
+              ) : (
+                <>
+                  Login
+                  <ChevronRight size={16} />
+                </>
+              )}
             </button>
-            <div style={{ color: "#dc2626", minHeight: 20 }}>
-              {message}
-            </div>
           </div>
 
           <p className={styles.noteText}>
             * Gunakan username dan password SIAKAD Anda
           </p>
+
+          {/* Toast rendered inside card for correct stacking */}
+          <Toast message={message} onClose={clearError} />
         </>
       ),
     },
@@ -162,7 +215,6 @@ export default function Home() {
   ];
 
   const handleDragStart = (e) => {
-    // disable dragging when interacting with inputs or buttons
     const tag = e.target.tagName;
     if (tag === "INPUT" || tag === "BUTTON" || tag === "TEXTAREA") return;
     setIsDragging(true);
@@ -193,7 +245,7 @@ export default function Home() {
 
   // Login handler
   async function handleLogin() {
-    setMessage("");
+    clearError();
     setLoadingLogin(true);
     try {
       const res = await fetch("/api/auth/login", {
@@ -204,14 +256,13 @@ export default function Home() {
 
       const data = await res.json();
       if (res.ok) {
-        // server sets HttpOnly cookie (skpi_auth). Redirect to dashboard.
         window.location.href = "/admin/dashboard";
       } else {
-        setMessage(data.error || "Login gagal. Periksa username dan password.");
+        triggerError(data.error || "Login gagal. Periksa username dan password.");
       }
     } catch (err) {
       console.error("Login error:", err);
-      setMessage("Terjadi kesalahan jaringan. Coba lagi.");
+      triggerError("Terjadi kesalahan jaringan. Coba lagi.");
     } finally {
       setLoadingLogin(false);
     }
