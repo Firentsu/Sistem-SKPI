@@ -1,39 +1,62 @@
 import prisma from '@/lib/prisma';
-import fs from 'fs/promises';
-import path from 'path';
+import bcrypt from 'bcryptjs';
 
 export async function POST(req) {
   try {
     const body = await req.json();
-    // Expecting { filename, data } where data is base64 string (data URL or pure base64)
-    const { filename, data } = body;
-    if (!filename || !data) {
-      return new Response(JSON.stringify({ error: 'Invalid payload' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
+    const { currentPassword, newPassword } = body;
+
+    if (!currentPassword || !newPassword) {
+      return new Response(
+        JSON.stringify({ error: 'Password lama dan baru wajib diisi.' }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      );
     }
 
-    // strip data URL prefix if present
-    const base64 = data.includes(',') ? data.split(',')[1] : data;
-    const buffer = Buffer.from(base64, 'base64');
+    if (newPassword.length < 6) {
+      return new Response(
+        JSON.stringify({ error: 'Password baru minimal 6 karakter.' }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
 
-    const uploadsDir = path.join(process.cwd(), 'public', 'uploads', 'avatars');
-    await fs.mkdir(uploadsDir, { recursive: true });
-
-    const safeName = `${Date.now()}_${filename.replace(/[^a-zA-Z0-9.\-_]/g, '_')}`;
-    const filePath = path.join(uploadsDir, safeName);
-    await fs.writeFile(filePath, buffer);
-
-    // update first admin's avatar (no auth) — store path relative to /public
+    // Get first admin (adjust with your auth/session logic as needed)
     const admin = await prisma.admin.findFirst();
     if (!admin) {
-      return new Response(JSON.stringify({ error: 'No admin found' }), { status: 404, headers: { 'Content-Type': 'application/json' } });
+      return new Response(
+        JSON.stringify({ error: 'Admin tidak ditemukan.' }),
+        { status: 404, headers: { 'Content-Type': 'application/json' } }
+      );
     }
 
-    const avatarPath = `/uploads/avatars/${safeName}`;
-    await prisma.admin.update({ where: { id_admin: admin.id_admin }, data: { avatar: avatarPath } });
+    // Verify current password
+    // If passwords are stored as plain text, use: admin.password === currentPassword
+    // If hashed with bcrypt:
+    const isValid = await bcrypt.compare(currentPassword, admin.password);
+    if (!isValid) {
+      return new Response(
+        JSON.stringify({ error: 'Password saat ini tidak sesuai.' }),
+        { status: 401, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
 
-    return new Response(JSON.stringify({ avatar: avatarPath }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    // Hash new password
+    const hashed = await bcrypt.hash(newPassword, 12);
+
+    await prisma.admin.update({
+      where: { id_admin: admin.id_admin },
+      data: { password: hashed },
+    });
+
+    return new Response(
+      JSON.stringify({ message: 'Password berhasil diperbarui.' }),
+      { status: 200, headers: { 'Content-Type': 'application/json' } }
+    );
   } catch (err) {
-    console.error(err);
-    return new Response(JSON.stringify({ error: 'Internal server error' }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+    console.error('Password change error:', err);
+    return new Response(
+      JSON.stringify({ error: 'Internal server error.' }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    );
   }
-}
+} 
