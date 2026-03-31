@@ -14,7 +14,7 @@
     "seed": "node prisma/seed.js"
   },
   "dependencies": {
-    "@prisma/client": "^5.22.0",
+    "@prisma/client": "^7.6.0",
     "axios": "^1.13.6",
     "bcryptjs": "^3.0.3",
     "lucide-react": "^0.577.0",
