@@ -249,7 +249,7 @@ export default function AdminLayout({ children }) {
     return (
       <div className={styles.loadingWrapper}>
         <div className={styles.loadingLogo}><div className={styles.spinner} /></div>
-        <span>Memeriksa autentikasi…</span>
+        <span suppressHydrationWarning>Memeriksa autentikasi…</span>
       </div>
     );
   }
