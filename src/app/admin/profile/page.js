@@ -126,7 +126,7 @@ function AvatarViewModal({ src, name, onClose, onEdit }) {
 
         <div style={{ textAlign:"center" }}>
           <p style={{ margin:0, color:"#fde68a", fontWeight:800, fontSize:16 }}>{name}</p>
-          <p style={{ margin:"5px 0 0", color:"#a07858", fontSize:12 }}>Administrator · ISB Shanti Bhuana</p>
+          <p style={{ margin:"5px 0 0", color:"#a07858", fontSize:12 }}>Administrator · Institut Shanti Bhuana</p>
         </div>
 
         <div style={{ display:"flex", gap:8, width:"100%" }}>
@@ -160,6 +160,10 @@ export default function ProfilePage() {
   const [draggingAvatar,  setDraggingAvatar]   = useState(false);
   const avatarInputRef = useRef(null);
 
+  /* ── Username ── */
+  const [username,       setUsername]       = useState("");
+  const [usernameSaving, setUsernameSaving] = useState(false);
+
   /* ── Email ── */
   const [email,       setEmail]       = useState("");
   const [emailSaving, setEmailSaving] = useState(false);
@@ -184,6 +188,7 @@ export default function ProfilePage() {
         const data = await res.json();
         setProfileData(data);
         setEmail(data.email ?? "");
+        setUsername(data.username ?? "");
         if (data.avatar) setAvatarSrc(data.avatar);
       } catch {
         router.replace("/");
@@ -232,6 +237,9 @@ export default function ProfilePage() {
       cancelAvatarSelect();
       setShowUploader(false);
       showToast("Foto profil berhasil diperbarui.");
+
+      // ── Sync avatar ke topbar layout ──
+      window.dispatchEvent(new CustomEvent("avatar:updated", { detail: { avatar: data.avatar } }));
     } catch {
       showToast("Gagal mengunggah foto. Coba lagi.", "error");
     } finally {
@@ -240,6 +248,39 @@ export default function ProfilePage() {
   }
 
   useEffect(() => () => { if (avatarPreview) URL.revokeObjectURL(avatarPreview); }, [avatarPreview]);
+
+  /* ── Username save ── */
+  async function handleUsernameSave(e) {
+    e.preventDefault();
+    if (usernameSaving) return;
+    const trimmed = username.trim();
+    if (!trimmed || trimmed.length < 3) {
+      showToast("Username minimal 3 karakter.", "error"); return;
+    }
+    if (!/^[a-zA-Z0-9_]+$/.test(trimmed)) {
+      showToast("Username hanya boleh huruf, angka, dan underscore (_).", "error"); return;
+    }
+    setUsernameSaving(true);
+    try {
+      const res  = await fetch("/api/auth/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({ action: "username", username: trimmed }),
+      });
+      const data = await res.json();
+      if (!res.ok) { showToast(data.error ?? "Gagal memperbarui username.", "error"); return; }
+      setProfileData((prev) => prev ? { ...prev, username: trimmed } : prev);
+      showToast("Username berhasil diperbarui.");
+
+      // ── Sync username ke topbar layout ──
+      window.dispatchEvent(new CustomEvent("profile:updated", { detail: { username: trimmed } }));
+    } catch {
+      showToast("Gagal memperbarui username. Coba lagi.", "error");
+    } finally {
+      setUsernameSaving(false);
+    }
+  }
 
   /* ── Email save ── */
   async function handleEmailSave(e) {
@@ -472,6 +513,45 @@ export default function ProfilePage() {
               RIGHT — Forms
           ══════════════════════════════ */}
           <div className={styles.formsCol}>
+
+            {/* Username Form */}
+            <div className={styles.formCard}>
+              <div className={styles.formCardHeader}>
+                <div className={styles.formCardIcon}><User size={20} /></div>
+                <div className={styles.formCardHeaderText}>
+                  <h2 className={styles.formCardTitle}>Ubah Username</h2>
+                  <p className={styles.formCardSub}>Perbarui username untuk login ke sistem</p>
+                </div>
+              </div>
+              <form className={styles.form} onSubmit={handleUsernameSave}>
+                <div className={styles.fieldGroup}>
+                  <label className={styles.label} htmlFor="username">Username</label>
+                  <div className={styles.inputWrap}>
+                    <AtSign size={15} className={styles.inputIcon} />
+                    <input
+                      id="username"
+                      type="text"
+                      className={styles.input}
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      placeholder="Contoh: admin_isb"
+                      autoComplete="username"
+                      required
+                    />
+                  </div>
+                  <p style={{ margin: "2px 0 0", fontSize: 11.5, color: "#b09880" }}>
+                    Hanya huruf, angka, dan underscore (_). Minimal 3 karakter.
+                  </p>
+                </div>
+                <div className={styles.formFooter}>
+                  <button type="submit" className={styles.btnPrimary} disabled={usernameSaving}>
+                    {usernameSaving
+                      ? <><Loader2 size={15} className={styles.spin} /> Menyimpan…</>
+                      : <><Save size={15} /> Simpan Username</>}
+                  </button>
+                </div>
+              </form>
+            </div>
 
             {/* Email Form */}
             <div className={styles.formCard}>

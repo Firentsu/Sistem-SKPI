@@ -50,6 +50,9 @@ export async function POST(req) {
         const user = await getAuthUser(req);
         if (!user) return json({ error: "Not authenticated" }, 401);
 
+        // admin adalah array karena relasi Users -> Admin[] di schema
+        const admin = user.admin?.[0] ?? null;
+
         const formData = await req.formData();
         const file = formData.get("avatar");
 
@@ -73,8 +76,8 @@ export async function POST(req) {
         }
 
         // hapus avatar lama jika ada
-        if (user.admin?.avatar) {
-            const oldPath = path.join(process.cwd(), "public", user.admin.avatar);
+        if (admin?.avatar) {
+            const oldPath = path.join(process.cwd(), "public", admin.avatar);
             if (existsSync(oldPath)) {
                 await unlink(oldPath).catch(() => { }); // abaikan error jika file sudah tidak ada
             }
@@ -82,7 +85,7 @@ export async function POST(req) {
 
         // nama file unik: admin_{id}_{timestamp}.ext
         const ext = EXT_MAP[file.type];
-        const filename = `admin_${user.admin?.id_admin ?? user.user_id}_${Date.now()}.${ext}`;
+        const filename = `admin_${admin?.id_admin ?? user.user_id}_${Date.now()}.${ext}`;
         const filePath = path.join(UPLOAD_DIR, filename);
 
         await writeFile(filePath, buffer);
@@ -91,9 +94,9 @@ export async function POST(req) {
         const publicUrl = `/uploads/avatars/${filename}`;
 
         // update kolom avatar di tabel Admin
-        if (user.admin) {
+        if (admin) {
             await prisma.admin.update({
-                where: { id_admin: user.admin.id_admin },
+                where: { id_admin: admin.id_admin },
                 data: { avatar: publicUrl },
             });
         } else {

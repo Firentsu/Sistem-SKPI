@@ -48,18 +48,21 @@ export async function GET(req) {
       });
     }
 
+    // Admin adalah array (Users -> Admin[] di schema)
+    const adminRecord = user.admin?.[0] ?? null;
+
     const body = {
       user: {
-        user_id: user.user_id,
+        user_id:  user.user_id,
         username: user.username,
-        email: user.email,
+        email:    user.email,
       },
-      admin: user.admin
+      admin: adminRecord
         ? {
-            id_admin: user.admin.id_admin,
-            nama_admin: user.admin.nama_admin,
-            email: user.admin.email,
-            avatar: user.admin.avatar,
+            id_admin:   adminRecord.id_admin,
+            nama_admin: adminRecord.nama_admin,
+            email:      adminRecord.email,
+            avatar:     adminRecord.avatar,
           }
         : null,
     };

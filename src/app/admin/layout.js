@@ -191,6 +191,26 @@ export default function AdminLayout({ children }) {
     return () => { mounted = false; };
   }, [router, pathname]);
 
+  /* ── Dengarkan event dari halaman profil ── */
+  useEffect(() => {
+    // Saat profile page berhasil update avatar, emit custom event
+    function onAvatarUpdated(e) {
+      if (e.detail?.avatar) setAvatarSrc(e.detail.avatar);
+    }
+    // Saat profile page berhasil update username/nama
+    function onProfileUpdated(e) {
+      if (e.detail?.username) setAdminName(e.detail.username);
+      if (e.detail?.nama_admin) setAdminName(e.detail.nama_admin);
+    }
+
+    window.addEventListener("avatar:updated", onAvatarUpdated);
+    window.addEventListener("profile:updated", onProfileUpdated);
+    return () => {
+      window.removeEventListener("avatar:updated", onAvatarUpdated);
+      window.removeEventListener("profile:updated", onProfileUpdated);
+    };
+  }, []);
+
   const navItems = [
     { href: "/admin/dashboard",     label: "Dashboard",     icon: LayoutDashboard },
     { href: "/admin/mahasiswa",     label: "Mahasiswa",     icon: Users },
@@ -223,7 +243,7 @@ export default function AdminLayout({ children }) {
 
   const activeNav  = navItems.find((n) => pathname.startsWith(n.href));
   const isProfile  = pathname.startsWith("/admin/profile");
-  const breadcrumb = isProfile ? "Profil Saya" : (activeNav ? activeNav.label : "Dashboard");
+  const breadcrumb = isProfile ? "Profile" : (activeNav ? activeNav.label : "Dashboard");
 
   if (checking) {
     return (
@@ -250,7 +270,7 @@ export default function AdminLayout({ children }) {
       <aside className={`${styles.sidebar} ${collapsed ? styles.collapsed : ""}`}>
         <div className={styles.brand}>
           <div className={styles.logo}>
-            <Image src="/img/logo_isb.png" alt="logo" width={34} height={34} loading="eager" />
+            <Image src="/img/logo_isb.png" alt="logo" width={80} height={35} loading="eager" />
           </div>
           {!collapsed && (
             <div className={styles.brandText}>
@@ -283,7 +303,7 @@ export default function AdminLayout({ children }) {
 
         {!collapsed && (
           <div className={styles.sidebarFooter}>
-            <span>v1.0 · © ISB Shanti Bhuana</span>
+            <span>v1.0 · © Institut Shanti Bhuana</span>
           </div>
         )}
       </aside>

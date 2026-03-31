@@ -43,13 +43,17 @@ export async function GET(req) {
     const user = await getAuthUser(req);
     if (!user) return json({ error: "Not authenticated" }, 401);
 
+    // admin adalah array karena relasi Users -> Admin[] di schema
+    const admin = user.admin?.[0] ?? null;
+
     return json({
       user_id:    user.user_id,
       username:   user.username,
       email:      user.email,
-      nama_admin: user.admin?.nama_admin ?? user.username,
-      avatar:     user.admin?.avatar ?? null,
-      id_admin:   user.admin?.id_admin ?? null,
+      nama_admin: admin?.nama_admin ?? user.username,
+      avatar:     admin?.avatar ?? null,
+      id_admin:   admin?.id_admin ?? null,
+      created_at: user.created_at,
     });
   } catch (err) {
     console.error("GET /api/auth/profile error:", err);
@@ -59,7 +63,7 @@ export async function GET(req) {
 
 /* ════════════════════════════════════════
    PATCH  /api/auth/profile
-   body: { action: "email"|"password", ...fields }
+   body: { action: "username"|"email"|"password", ...fields }
 ════════════════════════════════════════ */
 export async function PATCH(req) {
   try {
@@ -68,6 +72,37 @@ export async function PATCH(req) {
 
     const body = await req.json();
     const { action } = body;
+
+    // admin adalah array karena relasi Users -> Admin[] di schema
+    const admin = user.admin?.[0] ?? null;
+
+    /* ── Update Username ── */
+    if (action === "username") {
+      const { username } = body;
+
+      if (!username || username.trim().length < 3) {
+        return json({ error: "Username minimal 3 karakter." }, 400);
+      }
+
+      const trimmed = username.trim();
+
+      if (!/^[a-zA-Z0-9_]+$/.test(trimmed)) {
+        return json({ error: "Username hanya boleh huruf, angka, dan underscore (_)." }, 400);
+      }
+
+      // cek username sudah dipakai user lain
+      const existing = await prisma.users.findFirst({
+        where: { username: trimmed, NOT: { user_id: user.user_id } },
+      });
+      if (existing) return json({ error: "Username sudah digunakan akun lain." }, 409);
+
+      await prisma.users.update({
+        where: { user_id: user.user_id },
+        data:  { username: trimmed },
+      });
+
+      return json({ success: true, message: "Username berhasil diperbarui." });
+    }
 
     /* ── Update Email ── */
     if (action === "email") {
@@ -92,9 +127,9 @@ export async function PATCH(req) {
       });
 
       // update juga di tabel Admin jika ada
-      if (user.admin) {
+      if (admin) {
         await prisma.admin.update({
-          where: { id_admin: user.admin.id_admin },
+          where: { id_admin: admin.id_admin },
           data:  { email: trimmed },
         });
       }
