@@ -21,7 +21,7 @@ async function getAuthUser(req) {
 
   const user = await prisma.users.findUnique({
     where: { user_id: payload.userId },
-    include: { admin: true },
+    include: { admin: true }, // ✅ admin adalah object tunggal (one-to-one)
   });
   if (!user || user.role !== "admin") return null;
   return user;
@@ -36,15 +36,14 @@ function json(data, status = 200) {
 
 /* ════════════════════════════════════════
    GET  /api/auth/profile
-   → kembalikan data profil admin
 ════════════════════════════════════════ */
 export async function GET(req) {
   try {
     const user = await getAuthUser(req);
     if (!user) return json({ error: "Not authenticated" }, 401);
 
-    // admin adalah array karena relasi Users -> Admin[] di schema
-    const admin = user.admin?.[0] ?? null;
+    // ✅ admin adalah object tunggal, BUKAN array
+    const admin = user.admin ?? null;
 
     return json({
       user_id:    user.user_id,
@@ -73,8 +72,8 @@ export async function PATCH(req) {
     const body = await req.json();
     const { action } = body;
 
-    // admin adalah array karena relasi Users -> Admin[] di schema
-    const admin = user.admin?.[0] ?? null;
+    // ✅ admin adalah object tunggal, BUKAN array
+    const admin = user.admin ?? null;
 
     /* ── Update Username ── */
     if (action === "username") {
@@ -90,7 +89,6 @@ export async function PATCH(req) {
         return json({ error: "Username hanya boleh huruf, angka, dan underscore (_)." }, 400);
       }
 
-      // cek username sudah dipakai user lain
       const existing = await prisma.users.findFirst({
         where: { username: trimmed, NOT: { user_id: user.user_id } },
       });
@@ -114,19 +112,16 @@ export async function PATCH(req) {
 
       const trimmed = email.trim().toLowerCase();
 
-      // cek email sudah dipakai user lain
       const existing = await prisma.users.findFirst({
         where: { email: trimmed, NOT: { user_id: user.user_id } },
       });
       if (existing) return json({ error: "Email sudah digunakan akun lain." }, 409);
 
-      // update di tabel Users
       await prisma.users.update({
         where: { user_id: user.user_id },
         data:  { email: trimmed },
       });
 
-      // update juga di tabel Admin jika ada
       if (admin) {
         await prisma.admin.update({
           where: { id_admin: admin.id_admin },
@@ -148,11 +143,9 @@ export async function PATCH(req) {
         return json({ error: "Password baru minimal 8 karakter." }, 400);
       }
 
-      // verifikasi password lama
       const valid = await bcrypt.compare(currentPassword, user.password);
       if (!valid) return json({ error: "Password saat ini tidak tepat." }, 400);
 
-      // hash password baru
       const hashed = await bcrypt.hash(newPassword, 12);
 
       await prisma.users.update({

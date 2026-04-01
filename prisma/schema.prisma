@@ -292,4 +292,37 @@ enum kegiatanmahasiswa_status_verifikasi {
   disetujui
   ditolak
   revisi
+t(true)
+
+  template TemplateSkpi? @relation(fields: [id_template], references: [id_template])
+}
+
+model TandaTanganDigital {
+  id_ttd       Int     @id @default(autoincrement())
+  nama_pejabat String
+  jabatan      String
+  file_ttd     String
+  status       Boolean @default(true)
+t(true)
+
+  template TemplateSkpi? @relation(fields: [id_template], references: [id_template])
+}
+
+model TandaTanganDigital {
+  id_ttd       Int     @id @default(autoincrement())
+  nama_pejabat String
+  jabatan      String
+  file_ttd     String
+  status       Boolean @default(true)
+t(true)
+
+  template TemplateSkpi? @relation(fields: [id_template], references: [id_template])
+}
+
+model TandaTanganDigital {
+  id_ttd       Int     @id @default(autoincrement())
+  nama_pejabat String
+  jabatan      String
+  file_ttd     String
+  status       Boolean @default(true)
 }
