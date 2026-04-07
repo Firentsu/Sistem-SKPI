@@ -183,7 +183,7 @@ export default function ProfilePage() {
   useEffect(() => {
     (async () => {
       try {
-        const res  = await fetch("/api/auth/profile", { credentials: "same-origin", cache: "no-store" });
+        const res  = await (async () => { const { getProfile } = await import("@/lib/api"); const d = await getProfile(); return { ok: true, json: async () => d }; })();
         if (!res.ok) { router.replace("/"); return; }
         const data = await res.json();
         setProfileData(data);
@@ -228,12 +228,11 @@ export default function ProfilePage() {
       const form = new FormData();
       form.append("avatar", avatarFile, avatarFile.name);
 
-      const res  = await fetch("/api/auth/avatar", { method:"POST", body:form, credentials:"same-origin" });
-      const data = await res.json();
+      const { uploadAvatar } = await import("@/lib/api");
+      const result = await uploadAvatar(form);
+      if (!result.ok) { showToast(result.data?.error ?? "Gagal mengunggah foto.", "error"); return; }
 
-      if (!res.ok) { showToast(data.error ?? "Gagal mengunggah foto.", "error"); return; }
-
-      setAvatarSrc(data.avatar);
+      setAvatarSrc(result.data.avatar);
       cancelAvatarSelect();
       setShowUploader(false);
       showToast("Foto profil berhasil diperbarui.");
@@ -262,14 +261,9 @@ export default function ProfilePage() {
     }
     setUsernameSaving(true);
     try {
-      const res  = await fetch("/api/auth/profile", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        credentials: "same-origin",
-        body: JSON.stringify({ action: "username", username: trimmed }),
-      });
-      const data = await res.json();
-      if (!res.ok) { showToast(data.error ?? "Gagal memperbarui username.", "error"); return; }
+      const { updateProfile } = await import("@/lib/api");
+      const { ok, data } = await updateProfile({ action: "username", username: trimmed });
+      if (!ok) { showToast(data.error ?? "Gagal memperbarui username.", "error"); return; }
       setProfileData((prev) => prev ? { ...prev, username: trimmed } : prev);
       showToast("Username berhasil diperbarui.");
 
@@ -292,14 +286,9 @@ export default function ProfilePage() {
     }
     setEmailSaving(true);
     try {
-      const res  = await fetch("/api/auth/profile", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        credentials: "same-origin",
-        body: JSON.stringify({ action: "email", email: trimmed }),
-      });
-      const data = await res.json();
-      if (!res.ok) { showToast(data.error ?? "Gagal memperbarui email.", "error"); return; }
+      const { updateProfile } = await import("@/lib/api");
+      const { ok, data } = await updateProfile({ action: "email", email: trimmed });
+      if (!ok) { showToast(data.error ?? "Gagal memperbarui email.", "error"); return; }
       setProfileData((prev) => prev ? { ...prev, email: trimmed } : prev);
       showToast("Email berhasil diperbarui.");
     } catch {
@@ -321,14 +310,9 @@ export default function ProfilePage() {
     }
     setPwSaving(true);
     try {
-      const res  = await fetch("/api/auth/profile", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        credentials: "same-origin",
-        body: JSON.stringify({ action: "password", currentPassword: pwCurrent, newPassword: pwNew }),
-      });
-      const data = await res.json();
-      if (!res.ok) { showToast(data.error ?? "Gagal memperbarui password.", "error"); return; }
+      const { updateProfile } = await import("@/lib/api");
+      const { ok, data } = await updateProfile({ action: "password", currentPassword: pwCurrent, newPassword: pwNew });
+      if (!ok) { showToast(data.error ?? "Gagal memperbarui password.", "error"); return; }
       setPwCurrent(""); setPwNew(""); setPwConfirm("");
       showToast("Password berhasil diperbarui.");
     } catch {
