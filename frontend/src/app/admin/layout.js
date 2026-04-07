@@ -10,9 +10,8 @@ import {
 } from "lucide-react";
 import styles from "./admin.module.css";
 import { useRouter, usePathname } from "next/navigation";
-import { getMe, logout as apiLogout, uploadAvatar, isMockMode } from "@/lib/api";
+import { getMe, logout as apiLogout, uploadAvatar, isMockMode, getAvatarUrl } from "@/lib/api";
 
-// ── Avatar Editor Modal ─────────────────────────────────────
 function AvatarEditorModal({ currentSrc, onClose, onSave }) {
   const [preview, setPreview] = useState(null);
   const [dragging, setDragging] = useState(false);
@@ -37,7 +36,7 @@ function AvatarEditorModal({ currentSrc, onClose, onSave }) {
       form.append("avatar", blob, "avatar.jpg");
       const result = await uploadAvatar(form);
       if (!result.ok) { setError(result.data?.error ?? "Gagal menyimpan foto."); return; }
-      onSave(result.data.avatar);
+      onSave(getAvatarUrl(result.data.avatar));
     } catch { setError("Gagal menyimpan foto. Coba lagi."); }
     finally { setSaving(false); }
   }
@@ -97,7 +96,6 @@ function AvatarEditorModal({ currentSrc, onClose, onSave }) {
   );
 }
 
-// ── Main Layout ─────────────────────────────────────────────
 export default function AdminLayout({ children }) {
   const [collapsed,  setCollapsed]  = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
@@ -112,7 +110,6 @@ export default function AdminLayout({ children }) {
   const router   = useRouter();
   const pathname = usePathname();
 
-  // ── Auth check + load profil ──
   useEffect(() => {
     let mounted = true;
     (async () => {
@@ -120,7 +117,7 @@ export default function AdminLayout({ children }) {
       if (!mounted) return;
       if (data) {
         setAdminName(data.admin?.nama_admin ?? data.user?.username ?? "Admin");
-        if (data.admin?.avatar) setAvatarSrc(data.admin.avatar);
+        if (data.admin?.avatar) setAvatarSrc(getAvatarUrl(data.admin.avatar));
         setMockMode(isMockMode());
         setChecking(false);
       } else {
@@ -130,7 +127,6 @@ export default function AdminLayout({ children }) {
     return () => { mounted = false; };
   }, [router, pathname]);
 
-  // ── Dengarkan event dari halaman profil ──
   useEffect(() => {
     function onAvatarUpdated(e)  { if (e.detail?.avatar)     setAvatarSrc(e.detail.avatar); }
     function onProfileUpdated(e) {
@@ -182,7 +178,6 @@ export default function AdminLayout({ children }) {
 
   return (
     <div className={styles.wrapper}>
-      {/* ── Mode Demo Banner ── */}
       {mockMode && (
         <div style={{
           position: "fixed", top: 0, left: 0, right: 0, zIndex: 9999,
@@ -199,7 +194,6 @@ export default function AdminLayout({ children }) {
         <AvatarEditorModal currentSrc={avatarSrc} onClose={() => setShowEditor(false)} onSave={handleAvatarSave} />
       )}
 
-      {/* ── Sidebar ── */}
       <aside className={`${styles.sidebar} ${collapsed ? styles.collapsed : ""}`}
         style={mockMode ? { marginTop: 29 } : {}}>
         <div className={styles.brand}>
@@ -231,7 +225,6 @@ export default function AdminLayout({ children }) {
         {!collapsed && <div className={styles.sidebarFooter}><span>v1.0 · © Institut Shanti Bhuana</span></div>}
       </aside>
 
-      {/* ── Main ── */}
       <div className={styles.main} style={mockMode ? { marginTop: 29 } : {}}>
         <header className={styles.topbar}>
           <div className={styles.topbarLeft}>

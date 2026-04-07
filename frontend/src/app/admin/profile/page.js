@@ -8,6 +8,7 @@ import {
   CheckCircle2, AlertCircle, ArrowLeft, ImageIcon,
 } from "lucide-react";
 import styles from "../admin.module.css";
+import { getProfile, updateProfile, uploadAvatar, getAvatarUrl } from "@/lib/api";
 
 /* ─────────────────────────────────────────
    Toast
@@ -46,16 +47,16 @@ function useToast() {
 function getStrength(pw) {
   if (!pw) return { score: 0, label: "", color: "#e5e7eb" };
   let score = 0;
-  if (pw.length >= 8)           score++;
-  if (/[A-Z]/.test(pw))         score++;
-  if (/[0-9]/.test(pw))         score++;
-  if (/[^A-Za-z0-9]/.test(pw))  score++;
+  if (pw.length >= 8) score++;
+  if (/[A-Z]/.test(pw)) score++;
+  if (/[0-9]/.test(pw)) score++;
+  if (/[^A-Za-z0-9]/.test(pw)) score++;
   const map = [
     { label: "Sangat Lemah", color: "#ef4444" },
-    { label: "Lemah",        color: "#f97316" },
-    { label: "Cukup",        color: "#eab308" },
-    { label: "Kuat",         color: "#22c55e" },
-    { label: "Sangat Kuat",  color: "#16a34a" },
+    { label: "Lemah", color: "#f97316" },
+    { label: "Cukup", color: "#eab308" },
+    { label: "Kuat", color: "#22c55e" },
+    { label: "Sangat Kuat", color: "#16a34a" },
   ];
   return { score, ...map[score] };
 }
@@ -66,7 +67,7 @@ function StrengthBar({ password }) {
   return (
     <div className={styles.strengthWrap}>
       <div className={styles.strengthTrack}>
-        {[0,1,2,3].map((i) => (
+        {[0, 1, 2, 3].map((i) => (
           <div key={i} className={styles.strengthSegment}
             style={{ background: i < score ? color : "#f0e4d8" }} />
         ))}
@@ -96,42 +97,46 @@ function AvatarViewModal({ src, name, onClose, onEdit }) {
         border: "1px solid rgba(253,230,138,0.12)",
         animation: "slideUp 0.22s cubic-bezier(.4,0,.2,1)",
       }}>
-        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", width:"100%" }}>
-          <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-            <div style={{ width:28, height:28, background:"rgba(253,230,138,0.1)", borderRadius:8,
-              display:"flex", alignItems:"center", justifyContent:"center" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{
+              width: 28, height: 28, background: "rgba(253,230,138,0.1)", borderRadius: 8,
+              display: "flex", alignItems: "center", justifyContent: "center"
+            }}>
               <ImageIcon size={14} color="#fde68a" />
             </div>
-            <span style={{ color:"#fde68a", fontWeight:800, fontSize:14 }}>Foto Profil</span>
+            <span style={{ color: "#fde68a", fontWeight: 800, fontSize: 14 }}>Foto Profil</span>
           </div>
           <button onClick={onClose} style={{
-            background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.1)",
-            borderRadius:7, width:28, height:28, cursor:"pointer",
-            display:"flex", alignItems:"center", justifyContent:"center",
-            color:"rgba(253,230,138,0.5)"
+            background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)",
+            borderRadius: 7, width: 28, height: 28, cursor: "pointer",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            color: "rgba(253,230,138,0.5)"
           }} aria-label="Tutup"><X size={14} /></button>
         </div>
 
-        <div style={{ position:"relative" }}>
-          <div style={{ position:"absolute", inset:-6, borderRadius:"50%",
-            background:"linear-gradient(135deg,rgba(253,230,138,0.25),transparent)",
-            filter:"blur(8px)" }} />
+        <div style={{ position: "relative" }}>
+          <div style={{
+            position: "absolute", inset: -6, borderRadius: "50%",
+            background: "linear-gradient(135deg,rgba(253,230,138,0.25),transparent)",
+            filter: "blur(8px)"
+          }} />
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={src} alt={name} style={{
-            width:190, height:190, borderRadius:"50%", objectFit:"cover",
-            border:"3px solid rgba(253,230,138,0.4)",
-            boxShadow:"0 12px 40px rgba(0,0,0,0.5)", display:"block", position:"relative",
+            width: 190, height: 190, borderRadius: "50%", objectFit: "cover",
+            border: "3px solid rgba(253,230,138,0.4)",
+            boxShadow: "0 12px 40px rgba(0,0,0,0.5)", display: "block", position: "relative",
           }} />
         </div>
 
-        <div style={{ textAlign:"center" }}>
-          <p style={{ margin:0, color:"#fde68a", fontWeight:800, fontSize:16 }}>{name}</p>
-          <p style={{ margin:"5px 0 0", color:"#a07858", fontSize:12 }}>Administrator · Institut Shanti Bhuana</p>
+        <div style={{ textAlign: "center" }}>
+          <p style={{ margin: 0, color: "#fde68a", fontWeight: 800, fontSize: 16 }}>{name}</p>
+          <p style={{ margin: "5px 0 0", color: "#a07858", fontSize: 12 }}>Administrator · Institut Shanti Bhuana</p>
         </div>
 
-        <div style={{ display:"flex", gap:8, width:"100%" }}>
-          <button className={styles.modalBtnCancel} onClick={onClose} style={{ flex:1 }}>Tutup</button>
-          <button className={styles.modalBtnSave}   onClick={onEdit}  style={{ flex:1, justifyContent:"center" }}>
+        <div style={{ display: "flex", gap: 8, width: "100%" }}>
+          <button className={styles.modalBtnCancel} onClick={onClose} style={{ flex: 1 }}>Tutup</button>
+          <button className={styles.modalBtnSave} onClick={onEdit} style={{ flex: 1, justifyContent: "center" }}>
             <Camera size={14} /> Ganti Foto
           </button>
         </div>
@@ -147,49 +152,48 @@ export default function ProfilePage() {
   const router = useRouter();
   const { toast, show: showToast, hide: hideToast } = useToast();
 
-  const [loading,      setLoading]      = useState(true);
-  const [profileData,  setProfileData]  = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [profileData, setProfileData] = useState(null);
 
   /* ── Avatar ── */
-  const [avatarSrc,       setAvatarSrc]       = useState("/img/avatar.jpg");
-  const [showViewer,      setShowViewer]       = useState(false);
-  const [showUploader,    setShowUploader]     = useState(false);
-  const [avatarFile,      setAvatarFile]       = useState(null);
-  const [avatarPreview,   setAvatarPreview]    = useState(null);
-  const [uploadingAvatar, setUploadingAvatar]  = useState(false);
-  const [draggingAvatar,  setDraggingAvatar]   = useState(false);
+  const [avatarSrc, setAvatarSrc] = useState("/img/avatar.jpg");
+  const [showViewer, setShowViewer] = useState(false);
+  const [showUploader, setShowUploader] = useState(false);
+  const [avatarFile, setAvatarFile] = useState(null);
+  const [avatarPreview, setAvatarPreview] = useState(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [draggingAvatar, setDraggingAvatar] = useState(false);
   const avatarInputRef = useRef(null);
 
   /* ── Username ── */
-  const [username,       setUsername]       = useState("");
+  const [username, setUsername] = useState("");
   const [usernameSaving, setUsernameSaving] = useState(false);
 
   /* ── Email ── */
-  const [email,       setEmail]       = useState("");
+  const [email, setEmail] = useState("");
   const [emailSaving, setEmailSaving] = useState(false);
 
   /* ── Password ── */
   const [pwCurrent, setPwCurrent] = useState("");
-  const [pwNew,     setPwNew]     = useState("");
+  const [pwNew, setPwNew] = useState("");
   const [pwConfirm, setPwConfirm] = useState("");
   const [showPwCur, setShowPwCur] = useState(false);
   const [showPwNew, setShowPwNew] = useState(false);
   const [showPwCon, setShowPwCon] = useState(false);
-  const [pwSaving,  setPwSaving]  = useState(false);
+  const [pwSaving, setPwSaving] = useState(false);
 
   /* ════════════════════════════════════════
-     Load profile dari API
+     Load profil dari API
   ════════════════════════════════════════ */
   useEffect(() => {
     (async () => {
       try {
-        const res  = await (async () => { const { getProfile } = await import("@/lib/api"); const d = await getProfile(); return { ok: true, json: async () => d }; })();
-        if (!res.ok) { router.replace("/"); return; }
-        const data = await res.json();
+        const data = await getProfile();
+        if (!data) { router.replace("/"); return; }
         setProfileData(data);
         setEmail(data.email ?? "");
         setUsername(data.username ?? "");
-        if (data.avatar) setAvatarSrc(data.avatar);
+        if (data.avatar) setAvatarSrc(getAvatarUrl(data.avatar));
       } catch {
         router.replace("/");
       } finally {
@@ -199,8 +203,8 @@ export default function ProfilePage() {
   }, [router]);
 
   /* ── Avatar helpers ── */
-  const ACCEPTED = ["image/jpeg","image/png","image/webp","image/gif"];
-  const MAX_MB   = 2;
+  const ACCEPTED = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+  const MAX_MB = 2;
 
   function processAvatarFile(file) {
     if (!ACCEPTED.includes(file.type)) {
@@ -228,17 +232,20 @@ export default function ProfilePage() {
       const form = new FormData();
       form.append("avatar", avatarFile, avatarFile.name);
 
-      const { uploadAvatar } = await import("@/lib/api");
       const result = await uploadAvatar(form);
-      if (!result.ok) { showToast(result.data?.error ?? "Gagal mengunggah foto.", "error"); return; }
+      if (!result.ok) {
+        showToast(result.data?.error ?? "Gagal mengunggah foto.", "error");
+        return;
+      }
 
-      setAvatarSrc(result.data.avatar);
+      const newAvatarUrl = getAvatarUrl(result.data.avatar);
+      setAvatarSrc(newAvatarUrl);
       cancelAvatarSelect();
       setShowUploader(false);
       showToast("Foto profil berhasil diperbarui.");
 
-      // ── Sync avatar ke topbar layout ──
-      window.dispatchEvent(new CustomEvent("avatar:updated", { detail: { avatar: data.avatar } }));
+      // Sync avatar ke topbar layout
+      window.dispatchEvent(new CustomEvent("avatar:updated", { detail: { avatar: newAvatarUrl } }));
     } catch {
       showToast("Gagal mengunggah foto. Coba lagi.", "error");
     } finally {
@@ -261,13 +268,10 @@ export default function ProfilePage() {
     }
     setUsernameSaving(true);
     try {
-      const { updateProfile } = await import("@/lib/api");
       const { ok, data } = await updateProfile({ action: "username", username: trimmed });
       if (!ok) { showToast(data.error ?? "Gagal memperbarui username.", "error"); return; }
       setProfileData((prev) => prev ? { ...prev, username: trimmed } : prev);
       showToast("Username berhasil diperbarui.");
-
-      // ── Sync username ke topbar layout ──
       window.dispatchEvent(new CustomEvent("profile:updated", { detail: { username: trimmed } }));
     } catch {
       showToast("Gagal memperbarui username. Coba lagi.", "error");
@@ -286,7 +290,6 @@ export default function ProfilePage() {
     }
     setEmailSaving(true);
     try {
-      const { updateProfile } = await import("@/lib/api");
       const { ok, data } = await updateProfile({ action: "email", email: trimmed });
       if (!ok) { showToast(data.error ?? "Gagal memperbarui email.", "error"); return; }
       setProfileData((prev) => prev ? { ...prev, email: trimmed } : prev);
@@ -302,15 +305,14 @@ export default function ProfilePage() {
   async function handlePasswordSave(e) {
     e.preventDefault();
     if (pwSaving) return;
-    if (!pwCurrent)          { showToast("Masukkan password saat ini.", "error"); return; }
-    if (pwNew.length < 8)    { showToast("Password baru minimal 8 karakter.", "error"); return; }
+    if (!pwCurrent) { showToast("Masukkan password saat ini.", "error"); return; }
+    if (pwNew.length < 8) { showToast("Password baru minimal 8 karakter.", "error"); return; }
     if (pwNew !== pwConfirm) { showToast("Konfirmasi password tidak cocok.", "error"); return; }
     if (getStrength(pwNew).score < 2) {
       showToast("Password terlalu lemah. Tambahkan huruf besar, angka, atau simbol.", "error"); return;
     }
     setPwSaving(true);
     try {
-      const { updateProfile } = await import("@/lib/api");
       const { ok, data } = await updateProfile({ action: "password", currentPassword: pwCurrent, newPassword: pwNew });
       if (!ok) { showToast(data.error ?? "Gagal memperbarui password.", "error"); return; }
       setPwCurrent(""); setPwNew(""); setPwConfirm("");
@@ -322,13 +324,13 @@ export default function ProfilePage() {
     }
   }
 
-  const pwMatch    = pwConfirm && pwNew === pwConfirm;
+  const pwMatch = pwConfirm && pwNew === pwConfirm;
   const pwMismatch = pwConfirm && pwNew !== pwConfirm;
 
-  const displayName  = profileData?.nama_admin ?? profileData?.username ?? "Admin";
+  const displayName = profileData?.nama_admin ?? profileData?.username ?? "Admin";
   const displayEmail = profileData?.email ?? "-";
-  const joinedDate   = profileData?.created_at
-    ? new Date(profileData.created_at).toLocaleDateString("id-ID", { month:"long", year:"numeric" })
+  const joinedDate = profileData?.created_at
+    ? new Date(profileData.created_at).toLocaleDateString("id-ID", { month: "long", year: "numeric" })
     : "-";
 
   if (loading) {
@@ -360,13 +362,13 @@ export default function ProfilePage() {
             <button
               onClick={() => router.back()}
               style={{
-                background:"none", border:"1.5px solid #e8d5c4", borderRadius:10,
-                width:38, height:38, display:"flex", alignItems:"center",
-                justifyContent:"center", cursor:"pointer", color:"#9e7b5e",
-                flexShrink:0, transition:"all 0.15s",
+                background: "none", border: "1.5px solid #e8d5c4", borderRadius: 10,
+                width: 38, height: 38, display: "flex", alignItems: "center",
+                justifyContent: "center", cursor: "pointer", color: "#9e7b5e",
+                flexShrink: 0, transition: "all 0.15s",
               }}
-              onMouseEnter={e => { e.currentTarget.style.background="#f5ece4"; e.currentTarget.style.color="#765439"; }}
-              onMouseLeave={e => { e.currentTarget.style.background="none"; e.currentTarget.style.color="#9e7b5e"; }}
+              onMouseEnter={e => { e.currentTarget.style.background = "#f5ece4"; e.currentTarget.style.color = "#765439"; }}
+              onMouseLeave={e => { e.currentTarget.style.background = "none"; e.currentTarget.style.color = "#9e7b5e"; }}
               aria-label="Kembali"
             ><ArrowLeft size={16} /></button>
             <div className={styles.pageTitleIcon}><User size={22} /></div>
@@ -379,9 +381,7 @@ export default function ProfilePage() {
 
         <div className={styles.grid}>
 
-          {/* ══════════════════════════════
-              LEFT — Avatar Card
-          ══════════════════════════════ */}
+          {/* LEFT — Avatar Card */}
           <div className={styles.avatarCard}>
             <div className={styles.avatarSection}>
               <div className={styles.avatarBgCircle1} />
@@ -390,12 +390,12 @@ export default function ProfilePage() {
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={avatarSrc} alt="Foto Profil" className={styles.avatarImg}
-                  onClick={() => setShowViewer(true)} style={{ cursor:"pointer" }}
+                  onClick={() => setShowViewer(true)} style={{ cursor: "pointer" }}
                   title="Klik untuk melihat foto penuh"
                 />
                 <button className={styles.cameraBtn}
                   onClick={() => setShowUploader((v) => !v)}
-                  aria-label="Ganti foto profil" title="Ganti foto profil">
+                  aria-label="Ganti foto profil">
                   <Camera size={14} />
                 </button>
               </div>
@@ -420,43 +420,45 @@ export default function ProfilePage() {
                       role="button" tabIndex={0}
                       onKeyDown={(e) => e.key === "Enter" && avatarInputRef.current?.click()}
                       style={{
-                        border:`1.5px dashed ${draggingAvatar ? "#765439" : "#d5bfaf"}`,
-                        borderRadius:12, padding:"18px 12px",
-                        display:"flex", flexDirection:"column", alignItems:"center", gap:6,
-                        cursor:"pointer", background: draggingAvatar ? "#fdf3ec" : "#fdf8f4",
-                        transition:"all 0.2s", width:"100%", boxSizing:"border-box",
+                        border: `1.5px dashed ${draggingAvatar ? "#765439" : "#d5bfaf"}`,
+                        borderRadius: 12, padding: "18px 12px",
+                        display: "flex", flexDirection: "column", alignItems: "center", gap: 6,
+                        cursor: "pointer", background: draggingAvatar ? "#fdf3ec" : "#fdf8f4",
+                        transition: "all 0.2s", width: "100%", boxSizing: "border-box",
                       }}
                     >
-                      <div style={{ width:38, height:38, background:"linear-gradient(135deg,#fde8cc,#f5d0a0)",
-                        borderRadius:10, display:"flex", alignItems:"center", justifyContent:"center" }}>
+                      <div style={{
+                        width: 38, height: 38, background: "linear-gradient(135deg,#fde8cc,#f5d0a0)",
+                        borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center",
+                      }}>
                         <Upload size={18} color="#765439" />
                       </div>
-                      <span style={{ fontSize:13, color:"#5c3317", fontWeight:600, textAlign:"center" }}>
+                      <span style={{ fontSize: 13, color: "#5c3317", fontWeight: 600, textAlign: "center" }}>
                         {draggingAvatar ? "Lepaskan di sini…" : "Klik atau seret foto"}
                       </span>
-                      <span style={{ fontSize:11, color:"#b09880" }}>JPG, PNG, WebP, GIF · maks. 2 MB</span>
+                      <span style={{ fontSize: 11, color: "#b09880" }}>JPG, PNG, WebP, GIF · maks. 2 MB</span>
                     </div>
                     <input ref={avatarInputRef} type="file"
-                      accept="image/jpeg,image/png,image/webp,image/gif" style={{ display:"none" }}
+                      accept="image/jpeg,image/png,image/webp,image/gif" style={{ display: "none" }}
                       onChange={(e) => { const f = e.target.files?.[0]; if (f) processAvatarFile(f); }} />
                     <button
-                      style={{ background:"none", border:"none", cursor:"pointer", color:"#b09880", fontSize:12, marginTop:2 }}
+                      style={{ background: "none", border: "none", cursor: "pointer", color: "#b09880", fontSize: 12, marginTop: 2 }}
                       onClick={() => setShowUploader(false)}>
                       Batal
                     </button>
                   </>
                 ) : (
                   <div className={styles.fileSelected}>
-                    <div style={{ display:"flex", justifyContent:"center", marginBottom:4 }}>
+                    <div style={{ display: "flex", justifyContent: "center", marginBottom: 4 }}>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={avatarPreview} alt="preview" style={{
-                        width:80, height:80, borderRadius:"50%", objectFit:"cover",
-                        border:"2.5px solid #e8d5c4", boxShadow:"0 4px 14px rgba(118,84,57,0.18)",
+                        width: 80, height: 80, borderRadius: "50%", objectFit: "cover",
+                        border: "2.5px solid #e8d5c4", boxShadow: "0 4px 14px rgba(118,84,57,0.18)",
                       }} />
                     </div>
                     <div className={styles.fileInfo}>
                       <span>{avatarFile.name}</span>
-                      <span className={styles.fileSize}>{(avatarFile.size/1024).toFixed(0)} KB</span>
+                      <span className={styles.fileSize}>{(avatarFile.size / 1024).toFixed(0)} KB</span>
                     </div>
                     <div className={styles.uploadActions}>
                       <button className={styles.btnUpload} onClick={handleAvatarUpload} disabled={uploadingAvatar}>
@@ -493,9 +495,7 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* ══════════════════════════════
-              RIGHT — Forms
-          ══════════════════════════════ */}
+          {/* RIGHT — Forms */}
           <div className={styles.formsCol}>
 
             {/* Username Form */}
@@ -512,16 +512,9 @@ export default function ProfilePage() {
                   <label className={styles.label} htmlFor="username">Username</label>
                   <div className={styles.inputWrap}>
                     <AtSign size={15} className={styles.inputIcon} />
-                    <input
-                      id="username"
-                      type="text"
-                      className={styles.input}
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value)}
-                      placeholder="Contoh: admin_isb"
-                      autoComplete="username"
-                      required
-                    />
+                    <input id="username" type="text" className={styles.input}
+                      value={username} onChange={(e) => setUsername(e.target.value)}
+                      placeholder="Contoh: admin_isb" autoComplete="username" required />
                   </div>
                   <p style={{ margin: "2px 0 0", fontSize: 11.5, color: "#b09880" }}>
                     Hanya huruf, angka, dan underscore (_). Minimal 3 karakter.
@@ -585,9 +578,8 @@ export default function ProfilePage() {
                       className={styles.input} value={pwCurrent}
                       onChange={(e) => setPwCurrent(e.target.value)}
                       placeholder="Masukkan password saat ini" autoComplete="current-password" />
-                    <button type="button" className={styles.eyeBtn}
-                      onClick={() => setShowPwCur((v) => !v)}>
-                      {showPwCur ? <EyeOff size={15}/> : <Eye size={15}/>}
+                    <button type="button" className={styles.eyeBtn} onClick={() => setShowPwCur((v) => !v)}>
+                      {showPwCur ? <EyeOff size={15} /> : <Eye size={15} />}
                     </button>
                   </div>
                 </div>
@@ -601,9 +593,8 @@ export default function ProfilePage() {
                         className={styles.input} value={pwNew}
                         onChange={(e) => setPwNew(e.target.value)}
                         placeholder="Min. 8 karakter" autoComplete="new-password" />
-                      <button type="button" className={styles.eyeBtn}
-                        onClick={() => setShowPwNew((v) => !v)}>
-                        {showPwNew ? <EyeOff size={15}/> : <Eye size={15}/>}
+                      <button type="button" className={styles.eyeBtn} onClick={() => setShowPwNew((v) => !v)}>
+                        {showPwNew ? <EyeOff size={15} /> : <Eye size={15} />}
                       </button>
                     </div>
                     <StrengthBar password={pwNew} />
@@ -612,47 +603,48 @@ export default function ProfilePage() {
                   <div className={styles.fieldGroup}>
                     <label className={styles.label} htmlFor="pw-confirm">Konfirmasi Password</label>
                     <div className={styles.inputWrap} style={
-                      pwMatch    ? { borderColor:"#22c55e", boxShadow:"0 0 0 3px rgba(34,197,94,0.12)" } :
-                      pwMismatch ? { borderColor:"#ef4444", boxShadow:"0 0 0 3px rgba(239,68,68,0.12)" } : {}
+                      pwMatch ? { borderColor: "#22c55e", boxShadow: "0 0 0 3px rgba(34,197,94,0.12)" } :
+                        pwMismatch ? { borderColor: "#ef4444", boxShadow: "0 0 0 3px rgba(239,68,68,0.12)" } : {}
                     }>
                       <Lock size={15} className={styles.inputIcon} />
                       <input id="pw-confirm" type={showPwCon ? "text" : "password"}
                         className={styles.input} value={pwConfirm}
                         onChange={(e) => setPwConfirm(e.target.value)}
                         placeholder="Ulangi password baru" autoComplete="new-password" />
-                      <button type="button" className={styles.eyeBtn}
-                        onClick={() => setShowPwCon((v) => !v)}>
-                        {showPwCon ? <EyeOff size={15}/> : <Eye size={15}/>}
+                      <button type="button" className={styles.eyeBtn} onClick={() => setShowPwCon((v) => !v)}>
+                        {showPwCon ? <EyeOff size={15} /> : <Eye size={15} />}
                       </button>
                     </div>
-                    {pwMatch    && <div className={styles.matchHint} style={{ color:"#16a34a" }}><Check size={13}/> Password cocok</div>}
-                    {pwMismatch && <div className={styles.matchHint} style={{ color:"#dc2626" }}><X size={13}/> Password tidak cocok</div>}
+                    {pwMatch && <div className={styles.matchHint} style={{ color: "#16a34a" }}><Check size={13} /> Password cocok</div>}
+                    {pwMismatch && <div className={styles.matchHint} style={{ color: "#dc2626" }}><X size={13} /> Password tidak cocok</div>}
                   </div>
                 </div>
 
                 {/* Tips checklist */}
-                <div style={{ background:"#fdf8f4", border:"1px solid #f0e0cc", borderRadius:10, padding:"12px 14px" }}>
-                  <p style={{ margin:"0 0 8px", fontSize:11.5, fontWeight:700, color:"#765439",
-                    textTransform:"uppercase", letterSpacing:"0.05em" }}>
+                <div style={{ background: "#fdf8f4", border: "1px solid #f0e0cc", borderRadius: 10, padding: "12px 14px" }}>
+                  <p style={{
+                    margin: "0 0 8px", fontSize: 11.5, fontWeight: 700, color: "#765439",
+                    textTransform: "uppercase", letterSpacing: "0.05em"
+                  }}>
                     Tips Password Kuat
                   </p>
                   {[
-                    { ok: pwNew.length >= 8,           text: "Minimal 8 karakter" },
-                    { ok: /[A-Z]/.test(pwNew),         text: "Mengandung huruf kapital (A–Z)" },
-                    { ok: /[0-9]/.test(pwNew),         text: "Mengandung angka (0–9)" },
-                    { ok: /[^A-Za-z0-9]/.test(pwNew),  text: "Mengandung simbol (!@#$…)" },
+                    { ok: pwNew.length >= 8, text: "Minimal 8 karakter" },
+                    { ok: /[A-Z]/.test(pwNew), text: "Mengandung huruf kapital (A–Z)" },
+                    { ok: /[0-9]/.test(pwNew), text: "Mengandung angka (0–9)" },
+                    { ok: /[^A-Za-z0-9]/.test(pwNew), text: "Mengandung simbol (!@#$…)" },
                   ].map((tip, i) => (
-                    <div key={i} style={{ display:"flex", alignItems:"center", gap:7, marginTop:5 }}>
+                    <div key={i} style={{ display: "flex", alignItems: "center", gap: 7, marginTop: 5 }}>
                       <div style={{
-                        width:16, height:16, borderRadius:"50%",
+                        width: 16, height: 16, borderRadius: "50%",
                         background: tip.ok && pwNew ? "#dcfce7" : "#f5e8e0",
-                        display:"flex", alignItems:"center", justifyContent:"center",
-                        flexShrink:0, transition:"background 0.25s",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        flexShrink: 0, transition: "background 0.25s",
                       }}>
-                        {tip.ok && pwNew ? <Check size={10} color="#16a34a"/> : <X size={9} color="#c8945a"/>}
+                        {tip.ok && pwNew ? <Check size={10} color="#16a34a" /> : <X size={9} color="#c8945a" />}
                       </div>
                       <span style={{
-                        fontSize:12, transition:"color 0.25s",
+                        fontSize: 12, transition: "color 0.25s",
                         color: tip.ok && pwNew ? "#16a34a" : "#9e7b5e",
                         fontWeight: tip.ok && pwNew ? 600 : 400,
                       }}>{tip.text}</span>
@@ -661,9 +653,7 @@ export default function ProfilePage() {
                 </div>
 
                 <div className={styles.formFooter}>
-                  <button type="submit"
-                    className={`${styles.btnPrimary} ${styles.btnDanger}`}
-                    disabled={pwSaving}>
+                  <button type="submit" className={`${styles.btnPrimary} ${styles.btnDanger}`} disabled={pwSaving}>
                     {pwSaving
                       ? <><Loader2 size={15} className={styles.spin} /> Menyimpan…</>
                       : <><KeyRound size={15} /> Perbarui Password</>}

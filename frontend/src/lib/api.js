@@ -7,20 +7,26 @@
  * 3. Frontend tetap bisa jalan walaupun tanpa backend
  */
 
-// ── Base URL dari environment variable ──────────────────────
-// Isi di .env.local:  NEXT_PUBLIC_API_URL=http://localhost:5000
-// Kalau kosong → pakai mock mode otomatis
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "";
 
-// ── Flag: apakah mode mock sedang aktif ─────────────────────
+/**
+ * Konversi path avatar relatif → URL lengkap ke backend.
+ * Contoh: "/uploads/avatars/foto.jpg" → "http://localhost:5000/uploads/avatars/foto.jpg"
+ */
+export function getAvatarUrl(path) {
+  if (!path) return "/img/avatar.jpg";
+  if (path.startsWith("http://") || path.startsWith("https://")) return path;
+  if (path.startsWith("/uploads/") && API_URL) return `${API_URL}${path}`;
+  return path;
+}
+
 let _mockMode = false;
 export function isMockMode() { return _mockMode; }
 
-// ── Wrapper fetch ke backend ─────────────────────────────────
 export async function apiFetch(path, options = {}) {
   const url = `${API_URL}${path}`;
   return fetch(url, {
-    credentials: "include",      // wajib agar cookie JWT terkirim
+    credentials: "include",
     ...options,
     headers: {
       "Content-Type": "application/json",
@@ -29,20 +35,15 @@ export async function apiFetch(path, options = {}) {
   });
 }
 
-// ── Versi khusus untuk FormData (avatar upload) ──────────────
 export async function apiFetchForm(path, formData) {
   const url = `${API_URL}${path}`;
   return fetch(url, {
     method: "POST",
     credentials: "include",
     body: formData,
-    // JANGAN set Content-Type, biarkan browser isi boundary
   });
 }
 
-// ════════════════════════════════════════════════════════════
-//  MOCK DATA — dipakai saat backend tidak aktif
-// ════════════════════════════════════════════════════════════
 const MOCK_USER = {
   user: { user_id: 1, username: "admin_demo", email: "admin@isb.ac.id" },
   admin: {
@@ -63,22 +64,12 @@ const MOCK_PROFILE = {
   created_at: "2026-01-01T00:00:00.000Z",
 };
 
-// ════════════════════════════════════════════════════════════
-//  API METHODS — tiap method punya fallback mock-nya sendiri
-// ════════════════════════════════════════════════════════════
-
-/** Login — kembalikan { ok, error } */
 export async function login(username, password) {
-  // Kalau tidak ada API_URL, langsung mock mode
   if (!API_URL) {
     _mockMode = true;
-    // Mock: hanya terima "admin" / "admin123"
-    if (username === "admin" && password === "admin123") {
-      return { ok: true };
-    }
+    if (username === "admin" && password === "admin123") return { ok: true };
     return { ok: false, error: "Username atau password salah (mode demo)" };
   }
-
   try {
     const res  = await apiFetch("/api/auth/login", {
       method: "POST",
@@ -88,25 +79,18 @@ export async function login(username, password) {
     if (res.ok) { _mockMode = false; return { ok: true }; }
     return { ok: false, error: data.error || "Login gagal" };
   } catch {
-    // Backend tidak aktif → mock login
     _mockMode = true;
-    if (username === "admin" && password === "admin123") {
-      return { ok: true };
-    }
+    if (username === "admin" && password === "admin123") return { ok: true };
     return { ok: false, error: "Server tidak aktif. Gunakan admin / admin123 untuk demo." };
   }
 }
 
-/** Logout */
 export async function logout() {
   if (_mockMode || !API_URL) return;
-  try {
-    await apiFetch("/api/auth/logout", { method: "POST" });
-  } catch { /* abaikan */ }
+  try { await apiFetch("/api/auth/logout", { method: "POST" }); } catch {}
   _mockMode = false;
 }
 
-/** Cek sesi aktif — kembalikan data user atau null */
 export async function getMe() {
   if (_mockMode || !API_URL) return MOCK_USER;
   try {
@@ -119,7 +103,6 @@ export async function getMe() {
   }
 }
 
-/** Ambil profil admin */
 export async function getProfile() {
   if (_mockMode || !API_URL) return MOCK_PROFILE;
   try {
@@ -132,7 +115,6 @@ export async function getProfile() {
   }
 }
 
-/** Update profil (username / email / password) */
 export async function updateProfile(payload) {
   if (_mockMode || !API_URL) {
     return { ok: true, data: { success: true, message: "Tersimpan (mode demo)" } };
@@ -150,7 +132,6 @@ export async function updateProfile(payload) {
   }
 }
 
-/** Upload avatar */
 export async function uploadAvatar(formData) {
   if (_mockMode || !API_URL) {
     return { ok: true, data: { success: true, avatar: "/img/avatar.jpg" } };
@@ -165,10 +146,8 @@ export async function uploadAvatar(formData) {
   }
 }
 
-/** List mahasiswa (dengan fallback mock) */
 export async function getMahasiswa({ q = "", prodi = "Semua", page = 1 } = {}) {
-  if (_mockMode || !API_URL) return null; // halaman mahasiswa punya mock sendiri
-
+  if (_mockMode || !API_URL) return null;
   try {
     const params = new URLSearchParams({ q, prodi, page });
     const res    = await apiFetch(`/api/mahasiswa?${params}`);
