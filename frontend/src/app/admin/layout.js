@@ -15,10 +15,10 @@ import { getMe, logout as apiLogout, uploadAvatar, isMockMode, getAvatarUrl } fr
 function AvatarEditorModal({ currentSrc, onClose, onSave }) {
   const [preview, setPreview] = useState(null);
   const [dragging, setDragging] = useState(false);
-  const [error, setError]     = useState("");
-  const [saving, setSaving]   = useState(false);
+  const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
   const inputRef = useRef(null);
-  const ACCEPTED = ["image/jpeg","image/png","image/webp","image/gif"];
+  const ACCEPTED = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 
   function processFile(file) {
     setError("");
@@ -97,17 +97,17 @@ function AvatarEditorModal({ currentSrc, onClose, onSave }) {
 }
 
 export default function AdminLayout({ children }) {
-  const [collapsed,  setCollapsed]  = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
-  const [checking,   setChecking]   = useState(true);
+  const [checking, setChecking] = useState(true);
   const [showEditor, setShowEditor] = useState(false);
-  const [mockMode,   setMockMode]   = useState(false);
+  const [mockMode, setMockMode] = useState(false);
 
   const [avatarSrc, setAvatarSrc] = useState("/img/avatar.jpg");
   const [adminName, setAdminName] = useState("Admin");
   const [adminRole, setAdminRole] = useState("Administrator");
 
-  const router   = useRouter();
+  const router = useRouter();
   const pathname = usePathname();
 
   useEffect(() => {
@@ -128,24 +128,24 @@ export default function AdminLayout({ children }) {
   }, [router, pathname]);
 
   useEffect(() => {
-    function onAvatarUpdated(e)  { if (e.detail?.avatar)     setAvatarSrc(e.detail.avatar); }
+    function onAvatarUpdated(e) { if (e.detail?.avatar) setAvatarSrc(e.detail.avatar); }
     function onProfileUpdated(e) {
-      if (e.detail?.username)   setAdminName(e.detail.username);
+      if (e.detail?.username) setAdminName(e.detail.username);
       if (e.detail?.nama_admin) setAdminName(e.detail.nama_admin);
     }
-    window.addEventListener("avatar:updated",  onAvatarUpdated);
+    window.addEventListener("avatar:updated", onAvatarUpdated);
     window.addEventListener("profile:updated", onProfileUpdated);
     return () => {
-      window.removeEventListener("avatar:updated",  onAvatarUpdated);
+      window.removeEventListener("avatar:updated", onAvatarUpdated);
       window.removeEventListener("profile:updated", onProfileUpdated);
     };
   }, []);
 
   const navItems = [
-    { href: "/admin/dashboard",     label: "Dashboard",     icon: LayoutDashboard },
-    { href: "/admin/mahasiswa",     label: "Mahasiswa",     icon: Users },
-    { href: "/admin/master-data",   label: "Master Data",   icon: Settings },
-    { href: "/admin/aktivitas",     label: "Aktivitas",     icon: BookOpen },
+    { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/admin/mahasiswa", label: "Mahasiswa", icon: Users },
+    { href: "/admin/master-data", label: "Master Data", icon: Settings },
+    { href: "/admin/aktivitas", label: "Aktivitas", icon: BookOpen },
     { href: "/admin/template-skpi", label: "Template SKPI", icon: FileText },
     { href: "/admin/generate-skpi", label: "Generate SKPI", icon: Award },
   ];
@@ -155,7 +155,7 @@ export default function AdminLayout({ children }) {
     setLoggingOut(true);
     await apiLogout();
     router.replace("/");
-    setTimeout(() => { try { window.location.replace("/"); } catch {} }, 200);
+    setTimeout(() => { try { window.location.replace("/"); } catch { } }, 200);
   }
 
   const handleAvatarSave = useCallback((newUrl) => {
@@ -163,8 +163,8 @@ export default function AdminLayout({ children }) {
     setShowEditor(false);
   }, []);
 
-  const activeNav  = navItems.find(n => pathname.startsWith(n.href));
-  const isProfile  = pathname.startsWith("/admin/profile");
+  const activeNav = navItems.find(n => pathname.startsWith(n.href));
+  const isProfile = pathname.startsWith("/admin/profile");
   const breadcrumb = isProfile ? "Profile" : (activeNav ? activeNav.label : "Dashboard");
 
   if (checking) {
@@ -175,7 +175,7 @@ export default function AdminLayout({ children }) {
       </div>
     );
   }
-
+  
   return (
     <div className={styles.wrapper}>
       {mockMode && (
@@ -260,7 +260,7 @@ export default function AdminLayout({ children }) {
             </div>
           </div>
         </header>
-
+        
         <main className={styles.content}>{children}</main>
       </div>
     </div>

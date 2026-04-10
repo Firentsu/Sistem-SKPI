@@ -11,7 +11,8 @@ import {
   AlertCircle, X, Wifi, WifiOff,
 } from "lucide-react";
 import Image from "next/image";
-import { login, isMockMode } from "@/lib/api";
+// ↓ Tambah import loginMahasiswa — satu-satunya perubahan di baris import
+import { login, loginMahasiswa, isMockMode } from "@/lib/api";
 
 // ── Toast Notification ────────────────────────────────────────
 function Toast({ message, onClose }) {
@@ -33,7 +34,7 @@ function Toast({ message, onClose }) {
   );
 }
 
-// ── Mode Demo Banner ──────────────────────────────────────────
+// ── Mode Demo Banner — tampilkan kredensial kedua role ────────
 function DemoBanner() {
   return (
     <div style={{
@@ -46,6 +47,9 @@ function DemoBanner() {
       <strong>Mode Demo</strong> — Backend tidak terdeteksi. Login dengan:
       <code style={{ background: "#fde68a", padding: "1px 6px", borderRadius: 4 }}>admin</code> /
       <code style={{ background: "#fde68a", padding: "1px 6px", borderRadius: 4 }}>admin123</code>
+      &nbsp;·&nbsp; atau mahasiswa:&nbsp;
+      <code style={{ background: "#fde68a", padding: "1px 6px", borderRadius: 4 }}>2021001</code> /
+      <code style={{ background: "#fde68a", padding: "1px 6px", borderRadius: 4 }}>mhs123</code>
     </div>
   );
 }
@@ -75,17 +79,34 @@ export default function Home() {
 
   const clearError = () => { setMessage(""); setShake(false); };
 
+  // ── handleLogin — deteksi role dari input ─────────────────
   async function handleLogin() {
     clearError();
     setLoadingLogin(true);
     try {
-      const result = await login(username.trim(), password);
-      if (result.ok) {
-        if (isMockMode()) setShowDemo(true);
-        window.location.href = "/admin/dashboard";
+      const input = username.trim();
+
+      // Jika input hanya angka → dianggap NIM mahasiswa
+      const isMahasiswa = /^\d+$/.test(input);
+
+      if (isMahasiswa) {
+        const result = await loginMahasiswa(input, password);
+        if (result.ok) {
+          if (isMockMode()) setShowDemo(true);
+          window.location.href = "/mahasiswa/dashboard";
+        } else {
+          triggerError(result.error || "Login gagal. Periksa NIM dan password.");
+          if (isMockMode()) setShowDemo(true);
+        }
       } else {
-        triggerError(result.error || "Login gagal. Periksa username dan password.");
-        if (isMockMode()) setShowDemo(true);
+        const result = await login(input, password);
+        if (result.ok) {
+          if (isMockMode()) setShowDemo(true);
+          window.location.href = "/admin/dashboard";
+        } else {
+          triggerError(result.error || "Login gagal. Periksa username dan password.");
+          if (isMockMode()) setShowDemo(true);
+        }
       }
     } finally {
       setLoadingLogin(false);

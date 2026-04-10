@@ -158,3 +158,168 @@ export async function getMahasiswa({ q = "", prodi = "Semua", page = 1 } = {}) {
     return null;
   }
 }
+
+// =============================================================================
+// MAHASISWA — Auth & Profile
+// Setiap fungsi adalah padanan 1-to-1 dari fungsi admin di atas,
+// sehingga layout & halaman mahasiswa bekerja dengan pola yang sama persis.
+// =============================================================================
+
+/** Mock sesi mahasiswa — dipakai saat backend tidak aktif */
+const MOCK_MAHASISWA_SESSION = {
+  user: { user_id: 2, username: "mhs_demo", email: "mhs@isb.ac.id", role: "mahasiswa" },
+  mahasiswa: {
+    id_mahasiswa: 1,
+    nim:          "2021001",
+    nama:         "Budi Santoso Demo",
+    email:        "mhs@isb.ac.id",
+    prodi:        "Teknik Informatika",
+    angkatan:     2021,
+    avatar:       "/img/avatar.jpg",
+  },
+};
+
+/** Mock profil mahasiswa — dipakai saat backend tidak aktif */
+const MOCK_MAHASISWA_PROFILE = {
+  id_mahasiswa: 1,
+  nim:          "2021001",
+  nama:         "Budi Santoso Demo",
+  email:        "mhs@isb.ac.id",
+  username:     "mhs_demo",
+  prodi:        "Teknik Informatika",
+  angkatan:     2021,
+  avatar:       "/img/avatar.jpg",
+  created_at:   "2026-01-01T00:00:00.000Z",
+};
+
+/**
+ * Login mahasiswa — padanan login() admin.
+ * Endpoint : POST /api/mahasiswa/auth/login
+ * Body     : { nim, password }
+ * Demo     : nim bebas + password "mhs123"
+ */
+export async function loginMahasiswa(nim, password) {
+  if (!API_URL) {
+    _mockMode = true;
+    if (password === "mhs123") return { ok: true };
+    return { ok: false, error: "NIM atau password salah (mode demo)" };
+  }
+  try {
+    const res  = await apiFetch("/api/mahasiswa/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ nim, password }),
+    });
+    const data = await res.json();
+    if (res.ok) { _mockMode = false; return { ok: true }; }
+    return { ok: false, error: data.error || "Login mahasiswa gagal" };
+  } catch {
+    _mockMode = true;
+    if (password === "mhs123") return { ok: true };
+    return { ok: false, error: "Server tidak aktif. Gunakan NIM terdaftar & password mhs123 untuk demo." };
+  }
+}
+
+/**
+ * Ambil sesi mahasiswa — padanan getMe() admin.
+ * Dipakai layout mahasiswa untuk auth-check pertama kali.
+ * Endpoint : GET /api/mahasiswa/auth/me
+ */
+export async function getMahasiswaMe() {
+  if (_mockMode || !API_URL) return MOCK_MAHASISWA_SESSION;
+  try {
+    const res = await apiFetch("/api/mahasiswa/auth/me");
+    if (res.ok) { _mockMode = false; return res.json(); }
+    return null;
+  } catch {
+    _mockMode = true;
+    return MOCK_MAHASISWA_SESSION;
+  }
+}
+
+/**
+ * Ambil profil mahasiswa yang sedang login — padanan getProfile() admin.
+ * Endpoint : GET /api/mahasiswa/auth/profile
+ */
+export async function getMahasiswaProfile() {
+  if (_mockMode || !API_URL) return MOCK_MAHASISWA_PROFILE;
+  try {
+    const res = await apiFetch("/api/mahasiswa/auth/profile");
+    if (res.ok) return res.json();
+    return MOCK_MAHASISWA_PROFILE;
+  } catch {
+    _mockMode = true;
+    return MOCK_MAHASISWA_PROFILE;
+  }
+}
+
+/**
+ * Update profil mahasiswa — padanan updateProfile() admin.
+ * Endpoint : PATCH /api/mahasiswa/auth/profile
+ */
+export async function updateMahasiswaProfile(payload) {
+  if (_mockMode || !API_URL) {
+    return { ok: true, data: { success: true, message: "Tersimpan (mode demo)" } };
+  }
+  try {
+    const res  = await apiFetch("/api/mahasiswa/auth/profile", {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    return { ok: res.ok, data };
+  } catch {
+    _mockMode = true;
+    return { ok: true, data: { success: true, message: "Tersimpan (mode demo)" } };
+  }
+}
+
+/**
+ * Upload avatar mahasiswa — padanan uploadAvatar() admin.
+ * Endpoint : POST /api/mahasiswa/auth/avatar
+ */
+export async function uploadMahasiswaAvatar(formData) {
+  if (_mockMode || !API_URL) {
+    return { ok: true, data: { success: true, avatar: "/img/avatar.jpg" } };
+  }
+  try {
+    const res  = await apiFetchForm("/api/mahasiswa/auth/avatar", formData);
+    const data = await res.json();
+    return { ok: res.ok, data };
+  } catch {
+    _mockMode = true;
+    return { ok: true, data: { success: true, avatar: "/img/avatar.jpg" } };
+  }
+}
+
+/**
+ * Logout mahasiswa — padanan logout() admin.
+ * Endpoint : POST /api/mahasiswa/auth/logout
+ */
+export async function logoutMahasiswa() {
+  if (_mockMode || !API_URL) return;
+  try { await apiFetch("/api/mahasiswa/auth/logout", { method: "POST" }); } catch {}
+}
+
+/**
+ * Ganti password mahasiswa.
+ * Endpoint : PATCH /api/mahasiswa/auth/password
+ * Body     : { password_lama, password_baru }
+ */
+export async function updateMahasiswaPassword({ password_lama, password_baru }) {
+  if (_mockMode || !API_URL) {
+    if (password_lama !== "mhs123")
+      return { ok: false, error: "Password lama salah (mode demo)" };
+    return { ok: true, data: { success: true, message: "Password berhasil diubah (mode demo)" } };
+  }
+  try {
+    const res  = await apiFetch("/api/mahasiswa/auth/password", {
+      method: "PATCH",
+      body: JSON.stringify({ password_lama, password_baru }),
+    });
+    const data = await res.json();
+    return { ok: res.ok, data };
+  } catch {
+    _mockMode = true;
+    return updateMahasiswaPassword({ password_lama, password_baru });
+  }
+}

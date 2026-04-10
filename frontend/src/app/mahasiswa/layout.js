@@ -1,46 +1,64 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState, useEffect, useRef, useCallback } from "react";
 import {
-  LayoutDashboard, UserCircle, FileText, History, Send, LogOut,
-  Menu, ChevronLeft, ChevronRight, Bell, Award,
-  Camera, X, Check, Upload,
+  LayoutDashboard, FileText, LogOut, Menu,
+  ChevronLeft, ChevronRight, Bell,
+  Camera, X, Check, Upload, WifiOff,
+  BookOpen, ClipboardList, User, History,
 } from "lucide-react";
 import styles from "./mahasiswa.module.css";
 import { useRouter, usePathname } from "next/navigation";
-import { MahasiswaProvider, useMahasiswa } from "@/context/MahasiswaContext";
+import { useMahasiswa, MahasiswaProvider } from "@/context/MahasiswaContext";
+import {
+  getMahasiswaMe,
+  logoutMahasiswa,
+  uploadMahasiswaAvatar,
+  isMockMode,
+  getAvatarUrl,
+} from "@/lib/api";
 
-// ── Menu mahasiswa ────────────────────────────────────────────
-const MENU_ITEMS = [
-  { href: "/mahasiswa/dashboard", label: "Dashboard",        icon: LayoutDashboard },
-  { href: "/mahasiswa/profile",   label: "Profil Saya",      icon: UserCircle },
-  { href: "/mahasiswa/kegiatan",  label: "Kegiatan Saya",    icon: FileText },
-  { href: "/mahasiswa/riwayat",   label: "Riwayat Kegiatan", icon: History },
-  { href: "/mahasiswa/pengajuan", label: "Pengajuan SKPI",   icon: Send },
-];
-
-// ── Avatar Editor Modal ───────────────────────────────────────
+// ─────────────────────────────────────────────
+// Modal Edit Foto Profil
+// ─────────────────────────────────────────────
 function AvatarEditorModal({ currentSrc, onClose, onSave }) {
-  const [preview, setPreview] = useState(null);
+  const [preview, setPreview]   = useState(null);
   const [dragging, setDragging] = useState(false);
-  const [error, setError]     = useState("");
-  const [saving, setSaving]   = useState(false);
+  const [error, setError]       = useState("");
+  const [saving, setSaving]     = useState(false);
   const inputRef = useRef(null);
   const ACCEPTED = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 
   function processFile(file) {
     setError("");
-    if (!ACCEPTED.includes(file.type)) { setError("Format tidak didukung. Gunakan JPG, PNG, WebP, atau GIF."); return; }
-    if (file.size > 2 * 1024 * 1024) { setError("Ukuran file maksimal 2 MB."); return; }
+    if (!ACCEPTED.includes(file.type)) {
+      setError("Format tidak didukung. Gunakan JPG, PNG, WebP, atau GIF.");
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      setError("Ukuran file maksimal 2 MB.");
+      return;
+    }
     setPreview(URL.createObjectURL(file));
   }
 
   async function handleSave() {
     if (!preview) return;
     setSaving(true);
-    // TODO: ganti dengan panggilan API upload avatar mahasiswa
-    setTimeout(() => { onSave(preview); setSaving(false); }, 1000);
+    try {
+      const blob = await fetch(preview).then((r) => r.blob());
+      const form = new FormData();
+      form.append("avatar", blob, "avatar.jpg");
+      const result = await uploadMahasiswaAvatar(form);
+      if (!result.ok) { setError(result.data?.error ?? "Gagal menyimpan foto."); return; }
+      onSave(getAvatarUrl(result.data.avatar));
+    } catch {
+      setError("Gagal menyimpan foto. Coba lagi.");
+    } finally {
+      setSaving(false);
+    }
   }
 
   useEffect(() => () => { if (preview) URL.revokeObjectURL(preview); }, [preview]);
@@ -52,19 +70,26 @@ function AvatarEditorModal({ currentSrc, onClose, onSave }) {
 
   return (
     <div className={styles.modalOverlay} onClick={onClose}>
-      <div className={styles.modal} onClick={e => e.stopPropagation()}>
+      <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
         <div className={styles.modalHeader}>
           <div className={styles.modalHeaderLeft}>
             <div className={styles.modalHeaderIcon}><Camera size={15} /></div>
             <span className={styles.modalTitle}>Edit Foto Profil</span>
           </div>
-          <button className={styles.modalClose} onClick={onClose} aria-label="Tutup"><X size={15} /></button>
+          <button className={styles.modalClose} onClick={onClose} aria-label="Tutup">
+            <X size={15} />
+          </button>
         </div>
+
         <div className={styles.modalPreviewRow}>
           <div className={styles.modalPreviewWrap}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={preview || currentSrc} alt="Preview" className={styles.modalPreviewImg} />
-            {preview && <button className={styles.modalPreviewClear} onClick={() => { setPreview(null); setError(""); }}><X size={10} /></button>}
+            {preview && (
+              <button className={styles.modalPreviewClear} onClick={() => { setPreview(null); setError(""); }}>
+                <X size={10} />
+              </button>
+            )}
             {preview && <div className={styles.modalPreviewBadge}><Check size={10} /> Baru</div>}
           </div>
           <div className={styles.modalPreviewInfo}>
@@ -72,25 +97,38 @@ function AvatarEditorModal({ currentSrc, onClose, onSave }) {
             <p className={styles.modalPreviewHint}>JPG, PNG, WebP, GIF · maks. 2 MB</p>
           </div>
         </div>
+
         <div
           className={`${styles.dropZone} ${dragging ? styles.dropZoneActive : ""}`}
-          onDragOver={e => { e.preventDefault(); setDragging(true); }}
+          onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
           onDragLeave={() => setDragging(false)}
-          onDrop={e => { e.preventDefault(); setDragging(false); const f = e.dataTransfer.files?.[0]; if (f) processFile(f); }}
+          onDrop={(e) => { e.preventDefault(); setDragging(false); const f = e.dataTransfer.files?.[0]; if (f) processFile(f); }}
           onClick={() => inputRef.current?.click()}
-          role="button" tabIndex={0} onKeyDown={e => e.key === "Enter" && inputRef.current?.click()}
+          role="button" tabIndex={0} onKeyDown={(e) => e.key === "Enter" && inputRef.current?.click()}
         >
           <div className={styles.dropIconWrap}><Upload size={20} className={styles.dropIcon} /></div>
           <span className={styles.dropText}>{dragging ? "Lepaskan di sini…" : "Klik atau seret foto ke sini"}</span>
           <span className={styles.dropSubText}>PNG, JPG, WebP hingga 2MB</span>
-          <input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif"
-            className={styles.fileInput} onChange={e => { const f = e.target.files?.[0]; if (f) processFile(f); }} />
+          <input
+            ref={inputRef} type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif"
+            className={styles.fileInput}
+            onChange={(e) => { const f = e.target.files?.[0]; if (f) processFile(f); }}
+          />
         </div>
-        {error && <div className={styles.modalErrorBox}><X size={13} /><p className={styles.modalError}>{error}</p></div>}
+
+        {error && (
+          <div className={styles.modalErrorBox}>
+            <X size={13} /><p className={styles.modalError}>{error}</p>
+          </div>
+        )}
+
         <div className={styles.modalActions}>
           <button className={styles.modalBtnCancel} onClick={onClose}>Batal</button>
           <button className={styles.modalBtnSave} onClick={handleSave} disabled={!preview || saving}>
-            {saving ? <><span className={styles.savingSpinner} /> Menyimpan…</> : <><Check size={14} /> Simpan Foto</>}
+            {saving
+              ? <><span className={styles.savingSpinner} /> Menyimpan…</>
+              : <><Check size={14} /> Simpan Foto</>}
           </button>
         </div>
       </div>
@@ -98,55 +136,96 @@ function AvatarEditorModal({ currentSrc, onClose, onSave }) {
   );
 }
 
-// ── Layout Content (pakai MahasiswaContext) ───────────────────
-function LayoutContent({ children }) {
-  const { user, prodiConfig } = useMahasiswa();
-
+// ─────────────────────────────────────────────
+// Layout Utama Mahasiswa
+// ─────────────────────────────────────────────
+function MahasiswaLayoutInner({ children }) {
   const [collapsed,  setCollapsed]  = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const [checking,   setChecking]   = useState(true);
   const [showEditor, setShowEditor] = useState(false);
+  const [mockMode,   setMockMode]   = useState(false);
   const [avatarSrc,  setAvatarSrc]  = useState("/img/avatar-default.jpg");
 
   const router   = useRouter();
   const pathname = usePathname();
 
-  // Simulasi cek autentikasi — ganti dengan API call bila sudah ada
-  useEffect(() => {
-    const timer = setTimeout(() => setChecking(false), 500);
-    return () => clearTimeout(timer);
-  }, []);
+  // Ambil data user & tema prodi dari Context
+  const { user, updateUser, prodiConfig } = useMahasiswa();
 
-  // Terapkan CSS variable warna prodi ke document
+  // ── Auth check ───────────────────────────────
   useEffect(() => {
-    document.documentElement.style.setProperty("--prodi-primary", prodiConfig.primary);
-    document.documentElement.style.setProperty("--prodi-light",   prodiConfig.light);
-  }, [prodiConfig]);
+    let mounted = true;
+    (async () => {
+      const session = await getMahasiswaMe();
+      if (!mounted) return;
+      if (session) {
+        // Sinkronisasi foto dari API ke state lokal
+        const fotoApi = session.mahasiswa?.avatar ?? session.mahasiswa?.foto;
+        if (fotoApi) setAvatarSrc(getAvatarUrl(fotoApi));
+        setMockMode(isMockMode());
+        setChecking(false);
+      } else {
+        router.replace("/mahasiswa/login");
+      }
+    })();
+    return () => { mounted = false; };
+  }, [router, pathname]);
 
-  // Dengarkan event update avatar (sama seperti admin)
+  // ── Sinkronisasi foto dari Context ──────────
   useEffect(() => {
-    function onAvatarUpdated(e) { if (e.detail?.avatar) setAvatarSrc(e.detail.avatar); }
-    window.addEventListener("avatar:updated", onAvatarUpdated);
-    return () => window.removeEventListener("avatar:updated", onAvatarUpdated);
-  }, []);
+    if (user?.foto) setAvatarSrc(getAvatarUrl(user.foto));
+  }, [user?.foto]);
 
+  // ── Listener event update profil / avatar ───
+  useEffect(() => {
+    function onAvatarUpdated(e) {
+      if (!e.detail?.avatar) return;
+      const url = getAvatarUrl(e.detail.avatar);
+      setAvatarSrc(url);
+      updateUser({ foto: url });
+    }
+    function onProfileUpdated(e) {
+      if (e.detail) updateUser(e.detail);
+    }
+    window.addEventListener("avatar:updated",  onAvatarUpdated);
+    window.addEventListener("profile:updated", onProfileUpdated);
+    return () => {
+      window.removeEventListener("avatar:updated",  onAvatarUpdated);
+      window.removeEventListener("profile:updated", onProfileUpdated);
+    };
+  }, [updateUser]);
+
+  // ── Nav items — sesuai folder yang ada ──────
+  const navItems = [
+    { href: "/mahasiswa/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/mahasiswa/kegiatan",  label: "Kegiatan",  icon: BookOpen        },
+    { href: "/mahasiswa/pengajuan", label: "Pengajuan", icon: ClipboardList   },
+    { href: "/mahasiswa/riwayat",   label: "Riwayat",   icon: History         },
+    { href: "/mahasiswa/profile",   label: "Profil",    icon: User            },
+  ];
+
+  // ── Logout ───────────────────────────────────
   async function handleLogout() {
     if (loggingOut) return;
     setLoggingOut(true);
-    // TODO: panggil API logout mahasiswa
+    await logoutMahasiswa();
     router.replace("/");
+    setTimeout(() => { try { window.location.replace("/"); } catch {} }, 200);
   }
 
+  // ── Setelah avatar berhasil disimpan ────────
   const handleAvatarSave = useCallback((newUrl) => {
     setAvatarSrc(newUrl);
+    updateUser({ foto: newUrl });
     setShowEditor(false);
-    // TODO: update context user.foto
-  }, []);
+  }, [updateUser]);
 
-  const activeNav  = MENU_ITEMS.find(n => pathname.startsWith(n.href));
-  const isProfile  = pathname.startsWith("/mahasiswa/profile");
-  const breadcrumb = isProfile ? "Profil Saya" : (activeNav ? activeNav.label : "Dashboard");
+  // ── Breadcrumb ───────────────────────────────
+  const activeNav  = navItems.find((n) => pathname.startsWith(n.href));
+  const breadcrumb = activeNav ? activeNav.label : "Dashboard";
 
+  // ── Loading ──────────────────────────────────
   if (checking) {
     return (
       <div className={styles.loadingWrapper}>
@@ -158,6 +237,21 @@ function LayoutContent({ children }) {
 
   return (
     <div className={styles.wrapper}>
+
+      {/* Banner Mode Demo */}
+      {mockMode && (
+        <div style={{
+          position: "fixed", top: 0, left: 0, right: 0, zIndex: 9999,
+          background: "#fef3c7", borderBottom: "1px solid #f59e0b",
+          padding: "5px 16px", display: "flex", alignItems: "center", gap: 8,
+          fontSize: 12, color: "#92400e",
+        }}>
+          <WifiOff size={13} />
+          <strong>Mode Demo</strong> — Backend tidak aktif. Data yang ditampilkan adalah data simulasi.
+        </div>
+      )}
+
+      {/* Modal Edit Avatar */}
       {showEditor && (
         <AvatarEditorModal
           currentSrc={avatarSrc}
@@ -166,27 +260,38 @@ function LayoutContent({ children }) {
         />
       )}
 
-      {/* ── Sidebar ── */}
-      <aside className={`${styles.sidebar} ${collapsed ? styles.collapsed : ""}`}>
+      {/* ── Sidebar ─────────────────────────────── */}
+      <aside
+        className={`${styles.sidebar} ${collapsed ? styles.collapsed : ""}`}
+        style={{
+          // Warna sidebar otomatis mengikuti prodi mahasiswa
+          background: `linear-gradient(175deg, ${prodiConfig.primary}ee 0%, ${prodiConfig.dark} 68%, ${prodiConfig.dark}cc 100%)`,
+          ...(mockMode ? { marginTop: 29 } : {}),
+        }}
+      >
         <div className={styles.brand}>
           <div className={styles.logo}>
-            <Award size={26} className={styles.logoIcon} />
+            <Image src="/img/logo_isb.png" alt="logo" width={80} height={35} loading="eager" />
           </div>
           {!collapsed && (
             <div className={styles.brandText}>
               <strong>SKPI</strong>
-              <span>Mahasiswa</span>
+              <span>Portal Mahasiswa</span>
             </div>
           )}
-          <button aria-label="Toggle sidebar" className={styles.collapseBtn} onClick={() => setCollapsed(!collapsed)}>
+          <button
+            aria-label="Toggle sidebar"
+            className={styles.collapseBtn}
+            onClick={() => setCollapsed(!collapsed)}
+          >
             {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
           </button>
         </div>
 
         <nav className={styles.nav}>
           {!collapsed && <p className={styles.navSection}>MENU</p>}
-          {MENU_ITEMS.map((item) => {
-            const Icon = item.icon;
+          {navItems.map((item) => {
+            const Icon     = item.icon;
             const isActive = pathname.startsWith(item.href);
             return (
               <Link
@@ -195,7 +300,13 @@ function LayoutContent({ children }) {
                 className={`${styles.navItem} ${isActive ? styles.navItemActive : ""}`}
                 title={collapsed ? item.label : undefined}
               >
-                {isActive && <span className={styles.activeAccent} style={{ background: prodiConfig.primary }} />}
+                {/* Accent bar warna prodi */}
+                {isActive && (
+                  <span
+                    className={styles.activeAccent}
+                    style={{ background: prodiConfig.primary }}
+                  />
+                )}
                 <span className={styles.iconWrap}><Icon size={17} /></span>
                 {!collapsed && <span className={styles.navLabel}>{item.label}</span>}
               </Link>
@@ -205,16 +316,22 @@ function LayoutContent({ children }) {
 
         {!collapsed && (
           <div className={styles.sidebarFooter}>
-            <span>v1.0 · © Institut Shanti Bhuana</span>
+            <span className={styles.version}>v1.0 · © Institut Shanti Bhuana</span>
           </div>
         )}
       </aside>
 
-      {/* ── Main ── */}
-      <div className={styles.main}>
+      {/* ── Main Content ─────────────────────────── */}
+      <div className={styles.main} style={mockMode ? { marginTop: 29 } : {}}>
+
+        {/* Topbar */}
         <header className={styles.topbar}>
           <div className={styles.topbarLeft}>
-            <button className={styles.menuBtn} onClick={() => setCollapsed(!collapsed)} aria-label="Toggle menu">
+            <button
+              className={styles.menuBtn}
+              onClick={() => setCollapsed(!collapsed)}
+              aria-label="Toggle menu"
+            >
               <Menu size={19} />
             </button>
             <nav className={styles.breadcrumb}>
@@ -225,29 +342,36 @@ function LayoutContent({ children }) {
           </div>
 
           <div className={styles.topbarRight}>
-            <button className={styles.iconBtn} aria-label="Notifications">
-              <Bell size={17} />
-              <span className={styles.badge}>2</span>
+            <button className={styles.iconBtn} aria-label="Notifikasi">
+              <Bell size={17} /><span className={styles.badge}>3</span>
             </button>
             <span className={styles.divider} />
+
             <div className={styles.userBlock}>
+              {/* Avatar — klik untuk edit foto */}
               <button
                 className={styles.avatarBtn}
-                onClick={() => router.push("/mahasiswa/profile")}
-                aria-label="Lihat profil"
+                onClick={() => setShowEditor(true)}
+                aria-label="Edit foto profil"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={avatarSrc} alt="avatar" className={styles.avatar} />
                 <span className={styles.onlineDot} />
                 <span className={styles.avatarOverlay}><Camera size={11} /></span>
               </button>
+
+              {/* Info dari Context — nama & NIM warna prodi */}
               <button
                 className={styles.userInfoBtn}
                 onClick={() => router.push("/mahasiswa/profile")}
               >
                 <span className={styles.userName}>{user.nama}</span>
-                <span className={styles.userRole} style={{ color: prodiConfig.primary }}>{user.prodi}</span>
+                <span className={styles.userRole} style={{ color: prodiConfig.primary }}>
+                  {user.nim}
+                </span>
               </button>
+
+              {/* Logout */}
               <button
                 className={styles.logoutBtn}
                 title="Logout"
@@ -266,11 +390,11 @@ function LayoutContent({ children }) {
   );
 }
 
-// ── Export default dengan Provider ────────────────────────────
+// MahasiswaProvider membungkus layout agar useMahasiswa() tersedia
 export default function MahasiswaLayout({ children }) {
   return (
     <MahasiswaProvider>
-      <LayoutContent>{children}</LayoutContent>
+      <MahasiswaLayoutInner>{children}</MahasiswaLayoutInner>
     </MahasiswaProvider>
   );
 }
