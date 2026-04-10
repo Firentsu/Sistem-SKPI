@@ -1,24 +1,113 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useMahasiswa } from "@/context/MahasiswaContext";
-import { Plus, Edit2, Trash2, Upload, FileImage, X, CheckCircle2, AlertCircle } from "lucide-react";
+import {
+  Plus, Edit2, Trash2, Upload, FileImage, X, CheckCircle2, AlertCircle,
+  Eye, Calendar, MapPin, Building, Award, TrendingUp, BarChart3
+} from "lucide-react";
 import styles from "./kegiatan.module.css";
+import {
+  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell
+} from "recharts";
 
-// Mock data kegiatan
+// ==================== DATA MOCK (sementara, nanti dari API) ====================
 const MOCK_KEGIATAN = [
-  { id: 1, nama: "Workshop React", jenis: "Workshop", kategori: "Akademik", tanggal: "2026-03-20", poin: 15, status: "Disetujui", bukti: "bukti1.pdf" },
-  { id: 2, nama: "Seminar AI", jenis: "Seminar", kategori: "Non-Akademik", tanggal: "2026-03-25", poin: 10, status: "Menunggu", bukti: null },
-  { id: 3, nama: "Magang Startup", jenis: "Magang", kategori: "Profesional", tanggal: "2026-03-10", poin: 20, status: "Ditolak", bukti: "bukti3.pdf" },
+  {
+    id: 1,
+    nama_id: "Workshop React.js",
+    nama_en: "React.js Workshop",
+    jenis_aktivitas: "Peningkatan Keterampilan Profesional",
+    kategori: "Workshop",
+    kelompok: "Akademik",
+    level: "Nasional",
+    periode: "Semester Genap 2025/2026",
+    tingkat_prestasi: "Peserta",
+    peringkat: "",
+    lokasi: "Kampus TI",
+    penyelenggara: "Himpunan Mahasiswa TI",
+    tanggal: "2026-03-20",
+    poin: 15,
+    status: "Disetujui",
+    bukti: "bukti1.pdf",
+    created_at: "2026-03-01",
+  },
+  {
+    id: 2,
+    nama_id: "Seminar AI",
+    nama_en: "AI Seminar",
+    jenis_aktivitas: "Prestasi dan Kegiatan",
+    kategori: "Seminar",
+    kelompok: "Non-Akademik",
+    level: "Internasional",
+    periode: "Semester Ganjil 2025/2026",
+    tingkat_prestasi: "Peserta",
+    peringkat: "",
+    lokasi: "Online",
+    penyelenggara: "Tech Corp",
+    tanggal: "2026-03-25",
+    poin: 10,
+    status: "Menunggu",
+    bukti: null,
+    created_at: "2026-03-10",
+  },
+  {
+    id: 3,
+    nama_id: "Magang Startup",
+    nama_en: "Startup Internship",
+    jenis_aktivitas: "Praktik Kerja",
+    kategori: "Magang",
+    kelompok: "Profesional",
+    level: "Lokal",
+    periode: "Liburan Semester",
+    tingkat_prestasi: "",
+    peringkat: "",
+    lokasi: "Jakarta",
+    penyelenggara: "Startup.id",
+    tanggal: "2026-03-10",
+    poin: 20,
+    status: "Ditolak",
+    bukti: "bukti3.pdf",
+    created_at: "2026-02-20",
+  },
 ];
 
-const JENIS_OPTIONS = ["Workshop", "Seminar", "Kompetisi", "Training", "Magang", "Organisasi", "Lainnya"];
-const KATEGORI_OPTIONS = ["Akademik", "Non-Akademik", "Profesional", "Pengembangan Diri"];
+// Daftar pilihan dropdown
+const JENIS_AKTIVITAS = [
+  "Prestasi dan Kegiatan",
+  "Peningkatan Keterampilan Profesional",
+  "Pengalaman Berorganisasi dan Kepemimpinan",
+  "Pengembangan Intelektual",
+  "Praktik Kerja",
+  "Pembinaan Spiritual",
+  "Kepribadian Amarean 1",
+  "Kepribadian Amarean 2",
+  "Kepribadian Amarean 3",
+  "Kepribadian Amarean 4",
+  "Integritas Kepemimpinan 1",
+  "Integritas Kepemimpinan 2",
+  "Nilai - nilai Integritas Insani 1",
+  "Nilai - nilai Integritas Insani 2",
+  "Pembangunan Karakter dan Kepribadian",
+  "Kursus - kursus",
+  "Skripsi",
+];
 
+const KATEGORI_OPTIONS = [
+  "Lomba/Kompetisi", "Seminar", "Workshop", "Pelatihan", "Organisasi",
+  "Kepanitian", "Magang", "Penelitian", "Pengabdian Masyarakat",
+  "Publikasi Ilmiah", "Kegiatan Kampus", "Sertifikasi Profesional"
+];
+
+const KELOMPOK_OPTIONS = ["Akademik", "Non-Akademik", "Organisasi", "Kepemimpinan", "Penelitian", "Profesional"];
+const LEVEL_OPTIONS = ["Internal", "Nasional", "Internasional"];
+const TINGKAT_PRESTASI = ["Peserta", "Juara 1", "Juara 2", "Juara 3", "Harapan", "Finalis", "Partisipasi"];
+
+// ==================== KOMPONEN TOAST ====================
 function Toast({ message, onClose }) {
   if (!message) return null;
   return (
-    <div className={styles.toast}>
+    <div className={`${styles.toast} ${styles[message.type]}`}>
       {message.type === "success" ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
       <span>{message.text}</span>
       <button onClick={onClose}><X size={14} /></button>
@@ -26,20 +115,68 @@ function Toast({ message, onClose }) {
   );
 }
 
+// ==================== MODAL FORM TAMBAH/EDIT ====================
 function KegiatanModal({ isOpen, onClose, onSave, kegiatan, prodiColor }) {
-  const [form, setForm] = useState(kegiatan || { nama: "", jenis: "", kategori: "", tanggal: "", poin: "", bukti: null });
+  const [form, setForm] = useState(
+    kegiatan || {
+      nama_id: "", nama_en: "", jenis_aktivitas: "", kategori: "", kelompok: "",
+      level: "", periode: "", tingkat_prestasi: "", peringkat: "", lokasi: "",
+      penyelenggara: "", tanggal: "", poin: "", bukti: null
+    }
+  );
   const [file, setFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const [uploadError, setUploadError] = useState("");
   const fileRef = useRef();
+  const MAX_SIZE = 2 * 1024 * 1024; // 2 MB
+
+  const handleFileChange = (e) => {
+    const selected = e.target.files[0];
+    if (!selected) return;
+    setUploadError("");
+    if (!["application/pdf", "image/jpeg", "image/png"].includes(selected.type)) {
+      setUploadError("Format harus PDF, JPG, atau PNG");
+      return;
+    }
+    if (selected.size > MAX_SIZE) {
+      setUploadError("Ukuran file maksimal 2 MB");
+      return;
+    }
+    setFile(selected);
+    // Preview untuk gambar
+    if (selected.type.startsWith("image/")) {
+      const reader = new FileReader();
+      reader.onloadend = () => setPreviewUrl(reader.result);
+      reader.readAsDataURL(selected);
+    } else {
+      setPreviewUrl(null);
+    }
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!form.nama || !form.jenis || !form.kategori || !form.tanggal || !form.poin) {
-      alert("Lengkapi semua field wajib");
+    if (!form.nama_id || !form.nama_en || !form.jenis_aktivitas || !form.kategori ||
+        !form.kelompok || !form.level || !form.periode || !form.lokasi ||
+        !form.penyelenggara || !form.tanggal || !form.poin) {
+      alert("Lengkapi semua field yang bertanda *");
       return;
     }
-    onSave({ ...form, bukti: file ? file.name : kegiatan?.bukti });
+    if (!file && !kegiatan?.bukti) {
+      alert("Upload bukti kegiatan (wajib)");
+      return;
+    }
+    const newData = { ...form, bukti: file ? file.name : kegiatan.bukti };
+    onSave(newData);
     onClose();
   };
+
+  useEffect(() => {
+    if (!isOpen) {
+      setFile(null);
+      setPreviewUrl(null);
+      setUploadError("");
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -47,25 +184,71 @@ function KegiatanModal({ isOpen, onClose, onSave, kegiatan, prodiColor }) {
     <div className={styles.modalOverlay} onClick={onClose}>
       <div className={styles.modalContainer} onClick={e => e.stopPropagation()}>
         <div className={styles.modalHeader}>
-          <h3>{kegiatan ? "Edit Kegiatan" : "Tambah Kegiatan"}</h3>
+          <h3>{kegiatan ? "Edit Kegiatan" : "Tambah Kegiatan Baru"}</h3>
           <button onClick={onClose}><X size={20} /></button>
         </div>
         <form onSubmit={handleSubmit}>
           <div className={styles.modalBody}>
-            <input className={styles.input} placeholder="Nama Kegiatan *" value={form.nama} onChange={e => setForm({...form, nama: e.target.value})} />
-            <select className={styles.input} value={form.jenis} onChange={e => setForm({...form, jenis: e.target.value})}>
-              <option value="">Pilih Jenis *</option>
-              {JENIS_OPTIONS.map(j => <option key={j}>{j}</option>)}
-            </select>
-            <select className={styles.input} value={form.kategori} onChange={e => setForm({...form, kategori: e.target.value})}>
-              <option value="">Pilih Kategori *</option>
-              {KATEGORI_OPTIONS.map(k => <option key={k}>{k}</option>)}
-            </select>
-            <input type="date" className={styles.input} value={form.tanggal} onChange={e => setForm({...form, tanggal: e.target.value})} />
-            <input type="number" className={styles.input} placeholder="Poin *" value={form.poin} onChange={e => setForm({...form, poin: e.target.value})} />
-            <div className={styles.uploadArea} style={{ borderColor: prodiColor }} onClick={() => fileRef.current.click()}>
-              <input type="file" ref={fileRef} hidden onChange={e => setFile(e.target.files[0])} />
-              {file ? <><FileImage size={24} /> {file.name}</> : <><Upload size={24} /> Upload Bukti (PDF/JPG)</>}
+            <div className={styles.formRow}>
+              <input className={styles.input} placeholder="Nama Kegiatan (Indonesia) *" value={form.nama_id} onChange={e => setForm({...form, nama_id: e.target.value})} />
+              <input className={styles.input} placeholder="Nama Kegiatan (English) *" value={form.nama_en} onChange={e => setForm({...form, nama_en: e.target.value})} />
+            </div>
+            <div className={styles.formRow}>
+              <select className={styles.input} value={form.jenis_aktivitas} onChange={e => setForm({...form, jenis_aktivitas: e.target.value})}>
+                <option value="">Pilih Jenis Aktivitas *</option>
+                {JENIS_AKTIVITAS.map(j => <option key={j}>{j}</option>)}
+              </select>
+              <select className={styles.input} value={form.kategori} onChange={e => setForm({...form, kategori: e.target.value})}>
+                <option value="">Pilih Kategori *</option>
+                {KATEGORI_OPTIONS.map(k => <option key={k}>{k}</option>)}
+              </select>
+            </div>
+            <div className={styles.formRow}>
+              <select className={styles.input} value={form.kelompok} onChange={e => setForm({...form, kelompok: e.target.value})}>
+                <option value="">Pilih Kelompok Aktivitas *</option>
+                {KELOMPOK_OPTIONS.map(g => <option key={g}>{g}</option>)}
+              </select>
+              <select className={styles.input} value={form.level} onChange={e => setForm({...form, level: e.target.value})}>
+                <option value="">Pilih Level *</option>
+                {LEVEL_OPTIONS.map(l => <option key={l}>{l}</option>)}
+              </select>
+            </div>
+            <div className={styles.formRow}>
+              <input className={styles.input} placeholder="Periode (contoh: Semester Ganjil 2025) *" value={form.periode} onChange={e => setForm({...form, periode: e.target.value})} />
+              <select className={styles.input} value={form.tingkat_prestasi} onChange={e => setForm({...form, tingkat_prestasi: e.target.value})}>
+                <option value="">Tingkat Prestasi (Opsional)</option>
+                {TINGKAT_PRESTASI.map(t => <option key={t}>{t}</option>)}
+              </select>
+            </div>
+            <div className={styles.formRow}>
+              <input className={styles.input} placeholder="Peringkat (Opsional)" value={form.peringkat} onChange={e => setForm({...form, peringkat: e.target.value})} />
+              <input className={styles.input} placeholder="Lokasi *" value={form.lokasi} onChange={e => setForm({...form, lokasi: e.target.value})} />
+            </div>
+            <div className={styles.formRow}>
+              <input className={styles.input} placeholder="Penyelenggara *" value={form.penyelenggara} onChange={e => setForm({...form, penyelenggara: e.target.value})} />
+              <input type="date" className={styles.input} value={form.tanggal} onChange={e => setForm({...form, tanggal: e.target.value})} />
+            </div>
+          
+
+            {/* Upload bukti */}
+            <div className={styles.uploadSection}>
+              <div className={styles.uploadArea} style={{ borderColor: prodiColor }} onClick={() => fileRef.current.click()}>
+                <input type="file" ref={fileRef} hidden accept=".pdf,.jpg,.jpeg,.png" onChange={handleFileChange} />
+                {file ? (
+                  <>
+                    {previewUrl ? <img src={previewUrl} alt="preview" className={styles.previewImg} /> : <FileImage size={24} />}
+                    <span>{file.name}</span>
+                    <button type="button" onClick={(e) => { e.stopPropagation(); setFile(null); setPreviewUrl(null); }}><X size={14} /></button>
+                  </>
+                ) : (
+                  <>
+                    <Upload size={24} />
+                    <span>Upload Bukti Kegiatan (Wajib, maks 2MB, PDF/JPG/PNG)</span>
+                  </>
+                )}
+              </div>
+              {uploadError && <p className={styles.errorText}>{uploadError}</p>}
+              {kegiatan?.bukti && !file && <p className={styles.infoText}>Bukti saat ini: {kegiatan.bukti}</p>}
             </div>
           </div>
           <div className={styles.modalFooter}>
@@ -78,12 +261,22 @@ function KegiatanModal({ isOpen, onClose, onSave, kegiatan, prodiColor }) {
   );
 }
 
+
+
+// ==================== HALAMAN UTAMA ====================
 export default function KegiatanPage() {
-  const { prodiConfig } = useMahasiswa();
+  const { prodiConfig, user } = useMahasiswa();
   const [kegiatan, setKegiatan] = useState(MOCK_KEGIATAN);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [toast, setToast] = useState(null);
+  const [search, setSearch] = useState("");
+  const [filterStatus, setFilterStatus] = useState("Semua");
+
+        // Set document title
+  useEffect(() => {
+    document.title = "Dashboard Kegiatan | Mahasiswa SKPI";
+  }, []);
 
   const showToast = (text, type = "success") => {
     setToast({ text, type });
@@ -96,7 +289,7 @@ export default function KegiatanPage() {
       showToast("Kegiatan berhasil diupdate");
     } else {
       const newId = Math.max(...kegiatan.map(k => k.id), 0) + 1;
-      setKegiatan(prev => [{ id: newId, status: "Menunggu", ...data }, ...prev]);
+      setKegiatan(prev => [{ id: newId, status: "Menunggu", created_at: new Date().toISOString(), ...data }, ...prev]);
       showToast("Kegiatan berhasil ditambahkan");
     }
     setModalOpen(false);
@@ -104,6 +297,11 @@ export default function KegiatanPage() {
   };
 
   const handleDelete = (id) => {
+    const item = kegiatan.find(k => k.id === id);
+    if (item.status !== "Menunggu") {
+      showToast("Hanya kegiatan dengan status 'Menunggu' yang dapat dihapus", "error");
+      return;
+    }
     if (confirm("Hapus kegiatan ini?")) {
       setKegiatan(prev => prev.filter(k => k.id !== id));
       showToast("Kegiatan dihapus", "error");
@@ -111,33 +309,81 @@ export default function KegiatanPage() {
   };
 
   const handleEdit = (k) => {
+    if (k.status !== "Menunggu") {
+      showToast("Hanya kegiatan dengan status 'Menunggu' yang dapat diedit", "error");
+      return;
+    }
     setEditing(k);
     setModalOpen(true);
   };
 
+  // Filter & search
+  const filtered = kegiatan.filter(k => {
+    const matchSearch = k.nama_id.toLowerCase().includes(search.toLowerCase()) || k.nama_en.toLowerCase().includes(search.toLowerCase());
+    const matchStatus = filterStatus === "Semua" || k.status === filterStatus;
+    return matchSearch && matchStatus;
+  });
+
+  // Hitung total ICP
+  const totalICP = kegiatan.reduce((sum, k) => sum + (k.status === "Disetujui" ? k.poin : 0), 0);
+  // Data untuk grafik (mock)
+  const icpKategori = [
+    { name: "Akademik", value: kegiatan.filter(k => k.kelompok === "Akademik" && k.status === "Disetujui").reduce((s, k) => s + k.poin, 0) },
+    { name: "Non-Akademik", value: kegiatan.filter(k => k.kelompok === "Non-Akademik" && k.status === "Disetujui").reduce((s, k) => s + k.poin, 0) },
+    { name: "Organisasi", value: kegiatan.filter(k => k.kelompok === "Organisasi" && k.status === "Disetujui").reduce((s, k) => s + k.poin, 0) },
+    { name: "Profesional", value: kegiatan.filter(k => k.kelompok === "Profesional" && k.status === "Disetujui").reduce((s, k) => s + k.poin, 0) },
+  ];
+
   return (
     <div className={styles.container}>
       <Toast message={toast} onClose={() => setToast(null)} />
+
+      {/* Header dan tombol */}
       <div className={styles.header}>
-        <h1 className={styles.title}>Kegiatan Saya</h1>
+        <div>
+          <h1 className={styles.title}>Kegiatan Saya</h1>
+          <p className={styles.subtitle}>Catat seluruh aktivitas Anda selama masa studi</p>
+        </div>
         <button className={styles.addBtn} onClick={() => { setEditing(null); setModalOpen(true); }} style={{ background: prodiConfig.primary }}>
           <Plus size={16} /> Tambah Kegiatan
         </button>
       </div>
 
+
+
+      {/* Filter dan pencarian */}
+      <div className={styles.filterBar}>
+        <input type="text" placeholder="Cari kegiatan..." value={search} onChange={e => setSearch(e.target.value)} className={styles.searchInput} />
+        <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} className={styles.filterSelect}>
+          <option value="Semua">Semua Status</option>
+          <option value="Menunggu">Menunggu</option>
+          <option value="Disetujui">Disetujui</option>
+          <option value="Ditolak">Ditolak</option>
+          <option value="Revisi">Revisi</option>
+        </select>
+      </div>
+
+      {/* Tabel kegiatan */}
       <div className={styles.tableWrapper}>
         <table className={styles.table}>
           <thead>
-            <tr><th>Nama Kegiatan</th><th>Jenis</th><th>Kategori</th><th>Tanggal</th><th>Poin</th><th>Status</th><th>Bukti</th><th>Aksi</th></tr>
+            <tr>
+              <th>Nama Kegiatan (ID/EN)</th>
+              <th>Jenis</th>
+              <th>Kategori</th>
+              <th>Tanggal</th>
+              <th>Status</th>
+              <th>Bukti</th>
+              <th>Aksi</th>
+            </tr>
           </thead>
           <tbody>
-            {kegiatan.map(k => (
+            {filtered.map(k => (
               <tr key={k.id}>
-                <td><strong>{k.nama}</strong></td>
-                <td>{k.jenis}</td>
+                <td><strong>{k.nama_id}</strong><br /><small>{k.nama_en}</small></td>
+                <td>{k.jenis_aktivitas}</td>
                 <td>{k.kategori}</td>
                 <td>{k.tanggal}</td>
-                <td>{k.poin}</td>
                 <td><span className={`${styles.status} ${styles[k.status.toLowerCase()]}`}>{k.status}</span></td>
                 <td>{k.bukti ? <a href="#" className={styles.link}>Lihat</a> : "-"}</td>
                 <td className={styles.actions}>
@@ -146,11 +392,21 @@ export default function KegiatanPage() {
                 </td>
               </tr>
             ))}
+            {filtered.length === 0 && (
+              <tr><td colSpan="8" className={styles.emptyRow}>Belum ada kegiatan. Klik "Tambah Kegiatan" untuk mencatat aktivitas Anda.</td></tr>
+            )}
           </tbody>
         </table>
       </div>
 
-      <KegiatanModal isOpen={modalOpen} onClose={() => { setModalOpen(false); setEditing(null); }} onSave={handleSave} kegiatan={editing} prodiColor={prodiConfig.primary} />
+      {/* Modal form */}
+      <KegiatanModal
+        isOpen={modalOpen}
+        onClose={() => { setModalOpen(false); setEditing(null); }}
+        onSave={handleSave}
+        kegiatan={editing}
+        prodiColor={prodiConfig.primary}
+      />
     </div>
   );
 }

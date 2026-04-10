@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMahasiswa } from "@/context/MahasiswaContext";
 import { Send, Download, History, CheckCircle, AlertCircle } from "lucide-react";
 import styles from "./pengajuan.module.css";
@@ -11,6 +11,11 @@ export default function PengajuanPage() {
   const [riwayat, setRiwayat] = useState([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+
+        // Set document title
+  useEffect(() => {
+    document.title = "Dashboard Pengajuan | Mahasiswa SKPI";
+  }, []);
 
   const handleAjukan = () => {
     if (status !== "Belum Diajukan") return;

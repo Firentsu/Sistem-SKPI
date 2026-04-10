@@ -15,3 +15,355 @@
 .danger { color: #ef4444; }
 .link { color: #3b82f6; text-decoration: none; }
 .modalOverlay, .modalContainer, .modalHeader, .modalBody, .modalFooter, .input, .uploadArea, .toast, .saveBtn, .cancelBtn { /* style sama seperti sebelumnya */ }
+
+/* kegiatan.module.css */
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin: 0;
+  color: #2c1a0e;
+}
+
+.subtitle {
+  font-size: 0.9rem;
+  color: #9c7a5e;
+  margin: 4px 0 0;
+}
+
+.addBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 40px;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+/* ICP Card */
+.icpCard {
+  background: white;
+  border-radius: 20px;
+  padding: 20px;
+  margin-bottom: 24px;
+  border: 1px solid #ede0d4;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.cardTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.icpCharts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+@media (max-width: 768px) {
+  .icpCharts {
+    grid-template-columns: 1fr;
+  }
+}
+
+.barChart, .pieChart {
+  height: 220px;
+}
+
+/* Filter bar */
+.filterBar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.searchInput {
+  flex: 1;
+  padding: 10px 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 40px;
+  font-size: 0.9rem;
+  outline: none;
+}
+
+.filterSelect {
+  padding: 10px 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 40px;
+  background: white;
+  cursor: pointer;
+}
+
+/* Table */
+.tableWrapper {
+  overflow-x: auto;
+  background: white;
+  border-radius: 16px;
+  border: 1px solid #ede0d4;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 800px;
+}
+
+.table th {
+  text-align: left;
+  padding: 14px 12px;
+  background: #faf5f0;
+  font-weight: 600;
+  border-bottom: 1px solid #ede0d4;
+}
+
+.table td {
+  padding: 12px;
+  border-bottom: 1px solid #f0e6dc;
+  vertical-align: middle;
+}
+
+.status {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.disetujui {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.menunggu {
+  background: #fed7aa;
+  color: #9a3412;
+}
+
+.ditolak {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.revisi {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+.actionBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 6px;
+  background: #f1f5f9;
+  transition: 0.1s;
+}
+
+.actionBtn:hover:not(:disabled) {
+  background: #e2e8f0;
+}
+
+.danger {
+  color: #ef4444;
+}
+
+.link {
+  color: #3b82f6;
+  text-decoration: none;
+}
+
+/* Modal */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+}
+
+.modalContainer {
+  background: white;
+  border-radius: 24px;
+  width: 100%;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 35px rgba(0,0,0,0.2);
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid #ede0d4;
+}
+
+.modalBody {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.formRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+@media (max-width: 600px) {
+  .formRow {
+    grid-template-columns: 1fr;
+  }
+}
+
+.input, .select {
+  padding: 10px 12px;
+  border: 1px solid #ddd0c4;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  width: 100%;
+}
+
+.uploadSection {
+  margin-top: 8px;
+}
+
+.uploadArea {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border: 2px dashed;
+  border-radius: 16px;
+  cursor: pointer;
+  background: #fdfaf8;
+  transition: 0.2s;
+  flex-wrap: wrap;
+}
+
+.uploadArea:hover {
+  background: #fdf4ec;
+}
+
+.previewImg {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.errorText {
+  color: #dc2626;
+  font-size: 0.75rem;
+  margin-top: 4px;
+}
+
+.infoText {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-top: 4px;
+}
+
+.modalFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 20px;
+  border-top: 1px solid #ede0d4;
+}
+
+.cancelBtn {
+  background: white;
+  border: 1px solid #ddd0c4;
+  padding: 8px 16px;
+  border-radius: 40px;
+  cursor: pointer;
+}
+
+.saveBtn {
+  border: none;
+  padding: 8px 24px;
+  border-radius: 40px;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Toast */
+.toast {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: white;
+  padding: 12px 20px;
+  border-radius: 40px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  z-index: 1100;
+  border-left: 4px solid;
+}
+
+.toast.success {
+  border-left-color: #10b981;
+}
+.toast.error {
+  border-left-color: #ef4444;
+}
+
+.emptyRow {
+  text-align: center;
+  padding: 40px;
+  color: #9ca3af;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .container {
+    padding: 12px;
+  }
+  .title {
+    font-size: 1.4rem;
+  }
+  .addBtn {
+    padding: 6px 12px;
+    font-size: 0.8rem;
+  }
+}

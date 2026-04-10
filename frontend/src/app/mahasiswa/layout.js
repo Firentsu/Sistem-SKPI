@@ -202,7 +202,6 @@ function MahasiswaLayoutInner({ children }) {
     { href: "/mahasiswa/kegiatan",  label: "Kegiatan",  icon: BookOpen        },
     { href: "/mahasiswa/pengajuan", label: "Pengajuan", icon: ClipboardList   },
     { href: "/mahasiswa/riwayat",   label: "Riwayat",   icon: History         },
-    { href: "/mahasiswa/profile",   label: "Profil",    icon: User            },
   ];
 
   // ── Logout ───────────────────────────────────
@@ -366,9 +365,6 @@ function MahasiswaLayoutInner({ children }) {
                 onClick={() => router.push("/mahasiswa/profile")}
               >
                 <span className={styles.userName}>{user.nama}</span>
-                <span className={styles.userRole} style={{ color: prodiConfig.primary }}>
-                  {user.nim}
-                </span>
               </button>
 
               {/* Logout */}
