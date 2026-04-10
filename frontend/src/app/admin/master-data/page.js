@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Plus, Edit2, Trash2, Search, Filter, ChevronLeft, ChevronRight,
   AlertCircle, CheckCircle2, X,
@@ -133,6 +133,11 @@ export default function MasterDataPage() {
   const [selectedData, setSelectedData] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
+
+  // Set page title //
+   useEffect(() => {
+      document.title = "Master Data | Admin SKPI";
+    }, []);
 
   // Filter & search
   const filtered = data.filter(item => {

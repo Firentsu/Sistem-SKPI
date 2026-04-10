@@ -1,0 +1,13 @@
+.container { max-width: 1000px; margin: 0 auto; }
+.title { font-size: 1.8rem; font-weight: 700; margin-bottom: 20px; }
+.searchBar { display: flex; align-items: center; gap: 8px; background: white; padding: 8px 16px; border-radius: 40px; margin-bottom: 24px; border: 1px solid #e2e8f0; }
+.searchBar input { border: none; outline: none; flex: 1; }
+.tableWrapper { background: white; border-radius: 16px; overflow-x: auto; }
+.table { width: 100%; border-collapse: collapse; }
+.table th, .table td { padding: 12px; text-align: left; border-bottom: 1px solid #f0f0f0; }
+.status { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+.disetujui { background: #d1fae5; color: #065f46; }
+.ditolak { background: #fee2e2; color: #991b1b; }
+.revisi { background: #fef3c7; color: #b45309; }
+.detailBtn { background: none; border: 1px solid #cbd5e1; padding: 4px 12px; border-radius: 20px; cursor: pointer; display: flex; align-items: center; gap: 4px; }
+.modalOverlay, .modalContainer { /* sama seperti modal sebelumnya */ }

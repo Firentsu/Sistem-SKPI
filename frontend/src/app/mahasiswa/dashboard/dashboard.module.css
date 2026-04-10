@@ -1,0 +1,165 @@
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.welcomeCard {
+  border-radius: 20px;
+  padding: 24px;
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+.welcomeTitle {
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin: 0;
+}
+.welcomeSub {
+  margin: 8px 0 0;
+  opacity: 0.9;
+}
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.statCard {
+  background: white;
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  border-left: 4px solid;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+.statIcon {
+  width: 48px;
+  height: 48px;
+  background: #f1f5f9;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.statValue {
+  font-size: 28px;
+  font-weight: 800;
+}
+.statLabel {
+  font-size: 12px;
+  color: #64748b;
+}
+.twoColumns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+@media (max-width: 768px) {
+  .twoColumns {
+    grid-template-columns: 1fr;
+  }
+}
+.card {
+  background: white;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+.cardTitle {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0 0 16px;
+}
+.progressWrapper {
+  margin-bottom: 8px;
+}
+.progressBar {
+  background: #e2e8f0;
+  border-radius: 20px;
+  height: 8px;
+  overflow: hidden;
+}
+.progressFill {
+  height: 100%;
+  border-radius: 20px;
+  transition: width 0.3s;
+}
+.progressInfo {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  margin-top: 8px;
+}
+.progressNote {
+  font-size: 12px;
+  color: #64748b;
+  margin: 12px 0 0;
+}
+.ajukanBtn {
+  margin-top: 16px;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 40px;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+}
+.notifList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.notifItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+}
+.notifDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.tableWrapper {
+  overflow-x: auto;
+}
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.table th {
+  text-align: left;
+  padding: 12px 8px;
+  background: #f8fafc;
+  font-weight: 600;
+}
+.table td {
+  padding: 10px 8px;
+  border-bottom: 1px solid #f1f5f9;
+}
+.statusBadge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.disetujui {
+  background: #d1fae5;
+  color: #065f46;
+}
+.menunggu {
+  background: #fed7aa;
+  color: #9a3412;
+}
+.ditolak {
+  background: #fee2e2;
+  color: #991b1b;
+}

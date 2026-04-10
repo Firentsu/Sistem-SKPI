@@ -5,7 +5,8 @@ import styles from "./dashboard.module.css";
 import {
   Users, FileText, Clock, CheckCircle, AlertCircle,
   XCircle, Award, Bell, Filter, RefreshCw,
-  ChevronRight, TrendingUp, BookOpen, MoreHorizontal
+  ChevronRight, TrendingUp, BookOpen, MoreHorizontal,
+  Check, Trash2
 } from "lucide-react";
 
 const PRODI_LIST = ["Semua Prodi", "Teknik Informatika", "Manajemen", "Akuntansi", "Ilmu Komunikasi"];
@@ -25,13 +26,14 @@ const PRODI_ROWS = [
   { prodi: "Ilmu Komunikasi",    mahasiswa: 100, kegiatan: 260, menunggu: 17, disetujui: 115, verifikasi: 7,  ditolak: 7,  skpi: 35 },
 ];
 
-const NOTIFS = [
-  { id: 1, type: "skpi",      text: "Mahasiswa Andi Pratama (TI-2021) mengajukan SKPI",    time: "5 menit lalu"  },
-  { id: 2, type: "verifikasi",text: "Kegiatan 'Seminar AI 2024' menunggu verifikasi",       time: "12 menit lalu" },
-  { id: 3, type: "published", text: "SKPI Mahasiswa Sari Dewi telah diterbitkan",           time: "28 menit lalu" },
-  { id: 4, type: "revisi",    text: "Bukti kegiatan Budi Santoso diminta revisi",           time: "1 jam lalu"    },
-  { id: 5, type: "published", text: "SKPI batch Manajemen 2020 berhasil digenerate",        time: "2 jam lalu"    },
-  { id: 6, type: "verifikasi",text: "3 kegiatan baru dari prodi Akuntansi menunggu",        time: "3 jam lalu"    },
+// Data notifikasi awal
+const INITIAL_NOTIFS = [
+  { id: 1, type: "skpi",      text: "Mahasiswa Andi Pratama (TI-2021) mengajukan SKPI",    time: "5 menit lalu",  read: false },
+  { id: 2, type: "verifikasi",text: "Kegiatan 'Seminar AI 2024' menunggu verifikasi",       time: "12 menit lalu", read: false },
+  { id: 3, type: "published", text: "SKPI Mahasiswa Sari Dewi telah diterbitkan",           time: "28 menit lalu", read: false },
+  { id: 4, type: "revisi",    text: "Bukti kegiatan Budi Santoso diminta revisi",           time: "1 jam lalu",    read: false },
+  { id: 5, type: "published", text: "SKPI batch Manajemen 2020 berhasil digenerate",        time: "2 jam lalu",    read: false },
+  { id: 6, type: "verifikasi",text: "3 kegiatan baru dari prodi Akuntansi menunggu",        time: "3 jam lalu",    read: false },
 ];
 
 const NOTIF_COLORS = {
@@ -68,7 +70,31 @@ export default function DashboardPage() {
   const [open, setOpen] = useState(false);
   const stats = DATA[prodi];
 
-  useEffect(() => { document.title = "Dashboard | SKPI"; }, []);
+  // State untuk notifikasi
+  const [notifications, setNotifications] = useState(INITIAL_NOTIFS);
+  const [notifDropdownOpen, setNotifDropdownOpen] = useState(false);
+
+  // Hitung jumlah belum dibaca
+  const unreadCount = notifications.filter(n => !n.read).length;
+
+  useEffect(() => { document.title = "Dashboard Admin | SKPI"; }, []);
+
+  // Fungsi menandai notifikasi sebagai sudah dibaca
+  const markAsRead = (id) => {
+    setNotifications(prev =>
+      prev.map(n => n.id === id ? { ...n, read: true } : n)
+    );
+  };
+
+  // Fungsi menandai semua sudah dibaca
+  const markAllAsRead = () => {
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+  };
+
+  // Fungsi menghapus notifikasi
+  const deleteNotification = (id) => {
+    setNotifications(prev => prev.filter(n => n.id !== id));
+  };
 
   const cards = [
     { label: "Total Mahasiswa",     value: stats.totalMahasiswa,     icon: Users,         accent: "#765439" },
@@ -171,29 +197,51 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Notifications */}
+        {/* Notifications Widget */}
         <div className={styles.section}>
           <div className={styles.sectionHead}>
             <div className={styles.sectionTitle}>
               <Bell size={15} />
               Notifikasi Terbaru
             </div>
-            <span className={styles.badge}>{NOTIFS.length}</span>
+            <div style={{ display: "flex", gap: "8px" }}>
+              {unreadCount > 0 && (
+                <button className={styles.linkBtn} onClick={markAllAsRead} style={{ fontSize: "11px", padding: "2px 8px" }}>
+                  <Check size={12} /> Tandai semua
+                </button>
+              )}
+              <span className={styles.badge}>{unreadCount}</span>
+            </div>
           </div>
           <div className={styles.notifList}>
-            {NOTIFS.map(n => (
-              <div key={n.id} className={styles.notifItem}>
-                <div className={styles.notifDot}
-                  style={{ background: NOTIF_BG[n.type], color: NOTIF_COLORS[n.type], border: `1px solid ${NOTIF_COLORS[n.type]}22` }}>
-                  <Bell size={12} />
+            {notifications.length === 0 ? (
+              <div className={styles.emptyNotif}>Tidak ada notifikasi</div>
+            ) : (
+              notifications.map(n => (
+                <div
+                  key={n.id}
+                  className={`${styles.notifItem} ${!n.read ? styles.notifUnread : ""}`}
+                  onClick={() => markAsRead(n.id)}
+                  style={{ cursor: "pointer" }}
+                >
+                  <div className={styles.notifDot}
+                    style={{ background: NOTIF_BG[n.type], color: NOTIF_COLORS[n.type], border: `1px solid ${NOTIF_COLORS[n.type]}22` }}>
+                    <Bell size={12} />
+                  </div>
+                  <div className={styles.notifText}>
+                    <p>{n.text}</p>
+                    <span>{n.time}</span>
+                  </div>
+                  <button
+                    className={styles.notifMore}
+                    onClick={(e) => { e.stopPropagation(); deleteNotification(n.id); }}
+                    title="Hapus notifikasi"
+                  >
+                    <Trash2 size={13} />
+                  </button>
                 </div>
-                <div className={styles.notifText}>
-                  <p>{n.text}</p>
-                  <span>{n.time}</span>
-                </div>
-                <button className={styles.notifMore}><MoreHorizontal size={13} /></button>
-              </div>
-            ))}
+              ))
+            )}
           </div>
           <button className={styles.linkBtn} style={{ marginTop: 10, width: "100%", justifyContent: "center" }}>
             Semua Notifikasi <ChevronRight size={12} />

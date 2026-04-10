@@ -97,6 +97,11 @@ export default function AktivitasPage() {
   const itemsPerPage = 10;
   const router = useRouter();
 
+  // Set page title //
+   useEffect(() => {
+    document.title = "Aktivitas | Admin SKPI";
+  }, []);
+
   useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 600);
     return () => clearTimeout(timer);

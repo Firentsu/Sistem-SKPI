@@ -1,0 +1,16 @@
+.container { max-width: 800px; margin: 0 auto; }
+.title { font-size: 1.8rem; font-weight: 700; margin-bottom: 24px; }
+.statusCard { background: white; border-radius: 20px; padding: 20px; border-left: 4px solid; margin-bottom: 24px; }
+.statusHeader { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.statusLabel { font-weight: 600; }
+.statusValue { font-weight: 700; }
+.ajukanBtn, .downloadBtn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 24px; border-radius: 40px; font-weight: 600; cursor: pointer; border: none; }
+.ajukanBtn { color: white; }
+.downloadBtn { background: white; border: 2px solid; }
+.toast { position: fixed; bottom: 20px; right: 20px; color: white; padding: 8px 16px; border-radius: 40px; }
+.riwayatCard, .infoCard { background: white; border-radius: 16px; padding: 20px; margin-bottom: 20px; }
+.table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+.table th, .table td { padding: 8px; text-align: left; border-bottom: 1px solid #f0f0f0; }
+.belumdiajukan { color: #64748b; }
+.diproses { color: #f59e0b; }
+.selesai { color: #10b981; }

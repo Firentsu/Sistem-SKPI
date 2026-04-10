@@ -1,11 +1,101 @@
+// frontend/src/app/admin/generate-skpi/page.js
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Search, Filter, ChevronLeft, ChevronRight, AlertCircle, CheckCircle2, X,
   Download, Eye, FileText, Loader2, Zap, Users, Award, TrendingUp
 } from "lucide-react";
 import styles from "./page.module.css";
+import { TEMPLATE_SECTIONS } from "../../../lib/template-sections";
+
+// Helper: ambil section aktif dan urutkan
+const getActiveSections = () => {
+  return TEMPLATE_SECTIONS.filter(s => s.enabled).sort((a, b) => a.order - b.order);
+};
+
+// Fungsi render konten per section (bisa diperluas dengan data riil)
+const renderSectionContent = (section, mahasiswa) => {
+  switch (section.key) {
+    case "identitas":
+      return (
+        <div className={styles.sectionContent}>
+          <p><strong>Nama:</strong> {mahasiswa.nama}</p>
+          <p><strong>NIM:</strong> {mahasiswa.nim}</p>
+          <p><strong>Program Studi:</strong> {mahasiswa.prodi}</p>
+          <p><strong>Tempat, Tanggal Lahir:</strong> Jakarta, 1 Januari 2000</p>
+          <p><strong>Gelar:</strong> S.Kom.</p>
+        </div>
+      );
+    case "institusi":
+      return (
+        <div className={styles.sectionContent}>
+          <p><strong>Nama PT:</strong> Institut Shanti Bhuana</p>
+          <p><strong>Akreditasi:</strong> B</p>
+          <p><strong>Jenjang:</strong> Sarjana (S1)</p>
+          <p><strong>Bahasa Pengantar:</strong> Indonesia & Inggris</p>
+        </div>
+      );
+    case "capaian_sikap":
+      return (
+        <ul>
+          <li>Bertakwa kepada Tuhan Yang Maha Esa</li>
+          <li>Menjunjung tinggi nilai kemanusiaan</li>
+          <li>Berkontribusi dalam peningkatan mutu kehidupan</li>
+        </ul>
+      );
+    case "capaian_pengetahuan":
+      return (
+        <ul>
+          <li>Mampu menganalisis dan mendesain secara profesional</li>
+          <li>Pengetahuan dalam algoritma pemrograman</li>
+          <li>Menguasai konsep dasar computing</li>
+        </ul>
+      );
+    case "keterampilan_umum":
+      return (
+        <ul>
+          <li>Pemikiran logis, kritis, sistematis</li>
+          <li>Kinerja mandiri, bermutu, terukur</li>
+          <li>Keputusan tepat berdasarkan analisis</li>
+        </ul>
+      );
+    case "keterampilan_khusus":
+      return (
+        <ul>
+          <li>Merancang algoritma keamanan jaringan</li>
+          <li>Mengelola informasi melalui jaringan komputer</li>
+          <li>Menguji aplikasi berbasis komputer</li>
+        </ul>
+      );
+    case "aktivitas_prestasi":
+      return (
+        <div>
+          <p><strong>Aktivitas:</strong> Workshop, Seminar, Magang</p>
+          <p><strong>Prestasi:</strong> Juara 2 Lomba Aplikasi</p>
+        </div>
+      );
+    case "poin_integritas":
+      return (
+        <div>
+          <p><strong>Total ICP:</strong> {mahasiswa.total_poin} poin</p>
+          <p><strong>Kriteria:</strong> {mahasiswa.total_poin >= 150 ? "Silver" : mahasiswa.total_poin >= 100 ? "Bronze" : "Perlu ditingkatkan"}</p>
+        </div>
+      );
+    case "kkni":
+      return <p>Kerangka Kualifikasi Nasional Indonesia (KKNI) level 6 (Sarjana)</p>;
+    case "pengesahan":
+      return (
+        <div>
+          <p>Bengkayang, {new Date().toLocaleDateString("id-ID")}</p>
+          <p>Wakil Rektor I Institut Shanti Bhuana</p>
+          <p>Dr. Helena Anggraeni (Reni) Tondro Sugianto, S.T., M.T.</p>
+        </div>
+      );
+    default:
+      return <p>Konten belum tersedia</p>;
+  }
+};
 
 // Mock data mahasiswa
 const MOCK_MAHASISWA = [
@@ -27,15 +117,14 @@ function Toast({ toast, onClose }) {
         {isOk ? <CheckCircle2 size={18} /> : <AlertCircle size={18} />}
       </div>
       <span className={styles.toastMessage}>{toast.msg}</span>
-      <button className={styles.toastClose} onClick={onClose}>
-        <X size={14} />
-      </button>
+      <button className={styles.toastClose} onClick={onClose}><X size={14} /></button>
     </div>
   );
 }
 
 // Preview Modal
 function PreviewModal({ item, isOpen, onClose, onGenerate, loading }) {
+  const activeSections = getActiveSections();
   if (!isOpen || !item) return null;
 
   return (
@@ -43,9 +132,7 @@ function PreviewModal({ item, isOpen, onClose, onGenerate, loading }) {
       <div className={styles.modalContainer} onClick={(e) => e.stopPropagation()}>
         <div className={styles.modalHeader}>
           <h3>Preview SKPI - {item.nama}</h3>
-          <button onClick={onClose} className={styles.modalClose}>
-            <X size={20} />
-          </button>
+          <button onClick={onClose} className={styles.modalClose}><X size={20} /></button>
         </div>
         <div className={styles.modalBody}>
           <div className={styles.previewCard}>
@@ -54,49 +141,19 @@ function PreviewModal({ item, isOpen, onClose, onGenerate, loading }) {
               <p>Institut Shanti Bhuana</p>
             </div>
             <div className={styles.previewContent}>
-              <div className={styles.previewRow}>
-                <label>Nama Mahasiswa</label>
-                <p>{item.nama}</p>
-              </div>
-              <div className={styles.previewRow}>
-                <label>NIM</label>
-                <p>{item.nim}</p>
-              </div>
-              <div className={styles.previewRow}>
-                <label>Program Studi</label>
-                <p>{item.prodi}</p>
-              </div>
-              <div className={styles.previewRow}>
-                <label>Total Aktivitas</label>
-                <p>{item.total_aktivitas} kegiatan</p>
-              </div>
-              <div className={styles.previewRow}>
-                <label>Total Poin</label>
-                <p className={styles.previewPoin}>{item.total_poin} poin</p>
-              </div>
-              <hr className={styles.divider} />
-              <div className={styles.previewRow}>
-                <label>Rincian Aktivitas</label>
-                <div className={styles.rincianList}>
-                  <p>✓ Workshop & Seminar: 8 kegiatan (32 poin)</p>
-                  <p>✓ Kompetisi: 4 kegiatan (40 poin)</p>
-                  <p>✓ Training: 6 kegiatan (24 poin)</p>
-                  <p>✓ Pengabdian: 3 kegiatan (18 poin)</p>
-                  <p>✓ Pengembangan Diri: 4 kegiatan (11 poin)</p>
+              {activeSections.map((section) => (
+                <div key={section.id} className={styles.previewSection}>
+                  <h5>{section.titleID} / {section.titleEN}</h5>
+                  {renderSectionContent(section, item)}
+                  <hr className={styles.divider} />
                 </div>
-              </div>
+              ))}
             </div>
           </div>
         </div>
         <div className={styles.modalFooter}>
-          <button onClick={onClose} className={styles.btnSecondary}>
-            Batal
-          </button>
-          <button
-            onClick={() => onGenerate(item)}
-            disabled={loading}
-            className={`${styles.btnPrimary} ${styles.btnWithIcon}`}
-          >
+          <button onClick={onClose} className={styles.btnSecondary}>Batal</button>
+          <button onClick={() => onGenerate(item)} disabled={loading} className={`${styles.btnPrimary} ${styles.btnWithIcon}`}>
             {loading ? <Loader2 size={18} className={styles.spin} /> : <Download size={18} />}
             {loading ? "Memproses..." : "Generate & Download"}
           </button>
@@ -107,6 +164,11 @@ function PreviewModal({ item, isOpen, onClose, onGenerate, loading }) {
 }
 
 export default function GenerateSkpiPage() {
+  // Set document title di dalam komponen
+  useEffect(() => {
+    document.title = "Generate SKPI | Admin Panel";
+  }, []);
+
   const [mahasiswa] = useState(MOCK_MAHASISWA);
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("Semua");
@@ -120,7 +182,6 @@ export default function GenerateSkpiPage() {
 
   const prodiList = ["Semua", ...new Set(mahasiswa.map((m) => m.prodi))];
 
-  // Filter & pagination
   const filtered = mahasiswa.filter((item) => {
     const matchSearch = item.nim.includes(search) || item.nama.toLowerCase().includes(search.toLowerCase());
     const matchStatus = filterStatus === "Semua" || item.status === filterStatus;
@@ -144,7 +205,7 @@ export default function GenerateSkpiPage() {
   const handleGenerate = async (item) => {
     setLoading(true);
     setTimeout(() => {
-      showToast(`SKPI untuk ${item.nama} berhasil digenerate!`);
+      showToast(`SKPI untuk ${item.nama} berhasil digenerate sesuai template!`);
       setLoading(false);
       setPreviewOpen(false);
     }, 1500);
@@ -157,14 +218,13 @@ export default function GenerateSkpiPage() {
     }
     setLoading(true);
     setTimeout(() => {
-      showToast(`${filtered.length} SKPI berhasil digenerate!`);
+      showToast(`${filtered.length} SKPI berhasil digenerate sesuai template!`);
       setLoading(false);
     }, 2000);
   };
 
-  // Statistik
-  const totalSiap = mahasiswa.filter(m => m.status === "Siap").length;
-  const totalKurang = mahasiswa.filter(m => m.status === "Kurang").length;
+  const totalSiap = mahasiswa.filter((m) => m.status === "Siap").length;
+  const totalKurang = mahasiswa.filter((m) => m.status === "Kurang").length;
   const rataPoin = Math.round(mahasiswa.reduce((sum, m) => sum + m.total_poin, 0) / mahasiswa.length);
 
   return (
@@ -173,13 +233,9 @@ export default function GenerateSkpiPage() {
       <div className={styles.header}>
         <div>
           <h1 className={styles.title}>Generate & Penerbitan SKPI</h1>
-          <p className={styles.subtitle}>Buat dan terbitkan surat keterangan pencapaian kompetensi mahasiswa</p>
+          <p className={styles.subtitle}>Buat SKPI berdasarkan template yang telah ditentukan (bilingual, urutan dinamis)</p>
         </div>
-        <button
-          onClick={handleBulkGenerate}
-          disabled={loading}
-          className={`${styles.btnPrimary} ${styles.btnLg} ${styles.btnWithIcon}`}
-        >
+        <button onClick={handleBulkGenerate} disabled={loading} className={`${styles.btnPrimary} ${styles.btnLg} ${styles.btnWithIcon}`}>
           {loading ? <Loader2 size={18} className={styles.spin} /> : <Zap size={18} />}
           {loading ? "Sedang Generate..." : "Generate Semua"}
         </button>
@@ -231,7 +287,7 @@ export default function GenerateSkpiPage() {
         <div className={styles.filterGroup}>
           <Filter size={18} />
           <select value={filterProdi} onChange={(e) => { setFilterProdi(e.target.value); setCurrentPage(1); }}>
-            {prodiList.map(p => <option key={p} value={p}>{p}</option>)}
+            {prodiList.map((p) => <option key={p}>{p}</option>)}
           </select>
           <select value={filterStatus} onChange={(e) => { setFilterStatus(e.target.value); setCurrentPage(1); }}>
             <option value="Semua">Semua Status</option>
@@ -294,21 +350,33 @@ export default function GenerateSkpiPage() {
       {/* Pagination */}
       {totalPages > 1 && (
         <div className={styles.pagination}>
-          <button onClick={() => setCurrentPage(p => Math.max(1, p-1))} disabled={currentPage === 1} className={styles.pageBtn}>
-            <ChevronLeft size={18} />
-          </button>
-          {Array.from({ length: totalPages }, (_, i) => i+1).map(page => (
-            <button key={page} onClick={() => setCurrentPage(page)} className={`${styles.pageBtn} ${currentPage === page ? styles.activePage : ""}`}>
-              {page}
-            </button>
-          ))}
-          <button onClick={() => setCurrentPage(p => Math.min(totalPages, p+1))} disabled={currentPage === totalPages} className={styles.pageBtn}>
-            <ChevronRight size={18} />
-          </button>
+          <div className={styles.paginationInfo}>Halaman {currentPage} dari {totalPages}</div>
+          <div className={styles.paginationControls}>
+            <button className={styles.pageBtn} onClick={() => setCurrentPage(1)} disabled={currentPage === 1}>«</button>
+            <button className={styles.pageBtn} onClick={() => setCurrentPage(p => Math.max(1, p-1))} disabled={currentPage === 1}><ChevronLeft size={14} /></button>
+            {Array.from({ length: totalPages }, (_, i) => i+1).filter(p => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1).reduce((acc, p, i, arr) => {
+              if (i > 0 && arr[i-1] !== p-1) acc.push("...");
+              acc.push(p);
+              return acc;
+            }, []).map((p, i) => p === "..." ? <span key={`dots-${i}`} className={styles.pageDots}>…</span> : (
+              <button key={p} className={`${styles.pageBtn} ${currentPage === p ? styles.pageBtnActive : ""}`} onClick={() => setCurrentPage(p)}>{p}</button>
+            ))}
+            <button className={styles.pageBtn} onClick={() => setCurrentPage(p => Math.min(totalPages, p+1))} disabled={currentPage === totalPages}><ChevronRight size={14} /></button>
+            <button className={styles.pageBtn} onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages}>»</button>
+          </div>
         </div>
       )}
 
-      <PreviewModal item={selectedItem} isOpen={previewOpen} onClose={() => setPreviewOpen(false)} onGenerate={handleGenerate} loading={loading} />
+      {/* Preview Modal */}
+      <PreviewModal
+        item={selectedItem}
+        isOpen={previewOpen}
+        onClose={() => setPreviewOpen(false)}
+        onGenerate={handleGenerate}
+        loading={loading}
+      />
+
+      {/* Toast */}
       <Toast toast={toast} onClose={() => setToast(null)} />
     </div>
   );
