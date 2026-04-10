@@ -171,7 +171,7 @@ const MOCK_MAHASISWA_SESSION = {
   mahasiswa: {
     id_mahasiswa: 1,
     nim:          "2021001",
-    nama:         "Budi Santoso Demo",
+    nama:         "Mio Haimiya",
     email:        "mhs@isb.ac.id",
     prodi:        "Teknik Informatika",
     angkatan:     2021,
@@ -183,7 +183,7 @@ const MOCK_MAHASISWA_SESSION = {
 const MOCK_MAHASISWA_PROFILE = {
   id_mahasiswa: 1,
   nim:          "2021001",
-  nama:         "Budi Santoso Demo",
+  nama:         "Mio Haimiya",
   email:        "mhs@isb.ac.id",
   username:     "mhs_demo",
   prodi:        "Teknik Informatika",
