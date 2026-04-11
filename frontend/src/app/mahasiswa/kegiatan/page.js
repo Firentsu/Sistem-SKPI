@@ -1,17 +1,14 @@
+// frontend/src/app/mahasiswa/kegiatan/page.js
 "use client";
 
 import { useState, useRef, useEffect } from "react";
 import { useMahasiswa } from "@/context/MahasiswaContext";
 import {
-  Plus, Edit2, Trash2, Upload, FileImage, X, CheckCircle2, AlertCircle,
-  Eye, Calendar, MapPin, Building, Award, TrendingUp, BarChart3
+  Plus, Edit2, Trash2, Upload, FileImage, X, CheckCircle2, AlertCircle
 } from "lucide-react";
 import styles from "./kegiatan.module.css";
-import {
-  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell
-} from "recharts";
 
-// ==================== DATA MOCK (sementara, nanti dari API) ====================
+// ==================== DATA MOCK ====================
 const MOCK_KEGIATAN = [
   {
     id: 1,
@@ -23,11 +20,9 @@ const MOCK_KEGIATAN = [
     level: "Nasional",
     periode: "Semester Genap 2025/2026",
     tingkat_prestasi: "Peserta",
-    peringkat: "",
     lokasi: "Kampus TI",
     penyelenggara: "Himpunan Mahasiswa TI",
     tanggal: "2026-03-20",
-    poin: 15,
     status: "Disetujui",
     bukti: "bukti1.pdf",
     created_at: "2026-03-01",
@@ -42,11 +37,9 @@ const MOCK_KEGIATAN = [
     level: "Internasional",
     periode: "Semester Ganjil 2025/2026",
     tingkat_prestasi: "Peserta",
-    peringkat: "",
     lokasi: "Online",
     penyelenggara: "Tech Corp",
     tanggal: "2026-03-25",
-    poin: 10,
     status: "Menunggu",
     bukti: null,
     created_at: "2026-03-10",
@@ -61,18 +54,15 @@ const MOCK_KEGIATAN = [
     level: "Lokal",
     periode: "Liburan Semester",
     tingkat_prestasi: "",
-    peringkat: "",
     lokasi: "Jakarta",
     penyelenggara: "Startup.id",
     tanggal: "2026-03-10",
-    poin: 20,
     status: "Ditolak",
     bukti: "bukti3.pdf",
     created_at: "2026-02-20",
   },
 ];
 
-// Daftar pilihan dropdown
 const JENIS_AKTIVITAS = [
   "Prestasi dan Kegiatan",
   "Peningkatan Keterampilan Profesional",
@@ -103,7 +93,7 @@ const KELOMPOK_OPTIONS = ["Akademik", "Non-Akademik", "Organisasi", "Kepemimpina
 const LEVEL_OPTIONS = ["Internal", "Nasional", "Internasional"];
 const TINGKAT_PRESTASI = ["Peserta", "Juara 1", "Juara 2", "Juara 3", "Harapan", "Finalis", "Partisipasi"];
 
-// ==================== KOMPONEN TOAST ====================
+// Toast component
 function Toast({ message, onClose }) {
   if (!message) return null;
   return (
@@ -115,20 +105,20 @@ function Toast({ message, onClose }) {
   );
 }
 
-// ==================== MODAL FORM TAMBAH/EDIT ====================
+// Modal Form
 function KegiatanModal({ isOpen, onClose, onSave, kegiatan, prodiColor }) {
   const [form, setForm] = useState(
     kegiatan || {
       nama_id: "", nama_en: "", jenis_aktivitas: "", kategori: "", kelompok: "",
-      level: "", periode: "", tingkat_prestasi: "", peringkat: "", lokasi: "",
-      penyelenggara: "", tanggal: "", poin: "", bukti: null
+      level: "", periode: "", tingkat_prestasi: "", lokasi: "",
+      penyelenggara: "", tanggal: "", bukti: null
     }
   );
   const [file, setFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [uploadError, setUploadError] = useState("");
   const fileRef = useRef();
-  const MAX_SIZE = 2 * 1024 * 1024; // 2 MB
+  const MAX_SIZE = 2 * 1024 * 1024;
 
   const handleFileChange = (e) => {
     const selected = e.target.files[0];
@@ -143,7 +133,6 @@ function KegiatanModal({ isOpen, onClose, onSave, kegiatan, prodiColor }) {
       return;
     }
     setFile(selected);
-    // Preview untuk gambar
     if (selected.type.startsWith("image/")) {
       const reader = new FileReader();
       reader.onloadend = () => setPreviewUrl(reader.result);
@@ -157,7 +146,7 @@ function KegiatanModal({ isOpen, onClose, onSave, kegiatan, prodiColor }) {
     e.preventDefault();
     if (!form.nama_id || !form.nama_en || !form.jenis_aktivitas || !form.kategori ||
         !form.kelompok || !form.level || !form.periode || !form.lokasi ||
-        !form.penyelenggara || !form.tanggal || !form.poin) {
+        !form.penyelenggara || !form.tanggal) {
       alert("Lengkapi semua field yang bertanda *");
       return;
     }
@@ -221,14 +210,12 @@ function KegiatanModal({ isOpen, onClose, onSave, kegiatan, prodiColor }) {
               </select>
             </div>
             <div className={styles.formRow}>
-              <input className={styles.input} placeholder="Peringkat (Opsional)" value={form.peringkat} onChange={e => setForm({...form, peringkat: e.target.value})} />
               <input className={styles.input} placeholder="Lokasi *" value={form.lokasi} onChange={e => setForm({...form, lokasi: e.target.value})} />
+              <input className={styles.input} placeholder="Penyelenggara *" value={form.penyelenggara} onChange={e => setForm({...form, penyelenggara: e.target.value})} />
             </div>
             <div className={styles.formRow}>
-              <input className={styles.input} placeholder="Penyelenggara *" value={form.penyelenggara} onChange={e => setForm({...form, penyelenggara: e.target.value})} />
               <input type="date" className={styles.input} value={form.tanggal} onChange={e => setForm({...form, tanggal: e.target.value})} />
             </div>
-          
 
             {/* Upload bukti */}
             <div className={styles.uploadSection}>
@@ -261,11 +248,9 @@ function KegiatanModal({ isOpen, onClose, onSave, kegiatan, prodiColor }) {
   );
 }
 
-
-
-// ==================== HALAMAN UTAMA ====================
+// Main Page
 export default function KegiatanPage() {
-  const { prodiConfig, user } = useMahasiswa();
+  const { prodiConfig } = useMahasiswa();
   const [kegiatan, setKegiatan] = useState(MOCK_KEGIATAN);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);
@@ -273,9 +258,8 @@ export default function KegiatanPage() {
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("Semua");
 
-        // Set document title
   useEffect(() => {
-    document.title = "Dashboard Kegiatan | Mahasiswa SKPI";
+    document.title = "Kegiatan Saya | Mahasiswa SKPI";
   }, []);
 
   const showToast = (text, type = "success") => {
@@ -317,28 +301,16 @@ export default function KegiatanPage() {
     setModalOpen(true);
   };
 
-  // Filter & search
   const filtered = kegiatan.filter(k => {
     const matchSearch = k.nama_id.toLowerCase().includes(search.toLowerCase()) || k.nama_en.toLowerCase().includes(search.toLowerCase());
     const matchStatus = filterStatus === "Semua" || k.status === filterStatus;
     return matchSearch && matchStatus;
   });
 
-  // Hitung total ICP
-  const totalICP = kegiatan.reduce((sum, k) => sum + (k.status === "Disetujui" ? k.poin : 0), 0);
-  // Data untuk grafik (mock)
-  const icpKategori = [
-    { name: "Akademik", value: kegiatan.filter(k => k.kelompok === "Akademik" && k.status === "Disetujui").reduce((s, k) => s + k.poin, 0) },
-    { name: "Non-Akademik", value: kegiatan.filter(k => k.kelompok === "Non-Akademik" && k.status === "Disetujui").reduce((s, k) => s + k.poin, 0) },
-    { name: "Organisasi", value: kegiatan.filter(k => k.kelompok === "Organisasi" && k.status === "Disetujui").reduce((s, k) => s + k.poin, 0) },
-    { name: "Profesional", value: kegiatan.filter(k => k.kelompok === "Profesional" && k.status === "Disetujui").reduce((s, k) => s + k.poin, 0) },
-  ];
-
   return (
     <div className={styles.container}>
       <Toast message={toast} onClose={() => setToast(null)} />
 
-      {/* Header dan tombol */}
       <div className={styles.header}>
         <div>
           <h1 className={styles.title}>Kegiatan Saya</h1>
@@ -349,11 +321,8 @@ export default function KegiatanPage() {
         </button>
       </div>
 
-
-
-      {/* Filter dan pencarian */}
       <div className={styles.filterBar}>
-        <input type="text" placeholder="Cari kegiatan..." value={search} onChange={e => setSearch(e.target.value)} className={styles.searchInput} />
+        <input type="text" placeholder="Cari kegiatan (Indonesia/Inggris)..." value={search} onChange={e => setSearch(e.target.value)} className={styles.searchInput} />
         <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} className={styles.filterSelect}>
           <option value="Semua">Semua Status</option>
           <option value="Menunggu">Menunggu</option>
@@ -363,7 +332,6 @@ export default function KegiatanPage() {
         </select>
       </div>
 
-      {/* Tabel kegiatan */}
       <div className={styles.tableWrapper}>
         <table className={styles.table}>
           <thead>
@@ -393,13 +361,12 @@ export default function KegiatanPage() {
               </tr>
             ))}
             {filtered.length === 0 && (
-              <tr><td colSpan="8" className={styles.emptyRow}>Belum ada kegiatan. Klik "Tambah Kegiatan" untuk mencatat aktivitas Anda.</td></tr>
+              <tr><td colSpan="7" className={styles.emptyRow}>Belum ada kegiatan. Klik "Tambah Kegiatan" untuk mencatat aktivitas Anda.</td></tr>
             )}
           </tbody>
         </table>
       </div>
 
-      {/* Modal form */}
       <KegiatanModal
         isOpen={modalOpen}
         onClose={() => { setModalOpen(false); setEditing(null); }}
