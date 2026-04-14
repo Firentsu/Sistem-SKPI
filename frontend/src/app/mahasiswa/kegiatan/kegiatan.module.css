@@ -367,3 +367,266 @@
     font-size: 0.8rem;
   }
 }
+
+/* ─────────────────────────────────────────
+   COMPREHENSIVE RESPONSIVE - Kegiatan
+───────────────────────────────────────── */
+
+/* Desktop Large (1200px+) */
+@media (min-width: 1200px) {
+  .container { max-width: 1400px; padding: 24px; }
+  .title { font-size: 2rem; }
+  .subtitle { font-size: 0.95rem; }
+  .icpCharts { grid-template-columns: 1fr 1fr; gap: 24px; }
+  .barChart, .pieChart { height: 240px; }
+}
+
+/* Tablet Large (960px - 1199px) */
+@media (max-width: 1199px) {
+  .container { max-width: 100%; padding: 20px; }
+  .title { font-size: 1.6rem; }
+  .icpCharts { grid-template-columns: 1fr; gap: 20px; }
+  .barChart, .pieChart { height: 220px; }
+}
+
+/* Tablet (768px - 959px) */
+@media (max-width: 768px) {
+  .container { max-width: 100%; padding: 16px; }
+
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .title { font-size: 1.4rem; }
+  .subtitle { font-size: 0.9rem; }
+
+  .addBtn {
+    width: 100%;
+    justify-content: center;
+    padding: 10px 16px;
+    font-size: 0.9rem;
+  }
+
+  .icpCard { padding: 16px; margin-bottom: 20px; border-radius: 16px; }
+  .cardTitle { font-size: 1.1rem; margin-bottom: 14px; }
+
+  .icpCharts {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .barChart, .pieChart { height: 200px; }
+
+  .filterBar {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .filterBtn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .table { font-size: 12px; }
+  .table th { padding: 10px 8px; font-size: 11px; }
+  .table td { padding: 8px 6px; font-size: 11px; }
+
+  .status { padding: 2px 8px; font-size: 10px; }
+
+  .actions { gap: 6px; }
+  .actionBtn { padding: 3px; font-size: 14px; }
+
+  .toast {
+    bottom: 16px;
+    right: 16px;
+    padding: 10px 16px;
+    font-size: 12px;
+  }
+
+  .emptyRow { padding: 30px 16px; font-size: 13px; }
+}
+
+/* Mobile (480px - 767px) */
+@media (max-width: 480px) {
+  .container { padding: 12px; }
+
+  .header {
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .title {
+    font-size: 1.2rem;
+    margin: 0;
+  }
+
+  .subtitle { font-size: 0.85rem; }
+
+  .addBtn {
+    width: 100%;
+    padding: 9px 12px;
+    font-size: 0.85rem;
+    border-radius: 8px;
+  }
+
+  .icpCard {
+    padding: 14px;
+    margin-bottom: 16px;
+    border-radius: 14px;
+  }
+
+  .cardTitle {
+    font-size: 1rem;
+    margin-bottom: 12px;
+    gap: 6px;
+  }
+
+  .icpCharts {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .barChart, .pieChart { height: 180px; }
+
+  .filterBar {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .filterBtn {
+    width: 100%;
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+
+  .tableWrapper {
+    border-radius: 12px;
+    overflow: auto;
+    scroll-behavior: smooth;
+  }
+
+  .table {
+    font-size: 10px;
+    white-space: nowrap;
+  }
+
+  .table th {
+    padding: 8px 4px;
+    font-size: 9px;
+    font-weight: 600;
+  }
+
+  .table td {
+    padding: 6px 4px;
+    font-size: 10px;
+  }
+
+  .status {
+    padding: 1px 6px;
+    font-size: 9px;
+    white-space: nowrap;
+  }
+
+  .actions {
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+
+  .actionBtn {
+    padding: 2px;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+  }
+
+  .modalOverlay { padding: 12px; }
+  .modal { max-width: 95vw; border-radius: 12px; }
+  .modalHeader { padding: 12px; font-size: 0.95rem; }
+  .modalBody { padding: 12px; max-height: 60vh; }
+  .modalFooter { padding: 10px; gap: 6px; }
+
+  .input {
+    padding: 8px 10px;
+    font-size: 12px;
+    border-radius: 8px;
+  }
+
+  .saveBtn, .cancelBtn {
+    padding: 8px 12px;
+    font-size: 12px;
+    border-radius: 8px;
+    flex: 1;
+  }
+
+  .toast {
+    bottom: 12px;
+    right: 12px;
+    left: 12px;
+    padding: 8px 12px;
+    font-size: 11px;
+    border-radius: 8px;
+  }
+
+  .emptyRow {
+    padding: 24px 12px;
+    font-size: 12px;
+  }
+}
+
+/* Extra Small Mobile (< 360px) */
+@media (max-width: 359px) {
+  .container { padding: 10px; }
+  .title { font-size: 1rem; }
+  .subtitle { display: none; }
+
+  .addBtn {
+    padding: 8px 10px;
+    font-size: 0.8rem;
+    gap: 4px;
+  }
+
+  .icpCard { padding: 12px; margin-bottom: 14px; }
+  .cardTitle { font-size: 0.9rem; margin-bottom: 10px; }
+
+  .barChart, .pieChart { height: 150px; }
+
+  .filterBar { gap: 6px; }
+  .filterBtn { padding: 6px 10px; font-size: 11px; }
+
+  .table { font-size: 9px; }
+  .table th { padding: 6px 3px; font-size: 8px; }
+  .table td { padding: 4px 3px; font-size: 9px; }
+
+  .status { padding: 1px 4px; font-size: 8px; }
+  .actionBtn { width: 20px; height: 20px; font-size: 10px; }
+
+  .modal { max-width: 100vw; }
+  .input { padding: 6px 8px; font-size: 11px; }
+  .saveBtn, .cancelBtn { padding: 6px 10px; font-size: 11px; }
+
+  .toast { font-size: 10px; }
+  .emptyRow { padding: 20px 10px; font-size: 11px; }
+}
+
+/* Landscape Mobile */
+@media (max-height: 500px) and (orientation: landscape) {
+  .barChart, .pieChart { height: 150px; }
+  .icpCard { padding: 12px; margin-bottom: 12px; }
+  .table { font-size: 10px; }
+  .toast { bottom: 10px; right: 10px; }
+}
+
+/* Touch-friendly */
+@media (hover: none) and (pointer: coarse) {
+  .addBtn { min-height: 44px; padding: 12px 20px; }
+  .actionBtn { min-width: 44px; min-height: 44px; }
+  .saveBtn, .cancelBtn { min-height: 44px; padding: 12px 16px; }
+  .filterBtn { min-height: 40px; }
+}

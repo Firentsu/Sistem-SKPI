@@ -418,3 +418,100 @@
   .detailGrid { grid-template-columns: 1fr; }
   .modalContainer { margin: 16px; }
 }
+/* -----------------------------------------
+   RESPONSIVE DESIGN - Comprehensive
+----------------------------------------- */
+
+@media (max-width: 1199px) {
+  .container, .page { max-width: 100%; padding: 0 20px; }
+  .grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+}
+
+@media (max-width: 768px) {
+  .container, .page { max-width: 100%; padding: 0 16px; }
+  .grid { grid-template-columns: 1fr; gap: 12px; }
+  .title { font-size: 1.4rem; }
+  .subtitle { font-size: 0.9rem; }
+  .card { padding: 16px; border-radius: 14px; }
+  .statsGrid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .table { font-size: 12px; }
+  .table th, .table td { padding: 10px 8px; }
+  .twoColumns { grid-template-columns: 1fr; gap: 16px; }
+  .button, .btn, .btnPrimary { padding: 8px 16px; }
+}
+
+@media (max-width: 480px) {
+  .container, .page { padding: 0 12px; }
+  .title { font-size: 1.2rem; }
+  .subtitle { font-size: 0.85rem; }
+  .card { padding: 14px; border-radius: 12px; }
+  .statsGrid { grid-template-columns: 1fr; gap: 10px; }
+  .grid { grid-template-columns: 1fr; gap: 10px; }
+  .table { font-size: 10px; }
+  .table th { padding: 8px 4px; font-size: 9px; }
+  .table td { padding: 6px 4px; font-size: 10px; }
+  .button, .btn, .btnPrimary { padding: 8px 14px; font-size: 12px; min-height: 40px; }
+  .twoColumns { gap: 12px; }
+  .formRow { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 359px) {
+  .container, .page { padding: 0 10px; }
+  .title { font-size: 1rem; }
+  .card { padding: 12px; }
+  .table { font-size: 9px; }
+  .table th, .table td { padding: 4px 2px; }
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .button, .btn, .btnPrimary { min-height: 44px; }
+}
+
+/* -----------------------------------------
+   RESPONSIVE DESIGN - Comprehensive
+----------------------------------------- */
+
+@media (max-width: 1199px) {
+  .container, .page { max-width: 100%; padding: 0 20px; }
+  .grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+}
+
+@media (max-width: 768px) {
+  .container, .page { max-width: 100%; padding: 0 16px; }
+  .grid { grid-template-columns: 1fr; gap: 12px; }
+  .title { font-size: 1.4rem; }
+  .subtitle { font-size: 0.9rem; }
+  .card { padding: 16px; border-radius: 14px; }
+  .statsGrid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .table { font-size: 12px; }
+  .table th, .table td { padding: 10px 8px; }
+  .twoColumns { grid-template-columns: 1fr; gap: 16px; }
+  .button, .btn, .btnPrimary { padding: 8px 16px; }
+}
+
+@media (max-width: 480px) {
+  .container, .page { padding: 0 12px; }
+  .title { font-size: 1.2rem; }
+  .subtitle { font-size: 0.85rem; }
+  .card { padding: 14px; border-radius: 12px; }
+  .statsGrid { grid-template-columns: 1fr; gap: 10px; }
+  .grid { grid-template-columns: 1fr; gap: 10px; }
+  .table { font-size: 10px; }
+  .table th { padding: 8px 4px; font-size: 9px; }
+  .table td { padding: 6px 4px; font-size: 10px; }
+  .button, .btn, .btnPrimary { padding: 8px 14px; font-size: 12px; min-height: 40px; }
+  .twoColumns { gap: 12px; }
+  .formRow { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 359px) {
+  .container, .page { padding: 0 10px; }
+  .title { font-size: 1rem; }
+  .card { padding: 12px; }
+  .table { font-size: 9px; }
+  .table th, .table td { padding: 4px 2px; }
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .button, .btn, .btnPrimary { min-height: 44px; }
+}

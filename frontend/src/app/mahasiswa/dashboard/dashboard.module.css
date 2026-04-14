@@ -1,15 +1,20 @@
+/* frontend/src/app/mahasiswa/dashboard/dashboard.module.css */
 .container {
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
+  padding: 24px;
 }
+
+/* Welcome Card */
 .welcomeCard {
   border-radius: 20px;
-  padding: 24px;
+  padding: 24px 32px;
   color: white;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
+  margin-bottom: 28px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 .welcomeTitle {
   font-size: 1.8rem;
@@ -20,11 +25,22 @@
   margin: 8px 0 0;
   opacity: 0.9;
 }
+.welcomeIcon {
+  opacity: 0.9;
+}
+
+/* Stat Cards */
 .statsGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  grid-template-columns: repeat(4, 1fr);
   gap: 16px;
-  margin-bottom: 24px;
+  margin-bottom: 28px;
+}
+@media (max-width: 1000px) {
+  .statsGrid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 600px) {
+  .statsGrid { grid-template-columns: 1fr; }
 }
 .statCard {
   background: white;
@@ -35,48 +51,66 @@
   gap: 16px;
   border-left: 4px solid;
   box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.statCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.1);
 }
 .statIcon {
   width: 48px;
   height: 48px;
-  background: #f1f5f9;
   border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 .statValue {
   font-size: 28px;
   font-weight: 800;
+  line-height: 1.2;
+  color: #2c1a0e;
 }
 .statLabel {
   font-size: 12px;
-  color: #64748b;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 4px;
 }
+
+/* Two columns */
 .twoColumns {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 24px;
-  margin-bottom: 24px;
+  margin-bottom: 28px;
 }
-@media (max-width: 768px) {
-  .twoColumns {
-    grid-template-columns: 1fr;
-  }
+@media (max-width: 800px) {
+  .twoColumns { grid-template-columns: 1fr; }
 }
+
 .card {
   background: white;
-  border-radius: 16px;
+  border-radius: 20px;
   padding: 20px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  border: 1px solid #ede0d4;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
 }
 .cardTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-size: 1.1rem;
-  font-weight: 600;
+  font-weight: 700;
   margin: 0 0 16px;
+  color: #2c1a0e;
 }
+
+/* Progress */
 .progressWrapper {
-  margin-bottom: 8px;
+  margin-bottom: 12px;
 }
 .progressBar {
   background: #e2e8f0;
@@ -94,6 +128,7 @@
   justify-content: space-between;
   font-size: 13px;
   margin-top: 8px;
+  color: #64748b;
 }
 .progressNote {
   font-size: 12px;
@@ -110,22 +145,82 @@
   cursor: pointer;
   width: 100%;
 }
+
+/* Notifikasi */
+.notifBadge {
+  background: #ef4444;
+  color: white;
+  border-radius: 20px;
+  padding: 0 6px;
+  font-size: 11px;
+  margin-left: 8px;
+}
 .notifList {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
+  max-height: 300px;
+  overflow-y: auto;
 }
 .notifItem {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 12px;
-  font-size: 13px;
+  padding: 10px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.notifItem:hover {
+  background: #fdfaf7;
+}
+.notifUnread {
+  background: #fefce8;
 }
 .notifDot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
+  margin-top: 6px;
+  flex-shrink: 0;
 }
+.notifContent {
+  flex: 1;
+}
+.notifContent p {
+  margin: 0 0 4px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #2c1a0e;
+}
+.notifContent span {
+  font-size: 11px;
+  color: #b09880;
+}
+.emptyNotif {
+  text-align: center;
+  color: #9c7a5e;
+  padding: 20px;
+}
+.linkBtn {
+  background: none;
+  border: 1px solid #ede0d4;
+  border-radius: 40px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #765439;
+  cursor: pointer;
+  width: 100%;
+  margin-top: 12px;
+  transition: 0.1s;
+}
+.linkBtn:hover {
+  background: #fdf4ec;
+  border-color: #c8945a;
+}
+
+/* Tabel kegiatan terbaru */
 .tableWrapper {
   overflow-x: auto;
 }
@@ -137,12 +232,14 @@
 .table th {
   text-align: left;
   padding: 12px 8px;
-  background: #f8fafc;
+  background: #faf5f0;
   font-weight: 600;
+  color: #5c3317;
+  border-bottom: 1px solid #ede0d4;
 }
 .table td {
   padding: 10px 8px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid #f0e6dc;
 }
 .statusBadge {
   display: inline-block;
@@ -151,15 +248,20 @@
   font-size: 11px;
   font-weight: 600;
 }
-.disetujui {
-  background: #d1fae5;
-  color: #065f46;
+.disetujui { background: #d1fae5; color: #065f46; }
+.menunggu  { background: #fed7aa; color: #9a3412; }
+.ditolak   { background: #fee2e2; color: #991b1b; }
+.emptyRow {
+  text-align: center;
+  padding: 40px;
+  color: #b09880;
 }
-.menunggu {
-  background: #fed7aa;
-  color: #9a3412;
-}
-.ditolak {
-  background: #fee2e2;
-  color: #991b1b;
+
+/* Responsive */
+@media (max-width: 640px) {
+  .container { padding: 16px; }
+  .welcomeTitle { font-size: 1.4rem; }
+  .welcomeCard { padding: 16px 20px; }
+  .welcomeIcon { display: none; }
+  .statValue { font-size: 22px; }
 }

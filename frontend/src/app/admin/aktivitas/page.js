@@ -5,23 +5,42 @@ import { useRouter } from "next/navigation";
 import {
   Activity, Plus, Search, Filter, Edit2, Trash2, Eye,
   Loader2, ChevronLeft, ChevronRight, AlertCircle, CheckCircle2,
-  Calendar, Users, Tag, Award, TrendingUp, X
+  Calendar, Users, Tag, Award, TrendingUp, X, Check, X as XIcon, Clock
 } from "lucide-react";
+import { apiFetch, isMockMode } from "@/lib/api";
 import styles from "./aktivitas.module.css";
 
-// ========== MOCK DATA ==========
-const MOCK_AKTIVITAS = [
-  { id: 1, nama: "Workshop React.js Advanced", jenis: "Workshop", kategori: "Akademik", peserta: 45, status: "Aktif", tanggal: "2026-04-20", icp: 15 },
-  { id: 2, nama: "Seminar Entrepreneurship", jenis: "Seminar", kategori: "Kewirausahaan", peserta: 120, status: "Aktif", tanggal: "2026-04-18", icp: 20 },
-  { id: 3, nama: "Kompetisi Coding ISB", jenis: "Kompetisi", kategori: "Akademik", peserta: 78, status: "Selesai", tanggal: "2026-04-10", icp: 25 },
-  { id: 4, nama: "Training Kepemimpinan", jenis: "Training", kategori: "Pengembangan Diri", peserta: 60, status: "Aktif", tanggal: "2026-04-08", icp: 10 },
-  { id: 5, nama: "Webinar: Digital Marketing", jenis: "Webinar", kategori: "Industri", peserta: 200, status: "Aktif", tanggal: "2026-04-25", icp: 12 },
-  { id: 6, nama: "Magang Program ISB", jenis: "Magang", kategori: "Industri", peserta: 30, status: "Aktif", tanggal: "2026-05-01", icp: 30 },
-];
+// ========== STATUS VERIFIKASI (dari backend) ==========
+const STATUS_VERIFIKASI = {
+  "diproses": { label: "Diproses", color: "#f59e0b", icon: Clock },
+  "disetujui": { label: "Disetujui", color: "#22c55e", icon: Check },
+  "ditolak": { label: "Ditolak", color: "#ef4444", icon: XIcon },
+  "revisi": { label: "Revisi", color: "#8b5cf6", icon: AlertCircle },
+};
 
-const JENIS_OPTIONS = ["Semua", "Workshop", "Seminar", "Kompetisi", "Training", "Webinar", "Magang", "Organisasi"];
-const KATEGORI_OPTIONS = ["Semua", "Akademik", "Kewirausahaan", "Pengembangan Diri", "Industri", "Organisasi"];
-const STATUS_OPTIONS = ["Semua", "Aktif", "Selesai", "Ditunda", "Dibatalkan"];
+// ========== MOCK DATA (fallback jika backend down) ==========
+const MOCK_AKTIVITAS = [
+  { 
+    id_kegiatan: 1, 
+    nama_kegiatan: "Workshop React.js Advanced", 
+    jenisaktivitas: { nama_indo: "Workshop" },
+    kategoriaktivitas: { nama_indo: "Akademik" },
+    mahasiswa: { nama: "Budi Santoso", nim: "2024001" },
+    tanggal_kegiatan: "2026-04-20", 
+    status_verifikasi: "diproses",
+    penyelenggara: "ISB Academy",
+  },
+  { 
+    id_kegiatan: 2, 
+    nama_kegiatan: "Seminar Entrepreneurship", 
+    jenisaktivitas: { nama_indo: "Seminar" },
+    kategoriaktivitas: { nama_indo: "Kewirausahaan" },
+    mahasiswa: { nama: "Ani Wijaya", nim: "2024002" },
+    tanggal_kegiatan: "2026-04-18", 
+    status_verifikasi: "disetujui",
+    penyelenggara: "ISB Business Club",
+  },
+];
 
 const JENIS_COLOR = {
   "Workshop": "#7c3aed",
@@ -31,13 +50,6 @@ const JENIS_COLOR = {
   "Webinar": "#6366f1",
   "Magang": "#10b981",
   "Organisasi": "#8b5cf6",
-};
-
-const STATUS_COLOR = {
-  "Aktif": "#22c55e",
-  "Selesai": "#3b82f6",
-  "Ditunda": "#f59e0b",
-  "Dibatalkan": "#ef4444",
 };
 
 // ========== TOAST ==========
@@ -53,30 +65,103 @@ function Toast({ toast, onClose }) {
   );
 }
 
-// ========== MODAL DETAIL ==========
-function DetailModal({ data, isOpen, onClose }) {
+// ========== MODAL DETAIL + VERIFIKASI ==========
+function DetailModal({ data, isOpen, onClose, onVerifikasi, isVerifying }) {
+  const [status, setStatus] = useState("diproses");
+  const [catatan, setCatatan] = useState("");
+
   if (!isOpen || !data) return null;
+
+  const handleVerifikasi = () => {
+    onVerifikasi(data.id_kegiatan, status, catatan);
+    setCatatan("");
+  };
+
   return (
     <div className={styles.modalOverlay} onClick={onClose}>
       <div className={styles.modalContainer} onClick={e => e.stopPropagation()}>
         <div className={styles.modalHeader}>
           <div className={styles.modalTitle}>
             <Eye size={16} />
-            <span>Detail Aktivitas</span>
+            <span>Detail & Verifikasi Aktivitas</span>
           </div>
           <button onClick={onClose} className={styles.modalClose}><X size={18} /></button>
         </div>
         <div className={styles.modalBody}>
-          <div className={styles.detailRow}><label>Nama Aktivitas</label><p>{data.nama}</p></div>
-          <div className={styles.detailRow}><label>Jenis</label><p>{data.jenis}</p></div>
-          <div className={styles.detailRow}><label>Kategori</label><p>{data.kategori}</p></div>
-          <div className={styles.detailRow}><label>Jumlah Peserta</label><p>{data.peserta} orang</p></div>
-          <div className={styles.detailRow}><label>ICP</label><p>{data.icp} poin</p></div>
-          <div className={styles.detailRow}><label>Status</label><p>{data.status}</p></div>
-          <div className={styles.detailRow}><label>Tanggal</label><p>{data.tanggal}</p></div>
+          {/* Detail Aktivitas */}
+          <div className={styles.detailSection}>
+            <h3 className={styles.sectionTitle}>📋 Informasi Aktivitas</h3>
+            <div className={styles.detailRow}><label>Nama Aktivitas</label><p>{data.nama_kegiatan}</p></div>
+            <div className={styles.detailRow}><label>Jenis</label><p>{data.jenisaktivitas?.nama_indo || "-"}</p></div>
+            <div className={styles.detailRow}><label>Kategori</label><p>{data.kategoriaktivitas?.nama_indo || "-"}</p></div>
+            <div className={styles.detailRow}><label>Penyelenggara</label><p>{data.penyelenggara || "-"}</p></div>
+            <div className={styles.detailRow}><label>Tanggal Kegiatan</label><p>{new Date(data.tanggal_kegiatan).toLocaleDateString("id-ID")}</p></div>
+            <div className={styles.detailRow}><label>Lokasi</label><p>{data.lokasi || "-"}</p></div>
+            
+            {/* Info Mahasiswa */}
+            <h3 className={styles.sectionTitle}>👤 Mahasiswa Pengusul</h3>
+            <div className={styles.detailRow}><label>Nama</label><p>{data.mahasiswa?.nama || "-"}</p></div>
+            <div className={styles.detailRow}><label>NIM</label><p>{data.mahasiswa?.nim || "-"}</p></div>
+
+            {/* Status Saat Ini */}
+            <h3 className={styles.sectionTitle}>✅ Status Verifikasi Saat Ini</h3>
+            <div className={styles.detailRow}>
+              <label>Status</label>
+              <span style={{ 
+                color: STATUS_VERIFIKASI[data.status_verifikasi]?.color,
+                fontWeight: "bold"
+              }}>
+                {STATUS_VERIFIKASI[data.status_verifikasi]?.label || data.status_verifikasi}
+              </span>
+            </div>
+            {data.catatan_admin && (
+              <div className={styles.detailRow}>
+                <label>Catatan Admin</label>
+                <p>{data.catatan_admin}</p>
+              </div>
+            )}
+          </div>
+
+          {/* Form Verifikasi */}
+          <div className={styles.verifikasiSection}>
+            <h3 className={styles.sectionTitle}>🔍 Verifikasi Aktivitas</h3>
+            <div className={styles.formGroup}>
+              <label htmlFor="verif-status" className={styles.label}>Ubah Status</label>
+              <select 
+                id="verif-status"
+                className={styles.select}
+                value={status}
+                onChange={(e) => setStatus(e.target.value)}
+              >
+                <option value="diproses">⏳ Diproses</option>
+                <option value="disetujui">✅ Disetujui</option>
+                <option value="ditolak">❌ Ditolak</option>
+                <option value="revisi">🔄 Revisi</option>
+              </select>
+            </div>
+            <div className={styles.formGroup}>
+              <label htmlFor="catatan" className={styles.label}>Catatan (Opsional)</label>
+              <textarea
+                id="catatan"
+                className={styles.textarea}
+                placeholder="Berikan catatan jika diperlukan..."
+                value={catatan}
+                onChange={(e) => setCatatan(e.target.value)}
+                rows="3"
+              />
+            </div>
+          </div>
         </div>
         <div className={styles.modalFooter}>
           <button className={styles.btnOutline} onClick={onClose}>Tutup</button>
+          <button 
+            className={styles.btnPrimary}
+            onClick={handleVerifikasi}
+            disabled={isVerifying}
+          >
+            {isVerifying ? <Loader2 size={14} className={styles.spinner} /> : <Check size={14} />}
+            {isVerifying ? "Memproses..." : "Simpan Verifikasi"}
+          </button>
         </div>
       </div>
     </div>
@@ -85,26 +170,45 @@ function DetailModal({ data, isOpen, onClose }) {
 
 // ========== MAIN PAGE ==========
 export default function AktivitasPage() {
-  const [aktivitas, setAktivitas] = useState(MOCK_AKTIVITAS);
+  const [aktivitas, setAktivitas] = useState([]);
   const [search, setSearch] = useState("");
-  const [filterJenis, setFilterJenis] = useState("Semua");
-  const [filterKategori, setFilterKategori] = useState("Semua");
   const [filterStatus, setFilterStatus] = useState("Semua");
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [toast, setToast] = useState(null);
   const [detailModal, setDetailModal] = useState(null);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [mockMode, setMockMode] = useState(false);
   const itemsPerPage = 10;
   const router = useRouter();
 
-  // Set page title //
-   useEffect(() => {
-    document.title = "Aktivitas | Admin SKPI";
-  }, []);
-
+  // Load aktivitas dari backend
   useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 600);
-    return () => clearTimeout(timer);
+    const fetchAktivitas = async () => {
+      try {
+        setLoading(true);
+        const res = await apiFetch("/api/aktivitas");
+        
+        if (res.ok) {
+          const data = await res.json();
+          setAktivitas(data.rows || []);
+          setMockMode(false);
+        } else {
+          // Fallback ke mock data jika backend error
+          setAktivitas(MOCK_AKTIVITAS);
+          setMockMode(true);
+        }
+      } catch (err) {
+        console.error("Error fetching aktivitas:", err);
+        setAktivitas(MOCK_AKTIVITAS);
+        setMockMode(true);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAktivitas();
+    document.title = "Aktivitas | Admin SKPI";
   }, []);
 
   const showToast = (msg, type = "success") => {
@@ -112,37 +216,52 @@ export default function AktivitasPage() {
     setTimeout(() => setToast(null), 3500);
   };
 
-  // Filter
+  // Filter data
   const filtered = aktivitas.filter(a => {
-    const matchSearch = !search || a.nama.toLowerCase().includes(search.toLowerCase());
-    const matchJenis = filterJenis === "Semua" || a.jenis === filterJenis;
-    const matchKategori = filterKategori === "Semua" || a.kategori === filterKategori;
-    const matchStatus = filterStatus === "Semua" || a.status === filterStatus;
-    return matchSearch && matchJenis && matchKategori && matchStatus;
+    const matchSearch = !search || a.nama_kegiatan?.toLowerCase().includes(search.toLowerCase());
+    const matchStatus = filterStatus === "Semua" || a.status_verifikasi === filterStatus;
+    return matchSearch && matchStatus;
   });
 
   const totalPages = Math.ceil(filtered.length / itemsPerPage);
   const paginatedData = filtered.slice((page - 1) * itemsPerPage, page * itemsPerPage);
 
-  const handleEdit = useCallback((data) => {
-    router.push(`/admin/aktivitas/edit/${data.id}`);
-  }, [router]);
-
-  const handleDelete = useCallback((id) => {
-    if (confirm("Apakah Anda yakin ingin menghapus aktivitas ini?")) {
-      setAktivitas(prev => prev.filter(a => a.id !== id));
-      showToast("Aktivitas berhasil dihapus", "error");
-    }
-  }, []);
-
+  // Handle view detail & verifikasi
   const handleView = useCallback((data) => {
     setDetailModal(data);
   }, []);
 
+  // Handle verifikasi aktivitas
+  const handleVerifikasi = async (id, status, catatan) => {
+    try {
+      setIsVerifying(true);
+      const res = await apiFetch(`/api/aktivitas/${id}/verifikasi`, {
+        method: "PATCH",
+        body: JSON.stringify({ status, catatan_admin: catatan }),
+      });
+
+      if (res.ok) {
+        const updated = await res.json();
+        // Update local state
+        setAktivitas(prev => prev.map(a => a.id_kegiatan === id ? updated.data : a));
+        setDetailModal(null);
+        showToast(`Aktivitas berhasil diverifikasi dengan status: ${STATUS_VERIFIKASI[status].label}`, "success");
+      } else {
+        showToast("Gagal memverifikasi aktivitas", "error");
+      }
+    } catch (err) {
+      console.error("Error verifikasi:", err);
+      showToast("Error: " + err.message, "error");
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
+  // Hitung statistik
   const stats = {
     total: filtered.length,
-    aktif: filtered.filter(a => a.status === "Aktif").length,
-    totalPeserta: filtered.reduce((sum, a) => sum + a.peserta, 0),
+    disetujui: filtered.filter(a => a.status_verifikasi === "disetujui").length,
+    diproses: filtered.filter(a => a.status_verifikasi === "diproses").length,
   };
 
   if (loading) {
@@ -157,7 +276,13 @@ export default function AktivitasPage() {
   return (
     <div className={styles.container}>
       <Toast toast={toast} onClose={() => setToast(null)} />
-      <DetailModal data={detailModal} isOpen={!!detailModal} onClose={() => setDetailModal(null)} />
+      <DetailModal 
+        data={detailModal} 
+        isOpen={!!detailModal} 
+        onClose={() => setDetailModal(null)}
+        onVerifikasi={handleVerifikasi}
+        isVerifying={isVerifying}
+      />
 
       {/* Header */}
       <div className={styles.header}>
@@ -182,15 +307,15 @@ export default function AktivitasPage() {
         <div className={styles.statCard}>
           <div className={styles.statIcon}><CheckCircle2 size={20} /></div>
           <div className={styles.statContent}>
-            <div className={styles.statValue}>{stats.aktif}</div>
-            <div className={styles.statTitle}>Aktif</div>
+            <div className={styles.statValue}>{stats.disetujui}</div>
+            <div className={styles.statTitle}>Disetujui</div>
           </div>
         </div>
         <div className={styles.statCard}>
-          <div className={styles.statIcon}><Users size={20} /></div>
+          <div className={styles.statIcon}><Clock size={20} /></div>
           <div className={styles.statContent}>
-            <div className={styles.statValue}>{stats.totalPeserta}</div>
-            <div className={styles.statTitle}>Total Peserta</div>
+            <div className={styles.statValue}>{stats.diproses}</div>
+            <div className={styles.statTitle}>Diproses</div>
           </div>
         </div>
       </div>
@@ -205,18 +330,12 @@ export default function AktivitasPage() {
         <div className={styles.filterActions}>
           <div className={styles.filterGroup}>
             <Filter size={14} />
-            <select className={styles.filterSelect} value={filterJenis} onChange={e => { setFilterJenis(e.target.value); setPage(1); }}>
-              {JENIS_OPTIONS.map(j => <option key={j}>{j}</option>)}
-            </select>
-          </div>
-          <div className={styles.filterGroup}>
-            <select className={styles.filterSelect} value={filterKategori} onChange={e => { setFilterKategori(e.target.value); setPage(1); }}>
-              {KATEGORI_OPTIONS.map(k => <option key={k}>{k}</option>)}
-            </select>
-          </div>
-          <div className={styles.filterGroup}>
             <select className={styles.filterSelect} value={filterStatus} onChange={e => { setFilterStatus(e.target.value); setPage(1); }}>
-              {STATUS_OPTIONS.map(s => <option key={s}>{s}</option>)}
+              <option value="Semua">Semua Status</option>
+              <option value="diproses">⏳ Diproses</option>
+              <option value="disetujui">✅ Disetujui</option>
+              <option value="ditolak">❌ Ditolak</option>
+              <option value="revisi">🔄 Revisi</option>
             </select>
           </div>
         </div>
@@ -229,41 +348,46 @@ export default function AktivitasPage() {
             <thead>
               <tr>
                 <th>Nama Aktivitas</th>
+                <th>Mahasiswa</th>
                 <th>Jenis</th>
                 <th>Kategori</th>
-                <th>Peserta</th>
-                <th>ICP</th>
-                <th>Status</th>
+                <th>Status Verifikasi</th>
+                <th>Tanggal</th>
                 <th>Aksi</th>
               </tr>
             </thead>
             <tbody>
               {paginatedData.map(item => (
-                <tr key={item.id} className={styles.tableRow}>
+                <tr key={item.id_kegiatan} className={styles.tableRow}>
                   <td>
                     <div className={styles.nameColumn}>
-                      <strong>{item.nama}</strong>
-                      <small className={styles.idSub}>ID: {String(item.id).padStart(3, "0")}</small>
+                      <strong>{item.nama_kegiatan}</strong>
+                      <small className={styles.idSub}>ID: {String(item.id_kegiatan).padStart(3, "0")}</small>
                     </div>
                   </td>
                   <td>
-                    <span className={styles.jenisBadge} style={{ backgroundColor: `${JENIS_COLOR[item.jenis] || "#6b7280"}22`, color: JENIS_COLOR[item.jenis] || "#6b7280" }}>
-                      {item.jenis}
+                    <div>
+                      <strong>{item.mahasiswa?.nama}</strong>
+                      <small className={styles.idSub}>{item.mahasiswa?.nim}</small>
+                    </div>
+                  </td>
+                  <td>
+                    <span className={styles.jenisBadge} style={{ backgroundColor: `${JENIS_COLOR[item.jenisaktivitas?.nama_indo] || "#6b7280"}22`, color: JENIS_COLOR[item.jenisaktivitas?.nama_indo] || "#6b7280" }}>
+                      {item.jenisaktivitas?.nama_indo || "-"}
                     </span>
                   </td>
-                  <td>{item.kategori}</td>
-                  <td className={styles.center}><span className={styles.numberChip}>{item.peserta}</span></td>
-                  <td className={styles.center}><span className={`${styles.numberChip} ${styles.icpChip}`}>{item.icp}</span></td>
+                  <td>{item.kategoriaktivitas?.nama_indo || "-"}</td>
                   <td>
-                    <span className={styles.statusBadge} style={{ backgroundColor: `${STATUS_COLOR[item.status]}22`, color: STATUS_COLOR[item.status] }}>
-                      {item.status}
+                    <span className={styles.statusBadge} style={{ backgroundColor: `${STATUS_VERIFIKASI[item.status_verifikasi]?.color}22`, color: STATUS_VERIFIKASI[item.status_verifikasi]?.color }}>
+                      {STATUS_VERIFIKASI[item.status_verifikasi]?.label}
                     </span>
+                  </td>
+                  <td>
+                    <small>{new Date(item.tanggal_kegiatan).toLocaleDateString("id-ID")}</small>
                   </td>
                   <td>
                     <div className={styles.actionGroup}>
-                      <button className={styles.actionBtn} onClick={() => handleView(item)} title="Detail"><Eye size={14} /></button>
-                      <button className={styles.actionBtn} onClick={() => handleEdit(item)} title="Edit"><Edit2 size={14} /></button>
-                      <button className={`${styles.actionBtn} ${styles.actionDanger}`} onClick={() => handleDelete(item.id)} title="Hapus"><Trash2 size={14} /></button>
+                      <button className={styles.actionBtn} onClick={() => handleView(item)} title="Verifikasi"><Eye size={14} /></button>
                     </div>
                   </td>
                 </tr>
@@ -274,6 +398,7 @@ export default function AktivitasPage() {
           <div className={styles.emptyState}>
             <AlertCircle size={40} />
             <p>Tidak ada aktivitas yang sesuai dengan filter Anda</p>
+            {mockMode && <p style={{ fontSize: "12px", color: "#999" }}>(Mode Demo)</p>}
           </div>
         )}
       </div>

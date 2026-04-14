@@ -24,12 +24,12 @@ const JENIS_COLORS = {
 
 // ========== MOCK DATA ==========
 const MOCK_MASTER_DATA = [
-  { id: 1, jenis: "Workshop", kategori: "Akademik", bobot: 5, deskripsi: "Workshop pengembangan skill programming", max_peserta: 50, status: "Aktif" },
-  { id: 2, jenis: "Seminar", kategori: "Non-Akademik", bobot: 3, deskripsi: "Seminar soft skills dan karir profesional", max_peserta: 100, status: "Aktif" },
-  { id: 3, jenis: "Kompetisi", kategori: "Akademik", bobot: 10, deskripsi: "Kompetisi programming nasional", max_peserta: 30, status: "Aktif" },
-  { id: 4, jenis: "Training", kategori: "Pengembangan Diri", bobot: 4, deskripsi: "Training kepemimpinan dan teamwork", max_peserta: 40, status: "Aktif" },
-  { id: 5, jenis: "Pengabdian", kategori: "Non-Akademik", bobot: 3, deskripsi: "Program pengabdian masyarakat", max_peserta: 20, status: "Nonaktif" },
-  { id: 6, jenis: "Workshop", kategori: "Akademik", bobot: 6, deskripsi: "Workshop web development full-stack", max_peserta: 45, status: "Aktif" },
+  { id: 1, jenis: "Workshop", kategori: "Akademik", deskripsi: "Workshop pengembangan skill programming", max_peserta: 50, status: "Aktif" },
+  { id: 3, jenis: "Kompetisi", kategori: "Akademik", deskripsi: "Kompetisi programming nasional", max_peserta: 30, status: "Aktif" },
+  { id: 4, jenis: "Training", kategori: "Pengembangan Diri", deskripsi: "Training kepemimpinan dan teamwork", max_peserta: 40, status: "Aktif" },
+  { id: 2, jenis: "Seminar", kategori: "Non-Akademik", deskripsi: "Seminar soft skills dan karir profesional", max_peserta: 100, status: "Aktif" },
+  { id: 5, jenis: "Pengabdian", kategori: "Non-Akademik", deskripsi: "Program pengabdian masyarakat", max_peserta: 20, status: "Nonaktif" },
+  { id: 6, jenis: "Workshop", kategori: "Akademik", deskripsi: "Workshop web development full-stack", max_peserta: 45, status: "Aktif" },
 ];
 
 // ========== TOAST COMPONENT ==========
@@ -48,14 +48,14 @@ function Toast({ toast, onClose }) {
 // ========== MODAL ADD / EDIT ==========
 function ModalAddEdit({ data, isOpen, onClose, onSave }) {
   const [form, setForm] = useState(
-    data || { jenis: "", kategori: "", bobot: "", deskripsi: "", max_peserta: "", status: "Aktif" }
+    data || { jenis: "", kategori: "", deskripsi: "", max_peserta: "", status: "Aktif" }
   );
 
   const handleChange = (field, value) => setForm(prev => ({ ...prev, [field]: value }));
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!form.jenis || !form.kategori || !form.bobot || !form.deskripsi || !form.max_peserta) {
+    if (!form.jenis || !form.kategori || !form.deskripsi || !form.max_peserta) {
       alert("Semua field harus diisi!");
       return;
     }
@@ -92,10 +92,6 @@ function ModalAddEdit({ data, isOpen, onClose, onSave }) {
               </select>
             </div>
             <div className={styles.formRow}>
-              <div className={styles.formGroup}>
-                <label>Bobot Poin *</label>
-                <input type="number" className={styles.input} min="1" value={form.bobot} onChange={e => handleChange("bobot", e.target.value)} />
-              </div>
               <div className={styles.formGroup}>
                 <label>Max Peserta *</label>
                 <input type="number" className={styles.input} min="1" value={form.max_peserta} onChange={e => handleChange("max_peserta", e.target.value)} />
@@ -187,7 +183,6 @@ export default function MasterDataPage() {
   };
 
   const totalActive = data.filter(d => d.status === "Aktif").length;
-  const maxBobot = Math.max(...data.map(d => Number(d.bobot)), 0);
 
   return (
     <div className={styles.container}>
@@ -195,7 +190,7 @@ export default function MasterDataPage() {
       <div className={styles.header}>
         <div>
           <h1 className={styles.title}>Master Data</h1>
-          <p className={styles.subtitle}>Kelola jenis, kategori, dan bobot aktivitas</p>
+          <p className={styles.subtitle}>Kelola jenis, kategori, dan aktivitas</p>
         </div>
         <button className={styles.btnPrimary} onClick={handleTambah}>
           <Plus size={16} /> Tambah Data
@@ -216,13 +211,6 @@ export default function MasterDataPage() {
           <div className={styles.statContent}>
             <div className={styles.statValue}>{totalActive}</div>
             <div className={styles.statTitle}>Data Aktif</div>
-          </div>
-        </div>
-        <div className={styles.statCard}>
-          <div className={styles.statIcon}><TrendingUp size={20} /></div>
-          <div className={styles.statContent}>
-            <div className={styles.statValue}>{maxBobot}</div>
-            <div className={styles.statTitle}>Bobot Tertinggi</div>
           </div>
         </div>
       </div>
@@ -256,14 +244,13 @@ export default function MasterDataPage() {
         {paginatedData.length > 0 ? (
           <table className={styles.table}>
             <thead>
-              <tr><th>Jenis</th><th>Kategori</th><th>Bobot</th><th>Max Peserta</th><th>Status</th><th>Deskripsi</th><th>Aksi</th></tr>
+              <tr><th>Jenis</th><th>Kategori</th><th>Max Peserta</th><th>Status</th><th>Deskripsi</th><th>Aksi</th></tr>
             </thead>
             <tbody>
               {paginatedData.map(item => (
                 <tr key={item.id}>
                   <td><span className={styles.badge} style={{ background: JENIS_COLORS[item.jenis] }}>{item.jenis}</span></td>
                   <td>{item.kategori}</td>
-                  <td><strong>{item.bobot} pts</strong></td>
                   <td>{item.max_peserta}</td>
                   <td><span className={`${styles.badge} ${item.status === "Aktif" ? styles.badgeSuccess : styles.badgeDanger}`}>{item.status}</span></td>
                   <td className={styles.descCell}>{item.deskripsi}</td>

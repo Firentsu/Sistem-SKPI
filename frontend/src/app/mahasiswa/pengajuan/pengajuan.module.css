@@ -13,4 +13,86 @@
 .table th, .table td { padding: 8px; text-align: left; border-bottom: 1px solid #f0f0f0; }
 .belumdiajukan { color: #64748b; }
 .diproses { color: #f59e0b; }
-.selesai { color: #10b981; }
+.selesai { color: #10b981; }/* -----------------------------------------
+   RESPONSIVE - Pengajuan SKPI
+----------------------------------------- */
+
+@media (max-width: 1200px) {
+  .container { max-width: 100%; padding: 0 20px; }
+  .title { font-size: 1.6rem; }
+  .grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 768px) {
+  .container { padding: 0 16px; }
+  .title { font-size: 1.4rem; }
+  .subtitle { font-size: 0.9rem; }
+  .card { padding: 18px; border-radius: 16px; }
+  .statusText { font-size: 0.9rem; }
+  .table { font-size: 12px; }
+  .table th, .table td { padding: 10px 8px; }
+  .badge { padding: 3px 9px; font-size: 10px; }
+  .buttonGroup { gap: 10px; flex-wrap: wrap; }
+  .button { padding: 8px 14px; font-size: 0.9rem; }
+}
+
+@media (max-width: 480px) {
+  .container { padding: 0 12px; }
+  .title { font-size: 1.2rem; }
+  .subtitle { font-size: 0.85rem; }
+
+  .card {
+    padding: 14px;
+    margin-bottom: 16px;
+    border-radius: 12px;
+  }
+
+  .statusSection { flex-direction: column; gap: 10px; }
+  .statusText { font-size: 0.85rem; }
+
+  .infoGrid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .infoItem { padding: 10px; }
+  .infoLabel { font-size: 0.85rem; }
+  .infoValue { font-size: 0.9rem; margin-top: 4px; }
+
+  .table {
+    font-size: 10px;
+    width: 100%;
+  }
+
+  .table th { padding: 8px 4px; font-size: 9px; }
+  .table td { padding: 6px 4px; font-size: 10px; }
+
+  .badge { padding: 2px 6px; font-size: 9px; }
+
+  .buttonGroup {
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .button {
+    width: 100%;
+    padding: 8px 10px;
+    font-size: 0.85rem;
+    border-radius: 8px;
+  }
+
+  .modal { max-width: 90vw; border-radius: 12px; }
+}
+
+@media (max-width: 359px) {
+  .container { padding: 0 10px; }
+  .title { font-size: 1rem; }
+  .card { padding: 12px; }
+  .table { font-size: 9px; }
+  .table th, .table td { padding: 4px 2px; }
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .button { min-height: 44px; }
+}

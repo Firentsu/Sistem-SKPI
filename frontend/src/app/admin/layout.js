@@ -98,6 +98,7 @@ function AvatarEditorModal({ currentSrc, onClose, onSave }) {
 
 export default function AdminLayout({ children }) {
   const [collapsed, setCollapsed] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false); // Mobile sidebar state
   const [loggingOut, setLoggingOut] = useState(false);
   const [checking, setChecking] = useState(true);
   const [showEditor, setShowEditor] = useState(false);
@@ -140,6 +141,22 @@ export default function AdminLayout({ children }) {
       window.removeEventListener("profile:updated", onProfileUpdated);
     };
   }, []);
+
+  // ── Close sidebar saat navigate (mobile) ──
+  useEffect(() => {
+    setSidebarOpen(false);
+  }, [pathname]);
+
+  // ── Keyboard escape untuk close sidebar ────
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape" && sidebarOpen) {
+        setSidebarOpen(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [sidebarOpen]);
 
   const navItems = [
     { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -194,14 +211,30 @@ export default function AdminLayout({ children }) {
         <AvatarEditorModal currentSrc={avatarSrc} onClose={() => setShowEditor(false)} onSave={handleAvatarSave} />
       )}
 
-      <aside className={`${styles.sidebar} ${collapsed ? styles.collapsed : ""}`}
+      {/* Mobile Overlay untuk close sidebar */}
+      {sidebarOpen && (
+        <div 
+          className={styles.sidebarOverlay}
+          onClick={() => setSidebarOpen(false)}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => e.key === "Escape" && setSidebarOpen(false)}
+          aria-label="Close menu"
+        />
+      )}
+
+      <aside className={`${styles.sidebar} ${collapsed ? styles.collapsed : ""} ${sidebarOpen ? styles.open : ""}`}
         style={mockMode ? { marginTop: 29 } : {}}>
         <div className={styles.brand}>
           <div className={styles.logo}>
             <Image src="/img/logo_isb.png" alt="logo" width={80} height={35} loading="eager" />
           </div>
           {!collapsed && <div className={styles.brandText}><strong>SKPI</strong><span>Admin Panel</span></div>}
-          <button aria-label="Toggle sidebar" className={styles.collapseBtn} onClick={() => setCollapsed(!collapsed)}>
+          <button aria-label="Toggle sidebar" className={styles.collapseBtn} onClick={() => {
+            setCollapsed(!collapsed);
+            // Di mobile, juga close overlay
+            setSidebarOpen(false);
+          }}>
             {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
           </button>
         </div>
@@ -228,7 +261,7 @@ export default function AdminLayout({ children }) {
       <div className={styles.main} style={mockMode ? { marginTop: 29 } : {}}>
         <header className={styles.topbar}>
           <div className={styles.topbarLeft}>
-            <button className={styles.menuBtn} onClick={() => setCollapsed(!collapsed)} aria-label="Toggle menu">
+            <button className={styles.menuBtn} onClick={() => setSidebarOpen(!sidebarOpen)} aria-label="Toggle menu">
               <Menu size={19} />
             </button>
             <nav className={styles.breadcrumb}>

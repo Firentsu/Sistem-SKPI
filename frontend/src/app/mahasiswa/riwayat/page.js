@@ -143,7 +143,6 @@ export default function RiwayatPage() {
                 </td>
                 <td>{r.jenis}</td>
                 <td>{r.tanggal}</td>
-                <td>{r.poin}</td>
                 <td>
                   <span className={`${styles.statusBadge} ${styles[r.status.toLowerCase()]}`}>
                     {r.status}
