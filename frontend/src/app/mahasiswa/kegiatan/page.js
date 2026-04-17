@@ -1,14 +1,24 @@
-// frontend/src/app/mahasiswa/kegiatan/page.js
 "use client";
 
 import { useState, useRef, useEffect } from "react";
 import { useMahasiswa } from "@/context/MahasiswaContext";
 import {
-  Plus, Edit2, Trash2, Upload, FileImage, X, CheckCircle2, AlertCircle
+  Plus, Edit2, Trash2, Upload, FileImage, X, CheckCircle2, AlertCircle,
+  Eye, Calendar, MapPin, Building, Award, TrendingUp
 } from "lucide-react";
 import styles from "./kegiatan.module.css";
 
-// ==================== DATA MOCK ====================
+// ========== IMPORT MASTER DATA ==========
+// Data master dari admin (nanti bisa dari API)
+import { 
+  getJenisAktivitas, 
+  getKategoriAktivitas, 
+  getKelompokAktivitas, 
+  getLevelKegiatan, 
+  getTingkatPrestasi 
+} from "@/lib/masterData";
+
+// ========== MOCK DATA KEGIATAN ==========
 const MOCK_KEGIATAN = [
   {
     id: 1,
@@ -63,37 +73,14 @@ const MOCK_KEGIATAN = [
   },
 ];
 
-const JENIS_AKTIVITAS = [
-  "Prestasi dan Kegiatan",
-  "Peningkatan Keterampilan Profesional",
-  "Pengalaman Berorganisasi dan Kepemimpinan",
-  "Pengembangan Intelektual",
-  "Praktik Kerja",
-  "Pembinaan Spiritual",
-  "Kepribadian Amarean 1",
-  "Kepribadian Amarean 2",
-  "Kepribadian Amarean 3",
-  "Kepribadian Amarean 4",
-  "Integritas Kepemimpinan 1",
-  "Integritas Kepemimpinan 2",
-  "Nilai - nilai Integritas Insani 1",
-  "Nilai - nilai Integritas Insani 2",
-  "Pembangunan Karakter dan Kepribadian",
-  "Kursus - kursus",
-  "Skripsi",
-];
+// ========== AMBIL DATA DARI MASTER ==========
+const JENIS_AKTIVITAS = getJenisAktivitas();
+const KATEGORI_OPTIONS = getKategoriAktivitas();
+const KELOMPOK_OPTIONS = getKelompokAktivitas();
+const LEVEL_OPTIONS = getLevelKegiatan();
+const TINGKAT_PRESTASI = getTingkatPrestasi();
 
-const KATEGORI_OPTIONS = [
-  "Lomba/Kompetisi", "Seminar", "Workshop", "Pelatihan", "Organisasi",
-  "Kepanitian", "Magang", "Penelitian", "Pengabdian Masyarakat",
-  "Publikasi Ilmiah", "Kegiatan Kampus", "Sertifikasi Profesional"
-];
-
-const KELOMPOK_OPTIONS = ["Akademik", "Non-Akademik", "Organisasi", "Kepemimpinan", "Penelitian", "Profesional"];
-const LEVEL_OPTIONS = ["Internal", "Nasional", "Internasional"];
-const TINGKAT_PRESTASI = ["Peserta", "Juara 1", "Juara 2", "Juara 3", "Harapan", "Finalis", "Partisipasi"];
-
-// Toast component
+// ========== TOAST COMPONENT ==========
 function Toast({ message, onClose }) {
   if (!message) return null;
   return (
@@ -105,7 +92,7 @@ function Toast({ message, onClose }) {
   );
 }
 
-// Modal Form
+// ========== MODAL FORM KEGIATAN ==========
 function KegiatanModal({ isOpen, onClose, onSave, kegiatan, prodiColor }) {
   const [form, setForm] = useState(
     kegiatan || {
@@ -178,10 +165,13 @@ function KegiatanModal({ isOpen, onClose, onSave, kegiatan, prodiColor }) {
         </div>
         <form onSubmit={handleSubmit}>
           <div className={styles.modalBody}>
+            {/* Baris 1: Nama Indonesia & Inggris */}
             <div className={styles.formRow}>
               <input className={styles.input} placeholder="Nama Kegiatan (Indonesia) *" value={form.nama_id} onChange={e => setForm({...form, nama_id: e.target.value})} />
               <input className={styles.input} placeholder="Nama Kegiatan (English) *" value={form.nama_en} onChange={e => setForm({...form, nama_en: e.target.value})} />
             </div>
+
+            {/* Baris 2: Jenis Aktivitas & Kategori */}
             <div className={styles.formRow}>
               <select className={styles.input} value={form.jenis_aktivitas} onChange={e => setForm({...form, jenis_aktivitas: e.target.value})}>
                 <option value="">Pilih Jenis Aktivitas *</option>
@@ -192,6 +182,8 @@ function KegiatanModal({ isOpen, onClose, onSave, kegiatan, prodiColor }) {
                 {KATEGORI_OPTIONS.map(k => <option key={k}>{k}</option>)}
               </select>
             </div>
+
+            {/* Baris 3: Kelompok & Level */}
             <div className={styles.formRow}>
               <select className={styles.input} value={form.kelompok} onChange={e => setForm({...form, kelompok: e.target.value})}>
                 <option value="">Pilih Kelompok Aktivitas *</option>
@@ -202,6 +194,8 @@ function KegiatanModal({ isOpen, onClose, onSave, kegiatan, prodiColor }) {
                 {LEVEL_OPTIONS.map(l => <option key={l}>{l}</option>)}
               </select>
             </div>
+
+            {/* Baris 4: Periode & Tingkat Prestasi */}
             <div className={styles.formRow}>
               <input className={styles.input} placeholder="Periode (contoh: Semester Ganjil 2025) *" value={form.periode} onChange={e => setForm({...form, periode: e.target.value})} />
               <select className={styles.input} value={form.tingkat_prestasi} onChange={e => setForm({...form, tingkat_prestasi: e.target.value})}>
@@ -209,15 +203,19 @@ function KegiatanModal({ isOpen, onClose, onSave, kegiatan, prodiColor }) {
                 {TINGKAT_PRESTASI.map(t => <option key={t}>{t}</option>)}
               </select>
             </div>
+
+            {/* Baris 5: Lokasi & Penyelenggara */}
             <div className={styles.formRow}>
               <input className={styles.input} placeholder="Lokasi *" value={form.lokasi} onChange={e => setForm({...form, lokasi: e.target.value})} />
               <input className={styles.input} placeholder="Penyelenggara *" value={form.penyelenggara} onChange={e => setForm({...form, penyelenggara: e.target.value})} />
             </div>
+
+            {/* Baris 6: Tanggal */}
             <div className={styles.formRow}>
               <input type="date" className={styles.input} value={form.tanggal} onChange={e => setForm({...form, tanggal: e.target.value})} />
             </div>
 
-            {/* Upload bukti */}
+            {/* Upload Bukti */}
             <div className={styles.uploadSection}>
               <div className={styles.uploadArea} style={{ borderColor: prodiColor }} onClick={() => fileRef.current.click()}>
                 <input type="file" ref={fileRef} hidden accept=".pdf,.jpg,.jpeg,.png" onChange={handleFileChange} />
@@ -248,7 +246,7 @@ function KegiatanModal({ isOpen, onClose, onSave, kegiatan, prodiColor }) {
   );
 }
 
-// Main Page
+// ========== HALAMAN UTAMA ==========
 export default function KegiatanPage() {
   const { prodiConfig } = useMahasiswa();
   const [kegiatan, setKegiatan] = useState(MOCK_KEGIATAN);
@@ -302,7 +300,8 @@ export default function KegiatanPage() {
   };
 
   const filtered = kegiatan.filter(k => {
-    const matchSearch = k.nama_id.toLowerCase().includes(search.toLowerCase()) || k.nama_en.toLowerCase().includes(search.toLowerCase());
+    const matchSearch = k.nama_id.toLowerCase().includes(search.toLowerCase()) || 
+                        k.nama_en.toLowerCase().includes(search.toLowerCase());
     const matchStatus = filterStatus === "Semua" || k.status === filterStatus;
     return matchSearch && matchStatus;
   });
@@ -322,7 +321,13 @@ export default function KegiatanPage() {
       </div>
 
       <div className={styles.filterBar}>
-        <input type="text" placeholder="Cari kegiatan (Indonesia/Inggris)..." value={search} onChange={e => setSearch(e.target.value)} className={styles.searchInput} />
+        <input 
+          type="text" 
+          placeholder="Cari kegiatan (Indonesia/Inggris)..." 
+          value={search} 
+          onChange={e => setSearch(e.target.value)} 
+          className={styles.searchInput} 
+        />
         <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} className={styles.filterSelect}>
           <option value="Semua">Semua Status</option>
           <option value="Menunggu">Menunggu</option>
@@ -348,20 +353,33 @@ export default function KegiatanPage() {
           <tbody>
             {filtered.map(k => (
               <tr key={k.id}>
-                <td><strong>{k.nama_id}</strong><br /><small>{k.nama_en}</small></td>
+                <td>
+                  <div className={styles.namaCell}>
+                    <strong>{k.nama_id}</strong>
+                    <small>{k.nama_en}</small>
+                  </div>
+                </td>
                 <td>{k.jenis_aktivitas}</td>
                 <td>{k.kategori}</td>
                 <td>{k.tanggal}</td>
                 <td><span className={`${styles.status} ${styles[k.status.toLowerCase()]}`}>{k.status}</span></td>
                 <td>{k.bukti ? <a href="#" className={styles.link}>Lihat</a> : "-"}</td>
                 <td className={styles.actions}>
-                  <button onClick={() => handleEdit(k)} disabled={k.status !== "Menunggu"} className={styles.actionBtn}><Edit2 size={14} /></button>
-                  <button onClick={() => handleDelete(k.id)} disabled={k.status !== "Menunggu"} className={`${styles.actionBtn} ${styles.danger}`}><Trash2 size={14} /></button>
+                  <button onClick={() => handleEdit(k)} disabled={k.status !== "Menunggu"} className={styles.actionBtn}>
+                    <Edit2 size={14} />
+                  </button>
+                  <button onClick={() => handleDelete(k.id)} disabled={k.status !== "Menunggu"} className={`${styles.actionBtn} ${styles.danger}`}>
+                    <Trash2 size={14} />
+                  </button>
                 </td>
-              </tr>
+               </tr>
             ))}
             {filtered.length === 0 && (
-              <tr><td colSpan="7" className={styles.emptyRow}>Belum ada kegiatan. Klik "Tambah Kegiatan" untuk mencatat aktivitas Anda.</td></tr>
+              <tr>
+                <td colSpan="7" className={styles.emptyRow}>
+                  Belum ada kegiatan. Klik "Tambah Kegiatan" untuk mencatat aktivitas Anda.
+                </td>
+              </tr>
             )}
           </tbody>
         </table>

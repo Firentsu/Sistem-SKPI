@@ -160,6 +160,7 @@ export default function AdminLayout({ children }) {
 
   const navItems = [
     { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/admin/admin", label: "Admin", icon: Shield },
     { href: "/admin/mahasiswa", label: "Mahasiswa", icon: Users },
     { href: "/admin/master-data", label: "Master Data", icon: Settings },
     { href: "/admin/aktivitas", label: "Aktivitas", icon: BookOpen },
