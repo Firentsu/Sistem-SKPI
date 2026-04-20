@@ -308,7 +308,7 @@ function MahasiswaLayoutInner({ children }) {
               </button>
               <button className={styles.userInfoBtn} onClick={() => router.push("/mahasiswa/profile")}>
                 <span className={styles.userName}>{user.nama}</span>
-                <span className={styles.userRole} style={{ color: prodiConfig.primary }}>{user.nim}</span>
+                <span className={styles.userRole}>{user.nim}</span>
               </button>
               <button className={styles.logoutBtn} title="Logout" onClick={handleLogout} disabled={loggingOut}>
                 {loggingOut ? <span className={styles.logoutSpinner} /> : <LogOut size={14} />}

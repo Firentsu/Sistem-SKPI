@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import * as XLSX from "xlsx";
 import {
   Search, Plus, Upload, Download, Edit2, KeyRound,
   ToggleLeft, ToggleRight, ChevronLeft, ChevronRight,
@@ -176,8 +177,6 @@ function MahasiswaFormModal({ mode, data, onClose, onSave }) {
   return (
     <div className={styles.modalOverlay} onClick={onClose}>
       <div className={styles.modalBox} onClick={e => e.stopPropagation()}>
-
-        {/* Header */}
         <div className={styles.modalHeader}>
           <div className={styles.modalHeaderLeft}>
             <div className={styles.modalHeaderIcon}>
@@ -192,8 +191,6 @@ function MahasiswaFormModal({ mode, data, onClose, onSave }) {
         </div>
 
         <div className={styles.modalBody}>
-
-          {/* Seksi: Data Pribadi */}
           <div className={styles.formSection}>DATA PRIBADI</div>
           <div className={styles.formGrid2}>
             <div className={styles.fg}>
@@ -231,7 +228,6 @@ function MahasiswaFormModal({ mode, data, onClose, onSave }) {
             </div>
           </div>
 
-          {/* Seksi: Password (hanya saat tambah) */}
           {mode === "add" && (
             <>
               <div className={styles.formSection}>KATA SANDI AKUN</div>
@@ -254,7 +250,6 @@ function MahasiswaFormModal({ mode, data, onClose, onSave }) {
             </>
           )}
 
-          {/* Seksi: Status */}
           <div className={styles.formSection}>STATUS AKUN</div>
           <div className={styles.formGrid2}>
             <div className={styles.fg}>
@@ -273,7 +268,6 @@ function MahasiswaFormModal({ mode, data, onClose, onSave }) {
               </button>
             </div>
           </div>
-
         </div>
 
         <div className={styles.modalFooter}>
@@ -330,28 +324,70 @@ function ResetPasswordModal({ mahasiswa, onClose, onDone }) {
 }
 
 /* ─────────────────────────────────────────
-   MODAL IMPORT EXCEL
+   MODAL IMPORT EXCEL (dengan validasi kolom & password default = NIM)
 ───────────────────────────────────────── */
 function ImportExcelModal({ onClose, onDone }) {
-  const [file,     setFile]     = useState(null);
+  const [file, setFile] = useState(null);
   const [dragging, setDragging] = useState(false);
-  const [loading,  setLoading]  = useState(false);
-  const [error,    setError]    = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const inputRef = useRef(null);
 
   const handleFile = f => {
     if (!f) return;
     const ext = f.name.split(".").pop().toLowerCase();
-    if (!["xlsx","xls","csv"].includes(ext)) { setError("Format harus .xlsx, .xls, atau .csv"); return; }
-    if (f.size > 5 * 1024 * 1024) { setError("Ukuran maksimal 5 MB"); return; }
-    setError(""); setFile(f);
+    if (!["xlsx", "xls", "csv"].includes(ext)) {
+      setError("Format harus .xlsx, .xls, atau .csv");
+      return;
+    }
+    if (f.size > 5 * 1024 * 1024) {
+      setError("Ukuran maksimal 5 MB");
+      return;
+    }
+    setError("");
+    setFile(f);
   };
 
   const handleImport = async () => {
     if (!file) return;
     setLoading(true);
-    await new Promise(r => setTimeout(r, 1200));
-    onDone(Math.floor(Math.random() * 20) + 5);
+    setError("");
+    try {
+      const data = await file.arrayBuffer();
+      const workbook = XLSX.read(data);
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(sheet);
+      if (rows.length === 0) throw new Error("File kosong");
+
+      // Kolom yang diperlukan (Password opsional, default = NIM)
+      const requiredColumns = ["Nama", "NIM", "Program Studi", "Angkatan", "Email", "Status SKPI", "Jumlah Kegiatan", "Total ICP", "Status Akun"];
+      const firstRow = rows[0];
+      const missing = requiredColumns.filter(col => !(col in firstRow));
+      if (missing.length) {
+        throw new Error(`Kolom tidak lengkap: ${missing.join(", ")}`);
+      }
+
+      // Konversi ke format data mahasiswa
+      const newMahasiswa = rows.map((row, idx) => ({
+        id: Date.now() + idx, // ID sementara
+        nama: row["Nama"],
+        nim: row["NIM"].toString(),
+        id_prodi: row["Program Studi"],
+        angkatan: row["Angkatan"].toString(),
+        email: row["Email"],
+        status_skpi: row["Status SKPI"],
+        jumlah_kegiatan: parseInt(row["Jumlah Kegiatan"]) || 0,
+        total_icp: parseInt(row["Total ICP"]) || 0,
+        aktif: row["Status Akun"] === "Aktif",
+        password: row["Password"] || row["NIM"].toString(), // jika tidak ada, pakai NIM
+      }));
+
+      onDone(newMahasiswa);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -395,7 +431,8 @@ function ImportExcelModal({ onClose, onDone }) {
           {error && <p className={styles.errMsg}>{error}</p>}
           <div className={styles.importNote}>
             <AlertCircle size={13} />
-            <span>Pastikan kolom sesuai template. <button className={styles.linkBtn} onClick={() => {}}>Unduh template</button></span>
+            <span>Pastikan kolom sesuai template. Kolom Password opsional, default = NIM.</span>
+            <button className={styles.linkBtn} onClick={() => window.downloadTemplate?.()}>Unduh template</button>
           </div>
         </div>
         <div className={styles.modalFooter}>
@@ -450,18 +487,46 @@ function RowActions({ row, onEdit, onResetPw, onToggleActive }) {
    HALAMAN UTAMA
 ───────────────────────────────────────── */
 export default function MahasiswaPage() {
-  const [data,          setData]          = useState(MOCK_DATA);
-  const [search,        setSearch]        = useState("");
-  const [filterProdi,   setFilterProdi]   = useState("Semua");
-  const [filterAngkatan,setFilterAngkatan]= useState("Semua");
-  const [filterStatus,  setFilterStatus]  = useState("Semua");
-  const [currentPage,   setCurrentPage]   = useState(1);
-  const [filterOpen,    setFilterOpen]    = useState(false);
-  const [modalAdd,      setModalAdd]      = useState(false);
-  const [modalEdit,     setModalEdit]     = useState(null);
-  const [modalReset,    setModalReset]    = useState(null);
-  const [modalImport,   setModalImport]   = useState(false);
-  const { toasts, add: toast, remove }    = useToast();
+  const [data, setData] = useState(MOCK_DATA);
+  const [search, setSearch] = useState("");
+  const [filterProdi, setFilterProdi] = useState("Semua");
+  const [filterAngkatan, setFilterAngkatan] = useState("Semua");
+  const [filterStatus, setFilterStatus] = useState("Semua");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [modalAdd, setModalAdd] = useState(false);
+  const [modalEdit, setModalEdit] = useState(null);
+  const [modalReset, setModalReset] = useState(null);
+  const [modalImport, setModalImport] = useState(false);
+  const { toasts, add: toast, remove } = useToast();
+
+  // Fungsi download template Excel (termasuk kolom Password)
+  const downloadTemplate = () => {
+    const templateData = [
+      {
+        "Nama": "Contoh Mahasiswa",
+        "NIM": "202200001001",
+        "Program Studi": "Teknik Informatika",
+        "Angkatan": "2024",
+        "Email": "contoh@student.isb.ac.id",
+        "Status SKPI": "Belum",
+        "Jumlah Kegiatan": 0,
+        "Total ICP": 0,
+        "Status Akun": "Aktif",
+        "Password": "contoh123" // contoh password (opsional)
+      }
+    ];
+    const ws = XLSX.utils.json_to_sheet(templateData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Template Mahasiswa");
+    XLSX.writeFile(wb, "template_mahasiswa.xlsx");
+    toast("Template berhasil diunduh");
+  };
+
+  // Pasang fungsi ke window agar bisa dipanggil dari modal import
+  if (typeof window !== "undefined") {
+    window.downloadTemplate = downloadTemplate;
+  }
 
   const filtered = data.filter(row => {
     const q = search.toLowerCase();
@@ -505,9 +570,10 @@ export default function MahasiswaPage() {
     toast(`Akun ${row.nama} ${row.aktif ? "dinonaktifkan" : "diaktifkan"}`);
   };
 
-  const handleImportDone = count => {
+  const handleImportDone = (newMahasiswa) => {
+    setData(prev => [...newMahasiswa, ...prev]);
     setModalImport(false);
-    toast(`Berhasil mengimport ${count} data mahasiswa`);
+    toast(`Berhasil mengimport ${newMahasiswa.length} data mahasiswa`);
   };
 
   const resetFilter = () => {
@@ -532,7 +598,7 @@ export default function MahasiswaPage() {
           <p className={styles.pageSub}>Kelola data mahasiswa, reset password, dan status akun</p>
         </div>
         <div className={styles.headerActions}>
-          <button className={styles.btnOutline} onClick={() => toast("Template diunduh")}>
+          <button className={styles.btnOutline} onClick={downloadTemplate}>
             <Download size={15} /> Template
           </button>
           <button className={styles.btnOutline} onClick={() => setModalImport(true)}>

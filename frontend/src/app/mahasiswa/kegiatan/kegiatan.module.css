@@ -40,6 +40,7 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
+  text-decoration: none;
 }
 
 .addBtn:hover {
@@ -298,26 +299,6 @@
   }
 }
 
-.formGroup {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  width: 100%;
-}
-
-.formLabel {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: #5c3317;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-}
-
-.required {
-  color: #ef4444;
-  margin-left: 2px;
-}
-
 .input, .select {
   padding: 10px 12px;
   border: 1px solid #ddd0c4;
@@ -334,7 +315,6 @@
   box-shadow: 0 0 0 2px rgba(200, 148, 90, 0.1);
 }
 
-/* Upload Section */
 .uploadSection {
   margin-top: 8px;
   width: 100%;

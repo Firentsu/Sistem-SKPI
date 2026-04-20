@@ -1,12 +1,14 @@
+// frontend/src/app/admin/admin/page.js
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import * as XLSX from "xlsx";
 import {
   Search, Plus, Edit2, KeyRound, ToggleLeft, ToggleRight,
   ChevronLeft, ChevronRight, X, Check, AlertCircle, Users,
   Filter, MoreVertical, Eye, EyeOff, RefreshCw, CheckCircle2,
   Shield, UserCog, Mail, AtSign, Trash2, ShieldCheck, ShieldOff,
-  ChevronDown,
+  ChevronDown, Upload, Download, FileSpreadsheet,
 } from "lucide-react";
 import styles from "./page.module.css";
 
@@ -91,7 +93,7 @@ function PasswordInput({ value, onChange, placeholder, id }) {
 }
 
 /* ─────────────────────────────────────────
-   MODAL TAMBAH ADMIN
+   MODAL TAMBAH / EDIT ADMIN
 ───────────────────────────────────────── */
 function AdminFormModal({ mode, data, onClose, onSave }) {
   const initial = data || {
@@ -334,6 +336,125 @@ function DeleteAdminModal({ admin, onClose, onDone }) {
 }
 
 /* ─────────────────────────────────────────
+   MODAL IMPORT EXCEL
+───────────────────────────────────────── */
+function ImportExcelModal({ onClose, onDone }) {
+  const [file, setFile] = useState(null);
+  const [dragging, setDragging] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const inputRef = useRef(null);
+
+  const handleFile = f => {
+    if (!f) return;
+    const ext = f.name.split(".").pop().toLowerCase();
+    if (!["xlsx", "xls", "csv"].includes(ext)) {
+      setError("Format harus .xlsx, .xls, atau .csv");
+      return;
+    }
+    if (f.size > 5 * 1024 * 1024) {
+      setError("Ukuran maksimal 5 MB");
+      return;
+    }
+    setError("");
+    setFile(f);
+  };
+
+  const handleImport = async () => {
+    if (!file) return;
+    setLoading(true);
+    setError("");
+    try {
+      const data = await file.arrayBuffer();
+      const workbook = XLSX.read(data);
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(sheet);
+      if (rows.length === 0) throw new Error("File kosong");
+
+      const requiredColumns = ["Nama", "Username", "Email", "Status Akun"];
+      const firstRow = rows[0];
+      const missing = requiredColumns.filter(col => !(col in firstRow));
+      if (missing.length) {
+        throw new Error(`Kolom tidak lengkap: ${missing.join(", ")}`);
+      }
+
+      const newAdmins = rows.map((row, idx) => ({
+        id: Date.now() + idx,
+        nama: row["Nama"],
+        username: row["Username"],
+        email: row["Email"],
+        aktif: row["Status Akun"] === "Aktif",
+        password: row["Password"] || row["Username"], // default = username
+        created_at: new Date().toISOString().split("T")[0],
+        last_login: "-",
+      }));
+
+      onDone(newAdmins);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className={styles.modalOverlay} onClick={onClose}>
+      <div className={styles.modalBox} onClick={e => e.stopPropagation()}>
+        <div className={styles.modalHeader}>
+          <div className={styles.modalHeaderLeft}>
+            <div className={styles.modalHeaderIcon}><FileSpreadsheet size={16} /></div>
+            <div>
+              <h3 className={styles.modalTitle}>Import Data Admin (Excel)</h3>
+              <p className={styles.modalSub}>Unggah file .xlsx, .xls, atau .csv</p>
+            </div>
+          </div>
+          <button className={styles.modalCloseBtn} onClick={onClose}><X size={17} /></button>
+        </div>
+        <div className={styles.modalBody}>
+          <div
+            className={`${styles.dropZone} ${dragging ? styles.dropActive : ""} ${file ? styles.dropFilled : ""}`}
+            onDragOver={e => { e.preventDefault(); setDragging(true); }}
+            onDragLeave={() => setDragging(false)}
+            onDrop={e => { e.preventDefault(); setDragging(false); handleFile(e.dataTransfer.files[0]); }}
+            onClick={() => inputRef.current?.click()}
+            role="button" tabIndex={0}
+          >
+            <input type="file" ref={inputRef} hidden accept=".xlsx,.xls,.csv"
+              onChange={e => handleFile(e.target.files[0])} />
+            {file ? (
+              <>
+                <FileSpreadsheet size={32} color="#16a34a" />
+                <p className={styles.dropFileName}>{file.name}</p>
+                <p className={styles.dropFileSize}>{(file.size / 1024).toFixed(1)} KB</p>
+              </>
+            ) : (
+              <>
+                <Upload size={32} />
+                <p>{dragging ? "Lepaskan file di sini" : "Klik atau seret file ke sini"}</p>
+                <small>.xlsx · .xls · .csv — maks. 5 MB</small>
+              </>
+            )}
+          </div>
+          {error && <p className={styles.errMsg}>{error}</p>}
+          <div className={styles.importNote}>
+            <AlertCircle size={13} />
+            <span>Pastikan kolom sesuai template. Kolom Password opsional, default = Username.</span>
+            <button className={styles.linkBtn} onClick={() => window.downloadTemplateAdmin?.()}>Unduh template</button>
+          </div>
+        </div>
+        <div className={styles.modalFooter}>
+          <button className={styles.btnGhost} onClick={onClose}>Batal</button>
+          <button className={styles.btnSave} onClick={handleImport} disabled={!file || loading}>
+            {loading ? <span className={styles.spin} /> : <Upload size={15} />}
+            {loading ? "Mengimport…" : "Import Data"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────
    ROW ACTION DROPDOWN
 ───────────────────────────────────────── */
 function RowActions({ row, onEdit, onResetPw, onToggleActive, onDelete }) {
@@ -380,7 +501,29 @@ export default function AdminManagementPage() {
   const [modalEdit, setModalEdit] = useState(null);
   const [modalReset, setModalReset] = useState(null);
   const [modalDelete, setModalDelete] = useState(null);
+  const [modalImport, setModalImport] = useState(false);
   const { toasts, add: toast, remove } = useToast();
+
+  const downloadTemplateAdmin = () => {
+    const templateData = [
+      {
+        "Nama": "Contoh Admin",
+        "Username": "admin_example",
+        "Email": "admin@isb.ac.id",
+        "Status Akun": "Aktif",
+        "Password": "admin123"
+      }
+    ];
+    const ws = XLSX.utils.json_to_sheet(templateData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Template Admin");
+    XLSX.writeFile(wb, "template_admin.xlsx");
+    toast("Template berhasil diunduh");
+  };
+
+  if (typeof window !== "undefined") {
+    window.downloadTemplateAdmin = downloadTemplateAdmin;
+  }
 
   const filtered = data.filter(row =>
     !search || 
@@ -425,6 +568,12 @@ export default function AdminManagementPage() {
     toast(`Akun ${row.nama} ${row.aktif ? "dinonaktifkan" : "diaktifkan"}`);
   };
 
+  const handleImportDone = (newAdmins) => {
+    setData(prev => [...newAdmins, ...prev]);
+    setModalImport(false);
+    toast(`Berhasil mengimport ${newAdmins.length} data admin`);
+  };
+
   const resetFilter = () => {
     setSearch("");
     setCurrentPage(1);
@@ -436,27 +585,30 @@ export default function AdminManagementPage() {
     <div className={styles.page}>
       <Toast toasts={toasts} remove={remove} />
 
-      {/* Header */}
       <div className={styles.pageHeader}>
         <div>
           <h1 className={styles.pageTitle}>Manajemen Administrator</h1>
           <p className={styles.pageSub}>Kelola akun admin, reset password, dan status akun</p>
         </div>
         <div className={styles.headerActions}>
+          <button className={styles.btnOutline} onClick={downloadTemplateAdmin}>
+            <Download size={15} /> Template
+          </button>
+          <button className={styles.btnOutline} onClick={() => setModalImport(true)}>
+            <Upload size={15} /> Import Excel
+          </button>
           <button className={styles.btnPrimary} onClick={() => setModalAdd(true)}>
             <Plus size={15} /> Tambah Admin
           </button>
         </div>
       </div>
 
-      {/* Stat Cards */}
       <div className={styles.statsGrid}>
         <StatCard icon={UserCog} title="Total Admin" value={total} subtitle={`${aktifCount} akun aktif`} color="blue" />
         <StatCard icon={Shield} title="Admin Aktif" value={aktifCount} subtitle="dapat mengakses sistem" color="green" />
         <StatCard icon={RefreshCw} title="Nonaktif" value={total - aktifCount} subtitle="akun dibekukan" color="orange" />
       </div>
 
-      {/* Search & Filter */}
       <div className={styles.toolbar}>
         <div className={styles.searchWrap}>
           <Search size={15} className={styles.searchIcon} />
@@ -481,7 +633,6 @@ export default function AdminManagementPage() {
         </div>
       </div>
 
-      {/* Filter Panel (hanya untuk info, tanpa role filter) */}
       {filterOpen && (
         <div className={styles.filterPanel}>
           <div className={styles.filterGroup}>
@@ -498,7 +649,6 @@ export default function AdminManagementPage() {
         </div>
       )}
 
-      {/* Table */}
       <div className={styles.tableCard}>
         <table className={styles.table}>
           <thead>
@@ -557,7 +707,6 @@ export default function AdminManagementPage() {
         </table>
       </div>
 
-      {/* Pagination */}
       {totalPages > 1 && (
         <div className={styles.pagination}>
           <span className={styles.paginInfo}>
@@ -587,11 +736,11 @@ export default function AdminManagementPage() {
         </div>
       )}
 
-      {/* Modals */}
       {modalAdd && <AdminFormModal mode="add" onClose={() => setModalAdd(false)} onSave={handleAddSave} />}
       {modalEdit && <AdminFormModal mode="edit" data={modalEdit} onClose={() => setModalEdit(null)} onSave={handleEditSave} />}
       {modalReset && <ResetPasswordModal admin={modalReset} onClose={() => setModalReset(null)} onDone={handleResetDone} />}
       {modalDelete && <DeleteAdminModal admin={modalDelete} onClose={() => setModalDelete(null)} onDone={handleDeleteDone} />}
+      {modalImport && <ImportExcelModal onClose={() => setModalImport(false)} onDone={handleImportDone} />}
     </div>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import Link from "next/link";
 import { useMahasiswa } from "@/context/MahasiswaContext";
 import {
   Plus, Edit2, Trash2, Upload, FileImage, X, CheckCircle2, AlertCircle,
@@ -9,7 +10,6 @@ import {
 import styles from "./kegiatan.module.css";
 
 // ========== IMPORT MASTER DATA ==========
-// Data master dari admin (nanti bisa dari API)
 import { 
   getJenisAktivitas, 
   getKategoriAktivitas, 
@@ -92,8 +92,8 @@ function Toast({ message, onClose }) {
   );
 }
 
-// ========== MODAL FORM KEGIATAN ==========
-function KegiatanModal({ isOpen, onClose, onSave, kegiatan, prodiColor }) {
+// ========== MODAL EDIT KEGIATAN (hanya untuk edit, tidak untuk tambah) ==========
+function EditKegiatanModal({ isOpen, onClose, onSave, kegiatan, prodiColor }) {
   const [form, setForm] = useState(
     kegiatan || {
       nama_id: "", nama_en: "", jenis_aktivitas: "", kategori: "", kelompok: "",
@@ -152,7 +152,11 @@ function KegiatanModal({ isOpen, onClose, onSave, kegiatan, prodiColor }) {
       setPreviewUrl(null);
       setUploadError("");
     }
-  }, [isOpen]);
+    // Reset form saat kegiatan berubah
+    if (kegiatan) {
+      setForm(kegiatan);
+    }
+  }, [isOpen, kegiatan]);
 
   if (!isOpen) return null;
 
@@ -160,18 +164,16 @@ function KegiatanModal({ isOpen, onClose, onSave, kegiatan, prodiColor }) {
     <div className={styles.modalOverlay} onClick={onClose}>
       <div className={styles.modalContainer} onClick={e => e.stopPropagation()}>
         <div className={styles.modalHeader}>
-          <h3>{kegiatan ? "Edit Kegiatan" : "Tambah Kegiatan Baru"}</h3>
+          <h3>Edit Kegiatan</h3>
           <button onClick={onClose}><X size={20} /></button>
         </div>
         <form onSubmit={handleSubmit}>
           <div className={styles.modalBody}>
-            {/* Baris 1: Nama Indonesia & Inggris */}
+            {/* Form sama seperti sebelumnya, hanya untuk edit */}
             <div className={styles.formRow}>
               <input className={styles.input} placeholder="Nama Kegiatan (Indonesia) *" value={form.nama_id} onChange={e => setForm({...form, nama_id: e.target.value})} />
               <input className={styles.input} placeholder="Nama Kegiatan (English) *" value={form.nama_en} onChange={e => setForm({...form, nama_en: e.target.value})} />
             </div>
-
-            {/* Baris 2: Jenis Aktivitas & Kategori */}
             <div className={styles.formRow}>
               <select className={styles.input} value={form.jenis_aktivitas} onChange={e => setForm({...form, jenis_aktivitas: e.target.value})}>
                 <option value="">Pilih Jenis Aktivitas *</option>
@@ -182,8 +184,6 @@ function KegiatanModal({ isOpen, onClose, onSave, kegiatan, prodiColor }) {
                 {KATEGORI_OPTIONS.map(k => <option key={k}>{k}</option>)}
               </select>
             </div>
-
-            {/* Baris 3: Kelompok & Level */}
             <div className={styles.formRow}>
               <select className={styles.input} value={form.kelompok} onChange={e => setForm({...form, kelompok: e.target.value})}>
                 <option value="">Pilih Kelompok Aktivitas *</option>
@@ -194,8 +194,6 @@ function KegiatanModal({ isOpen, onClose, onSave, kegiatan, prodiColor }) {
                 {LEVEL_OPTIONS.map(l => <option key={l}>{l}</option>)}
               </select>
             </div>
-
-            {/* Baris 4: Periode & Tingkat Prestasi */}
             <div className={styles.formRow}>
               <input className={styles.input} placeholder="Periode (contoh: Semester Ganjil 2025) *" value={form.periode} onChange={e => setForm({...form, periode: e.target.value})} />
               <select className={styles.input} value={form.tingkat_prestasi} onChange={e => setForm({...form, tingkat_prestasi: e.target.value})}>
@@ -203,19 +201,13 @@ function KegiatanModal({ isOpen, onClose, onSave, kegiatan, prodiColor }) {
                 {TINGKAT_PRESTASI.map(t => <option key={t}>{t}</option>)}
               </select>
             </div>
-
-            {/* Baris 5: Lokasi & Penyelenggara */}
             <div className={styles.formRow}>
               <input className={styles.input} placeholder="Lokasi *" value={form.lokasi} onChange={e => setForm({...form, lokasi: e.target.value})} />
               <input className={styles.input} placeholder="Penyelenggara *" value={form.penyelenggara} onChange={e => setForm({...form, penyelenggara: e.target.value})} />
             </div>
-
-            {/* Baris 6: Tanggal */}
             <div className={styles.formRow}>
               <input type="date" className={styles.input} value={form.tanggal} onChange={e => setForm({...form, tanggal: e.target.value})} />
             </div>
-
-            {/* Upload Bukti */}
             <div className={styles.uploadSection}>
               <div className={styles.uploadArea} style={{ borderColor: prodiColor }} onClick={() => fileRef.current.click()}>
                 <input type="file" ref={fileRef} hidden accept=".pdf,.jpg,.jpeg,.png" onChange={handleFileChange} />
@@ -238,7 +230,7 @@ function KegiatanModal({ isOpen, onClose, onSave, kegiatan, prodiColor }) {
           </div>
           <div className={styles.modalFooter}>
             <button type="button" className={styles.cancelBtn} onClick={onClose}>Batal</button>
-            <button type="submit" className={styles.saveBtn} style={{ background: prodiColor }}>Simpan</button>
+            <button type="submit" className={styles.saveBtn} style={{ background: prodiColor }}>Update</button>
           </div>
         </form>
       </div>
@@ -250,7 +242,7 @@ function KegiatanModal({ isOpen, onClose, onSave, kegiatan, prodiColor }) {
 export default function KegiatanPage() {
   const { prodiConfig } = useMahasiswa();
   const [kegiatan, setKegiatan] = useState(MOCK_KEGIATAN);
-  const [modalOpen, setModalOpen] = useState(false);
+  const [modalEditOpen, setModalEditOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [toast, setToast] = useState(null);
   const [search, setSearch] = useState("");
@@ -265,16 +257,10 @@ export default function KegiatanPage() {
     setTimeout(() => setToast(null), 3000);
   };
 
-  const handleSave = (data) => {
-    if (editing) {
-      setKegiatan(prev => prev.map(k => k.id === editing.id ? { ...k, ...data } : k));
-      showToast("Kegiatan berhasil diupdate");
-    } else {
-      const newId = Math.max(...kegiatan.map(k => k.id), 0) + 1;
-      setKegiatan(prev => [{ id: newId, status: "Menunggu", created_at: new Date().toISOString(), ...data }, ...prev]);
-      showToast("Kegiatan berhasil ditambahkan");
-    }
-    setModalOpen(false);
+  const handleSaveEdit = (data) => {
+    setKegiatan(prev => prev.map(k => k.id === editing.id ? { ...k, ...data } : k));
+    showToast("Kegiatan berhasil diupdate");
+    setModalEditOpen(false);
     setEditing(null);
   };
 
@@ -296,7 +282,7 @@ export default function KegiatanPage() {
       return;
     }
     setEditing(k);
-    setModalOpen(true);
+    setModalEditOpen(true);
   };
 
   const filtered = kegiatan.filter(k => {
@@ -315,9 +301,9 @@ export default function KegiatanPage() {
           <h1 className={styles.title}>Kegiatan Saya</h1>
           <p className={styles.subtitle}>Catat seluruh aktivitas Anda selama masa studi</p>
         </div>
-        <button className={styles.addBtn} onClick={() => { setEditing(null); setModalOpen(true); }} style={{ background: prodiConfig.primary }}>
+        <Link href="/mahasiswa/kegiatan/tambah-kegiatan" className={styles.addBtn} style={{ background: prodiConfig.primary }}>
           <Plus size={16} /> Tambah Kegiatan
-        </button>
+        </Link>
       </div>
 
       <div className={styles.filterBar}>
@@ -385,10 +371,11 @@ export default function KegiatanPage() {
         </table>
       </div>
 
-      <KegiatanModal
-        isOpen={modalOpen}
-        onClose={() => { setModalOpen(false); setEditing(null); }}
-        onSave={handleSave}
+      {/* Modal Edit */}
+      <EditKegiatanModal
+        isOpen={modalEditOpen}
+        onClose={() => { setModalEditOpen(false); setEditing(null); }}
+        onSave={handleSaveEdit}
         kegiatan={editing}
         prodiColor={prodiConfig.primary}
       />
