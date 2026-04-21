@@ -144,11 +144,6 @@ export default function TambahAktivitasPage() {
           </div>
 
           <div className={styles.formGroup}>
-            <label>Jumlah Peserta</label>
-            <input type="number" name="peserta" value={form.peserta} onChange={handleChange} placeholder="0" className={styles.input} />
-          </div>
-
-          <div className={styles.formGroup}>
             <label>Status</label>
             <select name="status" value={form.status} onChange={handleChange} className={styles.input}>
               {STATUS_OPTIONS.map((s) => (

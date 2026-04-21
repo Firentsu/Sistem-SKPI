@@ -1,14 +1,14 @@
+// frontend/src/app/admin/admin/page.js
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import * as XLSX from "xlsx";
 import {
-  Search, Plus, Upload, Download, Edit2, KeyRound,
-  ToggleLeft, ToggleRight, ChevronLeft, ChevronRight,
-  X, Check, AlertCircle, Users, FileSpreadsheet,
-  GraduationCap, Filter, MoreVertical,
-  Eye, EyeOff, RefreshCw, CheckCircle2,
-  TrendingUp, UserCheck, ChevronDown,
+  Search, Plus, Edit2, KeyRound, ToggleLeft, ToggleRight,
+  ChevronLeft, ChevronRight, X, Check, AlertCircle, Users,
+  Filter, MoreVertical, Eye, EyeOff, RefreshCw, CheckCircle2,
+  Shield, UserCog, Mail, AtSign, Trash2, ShieldCheck, ShieldOff,
+  ChevronDown, Upload, Download, FileSpreadsheet,
 } from "lucide-react";
 import styles from "./page.module.css";
 
@@ -16,35 +16,14 @@ import styles from "./page.module.css";
    CONSTANTS & MOCK DATA
 ───────────────────────────────────────── */
 const PER_PAGE = 10;
-const PRODI_LIST    = ["Semua", "Teknik Informatika", "Manajemen", "Akuntansi", "Sistem Informasi", "Ilmu Komunikasi"];
-const ANGKATAN_LIST = ["Semua", "2025", "2024", "2023", "2022", "2021", "2020"];
-const STATUS_SKPI   = ["Semua", "Belum", "Proses", "Selesai"];
 
-function generateMock() {
-  const prodiList  = PRODI_LIST.filter(p => p !== "Semua");
-  const statusList = ["Belum", "Proses", "Selesai"];
-  const names = [
-    "Andi Pratama","Budi Santoso","Citra Dewi","Dian Pertiwi","Eko Wibowo",
-    "Fitri Handayani","Galuh Pramesti","Hendra Kusuma","Indah Permata","Joko Widodo",
-    "Kartika Sari","Luthfi Hakim","Maya Sari","Nando Pratama","Oktavia Putri",
-    "Prima Yudha","Riani Astuti","Surya Darma","Tania Lestari","Umar Said",
-    "Vera Kusuma","Wahyu Ramadan","Xena Pratiwi","Yoga Santoso","Zahra Nadia",
-  ];
-  return names.map((nama, i) => ({
-    id: i + 1,
-    nama,
-    nim: `20${String(20 + (i % 5)).slice(-2)}${String(1001 + i).padStart(6, "0")}`,
-    id_prodi: prodiList[i % prodiList.length],
-    angkatan: String(2019 + (i % 6)),
-    email: `${nama.split(" ")[0].toLowerCase()}@student.isb.ac.id`,
-    status_skpi: statusList[i % statusList.length],
-    jumlah_kegiatan: Math.floor(Math.random() * 25) + 1,
-    total_icp: Math.floor(Math.random() * 180) + 20,
-    aktif: i % 7 !== 0,
-  }));
-}
-
-const MOCK_DATA = generateMock();
+const MOCK_ADMINS = [
+  { id: 1, nama: "Dr. Antonius Wibowo", username: "antonius", email: "antonius@isb.ac.id", aktif: true, created_at: "2022-01-10", last_login: "2026-04-17" },
+  { id: 2, nama: "Maria Goreti, S.Kom", username: "maria_g", email: "mariag@isb.ac.id", aktif: true, created_at: "2022-03-05", last_login: "2026-04-16" },
+  { id: 3, nama: "Benediktus Hartono", username: "bene_h", email: "benediktus@isb.ac.id", aktif: true, created_at: "2023-07-14", last_login: "2026-04-10" },
+  { id: 4, nama: "Theresia Lestari", username: "theresia", email: "theresia@isb.ac.id", aktif: true, created_at: "2024-01-20", last_login: "2026-03-28" },
+  { id: 5, nama: "Fransiskus Daud", username: "fran_d", email: "fransiskus@isb.ac.id", aktif: false, created_at: "2023-09-01", last_login: "2025-12-01" },
+];
 
 /* ─────────────────────────────────────────
    TOAST
@@ -75,19 +54,6 @@ function useToast() {
 }
 
 /* ─────────────────────────────────────────
-   STATUS BADGE
-───────────────────────────────────────── */
-function StatusBadge({ status }) {
-  const cfg = {
-    Selesai: { cls: styles.badgeSelesai, icon: <CheckCircle2 size={11} /> },
-    Proses:  { cls: styles.badgeProses,  icon: <RefreshCw size={11} />    },
-    Belum:   { cls: styles.badgeBelum,   icon: <AlertCircle size={11} />  },
-  };
-  const { cls, icon } = cfg[status] || cfg.Belum;
-  return <span className={`${styles.badge} ${cls}`}>{icon}{status}</span>;
-}
-
-/* ─────────────────────────────────────────
    STAT CARD
 ───────────────────────────────────────── */
 function StatCard({ icon: Icon, title, value, subtitle, color }) {
@@ -104,7 +70,7 @@ function StatCard({ icon: Icon, title, value, subtitle, color }) {
 }
 
 /* ─────────────────────────────────────────
-   INPUT PASSWORD
+   PASSWORD INPUT
 ───────────────────────────────────────── */
 function PasswordInput({ value, onChange, placeholder, id }) {
   const [show, setShow] = useState(false);
@@ -127,31 +93,32 @@ function PasswordInput({ value, onChange, placeholder, id }) {
 }
 
 /* ─────────────────────────────────────────
-   MODAL TAMBAH / EDIT MAHASISWA
+   MODAL TAMBAH / EDIT ADMIN
 ───────────────────────────────────────── */
-function MahasiswaFormModal({ mode, data, onClose, onSave }) {
+function AdminFormModal({ mode, data, onClose, onSave }) {
   const initial = data || {
-    nama: "", nim: "", id_prodi: PRODI_LIST[1], angkatan: "2024",
-    email: "", password: "", password_confirm: "",
-    status_skpi: "Belum", aktif: true,
+    nama: "", username: "", email: "",
+    password: "", password_confirm: "",
+    aktif: true,
   };
-  const [form, setForm]     = useState(initial);
+  const [form, setForm] = useState(initial);
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
 
-  const set = (k, v) => {
+  const setField = (k, v) => {
     setForm(prev => ({ ...prev, [k]: v }));
     if (errors[k]) setErrors(prev => ({ ...prev, [k]: undefined }));
   };
 
   const validate = () => {
     const err = {};
-    if (!form.nama.trim())  err.nama  = "Nama wajib diisi.";
-    if (!form.nim.trim())   err.nim   = "NIM wajib diisi.";
+    if (!form.nama.trim()) err.nama = "Nama wajib diisi.";
+    if (!form.username.trim()) err.username = "Username wajib diisi.";
+    else if (!/^[a-zA-Z0-9_]+$/.test(form.username)) err.username = "Hanya huruf, angka, underscore.";
     if (!form.email.trim()) err.email = "Email wajib diisi.";
     else if (!/\S+@\S+\.\S+/.test(form.email)) err.email = "Format email tidak valid.";
     if (mode === "add") {
-      if (!form.password)           err.password = "Password wajib diisi.";
+      if (!form.password) err.password = "Password wajib diisi.";
       else if (form.password.length < 8) err.password = "Minimal 8 karakter.";
       if (form.password !== form.password_confirm) err.password_confirm = "Konfirmasi tidak cocok.";
     }
@@ -183,67 +150,75 @@ function MahasiswaFormModal({ mode, data, onClose, onSave }) {
               {mode === "add" ? <Plus size={16} /> : <Edit2 size={16} />}
             </div>
             <div>
-              <h3 className={styles.modalTitle}>{mode === "add" ? "Tambah Mahasiswa" : "Edit Data Mahasiswa"}</h3>
-              <p className={styles.modalSub}>Isi data akun mahasiswa dengan benar</p>
+              <h3 className={styles.modalTitle}>{mode === "add" ? "Tambah Admin" : "Edit Data Admin"}</h3>
+              <p className={styles.modalSub}>Isi data akun administrator sistem</p>
             </div>
           </div>
           <button className={styles.modalCloseBtn} onClick={onClose}><X size={17} /></button>
         </div>
 
         <div className={styles.modalBody}>
-          <div className={styles.formSection}>DATA PRIBADI</div>
+          <div className={styles.formSection}>DATA ADMINISTRATOR</div>
           <div className={styles.formGrid2}>
-            <div className={styles.fg}>
+            <div className={`${styles.fg} ${styles.fullSpan}`}>
               <label className={styles.fl}>Nama Lengkap <span className={styles.req}>*</span></label>
-              <input className={`${styles.input} ${errors.nama ? styles.inputErr : ""}`}
-                value={form.nama} onChange={e => set("nama", e.target.value)}
-                placeholder="Nama lengkap sesuai KTP" />
+              <input
+                className={`${styles.input} ${errors.nama ? styles.inputErr : ""}`}
+                value={form.nama}
+                onChange={e => setField("nama", e.target.value)}
+                placeholder="Nama lengkap admin"
+              />
               {errors.nama && <small className={styles.errMsg}>{errors.nama}</small>}
             </div>
             <div className={styles.fg}>
-              <label className={styles.fl}>NIM <span className={styles.req}>*</span></label>
-              <input className={`${styles.input} ${errors.nim ? styles.inputErr : ""}`}
-                value={form.nim} onChange={e => set("nim", e.target.value)}
-                placeholder="Contoh: 202200001001" />
-              {errors.nim && <small className={styles.errMsg}>{errors.nim}</small>}
+              <label className={styles.fl}>Username <span className={styles.req}>*</span></label>
+              <div className={styles.inputIconWrap}>
+                <AtSign size={14} className={styles.inputIcon} />
+                <input
+                  className={`${styles.input} ${styles.inputWithIcon} ${errors.username ? styles.inputErr : ""}`}
+                  value={form.username}
+                  onChange={e => setField("username", e.target.value)}
+                  placeholder="contoh: admin_isb"
+                />
+              </div>
+              {errors.username && <small className={styles.errMsg}>{errors.username}</small>}
             </div>
             <div className={styles.fg}>
-              <label className={styles.fl}>Program Studi</label>
-              <select className={styles.input} value={form.id_prodi} onChange={e => set("id_prodi", e.target.value)}>
-                {PRODI_LIST.filter(p => p !== "Semua").map(p => <option key={p}>{p}</option>)}
-              </select>
-            </div>
-            <div className={styles.fg}>
-              <label className={styles.fl}>Angkatan</label>
-              <select className={styles.input} value={form.angkatan} onChange={e => set("angkatan", e.target.value)}>
-                {ANGKATAN_LIST.filter(a => a !== "Semua").map(a => <option key={a}>{a}</option>)}
-              </select>
-            </div>
-            <div className={`${styles.fg} ${styles.fullSpan}`}>
               <label className={styles.fl}>Email <span className={styles.req}>*</span></label>
-              <input type="email" className={`${styles.input} ${errors.email ? styles.inputErr : ""}`}
-                value={form.email} onChange={e => set("email", e.target.value)}
-                placeholder="email@student.isb.ac.id" />
+              <div className={styles.inputIconWrap}>
+                <Mail size={14} className={styles.inputIcon} />
+                <input
+                  type="email"
+                  className={`${styles.input} ${styles.inputWithIcon} ${errors.email ? styles.inputErr : ""}`}
+                  value={form.email}
+                  onChange={e => setField("email", e.target.value)}
+                  placeholder="admin@isb.ac.id"
+                />
+              </div>
               {errors.email && <small className={styles.errMsg}>{errors.email}</small>}
             </div>
           </div>
 
           {mode === "add" && (
             <>
-              <div className={styles.formSection}>KATA SANDI AKUN</div>
+              <div className={styles.formSection}>KATA SANDI</div>
               <div className={styles.formGrid2}>
                 <div className={styles.fg}>
                   <label className={styles.fl}>Password <span className={styles.req}>*</span></label>
-                  <PasswordInput value={form.password}
-                    onChange={e => set("password", e.target.value)}
-                    placeholder="Minimal 8 karakter" />
+                  <PasswordInput
+                    value={form.password}
+                    onChange={e => setField("password", e.target.value)}
+                    placeholder="Minimal 8 karakter"
+                  />
                   {errors.password && <small className={styles.errMsg}>{errors.password}</small>}
                 </div>
                 <div className={styles.fg}>
                   <label className={styles.fl}>Konfirmasi Password <span className={styles.req}>*</span></label>
-                  <PasswordInput value={form.password_confirm}
-                    onChange={e => set("password_confirm", e.target.value)}
-                    placeholder="Ulangi password" />
+                  <PasswordInput
+                    value={form.password_confirm}
+                    onChange={e => setField("password_confirm", e.target.value)}
+                    placeholder="Ulangi password"
+                  />
                   {errors.password_confirm && <small className={styles.errMsg}>{errors.password_confirm}</small>}
                 </div>
               </div>
@@ -253,16 +228,12 @@ function MahasiswaFormModal({ mode, data, onClose, onSave }) {
           <div className={styles.formSection}>STATUS AKUN</div>
           <div className={styles.formGrid2}>
             <div className={styles.fg}>
-              <label className={styles.fl}>Status SKPI</label>
-              <select className={styles.input} value={form.status_skpi} onChange={e => set("status_skpi", e.target.value)}>
-                {["Belum", "Proses", "Selesai"].map(s => <option key={s}>{s}</option>)}
-              </select>
-            </div>
-            <div className={styles.fg}>
               <label className={styles.fl}>Status Akun</label>
-              <button type="button"
+              <button
+                type="button"
                 className={`${styles.toggleBtn} ${form.aktif ? styles.toggleOn : styles.toggleOff}`}
-                onClick={() => set("aktif", !form.aktif)}>
+                onClick={() => setField("aktif", !form.aktif)}
+              >
                 {form.aktif ? <ToggleRight size={18} /> : <ToggleLeft size={18} />}
                 {form.aktif ? "Aktif" : "Nonaktif"}
               </button>
@@ -274,7 +245,7 @@ function MahasiswaFormModal({ mode, data, onClose, onSave }) {
           <button className={styles.btnGhost} onClick={onClose}>Batal</button>
           <button className={styles.btnSave} onClick={handleSave} disabled={saving}>
             {saving ? <span className={styles.spin} /> : <Check size={15} />}
-            {saving ? "Menyimpan…" : mode === "add" ? "Tambah Mahasiswa" : "Simpan Perubahan"}
+            {saving ? "Menyimpan…" : mode === "add" ? "Tambah Admin" : "Simpan Perubahan"}
           </button>
         </div>
       </div>
@@ -285,7 +256,7 @@ function MahasiswaFormModal({ mode, data, onClose, onSave }) {
 /* ─────────────────────────────────────────
    MODAL RESET PASSWORD
 ───────────────────────────────────────── */
-function ResetPasswordModal({ mahasiswa, onClose, onDone }) {
+function ResetPasswordModal({ admin, onClose, onDone }) {
   const [loading, setLoading] = useState(false);
   const handle = async () => {
     setLoading(true);
@@ -300,15 +271,15 @@ function ResetPasswordModal({ mahasiswa, onClose, onDone }) {
             <div className={`${styles.modalHeaderIcon} ${styles.iconWarn}`}><KeyRound size={16} /></div>
             <div>
               <h3 className={styles.modalTitle}>Reset Password</h3>
-              <p className={styles.modalSub}>Kirim password baru ke email mahasiswa</p>
+              <p className={styles.modalSub}>Kirim password baru ke email admin</p>
             </div>
           </div>
           <button className={styles.modalCloseBtn} onClick={onClose}><X size={17} /></button>
         </div>
         <div className={styles.modalBody}>
           <div className={styles.confirmBox}>
-            <p>Reset password untuk <strong>{mahasiswa.nama}</strong>?</p>
-            <p className={styles.confirmNote}>Password baru akan dikirim ke <strong>{mahasiswa.email}</strong></p>
+            <p>Reset password untuk <strong>{admin.nama}</strong>?</p>
+            <p className={styles.confirmNote}>Password baru dikirim ke <strong>{admin.email}</strong></p>
           </div>
         </div>
         <div className={styles.modalFooter}>
@@ -324,7 +295,48 @@ function ResetPasswordModal({ mahasiswa, onClose, onDone }) {
 }
 
 /* ─────────────────────────────────────────
-   MODAL IMPORT EXCEL (dengan validasi kolom & password default = NIM)
+   MODAL HAPUS ADMIN
+───────────────────────────────────────── */
+function DeleteAdminModal({ admin, onClose, onDone }) {
+  const [loading, setLoading] = useState(false);
+  const handle = async () => {
+    setLoading(true);
+    await new Promise(r => setTimeout(r, 700));
+    onDone();
+  };
+  return (
+    <div className={styles.modalOverlay} onClick={onClose}>
+      <div className={`${styles.modalBox} ${styles.modalSm}`} onClick={e => e.stopPropagation()}>
+        <div className={styles.modalHeader}>
+          <div className={styles.modalHeaderLeft}>
+            <div className={`${styles.modalHeaderIcon} ${styles.iconDanger}`}><Trash2 size={16} /></div>
+            <div>
+              <h3 className={styles.modalTitle}>Hapus Admin</h3>
+              <p className={styles.modalSub}>Tindakan ini tidak dapat dibatalkan</p>
+            </div>
+          </div>
+          <button className={styles.modalCloseBtn} onClick={onClose}><X size={17} /></button>
+        </div>
+        <div className={styles.modalBody}>
+          <div className={`${styles.confirmBox} ${styles.confirmBoxDanger}`}>
+            <p>Hapus akun <strong>{admin.nama}</strong> ({admin.username})?</p>
+            <p className={styles.confirmNote}>Seluruh data akses admin ini akan dihapus permanen.</p>
+          </div>
+        </div>
+        <div className={styles.modalFooter}>
+          <button className={styles.btnGhost} onClick={onClose}>Batal</button>
+          <button className={`${styles.btnSave} ${styles.btnDanger}`} onClick={handle} disabled={loading}>
+            {loading ? <span className={styles.spin} /> : <Trash2 size={15} />}
+            {loading ? "Menghapus…" : "Hapus Admin"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────
+   MODAL IMPORT EXCEL
 ───────────────────────────────────────── */
 function ImportExcelModal({ onClose, onDone }) {
   const [file, setFile] = useState(null);
@@ -359,30 +371,25 @@ function ImportExcelModal({ onClose, onDone }) {
       const rows = XLSX.utils.sheet_to_json(sheet);
       if (rows.length === 0) throw new Error("File kosong");
 
-      // Kolom yang diperlukan (Password opsional, default = NIM)
-      const requiredColumns = ["Nama", "NIM", "Program Studi", "Angkatan", "Email", "Status SKPI", "Jumlah Kegiatan", "Total ICP", "Status Akun"];
+      const requiredColumns = ["Nama", "Username", "Email", "Status Akun"];
       const firstRow = rows[0];
       const missing = requiredColumns.filter(col => !(col in firstRow));
       if (missing.length) {
         throw new Error(`Kolom tidak lengkap: ${missing.join(", ")}`);
       }
 
-      // Konversi ke format data mahasiswa
-      const newMahasiswa = rows.map((row, idx) => ({
-        id: Date.now() + idx, // ID sementara
+      const newAdmins = rows.map((row, idx) => ({
+        id: Date.now() + idx,
         nama: row["Nama"],
-        nim: row["NIM"].toString(),
-        id_prodi: row["Program Studi"],
-        angkatan: row["Angkatan"].toString(),
+        username: row["Username"],
         email: row["Email"],
-        status_skpi: row["Status SKPI"],
-        jumlah_kegiatan: parseInt(row["Jumlah Kegiatan"]) || 0,
-        total_icp: parseInt(row["Total ICP"]) || 0,
         aktif: row["Status Akun"] === "Aktif",
-        password: row["Password"] || row["NIM"].toString(), // jika tidak ada, pakai NIM
+        password: row["Password"] || row["Username"], // default = username
+        created_at: new Date().toISOString().split("T")[0],
+        last_login: "-",
       }));
 
-      onDone(newMahasiswa);
+      onDone(newAdmins);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -397,7 +404,7 @@ function ImportExcelModal({ onClose, onDone }) {
           <div className={styles.modalHeaderLeft}>
             <div className={styles.modalHeaderIcon}><FileSpreadsheet size={16} /></div>
             <div>
-              <h3 className={styles.modalTitle}>Import Data Excel</h3>
+              <h3 className={styles.modalTitle}>Import Data Admin (Excel)</h3>
               <p className={styles.modalSub}>Unggah file .xlsx, .xls, atau .csv</p>
             </div>
           </div>
@@ -431,8 +438,8 @@ function ImportExcelModal({ onClose, onDone }) {
           {error && <p className={styles.errMsg}>{error}</p>}
           <div className={styles.importNote}>
             <AlertCircle size={13} />
-            <span>Pastikan kolom sesuai template. Kolom Password opsional, default = NIM.</span>
-            <button className={styles.linkBtn} onClick={() => window.downloadTemplate?.()}>Unduh template</button>
+            <span>Pastikan kolom sesuai template. Kolom Password opsional, default = Username.</span>
+            <button className={styles.linkBtn} onClick={() => window.downloadTemplateAdmin?.()}>Unduh template</button>
           </div>
         </div>
         <div className={styles.modalFooter}>
@@ -450,32 +457,31 @@ function ImportExcelModal({ onClose, onDone }) {
 /* ─────────────────────────────────────────
    ROW ACTION DROPDOWN
 ───────────────────────────────────────── */
-function RowActions({ row, onEdit, onResetPw, onToggleActive }) {
+function RowActions({ row, onEdit, onResetPw, onToggleActive, onDelete }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
-
   useEffect(() => {
     const fn = e => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
     document.addEventListener("mousedown", fn);
     return () => document.removeEventListener("mousedown", fn);
   }, []);
-
   return (
     <div className={styles.ddWrap} ref={ref}>
-      <button className={styles.ddTrigger} onClick={() => setOpen(o => !o)}>
-        <MoreVertical size={15} />
-      </button>
+      <button className={styles.ddTrigger} onClick={() => setOpen(o => !o)}><MoreVertical size={15} /></button>
       {open && (
         <div className={styles.ddMenu}>
           <button onClick={() => { onEdit(); setOpen(false); }}><Edit2 size={13} /> Edit Data</button>
           <button onClick={() => { onResetPw(); setOpen(false); }}><KeyRound size={13} /> Reset Password</button>
           <div className={styles.ddDivider} />
           <button
-            className={row.aktif ? styles.ddDanger : styles.ddSuccess}
-            onClick={() => { onToggleActive(); setOpen(false); }}
-          >
-            {row.aktif ? <EyeOff size={13} /> : <Eye size={13} />}
+            className={row.aktif ? styles.ddWarn : styles.ddSuccess}
+            onClick={() => { onToggleActive(); setOpen(false); }}>
+            {row.aktif ? <ShieldOff size={13} /> : <ShieldCheck size={13} />}
             {row.aktif ? "Nonaktifkan" : "Aktifkan"}
+          </button>
+          <div className={styles.ddDivider} />
+          <button className={styles.ddDanger} onClick={() => { onDelete(); setOpen(false); }}>
+            <Trash2 size={13} /> Hapus Admin
           </button>
         </div>
       )}
@@ -486,78 +492,64 @@ function RowActions({ row, onEdit, onResetPw, onToggleActive }) {
 /* ─────────────────────────────────────────
    HALAMAN UTAMA
 ───────────────────────────────────────── */
-export default function MahasiswaPage() {
-  const [data, setData] = useState(MOCK_DATA);
+export default function AdminManagementPage() {
+  const [data, setData] = useState(MOCK_ADMINS);
   const [search, setSearch] = useState("");
-  const [filterProdi, setFilterProdi] = useState("Semua");
-  const [filterAngkatan, setFilterAngkatan] = useState("Semua");
-  const [filterStatus, setFilterStatus] = useState("Semua");
-  const [currentPage, setCurrentPage] = useState(1);
   const [filterOpen, setFilterOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
   const [modalAdd, setModalAdd] = useState(false);
   const [modalEdit, setModalEdit] = useState(null);
   const [modalReset, setModalReset] = useState(null);
+  const [modalDelete, setModalDelete] = useState(null);
   const [modalImport, setModalImport] = useState(false);
   const { toasts, add: toast, remove } = useToast();
 
-  // Fungsi download template Excel (termasuk kolom Password)
-  const downloadTemplate = () => {
+  const downloadTemplateAdmin = () => {
     const templateData = [
       {
-        "Nama": "Contoh Mahasiswa",
-        "NIM": "202200001001",
-        "Program Studi": "Teknik Informatika",
-        "Angkatan": "2024",
-        "Email": "contoh@student.isb.ac.id",
-        "Status SKPI": "Belum",
-        "Jumlah Kegiatan": 0,
-        "Total ICP": 0,
+        "Nama": "Contoh Admin",
+        "Username": "admin_example",
+        "Email": "admin@isb.ac.id",
         "Status Akun": "Aktif",
-        "Password": "contoh123" // contoh password (opsional)
+        "Password": "admin123"
       }
     ];
     const ws = XLSX.utils.json_to_sheet(templateData);
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Template Mahasiswa");
-    XLSX.writeFile(wb, "template_mahasiswa.xlsx");
+    XLSX.utils.book_append_sheet(wb, ws, "Template Admin");
+    XLSX.writeFile(wb, "template_admin.xlsx");
     toast("Template berhasil diunduh");
   };
 
-  // Pasang fungsi ke window agar bisa dipanggil dari modal import
   if (typeof window !== "undefined") {
-    window.downloadTemplate = downloadTemplate;
+    window.downloadTemplateAdmin = downloadTemplateAdmin;
   }
 
-  const filtered = data.filter(row => {
-    const q = search.toLowerCase();
-    return (
-      (!search || row.nama.toLowerCase().includes(q) || row.nim.includes(q)) &&
-      (filterProdi    === "Semua" || row.id_prodi    === filterProdi) &&
-      (filterAngkatan === "Semua" || row.angkatan    === filterAngkatan) &&
-      (filterStatus   === "Semua" || row.status_skpi === filterStatus)
-    );
-  });
+  const filtered = data.filter(row =>
+    !search || 
+    row.nama.toLowerCase().includes(search.toLowerCase()) ||
+    row.username.toLowerCase().includes(search.toLowerCase()) ||
+    row.email.toLowerCase().includes(search.toLowerCase())
+  );
 
   const totalPages = Math.ceil(filtered.length / PER_PAGE);
-  const safePage   = Math.min(currentPage, totalPages || 1);
-  const start      = (safePage - 1) * PER_PAGE;
-  const paged      = filtered.slice(start, start + PER_PAGE);
+  const safePage = Math.min(currentPage, totalPages || 1);
+  const start = (safePage - 1) * PER_PAGE;
+  const paged = filtered.slice(start, start + PER_PAGE);
 
-  const totalM   = data.length;
-  const aktifC   = data.filter(r => r.aktif).length;
-  const selesaiC = data.filter(r => r.status_skpi === "Selesai").length;
-  const avgICP   = Math.round(data.reduce((s, r) => s + r.total_icp, 0) / totalM);
+  const total = data.length;
+  const aktifCount = data.filter(r => r.aktif).length;
 
   const handleAddSave = d => {
-    setData(prev => [{ ...d, id: Math.max(0,...prev.map(x=>x.id))+1, jumlah_kegiatan:0, total_icp:0 }, ...prev]);
+    setData(prev => [{ ...d, id: Math.max(0, ...prev.map(x => x.id)) + 1, created_at: new Date().toISOString().split("T")[0], last_login: "-" }, ...prev]);
     setModalAdd(false);
-    toast("Mahasiswa berhasil ditambahkan");
+    toast("Admin baru berhasil ditambahkan");
   };
 
   const handleEditSave = d => {
     setData(prev => prev.map(r => r.id === d.id ? { ...r, ...d } : r));
     setModalEdit(null);
-    toast("Data mahasiswa diperbarui");
+    toast("Data admin diperbarui");
   };
 
   const handleResetDone = () => {
@@ -565,96 +557,90 @@ export default function MahasiswaPage() {
     toast("Password direset, email telah dikirim");
   };
 
-  const handleToggle = row => {
+  const handleDeleteDone = () => {
+    setData(prev => prev.filter(r => r.id !== modalDelete.id));
+    setModalDelete(null);
+    toast("Admin berhasil dihapus", "error");
+  };
+
+  const handleToggleActive = row => {
     setData(prev => prev.map(r => r.id === row.id ? { ...r, aktif: !r.aktif } : r));
     toast(`Akun ${row.nama} ${row.aktif ? "dinonaktifkan" : "diaktifkan"}`);
   };
 
-  const handleImportDone = (newMahasiswa) => {
-    setData(prev => [...newMahasiswa, ...prev]);
+  const handleImportDone = (newAdmins) => {
+    setData(prev => [...newAdmins, ...prev]);
     setModalImport(false);
-    toast(`Berhasil mengimport ${newMahasiswa.length} data mahasiswa`);
+    toast(`Berhasil mengimport ${newAdmins.length} data admin`);
   };
 
   const resetFilter = () => {
-    setFilterProdi("Semua"); setFilterAngkatan("Semua");
-    setFilterStatus("Semua"); setSearch(""); setCurrentPage(1);
+    setSearch("");
+    setCurrentPage(1);
   };
 
-  const activeFilters =
-    (filterProdi !== "Semua" ? 1 : 0) +
-    (filterAngkatan !== "Semua" ? 1 : 0) +
-    (filterStatus !== "Semua" ? 1 : 0) +
-    (search ? 1 : 0);
+  const activeFilters = search ? 1 : 0;
 
   return (
     <div className={styles.page}>
       <Toast toasts={toasts} remove={remove} />
 
-      {/* ── Header ── */}
       <div className={styles.pageHeader}>
         <div>
-          <h1 className={styles.pageTitle}>Manajemen Mahasiswa</h1>
-          <p className={styles.pageSub}>Kelola data mahasiswa, reset password, dan status akun</p>
+          <h1 className={styles.pageTitle}>Manajemen Administrator</h1>
+          <p className={styles.pageSub}>Kelola akun admin, reset password, dan status akun</p>
         </div>
         <div className={styles.headerActions}>
-          <button className={styles.btnOutline} onClick={downloadTemplate}>
+          <button className={styles.btnOutline} onClick={downloadTemplateAdmin}>
             <Download size={15} /> Template
           </button>
           <button className={styles.btnOutline} onClick={() => setModalImport(true)}>
             <Upload size={15} /> Import Excel
           </button>
           <button className={styles.btnPrimary} onClick={() => setModalAdd(true)}>
-            <Plus size={15} /> Tambah Mahasiswa
+            <Plus size={15} /> Tambah Admin
           </button>
         </div>
       </div>
 
-      {/* ── Stats ── */}
       <div className={styles.statsGrid}>
-        <StatCard icon={Users}         title="Total Mahasiswa"  value={totalM}   subtitle={`${aktifC} akun aktif`}       color="blue"   />
-        <StatCard icon={CheckCircle2}  title="SKPI Selesai"     value={selesaiC} subtitle={`${Math.round(selesaiC/totalM*100)}%`} color="green"  />
-        <StatCard icon={TrendingUp}    title="Rata-rata ICP"    value={avgICP}   subtitle="poin integritas"               color="purple" />
-        <StatCard icon={UserCheck}     title="Akun Aktif"       value={aktifC}   subtitle={`${totalM-aktifC} nonaktif`}   color="orange" />
+        <StatCard icon={UserCog} title="Total Admin" value={total} subtitle={`${aktifCount} akun aktif`} color="blue" />
+        <StatCard icon={Shield} title="Admin Aktif" value={aktifCount} subtitle="dapat mengakses sistem" color="green" />
+        <StatCard icon={RefreshCw} title="Nonaktif" value={total - aktifCount} subtitle="akun dibekukan" color="orange" />
       </div>
 
-      {/* ── Search & Filter ── */}
       <div className={styles.toolbar}>
         <div className={styles.searchWrap}>
           <Search size={15} className={styles.searchIcon} />
-          <input className={styles.searchInput} placeholder="Cari nama atau NIM…"
-            value={search} onChange={e => { setSearch(e.target.value); setCurrentPage(1); }} />
+          <input
+            className={styles.searchInput}
+            placeholder="Cari nama, username, atau email…"
+            value={search}
+            onChange={e => { setSearch(e.target.value); setCurrentPage(1); }}
+          />
           {search && <button className={styles.searchClear} onClick={() => setSearch("")}><X size={14} /></button>}
         </div>
         <div className={styles.toolbarRight}>
-          <button className={`${styles.btnFilter} ${filterOpen || activeFilters ? styles.btnFilterActive : ""}`}
-            onClick={() => setFilterOpen(o => !o)}>
+          <button
+            className={`${styles.btnFilter} ${filterOpen || activeFilters ? styles.btnFilterActive : ""}`}
+            onClick={() => setFilterOpen(o => !o)}
+          >
             <Filter size={14} /> Filter
             {activeFilters > 0 && <span className={styles.filterBadge}>{activeFilters}</span>}
             <ChevronDown size={13} className={filterOpen ? styles.chevUp : ""} />
           </button>
-          <span className={styles.resultCount}>{filtered.length} mahasiswa</span>
+          <span className={styles.resultCount}>{filtered.length} admin</span>
         </div>
       </div>
 
-      {/* ── Filter Panel ── */}
       {filterOpen && (
         <div className={styles.filterPanel}>
-          {[
-            { label: "Program Studi", list: PRODI_LIST, val: filterProdi, set: v => { setFilterProdi(v); setCurrentPage(1); } },
-            { label: "Angkatan",      list: ANGKATAN_LIST, val: filterAngkatan, set: v => { setFilterAngkatan(v); setCurrentPage(1); } },
-            { label: "Status SKPI",   list: STATUS_SKPI,   val: filterStatus,   set: v => { setFilterStatus(v);   setCurrentPage(1); } },
-          ].map(({ label, list, val, set: setVal }) => (
-            <div className={styles.filterGroup} key={label}>
-              <p className={styles.filterLabel}>{label}</p>
-              <div className={styles.chipRow}>
-                {list.map(item => (
-                  <button key={item} onClick={() => setVal(item)}
-                    className={`${styles.chip} ${val === item ? styles.chipActive : ""}`}>{item}</button>
-                ))}
-              </div>
+          <div className={styles.filterGroup}>
+            <p className={styles.filterLabel}>Pencarian aktif</p>
+            <div className={styles.chipRow}>
+              <span className={styles.filterInfo}>Menampilkan admin yang sesuai dengan kata kunci "{search || '-'}"</span>
             </div>
-          ))}
+          </div>
           {activeFilters > 0 && (
             <button className={styles.btnResetFilter} onClick={resetFilter}>
               <RefreshCw size={13} /> Reset Filter
@@ -663,32 +649,28 @@ export default function MahasiswaPage() {
         </div>
       )}
 
-      {/* ── Table ── */}
       <div className={styles.tableCard}>
         <table className={styles.table}>
           <thead>
             <tr>
               <th className={styles.thNo}>#</th>
-              <th>Nama Mahasiswa</th>
-              <th>NIM</th>
-              <th>Program Studi</th>
-              <th className={styles.thCenter}>Angkatan</th>
+              <th>Nama Administrator</th>
+              <th>Username</th>
               <th>Email</th>
-              <th className={styles.thCenter}>Status SKPI</th>
-              <th className={styles.thCenter}>Kegiatan</th>
-              <th className={styles.thCenter}>ICP</th>
               <th className={styles.thCenter}>Akun</th>
+              <th className={styles.thCenter}>Dibuat</th>
+              <th className={styles.thCenter}>Login Terakhir</th>
               <th className={styles.thCenter}>Aksi</th>
             </tr>
           </thead>
           <tbody>
             {paged.length === 0 ? (
               <tr>
-                <td colSpan={11} className={styles.emptyTd}>
+                <td colSpan={8} className={styles.emptyTd}>
                   <div className={styles.emptyState}>
-                    <GraduationCap size={44} />
-                    <p>Tidak ada data mahasiswa</p>
-                    <span>Coba ubah filter atau tambah data baru</span>
+                    <UserCog size={44} />
+                    <p>Tidak ada data administrator</p>
+                    <span>Tambah admin baru dengan klik tombol di atas</span>
                   </div>
                 </td>
               </tr>
@@ -701,23 +683,23 @@ export default function MahasiswaPage() {
                     <span className={styles.nameText}>{row.nama}</span>
                   </div>
                 </td>
-                <td><span className={styles.nimBadge}>{row.nim}</span></td>
-                <td><span className={styles.prodiBadge}>{row.id_prodi}</span></td>
-                <td className={styles.tdCenter}>{row.angkatan}</td>
+                <td><span className={styles.nimBadge}>@{row.username}</span></td>
                 <td className={styles.emailCell}>{row.email}</td>
-                <td className={styles.tdCenter}><StatusBadge status={row.status_skpi} /></td>
-                <td className={styles.tdCenter}><span className={styles.numChip}>{row.jumlah_kegiatan}</span></td>
-                <td className={styles.tdCenter}><span className={`${styles.numChip} ${styles.icpChip}`}>{row.total_icp}</span></td>
                 <td className={styles.tdCenter}>
                   <span className={`${styles.akunDot} ${row.aktif ? styles.dotOn : styles.dotOff}`}>
                     {row.aktif ? "Aktif" : "Nonaktif"}
                   </span>
                 </td>
+                <td className={styles.tdCenter}><span className={styles.dateText}>{row.created_at}</span></td>
+                <td className={styles.tdCenter}><span className={styles.dateText}>{row.last_login}</span></td>
                 <td className={styles.tdCenter}>
-                  <RowActions row={row}
+                  <RowActions
+                    row={row}
                     onEdit={() => setModalEdit(row)}
                     onResetPw={() => setModalReset(row)}
-                    onToggleActive={() => handleToggle(row)} />
+                    onToggleActive={() => handleToggleActive(row)}
+                    onDelete={() => setModalDelete(row)}
+                  />
                 </td>
               </tr>
             ))}
@@ -725,36 +707,39 @@ export default function MahasiswaPage() {
         </table>
       </div>
 
-      {/* ── Pagination ── */}
       {totalPages > 1 && (
         <div className={styles.pagination}>
           <span className={styles.paginInfo}>
-            {filtered.length === 0 ? 0 : start+1}–{Math.min(start+PER_PAGE, filtered.length)} dari {filtered.length}
+            {filtered.length === 0 ? 0 : start + 1}–{Math.min(start + PER_PAGE, filtered.length)} dari {filtered.length}
           </span>
           <div className={styles.paginBtns}>
-            <button className={styles.pBtn} onClick={() => setCurrentPage(1)} disabled={safePage===1}>«</button>
-            <button className={styles.pBtn} onClick={() => setCurrentPage(p=>Math.max(1,p-1))} disabled={safePage===1}>
+            <button className={styles.pBtn} onClick={() => setCurrentPage(1)} disabled={safePage === 1}>«</button>
+            <button className={styles.pBtn} onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={safePage === 1}>
               <ChevronLeft size={13} />
             </button>
-            {Array.from({length:totalPages},(_,i)=>i+1)
-              .filter(p=>p===1||p===totalPages||Math.abs(p-safePage)<=1)
-              .reduce((acc,p,i,arr)=>{ if(i>0&&arr[i-1]!==p-1) acc.push("…"); acc.push(p); return acc; },[])
-              .map((p,i) => p==="…"
+            {Array.from({ length: totalPages }, (_, i) => i + 1)
+              .filter(p => p === 1 || p === totalPages || Math.abs(p - safePage) <= 1)
+              .reduce((acc, p, i, arr) => {
+                if (i > 0 && arr[i - 1] !== p - 1) acc.push("…");
+                acc.push(p);
+                return acc;
+              }, [])
+              .map((p, i) => p === "…"
                 ? <span key={`d${i}`} className={styles.pDots}>…</span>
-                : <button key={p} className={`${styles.pBtn} ${safePage===p?styles.pBtnActive:""}`} onClick={()=>setCurrentPage(p)}>{p}</button>
+                : <button key={p} className={`${styles.pBtn} ${safePage === p ? styles.pBtnActive : ""}`} onClick={() => setCurrentPage(p)}>{p}</button>
               )}
-            <button className={styles.pBtn} onClick={() => setCurrentPage(p=>Math.min(totalPages,p+1))} disabled={safePage===totalPages}>
+            <button className={styles.pBtn} onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={safePage === totalPages}>
               <ChevronRight size={13} />
             </button>
-            <button className={styles.pBtn} onClick={() => setCurrentPage(totalPages)} disabled={safePage===totalPages}>»</button>
+            <button className={styles.pBtn} onClick={() => setCurrentPage(totalPages)} disabled={safePage === totalPages}>»</button>
           </div>
         </div>
       )}
 
-      {/* ── Modals ── */}
-      {modalAdd    && <MahasiswaFormModal mode="add"  onClose={() => setModalAdd(false)}  onSave={handleAddSave} />}
-      {modalEdit   && <MahasiswaFormModal mode="edit" data={modalEdit} onClose={() => setModalEdit(null)}  onSave={handleEditSave} />}
-      {modalReset  && <ResetPasswordModal mahasiswa={modalReset} onClose={() => setModalReset(null)} onDone={handleResetDone} />}
+      {modalAdd && <AdminFormModal mode="add" onClose={() => setModalAdd(false)} onSave={handleAddSave} />}
+      {modalEdit && <AdminFormModal mode="edit" data={modalEdit} onClose={() => setModalEdit(null)} onSave={handleEditSave} />}
+      {modalReset && <ResetPasswordModal admin={modalReset} onClose={() => setModalReset(null)} onDone={handleResetDone} />}
+      {modalDelete && <DeleteAdminModal admin={modalDelete} onClose={() => setModalDelete(null)} onDone={handleDeleteDone} />}
       {modalImport && <ImportExcelModal onClose={() => setModalImport(false)} onDone={handleImportDone} />}
     </div>
   );

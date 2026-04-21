@@ -1,10 +1,15 @@
-// frontend/src/app/mahasiswa/kegiatan/page.js
 "use client";
 
+<<<<<<< HEAD
 import { useState, useRef, useEffect, useCallback } from "react";
+=======
+import { useState, useRef, useEffect } from "react";
+import Link from "next/link";
+>>>>>>> a3574bcbfeb16234599947d0d04bd59d00829fb9
 import { useMahasiswa } from "@/context/MahasiswaContext";
 import {
-  Plus, Edit2, Trash2, Upload, FileImage, X, CheckCircle2, AlertCircle
+  Plus, Edit2, Trash2, Upload, FileImage, X, CheckCircle2, AlertCircle,
+  Eye, Calendar, MapPin, Building, Award, TrendingUp
 } from "lucide-react";
 import styles from "./kegiatan.module.css";
 import {
@@ -16,7 +21,16 @@ import {
   isMockMode,
 } from "@/lib/api";
 
-// ==================== DATA MOCK ====================
+// ========== IMPORT MASTER DATA ==========
+import { 
+  getJenisAktivitas, 
+  getKategoriAktivitas, 
+  getKelompokAktivitas, 
+  getLevelKegiatan, 
+  getTingkatPrestasi 
+} from "@/lib/masterData";
+
+// ========== MOCK DATA KEGIATAN ==========
 const MOCK_KEGIATAN = [
   {
     id: 1,
@@ -71,26 +85,14 @@ const MOCK_KEGIATAN = [
   },
 ];
 
-const JENIS_AKTIVITAS = [
-  "Prestasi dan Kegiatan",
-  "Peningkatan Keterampilan Profesional",
-  "Pengalaman Berorganisasi dan Kepemimpinan",
-  "Pengembangan Intelektual",
-  "Praktik Kerja",
-  "Pembinaan Spiritual",
-  "Kepribadian Amarean 1",
-  "Kepribadian Amarean 2",
-  "Kepribadian Amarean 3",
-  "Kepribadian Amarean 4",
-  "Integritas Kepemimpinan 1",
-  "Integritas Kepemimpinan 2",
-  "Nilai - nilai Integritas Insani 1",
-  "Nilai - nilai Integritas Insani 2",
-  "Pembangunan Karakter dan Kepribadian",
-  "Kursus - kursus",
-  "Skripsi",
-];
+// ========== AMBIL DATA DARI MASTER ==========
+const JENIS_AKTIVITAS = getJenisAktivitas();
+const KATEGORI_OPTIONS = getKategoriAktivitas();
+const KELOMPOK_OPTIONS = getKelompokAktivitas();
+const LEVEL_OPTIONS = getLevelKegiatan();
+const TINGKAT_PRESTASI = getTingkatPrestasi();
 
+<<<<<<< HEAD
 const KATEGORI_OPTIONS = [
   "Lomba/Kompetisi", "Seminar", "Workshop", "Pelatihan", "Organisasi",
   "Kepanitian", "Magang", "Penelitian", "Pengabdian Masyarakat",
@@ -110,6 +112,9 @@ const STATUS_LABEL = {
 };
 
 // Toast component
+=======
+// ========== TOAST COMPONENT ==========
+>>>>>>> a3574bcbfeb16234599947d0d04bd59d00829fb9
 function Toast({ message, onClose }) {
   if (!message) return null;
   return (
@@ -121,8 +126,8 @@ function Toast({ message, onClose }) {
   );
 }
 
-// Modal Form
-function KegiatanModal({ isOpen, onClose, onSave, kegiatan, prodiColor }) {
+// ========== MODAL EDIT KEGIATAN (hanya untuk edit, tidak untuk tambah) ==========
+function EditKegiatanModal({ isOpen, onClose, onSave, kegiatan, prodiColor }) {
   const [form, setForm] = useState(
     kegiatan || {
       nama_id: "", nama_en: "", jenis_aktivitas: "", kategori: "", kelompok: "",
@@ -181,7 +186,11 @@ function KegiatanModal({ isOpen, onClose, onSave, kegiatan, prodiColor }) {
       setPreviewUrl(null);
       setUploadError("");
     }
-  }, [isOpen]);
+    // Reset form saat kegiatan berubah
+    if (kegiatan) {
+      setForm(kegiatan);
+    }
+  }, [isOpen, kegiatan]);
 
   if (!isOpen) return null;
 
@@ -189,11 +198,12 @@ function KegiatanModal({ isOpen, onClose, onSave, kegiatan, prodiColor }) {
     <div className={styles.modalOverlay} onClick={onClose}>
       <div className={styles.modalContainer} onClick={e => e.stopPropagation()}>
         <div className={styles.modalHeader}>
-          <h3>{kegiatan ? "Edit Kegiatan" : "Tambah Kegiatan Baru"}</h3>
+          <h3>Edit Kegiatan</h3>
           <button onClick={onClose}><X size={20} /></button>
         </div>
         <form onSubmit={handleSubmit}>
           <div className={styles.modalBody}>
+            {/* Form sama seperti sebelumnya, hanya untuk edit */}
             <div className={styles.formRow}>
               <input className={styles.input} placeholder="Nama Kegiatan (Indonesia) *" value={form.nama_id} onChange={e => setForm({...form, nama_id: e.target.value})} />
               <input className={styles.input} placeholder="Nama Kegiatan (English) *" value={form.nama_en} onChange={e => setForm({...form, nama_en: e.target.value})} />
@@ -232,8 +242,6 @@ function KegiatanModal({ isOpen, onClose, onSave, kegiatan, prodiColor }) {
             <div className={styles.formRow}>
               <input type="date" className={styles.input} value={form.tanggal} onChange={e => setForm({...form, tanggal: e.target.value})} />
             </div>
-
-            {/* Upload bukti */}
             <div className={styles.uploadSection}>
               <div className={styles.uploadArea} style={{ borderColor: prodiColor }} onClick={() => fileRef.current.click()}>
                 <input type="file" ref={fileRef} hidden accept=".pdf,.jpg,.jpeg,.png" onChange={handleFileChange} />
@@ -256,7 +264,7 @@ function KegiatanModal({ isOpen, onClose, onSave, kegiatan, prodiColor }) {
           </div>
           <div className={styles.modalFooter}>
             <button type="button" className={styles.cancelBtn} onClick={onClose}>Batal</button>
-            <button type="submit" className={styles.saveBtn} style={{ background: prodiColor }}>Simpan</button>
+            <button type="submit" className={styles.saveBtn} style={{ background: prodiColor }}>Update</button>
           </div>
         </form>
       </div>
@@ -264,12 +272,17 @@ function KegiatanModal({ isOpen, onClose, onSave, kegiatan, prodiColor }) {
   );
 }
 
-// Main Page
+// ========== HALAMAN UTAMA ==========
 export default function KegiatanPage() {
   const { prodiConfig } = useMahasiswa();
+<<<<<<< HEAD
   const [kegiatan, setKegiatan] = useState([]);
   const [loading, setLoading]   = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
+=======
+  const [kegiatan, setKegiatan] = useState(MOCK_KEGIATAN);
+  const [modalEditOpen, setModalEditOpen] = useState(false);
+>>>>>>> a3574bcbfeb16234599947d0d04bd59d00829fb9
   const [editing, setEditing] = useState(null);
   const [toast, setToast] = useState(null);
   const [search, setSearch] = useState("");
@@ -319,6 +332,7 @@ export default function KegiatanPage() {
     setTimeout(() => setToast(null), 3000);
   };
 
+<<<<<<< HEAD
   const handleSave = async (data) => {
     if (editing) {
       const result = await editKegiatan(editing.id, data);
@@ -338,6 +352,12 @@ export default function KegiatanPage() {
       }
     }
     setModalOpen(false);
+=======
+  const handleSaveEdit = (data) => {
+    setKegiatan(prev => prev.map(k => k.id === editing.id ? { ...k, ...data } : k));
+    showToast("Kegiatan berhasil diupdate");
+    setModalEditOpen(false);
+>>>>>>> a3574bcbfeb16234599947d0d04bd59d00829fb9
     setEditing(null);
   };
 
@@ -364,11 +384,12 @@ export default function KegiatanPage() {
       return;
     }
     setEditing(k);
-    setModalOpen(true);
+    setModalEditOpen(true);
   };
 
   const filtered = kegiatan.filter(k => {
-    const matchSearch = k.nama_id.toLowerCase().includes(search.toLowerCase()) || k.nama_en.toLowerCase().includes(search.toLowerCase());
+    const matchSearch = k.nama_id.toLowerCase().includes(search.toLowerCase()) || 
+                        k.nama_en.toLowerCase().includes(search.toLowerCase());
     const matchStatus = filterStatus === "Semua" || k.status === filterStatus;
     return matchSearch && matchStatus;
   });
@@ -382,13 +403,19 @@ export default function KegiatanPage() {
           <h1 className={styles.title}>Kegiatan Saya</h1>
           <p className={styles.subtitle}>Catat seluruh aktivitas Anda selama masa studi</p>
         </div>
-        <button className={styles.addBtn} onClick={() => { setEditing(null); setModalOpen(true); }} style={{ background: prodiConfig.primary }}>
+        <Link href="/mahasiswa/kegiatan/tambah-kegiatan" className={styles.addBtn} style={{ background: prodiConfig.primary }}>
           <Plus size={16} /> Tambah Kegiatan
-        </button>
+        </Link>
       </div>
 
       <div className={styles.filterBar}>
-        <input type="text" placeholder="Cari kegiatan (Indonesia/Inggris)..." value={search} onChange={e => setSearch(e.target.value)} className={styles.searchInput} />
+        <input 
+          type="text" 
+          placeholder="Cari kegiatan (Indonesia/Inggris)..." 
+          value={search} 
+          onChange={e => setSearch(e.target.value)} 
+          className={styles.searchInput} 
+        />
         <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} className={styles.filterSelect}>
           <option value="Semua">Semua Status</option>
           <option value="Menunggu">Menunggu</option>
@@ -414,29 +441,43 @@ export default function KegiatanPage() {
           <tbody>
             {filtered.map(k => (
               <tr key={k.id}>
-                <td><strong>{k.nama_id}</strong><br /><small>{k.nama_en}</small></td>
+                <td>
+                  <div className={styles.namaCell}>
+                    <strong>{k.nama_id}</strong>
+                    <small>{k.nama_en}</small>
+                  </div>
+                </td>
                 <td>{k.jenis_aktivitas}</td>
                 <td>{k.kategori}</td>
                 <td>{k.tanggal}</td>
                 <td><span className={`${styles.status} ${styles[k.status.toLowerCase()]}`}>{k.status}</span></td>
                 <td>{k.bukti ? <a href="#" className={styles.link}>Lihat</a> : "-"}</td>
                 <td className={styles.actions}>
-                  <button onClick={() => handleEdit(k)} disabled={k.status !== "Menunggu"} className={styles.actionBtn}><Edit2 size={14} /></button>
-                  <button onClick={() => handleDelete(k.id)} disabled={k.status !== "Menunggu"} className={`${styles.actionBtn} ${styles.danger}`}><Trash2 size={14} /></button>
+                  <button onClick={() => handleEdit(k)} disabled={k.status !== "Menunggu"} className={styles.actionBtn}>
+                    <Edit2 size={14} />
+                  </button>
+                  <button onClick={() => handleDelete(k.id)} disabled={k.status !== "Menunggu"} className={`${styles.actionBtn} ${styles.danger}`}>
+                    <Trash2 size={14} />
+                  </button>
                 </td>
-              </tr>
+               </tr>
             ))}
             {filtered.length === 0 && (
-              <tr><td colSpan="7" className={styles.emptyRow}>Belum ada kegiatan. Klik "Tambah Kegiatan" untuk mencatat aktivitas Anda.</td></tr>
+              <tr>
+                <td colSpan="7" className={styles.emptyRow}>
+                  Belum ada kegiatan. Klik "Tambah Kegiatan" untuk mencatat aktivitas Anda.
+                </td>
+              </tr>
             )}
           </tbody>
         </table>
       </div>
 
-      <KegiatanModal
-        isOpen={modalOpen}
-        onClose={() => { setModalOpen(false); setEditing(null); }}
-        onSave={handleSave}
+      {/* Modal Edit */}
+      <EditKegiatanModal
+        isOpen={modalEditOpen}
+        onClose={() => { setModalEditOpen(false); setEditing(null); }}
+        onSave={handleSaveEdit}
         kegiatan={editing}
         prodiColor={prodiConfig.primary}
       />
