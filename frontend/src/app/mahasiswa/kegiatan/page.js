@@ -1,12 +1,20 @@
 // frontend/src/app/mahasiswa/kegiatan/page.js
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useMahasiswa } from "@/context/MahasiswaContext";
 import {
   Plus, Edit2, Trash2, Upload, FileImage, X, CheckCircle2, AlertCircle
 } from "lucide-react";
 import styles from "./kegiatan.module.css";
+import {
+  getMahasiswaKegiatan,
+  submitKegiatan,
+  editKegiatan,
+  deleteKegiatan,
+  uploadBuktiKegiatan,
+  isMockMode,
+} from "@/lib/api";
 
 // ==================== DATA MOCK ====================
 const MOCK_KEGIATAN = [
@@ -92,6 +100,14 @@ const KATEGORI_OPTIONS = [
 const KELOMPOK_OPTIONS = ["Akademik", "Non-Akademik", "Organisasi", "Kepemimpinan", "Penelitian", "Profesional"];
 const LEVEL_OPTIONS = ["Internal", "Nasional", "Internasional"];
 const TINGKAT_PRESTASI = ["Peserta", "Juara 1", "Juara 2", "Juara 3", "Harapan", "Finalis", "Partisipasi"];
+
+// Mapping status verifikasi DB → label UI
+const STATUS_LABEL = {
+  diproses:  "Menunggu",
+  disetujui: "Disetujui",
+  ditolak:   "Ditolak",
+  revisi:    "Revisi",
+};
 
 // Toast component
 function Toast({ message, onClose }) {
@@ -251,12 +267,48 @@ function KegiatanModal({ isOpen, onClose, onSave, kegiatan, prodiColor }) {
 // Main Page
 export default function KegiatanPage() {
   const { prodiConfig } = useMahasiswa();
-  const [kegiatan, setKegiatan] = useState(MOCK_KEGIATAN);
+  const [kegiatan, setKegiatan] = useState([]);
+  const [loading, setLoading]   = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [toast, setToast] = useState(null);
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("Semua");
+
+  // Muat data dari API
+  const loadKegiatan = useCallback(async () => {
+    setLoading(true);
+    const data = await getMahasiswaKegiatan();
+    if (data?.rows) {
+      // Normalise field names agar cocok dengan struktur mock yang digunakan UI
+      setKegiatan(data.rows.map(k => ({
+        id:              k.id_kegiatan,
+        nama_id:         k.nama_kegiatan,
+        nama_en:         k.nama_kegiatan_eng || "",
+        jenis_aktivitas: k.jenisaktivitas?.nama_indo || "",
+        kategori:        k.kategoriaktivitas?.nama_indo || "",
+        kelompok:        k.kelompokaktivitas?.nama_indo || "",
+        level:           k.levelkegiatan?.nama_level || "",
+        posisi:          k.posisikegiatan?.nama_posisi || "",
+        periode:         k.periode_kegiatan || "",
+        tingkat_prestasi:k.tingkat_prestasi || "",
+        peringkat:       k.peringkat || "",
+        lokasi:          k.lokasi || "",
+        penyelenggara:   k.penyelenggara || "",
+        tanggal:         k.tanggal_kegiatan ? k.tanggal_kegiatan.slice(0, 10) : "",
+        status:          STATUS_LABEL[k.status_verifikasi] || k.status_verifikasi,
+        catatan_admin:   k.catatan_admin || "",
+        bukti:           k.buktikegiatan?.[0]?.file_path || null,
+        created_at:      k.created_at,
+        _raw:            k, // simpan raw untuk edit
+      })));
+    } else if (isMockMode()) {
+      setKegiatan(MOCK_KEGIATAN);
+    }
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { loadKegiatan(); }, [loadKegiatan]);
 
   useEffect(() => {
     document.title = "Kegiatan Saya | Mahasiswa SKPI";
@@ -267,28 +319,42 @@ export default function KegiatanPage() {
     setTimeout(() => setToast(null), 3000);
   };
 
-  const handleSave = (data) => {
+  const handleSave = async (data) => {
     if (editing) {
-      setKegiatan(prev => prev.map(k => k.id === editing.id ? { ...k, ...data } : k));
-      showToast("Kegiatan berhasil diupdate");
+      const result = await editKegiatan(editing.id, data);
+      if (result.ok) {
+        showToast("Kegiatan berhasil diupdate");
+        await loadKegiatan();
+      } else {
+        showToast(result.data?.error || "Gagal update kegiatan", "error");
+      }
     } else {
-      const newId = Math.max(...kegiatan.map(k => k.id), 0) + 1;
-      setKegiatan(prev => [{ id: newId, status: "Menunggu", created_at: new Date().toISOString(), ...data }, ...prev]);
-      showToast("Kegiatan berhasil ditambahkan");
+      const result = await submitKegiatan(data);
+      if (result.ok) {
+        showToast("Kegiatan berhasil ditambahkan");
+        await loadKegiatan();
+      } else {
+        showToast(result.data?.error || "Gagal menambah kegiatan", "error");
+      }
     }
     setModalOpen(false);
     setEditing(null);
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     const item = kegiatan.find(k => k.id === id);
-    if (item.status !== "Menunggu") {
-      showToast("Hanya kegiatan dengan status 'Menunggu' yang dapat dihapus", "error");
+    if (item?.status === "Disetujui") {
+      showToast("Kegiatan yang sudah disetujui tidak dapat dihapus", "error");
       return;
     }
     if (confirm("Hapus kegiatan ini?")) {
-      setKegiatan(prev => prev.filter(k => k.id !== id));
-      showToast("Kegiatan dihapus", "error");
+      const result = await deleteKegiatan(id);
+      if (result.ok) {
+        showToast("Kegiatan dihapus");
+        await loadKegiatan();
+      } else {
+        showToast(result.data?.error || "Gagal menghapus kegiatan", "error");
+      }
     }
   };
 

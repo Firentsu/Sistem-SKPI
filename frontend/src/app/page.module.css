@@ -5,7 +5,11 @@
   height: 100vh;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   background: linear-gradient(135deg, #ad8461 0%, #765439 100%);
-  position: relative;
+  position: fixed; /* UBAH: dari relative ke fixed */
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   overflow: hidden;
 }
 
@@ -109,15 +113,19 @@
 /* MAIN CONTENT */
 .mainContent {
   display: flex;
-  flex: 1;
-  margin-top: 64px;
-  margin-bottom: 60px;
+  position: absolute; /* UBAH: dari flex ke absolute */
+  top: 64px; /* Sesuai tinggi header */
+  left: 0;
+  right: 0;
+  bottom: 60px; /* Sesuai tinggi footer */
   overflow: hidden;
+  align-items: center; /* Center vertikal */
 }
 
 /* LEFT SIDE */
 .left {
   flex: 1;
+  height: 100%;
   background: linear-gradient(#765439 100%);
   display: flex;
   align-items: center;
@@ -131,6 +139,7 @@
 /* RIGHT SIDE */
 .right {
   flex: 1;
+  height: 100%;
   background: rgb(185, 183, 183);
   display: flex;
   align-items: center;
@@ -276,6 +285,7 @@
 /* SLIDER CONTAINER */
 .sliderContainer {
   width: 420px;
+  max-width: 90%;
   position: relative;
   z-index: 10;
   animation: slideInRight 0.8s cubic-bezier(0.2, 0.9, 0.4, 1.1);
@@ -301,6 +311,8 @@
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
   transition: all 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1);
   position: relative;
+  max-height: calc(100vh - 200px); /* TAMBAHAN: batasi tinggi maksimal */
+  overflow-y: auto; /* TAMBAHAN: scroll di dalam card jika diperlukan */
 }
 
 .sliderWrapper:active {
@@ -319,46 +331,44 @@
 /* CARD */
 .card {
   background: white;
-  padding: 48px 40px;
+  padding: 30px 32px; /* UBAH: padding dikurangi */
   width: 100%;
   box-sizing: border-box;
   position: relative;
-  overflow: hidden;
 }
 
 .card h2 {
-  font-size: 30px;
+  font-size: 28px; /* UBAH: ukuran font dikurangi */
   font-weight: 800;
   background: linear-gradient(#765439);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   text-align: center;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 
 .cardSubtitle {
   text-align: center;
   font-size: 13px;
   color: #8c7a6b;
-  margin-bottom: 50px;
+  margin-bottom: 25px; /* UBAH: margin dikurangi */
   font-weight: 500;
-  
 }
 
 /* INPUT */
 .inputGroup {
-  margin-bottom: 99px;
+  margin-bottom: 15px; /* UBAH: margin dikurangi */
 }
 
 .input {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   border: 2px solid #eef2f6;
-  padding: 14px 18px;
-  border-radius: 20px;
-  margin-bottom: 15px;
+  padding: 12px 16px; /* UBAH: padding dikurangi */
+  border-radius: 16px; /* UBAH: radius dikurangi */
+  margin-bottom: 12px; /* UBAH: margin dikurangi */
   background: #ffffff;
   transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
 }
@@ -395,7 +405,7 @@
   color: #64490f;
 }
 
-/* ── Error state for inputs ─────────────────────── */
+/* Error state for inputs */
 .inputError {
   border-color: #e53e3e !important;
   background: #fff5f5 !important;
@@ -406,7 +416,7 @@
   color: #e53e3e !important;
 }
 
-/* ── Shake animation for form ───────────────────── */
+/* Shake animation for form */
 @keyframes shake {
   0%   { transform: translateX(0); }
   15%  { transform: translateX(-7px); }
@@ -422,7 +432,7 @@
   animation: shake 0.55s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
 }
 
-/* ── Spinner inside button ──────────────────────── */
+/* Spinner inside button */
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
@@ -438,7 +448,7 @@
   flex-shrink: 0;
 }
 
-/* ── Toast notification ─────────────────────────── */
+/* Toast notification */
 @keyframes toastIn {
   from {
     opacity: 0;
@@ -460,8 +470,8 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-top: 16px;
-  padding: 13px 14px 13px 14px;
+  margin-top: 12px; /* UBAH: margin dikurangi */
+  padding: 10px 12px; /* UBAH: padding dikurangi */
   background: #fff5f5;
   border: 1.5px solid #fed7d7;
   border-left: 4px solid #e53e3e;
@@ -480,7 +490,7 @@
 
 .toastMessage {
   flex: 1;
-  font-size: 13px;
+  font-size: 12px; /* UBAH: ukuran font dikurangi */
   font-weight: 600;
   color: #c53030;
   line-height: 1.4;
@@ -535,7 +545,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 28px;
+  margin-bottom: 20px; /* UBAH: margin dikurangi */
   font-size: 13px;
 }
 
@@ -574,11 +584,11 @@
 /* Button */
 .button {
   width: 100%;
-  padding: 16px;
+  padding: 14px; /* UBAH: padding dikurangi */
   background: linear-gradient(#765439 100%);
   color: white;
   border: none;
-  border-radius: 20px;
+  border-radius: 16px; /* UBAH: radius dikurangi */
   cursor: pointer;
   font-size: 15px;
   font-weight: 700;
@@ -603,7 +613,7 @@
 /* Note Text */
 .noteText {
   text-align: center;
-  margin-top: 18px;
+  margin-top: 14px; /* UBAH: margin dikurangi */
   font-size: 11px;
   color: #b87a4b;
   font-style: italic;
@@ -617,15 +627,15 @@
 .aboutCards {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  margin-bottom: 20px;
+  gap: 10px; /* UBAH: gap dikurangi */
+  margin-bottom: 15px; /* UBAH: margin dikurangi */
 }
 
 .aboutCard {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 12px;
+  padding: 10px; /* UBAH: padding dikurangi */
   background: #fef9f4;
   border-radius: 12px;
   transition: all 0.3s ease;
@@ -639,8 +649,8 @@
 }
 
 .aboutIcon {
-  width: 40px;
-  height: 40px;
+  width: 35px; /* UBAH: ukuran dikurangi */
+  height: 35px; /* UBAH: ukuran dikurangi */
   background: white;
   border-radius: 10px;
   display: flex;
@@ -665,8 +675,8 @@
 }
 
 .aboutFooter {
-  margin-top: 15px;
-  padding-top: 15px;
+  margin-top: 12px; /* UBAH: margin dikurangi */
+  padding-top: 12px; /* UBAH: padding dikurangi */
   border-top: 1px solid #f0e8e0;
 }
 
@@ -675,7 +685,7 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 10px;
+  padding: 8px; /* UBAH: padding dikurangi */
   background: #fef9f4;
   border-radius: 10px;
   font-size: 11px;
@@ -723,7 +733,7 @@
   display: flex;
   justify-content: center;
   gap: 12px;
-  margin-top: 32px;
+  margin-top: 20px; /* UBAH: margin dikurangi */
 }
 
 .dot {
@@ -762,7 +772,7 @@
 
 .footerBottom {
   text-align: center;
-  padding: 23px 32px;
+  padding: 20px 32px; /* UBAH: padding dikurangi */
   color: #999;
 }
 
@@ -781,7 +791,7 @@
   }
   
   .card {
-    padding: 40px 32px;
+    padding: 30px 28px;
   }
   
   .leftContent h2 {
@@ -799,25 +809,33 @@
 }
 
 @media (max-width: 768px) {
+  .container {
+    position: fixed;
+    overflow: hidden;
+  }
+
   .mainContent {
+    position: absolute;
+    top: 56px;
+    bottom: 60px;
     flex-direction: column;
-    margin-top: 56px;
-    margin-bottom: auto;
     overflow-y: auto;
   }
 
   .left {
     flex: none;
-    padding: 40px 20px;
+    padding: 30px 20px;
     min-height: auto;
     clip-path: none;
+    height: auto;
   }
 
   .right {
     flex: none;
-    padding: 40px 20px;
+    padding: 30px 20px;
     clip-path: none;
     box-shadow: none;
+    height: auto;
   }
 
   .left::after,
@@ -835,12 +853,11 @@
   }
   
   .card {
-    padding: 36px 28px;
+    padding: 30px 24px;
   }
 
   .footer {
-    position: relative;
-    margin-top: auto;
+    position: fixed;
   }
 
   .contactItem {
