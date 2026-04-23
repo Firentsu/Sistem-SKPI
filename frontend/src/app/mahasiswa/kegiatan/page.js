@@ -1,11 +1,7 @@
 "use client";
 
-<<<<<<< HEAD
 import { useState, useRef, useEffect, useCallback } from "react";
-=======
-import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
->>>>>>> a3574bcbfeb16234599947d0d04bd59d00829fb9
 import { useMahasiswa } from "@/context/MahasiswaContext";
 import {
   Plus, Edit2, Trash2, Upload, FileImage, X, CheckCircle2, AlertCircle,
@@ -92,17 +88,6 @@ const KELOMPOK_OPTIONS = getKelompokAktivitas();
 const LEVEL_OPTIONS = getLevelKegiatan();
 const TINGKAT_PRESTASI = getTingkatPrestasi();
 
-<<<<<<< HEAD
-const KATEGORI_OPTIONS = [
-  "Lomba/Kompetisi", "Seminar", "Workshop", "Pelatihan", "Organisasi",
-  "Kepanitian", "Magang", "Penelitian", "Pengabdian Masyarakat",
-  "Publikasi Ilmiah", "Kegiatan Kampus", "Sertifikasi Profesional"
-];
-
-const KELOMPOK_OPTIONS = ["Akademik", "Non-Akademik", "Organisasi", "Kepemimpinan", "Penelitian", "Profesional"];
-const LEVEL_OPTIONS = ["Internal", "Nasional", "Internasional"];
-const TINGKAT_PRESTASI = ["Peserta", "Juara 1", "Juara 2", "Juara 3", "Harapan", "Finalis", "Partisipasi"];
-
 // Mapping status verifikasi DB → label UI
 const STATUS_LABEL = {
   diproses:  "Menunggu",
@@ -111,10 +96,7 @@ const STATUS_LABEL = {
   revisi:    "Revisi",
 };
 
-// Toast component
-=======
 // ========== TOAST COMPONENT ==========
->>>>>>> a3574bcbfeb16234599947d0d04bd59d00829fb9
 function Toast({ message, onClose }) {
   if (!message) return null;
   return (
@@ -186,7 +168,6 @@ function EditKegiatanModal({ isOpen, onClose, onSave, kegiatan, prodiColor }) {
       setPreviewUrl(null);
       setUploadError("");
     }
-    // Reset form saat kegiatan berubah
     if (kegiatan) {
       setForm(kegiatan);
     }
@@ -203,7 +184,6 @@ function EditKegiatanModal({ isOpen, onClose, onSave, kegiatan, prodiColor }) {
         </div>
         <form onSubmit={handleSubmit}>
           <div className={styles.modalBody}>
-            {/* Form sama seperti sebelumnya, hanya untuk edit */}
             <div className={styles.formRow}>
               <input className={styles.input} placeholder="Nama Kegiatan (Indonesia) *" value={form.nama_id} onChange={e => setForm({...form, nama_id: e.target.value})} />
               <input className={styles.input} placeholder="Nama Kegiatan (English) *" value={form.nama_en} onChange={e => setForm({...form, nama_en: e.target.value})} />
@@ -275,14 +255,9 @@ function EditKegiatanModal({ isOpen, onClose, onSave, kegiatan, prodiColor }) {
 // ========== HALAMAN UTAMA ==========
 export default function KegiatanPage() {
   const { prodiConfig } = useMahasiswa();
-<<<<<<< HEAD
   const [kegiatan, setKegiatan] = useState([]);
-  const [loading, setLoading]   = useState(true);
-  const [modalOpen, setModalOpen] = useState(false);
-=======
-  const [kegiatan, setKegiatan] = useState(MOCK_KEGIATAN);
+  const [loading, setLoading] = useState(true);
   const [modalEditOpen, setModalEditOpen] = useState(false);
->>>>>>> a3574bcbfeb16234599947d0d04bd59d00829fb9
   const [editing, setEditing] = useState(null);
   const [toast, setToast] = useState(null);
   const [search, setSearch] = useState("");
@@ -293,7 +268,6 @@ export default function KegiatanPage() {
     setLoading(true);
     const data = await getMahasiswaKegiatan();
     if (data?.rows) {
-      // Normalise field names agar cocok dengan struktur mock yang digunakan UI
       setKegiatan(data.rows.map(k => ({
         id:              k.id_kegiatan,
         nama_id:         k.nama_kegiatan,
@@ -313,7 +287,7 @@ export default function KegiatanPage() {
         catatan_admin:   k.catatan_admin || "",
         bukti:           k.buktikegiatan?.[0]?.file_path || null,
         created_at:      k.created_at,
-        _raw:            k, // simpan raw untuk edit
+        _raw:            k,
       })));
     } else if (isMockMode()) {
       setKegiatan(MOCK_KEGIATAN);
@@ -332,7 +306,6 @@ export default function KegiatanPage() {
     setTimeout(() => setToast(null), 3000);
   };
 
-<<<<<<< HEAD
   const handleSave = async (data) => {
     if (editing) {
       const result = await editKegiatan(editing.id, data);
@@ -351,13 +324,7 @@ export default function KegiatanPage() {
         showToast(result.data?.error || "Gagal menambah kegiatan", "error");
       }
     }
-    setModalOpen(false);
-=======
-  const handleSaveEdit = (data) => {
-    setKegiatan(prev => prev.map(k => k.id === editing.id ? { ...k, ...data } : k));
-    showToast("Kegiatan berhasil diupdate");
     setModalEditOpen(false);
->>>>>>> a3574bcbfeb16234599947d0d04bd59d00829fb9
     setEditing(null);
   };
 
@@ -460,7 +427,7 @@ export default function KegiatanPage() {
                     <Trash2 size={14} />
                   </button>
                 </td>
-               </tr>
+              </tr>
             ))}
             {filtered.length === 0 && (
               <tr>
@@ -477,7 +444,7 @@ export default function KegiatanPage() {
       <EditKegiatanModal
         isOpen={modalEditOpen}
         onClose={() => { setModalEditOpen(false); setEditing(null); }}
-        onSave={handleSaveEdit}
+        onSave={handleSave}
         kegiatan={editing}
         prodiColor={prodiConfig.primary}
       />
