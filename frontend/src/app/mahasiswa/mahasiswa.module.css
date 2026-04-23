@@ -1570,3 +1570,113 @@
 .spin {
   animation: spin 0.7s linear infinite;
 }
+
+/* Notifikasi dropdown */
+.notifWrapper {
+  position: relative;
+}
+.notifDropdown {
+  position: absolute;
+  top: 45px;
+  right: 0;
+  width: 320px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+  border: 1px solid #ede0d4;
+  z-index: 100;
+  overflow: hidden;
+}
+.notifHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 16px;
+  border-bottom: 1px solid #ede0d4;
+  font-weight: 600;
+}
+.notifMarkAll {
+  background: none;
+  border: none;
+  font-size: 11px;
+  color: #765439;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.notifList {
+  max-height: 350px;
+  overflow-y: auto;
+}
+.notifItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #f0e6dc;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.notifItem:hover {
+  background: #fdfaf7;
+}
+.notifUnread {
+  background: #fefce8;
+}
+.notifIcon {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.notifContent {
+  flex: 1;
+}
+.notifContent p {
+  margin: 0 0 4px;
+  font-size: 12px;
+  font-weight: 500;
+}
+.notifContent span {
+  font-size: 10px;
+  color: #b09880;
+}
+.notifDelete {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #b09880;
+  padding: 4px;
+  border-radius: 4px;
+  visibility: hidden;
+}
+.notifItem:hover .notifDelete {
+  visibility: visible;
+}
+.notifDelete:hover {
+  background: #fee2e2;
+  color: #ef4444;
+}
+.notifFooter {
+  padding: 8px 16px;
+  border-top: 1px solid #ede0d4;
+  text-align: center;
+}
+.notifSeeAll {
+  background: none;
+  border: none;
+  color: #765439;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.notifEmpty {
+  padding: 20px;
+  text-align: center;
+  color: #b09880;
+  font-size: 12px;
+}

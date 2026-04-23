@@ -4,7 +4,7 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
-  min-height: 100%;
+  min-height: 100vh;
   font-family: 'Segoe UI', sans-serif;
   background: #f8f4f0;
 }
@@ -417,4 +417,47 @@
 
 @media (hover: none) and (pointer: coarse) {
   .button, .btn, .btnPrimary { min-height: 44px; }
+}
+
+.thCheckbox, .tdCheckbox {
+  width: 40px;
+  text-align: center;
+}
+.modalHeaderActions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.iconBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #765439;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+}
+.iconBtn:hover {
+  background: #fdf4ec;
+}
+.editRow {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+.editInput {
+  padding: 4px 8px;
+  border: 1px solid #ddd0c4;
+  border-radius: 6px;
+  font-size: 13px;
+  background: white;
+  flex: 1;
+  min-width: 150px;
+}
+.editInput:focus {
+  outline: none;
+  border-color: #c8945a;
 }

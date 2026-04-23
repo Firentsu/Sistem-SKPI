@@ -1,54 +1,112 @@
+// frontend/src/app/admin/dashboard/page.js
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import styles from "./dashboard.module.css";
 import {
   Users, FileText, Clock, CheckCircle, AlertCircle,
-  XCircle, Award, Bell, Filter, RefreshCw,
-  ChevronRight, TrendingUp, BookOpen, MoreHorizontal,
-  Check, Trash2
+  XCircle, Award, Filter, RefreshCw,
+  ChevronRight, TrendingUp, BookOpen
 } from "lucide-react";
 
-const PRODI_LIST = ["Semua Prodi", "Teknik Informatika", "Manajemen", "Akuntansi", "Ilmu Komunikasi"];
+// ==================== DATA PROGRAM STUDI ====================
+const PRODI_LIST = [
+  "Semua Prodi",
+  "Teknologi Informasi",
+  "Manajemen",
+  "Pendidikan Guru Sekolah Dasar",
+  "Kewirausahaan",
+  "Sistem Informasi",
+  "Agroekoteknologi"
+];
 
+// Warna tema untuk setiap prodi (sesuai dengan PRODI_CONFIG)
+const PRODI_COLORS = {
+  "Teknologi Informasi": "#ff7f00",
+  "Manajemen": "#0099cc",
+  "Pendidikan Guru Sekolah Dasar": "#800080",
+  "Kewirausahaan": "#ff3300",
+  "Sistem Informasi": "#1a0909",
+  "Agroekoteknologi": "#00bfb3",
+};
+
+// Data statistik per prodi (mock, nanti dari backend)
 const DATA = {
-  "Semua Prodi":        { totalMahasiswa: 480, totalKegiatan: 1340, menungguDisetujui: 87, disetujui: 620, dimintaVerifikasi: 43, ditolak: 28, skpiDiterbitkan: 215 },
-  "Teknik Informatika": { totalMahasiswa: 140, totalKegiatan: 420,  menungguDisetujui: 30, disetujui: 190, dimintaVerifikasi: 15, ditolak: 8,  skpiDiterbitkan: 72  },
-  "Manajemen":          { totalMahasiswa: 130, totalKegiatan: 370,  menungguDisetujui: 22, disetujui: 170, dimintaVerifikasi: 12, ditolak: 7,  skpiDiterbitkan: 60  },
-  "Akuntansi":          { totalMahasiswa: 110, totalKegiatan: 290,  menungguDisetujui: 18, disetujui: 145, dimintaVerifikasi: 9,  ditolak: 6,  skpiDiterbitkan: 48  },
-  "Ilmu Komunikasi":    { totalMahasiswa: 100, totalKegiatan: 260,  menungguDisetujui: 17, disetujui: 115, dimintaVerifikasi: 7,  ditolak: 7,  skpiDiterbitkan: 35  },
+  "Semua Prodi": {
+    totalMahasiswa: 480,
+    totalKegiatan: 1340,
+    menungguDisetujui: 87,
+    disetujui: 620,
+    dimintaVerifikasi: 43,
+    ditolak: 28,
+    skpiDiterbitkan: 215
+  },
+  "Teknologi Informasi": {
+    totalMahasiswa: 120,
+    totalKegiatan: 380,
+    menungguDisetujui: 25,
+    disetujui: 175,
+    dimintaVerifikasi: 12,
+    ditolak: 8,
+    skpiDiterbitkan: 65
+  },
+  "Manajemen": {
+    totalMahasiswa: 130,
+    totalKegiatan: 370,
+    menungguDisetujui: 22,
+    disetujui: 170,
+    dimintaVerifikasi: 12,
+    ditolak: 7,
+    skpiDiterbitkan: 60
+  },
+  "Pendidikan Guru Sekolah Dasar": {
+    totalMahasiswa: 90,
+    totalKegiatan: 250,
+    menungguDisetujui: 15,
+    disetujui: 110,
+    dimintaVerifikasi: 8,
+    ditolak: 5,
+    skpiDiterbitkan: 40
+  },
+  "Kewirausahaan": {
+    totalMahasiswa: 70,
+    totalKegiatan: 200,
+    menungguDisetujui: 12,
+    disetujui: 85,
+    dimintaVerifikasi: 6,
+    ditolak: 4,
+    skpiDiterbitkan: 30
+  },
+  "Sistem Informasi": {
+    totalMahasiswa: 40,
+    totalKegiatan: 80,
+    menungguDisetujui: 8,
+    disetujui: 50,
+    dimintaVerifikasi: 3,
+    ditolak: 2,
+    skpiDiterbitkan: 15
+  },
+  "Agroekoteknologi": {
+    totalMahasiswa: 30,
+    totalKegiatan: 60,
+    menungguDisetujui: 5,
+    disetujui: 30,
+    dimintaVerifikasi: 2,
+    ditolak: 2,
+    skpiDiterbitkan: 5
+  },
 };
 
+// Data tabel per prodi
 const PRODI_ROWS = [
-  { prodi: "Teknik Informatika", mahasiswa: 140, kegiatan: 420, menunggu: 30, disetujui: 190, verifikasi: 15, ditolak: 8,  skpi: 72 },
-  { prodi: "Manajemen",          mahasiswa: 130, kegiatan: 370, menunggu: 22, disetujui: 170, verifikasi: 12, ditolak: 7,  skpi: 60 },
-  { prodi: "Akuntansi",          mahasiswa: 110, kegiatan: 290, menunggu: 18, disetujui: 145, verifikasi: 9,  ditolak: 6,  skpi: 48 },
-  { prodi: "Ilmu Komunikasi",    mahasiswa: 100, kegiatan: 260, menunggu: 17, disetujui: 115, verifikasi: 7,  ditolak: 7,  skpi: 35 },
+  { prodi: "Teknologi Informasi", mahasiswa: 120, kegiatan: 380, menunggu: 25, disetujui: 175, verifikasi: 12, ditolak: 8, skpi: 65, color: "#ff7f00" },
+  { prodi: "Manajemen", mahasiswa: 130, kegiatan: 370, menunggu: 22, disetujui: 170, verifikasi: 12, ditolak: 7, skpi: 60, color: "#0099cc" },
+  { prodi: "Pendidikan Guru Sekolah Dasar", mahasiswa: 90, kegiatan: 250, menunggu: 15, disetujui: 110, verifikasi: 8, ditolak: 5, skpi: 40, color: "#800080" },
+  { prodi: "Kewirausahaan", mahasiswa: 70, kegiatan: 200, menunggu: 12, disetujui: 85, verifikasi: 6, ditolak: 4, skpi: 30, color: "#ff3300" },
+  { prodi: "Sistem Informasi", mahasiswa: 40, kegiatan: 80, menunggu: 8, disetujui: 50, verifikasi: 3, ditolak: 2, skpi: 15, color: "#1a0909" },
+  { prodi: "Agroekoteknologi", mahasiswa: 30, kegiatan: 60, menunggu: 5, disetujui: 30, verifikasi: 2, ditolak: 2, skpi: 5, color: "#00bfb3" },
 ];
-
-// Data notifikasi awal
-const INITIAL_NOTIFS = [
-  { id: 1, type: "skpi",      text: "Mahasiswa Andi Pratama (TI-2021) mengajukan SKPI",    time: "5 menit lalu",  read: false },
-  { id: 2, type: "verifikasi",text: "Kegiatan 'Seminar AI 2024' menunggu verifikasi",       time: "12 menit lalu", read: false },
-  { id: 3, type: "published", text: "SKPI Mahasiswa Sari Dewi telah diterbitkan",           time: "28 menit lalu", read: false },
-  { id: 4, type: "revisi",    text: "Bukti kegiatan Budi Santoso diminta revisi",           time: "1 jam lalu",    read: false },
-  { id: 5, type: "published", text: "SKPI batch Manajemen 2020 berhasil digenerate",        time: "2 jam lalu",    read: false },
-  { id: 6, type: "verifikasi",text: "3 kegiatan baru dari prodi Akuntansi menunggu",        time: "3 jam lalu",    read: false },
-];
-
-const NOTIF_COLORS = {
-  skpi:       "#765439",
-  verifikasi: "#b45309",
-  published:  "#047857",
-  revisi:     "#b91c1c",
-};
-
-const NOTIF_BG = {
-  skpi:       "#fdf4ec",
-  verifikasi: "#fffbeb",
-  published:  "#f0fdf4",
-  revisi:     "#fff5f5",
-};
 
 function Counter({ value }) {
   const [n, setN] = useState(0);
@@ -70,50 +128,32 @@ export default function DashboardPage() {
   const [open, setOpen] = useState(false);
   const stats = DATA[prodi];
 
-  // State untuk notifikasi
-  const [notifications, setNotifications] = useState(INITIAL_NOTIFS);
-  const [notifDropdownOpen, setNotifDropdownOpen] = useState(false);
-
-  // Hitung jumlah belum dibaca
-  const unreadCount = notifications.filter(n => !n.read).length;
-
-  useEffect(() => { document.title = "Dashboard Admin | SKPI"; }, []);
-
-  // Fungsi menandai notifikasi sebagai sudah dibaca
-  const markAsRead = (id) => {
-    setNotifications(prev =>
-      prev.map(n => n.id === id ? { ...n, read: true } : n)
-    );
-  };
-
-  // Fungsi menandai semua sudah dibaca
-  const markAllAsRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-  };
-
-  // Fungsi menghapus notifikasi
-  const deleteNotification = (id) => {
-    setNotifications(prev => prev.filter(n => n.id !== id));
-  };
+  useEffect(() => {
+    document.title = "Dashboard Admin | SKPI";
+  }, []);
 
   const cards = [
-    { label: "Total Mahasiswa",     value: stats.totalMahasiswa,     icon: Users,         accent: "#765439" },
-    { label: "Total Kegiatan",      value: stats.totalKegiatan,      icon: FileText,      accent: "#765439" },
-    { label: "Menunggu Disetujui",  value: stats.menungguDisetujui,  icon: Clock,         accent: "#b45309" },
-    { label: "Disetujui",           value: stats.disetujui,          icon: CheckCircle,   accent: "#047857" },
-    { label: "Diminta Verifikasi",  value: stats.dimintaVerifikasi,  icon: AlertCircle,   accent: "#92400e" },
-    { label: "Ditolak",             value: stats.ditolak,            icon: XCircle,       accent: "#b91c1c" },
-    { label: "SKPI Diterbitkan",    value: stats.skpiDiterbitkan,    icon: Award,         accent: "#0f766e" },
+    { label: "Total Mahasiswa", value: stats.totalMahasiswa, icon: Users, accent: "#765439" },
+    { label: "Total Kegiatan", value: stats.totalKegiatan, icon: FileText, accent: "#765439" },
+    { label: "Menunggu Disetujui", value: stats.menungguDisetujui, icon: Clock, accent: "#b45309" },
+    { label: "Disetujui", value: stats.disetujui, icon: CheckCircle, accent: "#047857" },
+    { label: "Diminta Verifikasi", value: stats.dimintaVerifikasi, icon: AlertCircle, accent: "#92400e" },
+    { label: "Ditolak", value: stats.ditolak, icon: XCircle, accent: "#b91c1c" },
+    { label: "SKPI Diterbitkan", value: stats.skpiDiterbitkan, icon: Award, accent: "#0f766e" },
   ];
 
   return (
     <div className={styles.page}>
-
-      {/* Header */}
+      {/* Header dengan Logo Institut */}
       <div className={styles.header}>
-        <div>
-          <h1 className={styles.title}>Dashboard</h1>
-          <p className={styles.subtitle}>Ringkasan aktivitas sistem SKPI Institut Shanti Bhuana</p>
+        <div className={styles.headerLeft}>
+          
+          <div>
+            <h1 className={styles.title}>Dashboard</h1>
+            <p className={styles.subtitle}>
+              Ringkasan aktivitas sistem SKPI Institut Shanti Bhuana Bengkayang
+            </p>
+          </div>
         </div>
         <div className={styles.headerRight}>
           <div className={styles.filterBox}>
@@ -125,8 +165,11 @@ export default function DashboardPage() {
             {open && (
               <div className={styles.dropdown}>
                 {PRODI_LIST.map(p => (
-                  <button key={p} className={`${styles.dropItem} ${prodi === p ? styles.dropActive : ""}`}
-                    onClick={() => { setProdi(p); setOpen(false); }}>
+                  <button
+                    key={p}
+                    className={`${styles.dropItem} ${prodi === p ? styles.dropActive : ""}`}
+                    onClick={() => { setProdi(p); setOpen(false); }}
+                  >
                     {p}
                   </button>
                 ))}
@@ -159,107 +202,57 @@ export default function DashboardPage() {
         })}
       </div>
 
-      {/* Bottom grid */}
-      <div className={styles.bottom}>
-        {/* Table */}
-        <div className={styles.section}>
-          <div className={styles.sectionHead}>
-            <div className={styles.sectionTitle}>
-              <BookOpen size={15} />
-              Kegiatan per Program Studi
-            </div>
-            <button className={styles.linkBtn}>Lihat Detail</button>
+      {/* Tabel Kegiatan per Program Studi */}
+      <div className={styles.section}>
+        <div className={styles.sectionHead}>
+          <div className={styles.sectionTitle}>
+            <BookOpen size={15} />
+            Kegiatan per Program Studi
           </div>
-          <div className={styles.tableWrap}>
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  {["Program Studi","Mahasiswa","Kegiatan","Menunggu","Disetujui","Verifikasi","Ditolak","SKPI"].map(h => (
-                    <th key={h}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {PRODI_ROWS.map(r => (
-                  <tr key={r.prodi}>
-                    <td className={styles.tdProdi}>{r.prodi}</td>
-                    <td><span className={`${styles.tag} ${styles.tagBrown}`}>{r.mahasiswa}</span></td>
-                    <td className={styles.tdNum}>{r.kegiatan}</td>
-                    <td><span className={`${styles.tag} ${styles.tagOrange}`}>{r.menunggu}</span></td>
-                    <td><span className={`${styles.tag} ${styles.tagGreen}`}>{r.disetujui}</span></td>
-                    <td><span className={`${styles.tag} ${styles.tagAmber}`}>{r.verifikasi}</span></td>
-                    <td><span className={`${styles.tag} ${styles.tagRed}`}>{r.ditolak}</span></td>
-                    <td><span className={`${styles.tag} ${styles.tagTeal}`}>{r.skpi}</span></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <button className={styles.linkBtn}>Lihat Detail</button>
         </div>
-
-        {/* Notifications Widget */}
-        <div className={styles.section}>
-          <div className={styles.sectionHead}>
-            <div className={styles.sectionTitle}>
-              <Bell size={15} />
-              Notifikasi Terbaru
-            </div>
-            <div style={{ display: "flex", gap: "8px" }}>
-              {unreadCount > 0 && (
-                <button className={styles.linkBtn} onClick={markAllAsRead} style={{ fontSize: "11px", padding: "2px 8px" }}>
-                  <Check size={12} /> Tandai semua
-                </button>
-              )}
-              <span className={styles.badge}>{unreadCount}</span>
-            </div>
-          </div>
-          <div className={styles.notifList}>
-            {notifications.length === 0 ? (
-              <div className={styles.emptyNotif}>Tidak ada notifikasi</div>
-            ) : (
-              notifications.map(n => (
-                <div
-                  key={n.id}
-                  className={`${styles.notifItem} ${!n.read ? styles.notifUnread : ""}`}
-                  onClick={() => markAsRead(n.id)}
-                  style={{ cursor: "pointer" }}
-                >
-                  <div className={styles.notifDot}
-                    style={{ background: NOTIF_BG[n.type], color: NOTIF_COLORS[n.type], border: `1px solid ${NOTIF_COLORS[n.type]}22` }}>
-                    <Bell size={12} />
-                  </div>
-                  <div className={styles.notifText}>
-                    <p>{n.text}</p>
-                    <span>{n.time}</span>
-                  </div>
-                  <button
-                    className={styles.notifMore}
-                    onClick={(e) => { e.stopPropagation(); deleteNotification(n.id); }}
-                    title="Hapus notifikasi"
-                  >
-                    <Trash2 size={13} />
-                  </button>
-                </div>
-              ))
-            )}
-          </div>
-          <button className={styles.linkBtn} style={{ marginTop: 10, width: "100%", justifyContent: "center" }}>
-            Semua Notifikasi <ChevronRight size={12} />
-          </button>
+        <div className={styles.tableWrap}>
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                {["Program Studi", "Mahasiswa", "Kegiatan", "Menunggu", "Disetujui", "Verifikasi", "Ditolak", "SKPI"].map(h => (
+                  <th key={h}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {PRODI_ROWS.map(r => (
+                <tr key={r.prodi}>
+                  <td className={styles.tdProdi} style={{ color: r.color, fontWeight: 600 }}>
+                    {r.prodi}
+                  </td>
+                  <td><span className={`${styles.tag} ${styles.tagBrown}`}>{r.mahasiswa}</span></td>
+                  <td className={styles.tdNum}>{r.kegiatan}</td>
+                  <td><span className={`${styles.tag} ${styles.tagOrange}`}>{r.menunggu}</span></td>
+                  <td><span className={`${styles.tag} ${styles.tagGreen}`}>{r.disetujui}</span></td>
+                  <td><span className={`${styles.tag} ${styles.tagAmber}`}>{r.verifikasi}</span></td>
+                  <td><span className={`${styles.tag} ${styles.tagRed}`}>{r.ditolak}</span></td>
+                  <td><span className={`${styles.tag} ${styles.tagTeal}`}>{r.skpi}</span></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
 
-      {/* Progress summary */}
+      {/* Ringkasan Status Kegiatan */}
       <div className={styles.section} style={{ marginTop: 0 }}>
         <div className={styles.sectionHead}>
-          <div className={styles.sectionTitle}><TrendingUp size={15} />Ringkasan Status Kegiatan</div>
+          <div className={styles.sectionTitle}>
+            <TrendingUp size={15} /> Ringkasan Status Kegiatan
+          </div>
         </div>
         <div className={styles.progressGrid}>
           {[
-            { label: "Disetujui",        value: stats.disetujui,          color: "#047857" },
-            { label: "Menunggu",         value: stats.menungguDisetujui,  color: "#b45309" },
-            { label: "Diminta Verifikasi",value: stats.dimintaVerifikasi, color: "#92400e" },
-            { label: "Ditolak",          value: stats.ditolak,            color: "#b91c1c" },
+            { label: "Disetujui", value: stats.disetujui, color: "#047857" },
+            { label: "Menunggu", value: stats.menungguDisetujui, color: "#b45309" },
+            { label: "Diminta Verifikasi", value: stats.dimintaVerifikasi, color: "#92400e" },
+            { label: "Ditolak", value: stats.ditolak, color: "#b91c1c" },
           ].map(p => {
             const pct = Math.round((p.value / stats.totalKegiatan) * 100) || 0;
             return (
@@ -277,7 +270,6 @@ export default function DashboardPage() {
           })}
         </div>
       </div>
-
     </div>
   );
 }

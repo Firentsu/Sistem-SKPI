@@ -20,6 +20,15 @@ const PRODI_LIST    = ["Semua", "Teknik Informatika", "Manajemen", "Akuntansi", 
 const ANGKATAN_LIST = ["Semua", "2025", "2024", "2023", "2022", "2021", "2020"];
 const STATUS_SKPI   = ["Semua", "Belum", "Proses", "Selesai"];
 
+// Warna untuk setiap program studi
+const PRODI_COLORS = {
+  "Teknik Informatika": "#ff7f00",
+  "Manajemen": "#0099cc",
+  "Akuntansi": "#10b981",
+  "Sistem Informasi": "#1a0909",
+  "Ilmu Komunikasi": "#3b82f6",
+};
+
 function generateMock() {
   const prodiList  = PRODI_LIST.filter(p => p !== "Semua");
   const statusList = ["Belum", "Proses", "Selesai"];
@@ -324,7 +333,7 @@ function ResetPasswordModal({ mahasiswa, onClose, onDone }) {
 }
 
 /* ─────────────────────────────────────────
-   MODAL IMPORT EXCEL (dengan validasi kolom & password default = NIM)
+   MODAL IMPORT EXCEL
 ───────────────────────────────────────── */
 function ImportExcelModal({ onClose, onDone }) {
   const [file, setFile] = useState(null);
@@ -359,7 +368,6 @@ function ImportExcelModal({ onClose, onDone }) {
       const rows = XLSX.utils.sheet_to_json(sheet);
       if (rows.length === 0) throw new Error("File kosong");
 
-      // Kolom yang diperlukan (Password opsional, default = NIM)
       const requiredColumns = ["Nama", "NIM", "Program Studi", "Angkatan", "Email", "Status SKPI", "Jumlah Kegiatan", "Total ICP", "Status Akun"];
       const firstRow = rows[0];
       const missing = requiredColumns.filter(col => !(col in firstRow));
@@ -367,9 +375,8 @@ function ImportExcelModal({ onClose, onDone }) {
         throw new Error(`Kolom tidak lengkap: ${missing.join(", ")}`);
       }
 
-      // Konversi ke format data mahasiswa
       const newMahasiswa = rows.map((row, idx) => ({
-        id: Date.now() + idx, // ID sementara
+        id: Date.now() + idx,
         nama: row["Nama"],
         nim: row["NIM"].toString(),
         id_prodi: row["Program Studi"],
@@ -379,7 +386,7 @@ function ImportExcelModal({ onClose, onDone }) {
         jumlah_kegiatan: parseInt(row["Jumlah Kegiatan"]) || 0,
         total_icp: parseInt(row["Total ICP"]) || 0,
         aktif: row["Status Akun"] === "Aktif",
-        password: row["Password"] || row["NIM"].toString(), // jika tidak ada, pakai NIM
+        password: row["Password"] || row["NIM"].toString(),
       }));
 
       onDone(newMahasiswa);
@@ -500,7 +507,10 @@ export default function MahasiswaPage() {
   const [modalImport, setModalImport] = useState(false);
   const { toasts, add: toast, remove } = useToast();
 
-  // Fungsi download template Excel (termasuk kolom Password)
+  useEffect(() => {
+    document.title = "Manajemen Mahasiswa | Admin SKPI";
+  }, []);
+
   const downloadTemplate = () => {
     const templateData = [
       {
@@ -513,7 +523,7 @@ export default function MahasiswaPage() {
         "Jumlah Kegiatan": 0,
         "Total ICP": 0,
         "Status Akun": "Aktif",
-        "Password": "contoh123" // contoh password (opsional)
+        "Password": "contoh123"
       }
     ];
     const ws = XLSX.utils.json_to_sheet(templateData);
@@ -523,7 +533,6 @@ export default function MahasiswaPage() {
     toast("Template berhasil diunduh");
   };
 
-  // Pasang fungsi ke window agar bisa dipanggil dari modal import
   if (typeof window !== "undefined") {
     window.downloadTemplate = downloadTemplate;
   }
@@ -591,7 +600,6 @@ export default function MahasiswaPage() {
     <div className={styles.page}>
       <Toast toasts={toasts} remove={remove} />
 
-      {/* ── Header ── */}
       <div className={styles.pageHeader}>
         <div>
           <h1 className={styles.pageTitle}>Manajemen Mahasiswa</h1>
@@ -599,7 +607,7 @@ export default function MahasiswaPage() {
         </div>
         <div className={styles.headerActions}>
           <button className={styles.btnOutline} onClick={downloadTemplate}>
-            <Download size={15} /> Template
+            <Download size={15} /> Cetak
           </button>
           <button className={styles.btnOutline} onClick={() => setModalImport(true)}>
             <Upload size={15} /> Import Excel
@@ -610,7 +618,6 @@ export default function MahasiswaPage() {
         </div>
       </div>
 
-      {/* ── Stats ── */}
       <div className={styles.statsGrid}>
         <StatCard icon={Users}         title="Total Mahasiswa"  value={totalM}   subtitle={`${aktifC} akun aktif`}       color="blue"   />
         <StatCard icon={CheckCircle2}  title="SKPI Selesai"     value={selesaiC} subtitle={`${Math.round(selesaiC/totalM*100)}%`} color="green"  />
@@ -618,7 +625,6 @@ export default function MahasiswaPage() {
         <StatCard icon={UserCheck}     title="Akun Aktif"       value={aktifC}   subtitle={`${totalM-aktifC} nonaktif`}   color="orange" />
       </div>
 
-      {/* ── Search & Filter ── */}
       <div className={styles.toolbar}>
         <div className={styles.searchWrap}>
           <Search size={15} className={styles.searchIcon} />
@@ -637,7 +643,6 @@ export default function MahasiswaPage() {
         </div>
       </div>
 
-      {/* ── Filter Panel ── */}
       {filterOpen && (
         <div className={styles.filterPanel}>
           {[
@@ -663,7 +668,6 @@ export default function MahasiswaPage() {
         </div>
       )}
 
-      {/* ── Table ── */}
       <div className={styles.tableCard}>
         <table className={styles.table}>
           <thead>
@@ -692,40 +696,50 @@ export default function MahasiswaPage() {
                   </div>
                 </td>
               </tr>
-            ) : paged.map((row, idx) => (
-              <tr key={row.id} className={!row.aktif ? styles.rowInactive : ""}>
-                <td className={styles.tdNo}>{start + idx + 1}</td>
-                <td>
-                  <div className={styles.nameCell}>
-                    <div className={styles.avatar}>{row.nama.charAt(0)}</div>
-                    <span className={styles.nameText}>{row.nama}</span>
-                  </div>
-                </td>
-                <td><span className={styles.nimBadge}>{row.nim}</span></td>
-                <td><span className={styles.prodiBadge}>{row.id_prodi}</span></td>
-                <td className={styles.tdCenter}>{row.angkatan}</td>
-                <td className={styles.emailCell}>{row.email}</td>
-                <td className={styles.tdCenter}><StatusBadge status={row.status_skpi} /></td>
-                <td className={styles.tdCenter}><span className={styles.numChip}>{row.jumlah_kegiatan}</span></td>
-                <td className={styles.tdCenter}><span className={`${styles.numChip} ${styles.icpChip}`}>{row.total_icp}</span></td>
-                <td className={styles.tdCenter}>
-                  <span className={`${styles.akunDot} ${row.aktif ? styles.dotOn : styles.dotOff}`}>
-                    {row.aktif ? "Aktif" : "Nonaktif"}
-                  </span>
-                </td>
-                <td className={styles.tdCenter}>
-                  <RowActions row={row}
-                    onEdit={() => setModalEdit(row)}
-                    onResetPw={() => setModalReset(row)}
-                    onToggleActive={() => handleToggle(row)} />
-                </td>
-              </tr>
-            ))}
+            ) : paged.map((row, idx) => {
+              const prodiColor = PRODI_COLORS[row.id_prodi] || "#6b7280";
+              return (
+                <tr key={row.id} className={!row.aktif ? styles.rowInactive : ""}>
+                  <td className={styles.tdNo}>{start + idx + 1}</td>
+                  <td>
+                    <div className={styles.nameCell}>
+                      <div className={styles.avatar}>{row.nama.charAt(0)}</div>
+                      <span className={styles.nameText}>{row.nama}</span>
+                    </div>
+                  </td>
+                  <td><span className={styles.nimBadge}>{row.nim}</span></td>
+                  <td>
+                    <span className={styles.prodiBadge} style={{ 
+                      backgroundColor: `${prodiColor}20`,
+                      color: prodiColor,
+                      borderLeft: `3px solid ${prodiColor}`
+                    }}>
+                      {row.id_prodi}
+                    </span>
+                  </td>
+                  <td className={styles.tdCenter}>{row.angkatan}</td>
+                  <td className={styles.emailCell}>{row.email}</td>
+                  <td className={styles.tdCenter}><StatusBadge status={row.status_skpi} /></td>
+                  <td className={styles.tdCenter}><span className={styles.numChip}>{row.jumlah_kegiatan}</span></td>
+                  <td className={styles.tdCenter}><span className={`${styles.numChip} ${styles.icpChip}`}>{row.total_icp}</span></td>
+                  <td className={styles.tdCenter}>
+                    <span className={`${styles.akunDot} ${row.aktif ? styles.dotOn : styles.dotOff}`}>
+                      {row.aktif ? "Aktif" : "Nonaktif"}
+                    </span>
+                  </td>
+                  <td className={styles.tdCenter}>
+                    <RowActions row={row}
+                      onEdit={() => setModalEdit(row)}
+                      onResetPw={() => setModalReset(row)}
+                      onToggleActive={() => handleToggle(row)} />
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
 
-      {/* ── Pagination ── */}
       {totalPages > 1 && (
         <div className={styles.pagination}>
           <span className={styles.paginInfo}>
@@ -751,7 +765,6 @@ export default function MahasiswaPage() {
         </div>
       )}
 
-      {/* ── Modals ── */}
       {modalAdd    && <MahasiswaFormModal mode="add"  onClose={() => setModalAdd(false)}  onSave={handleAddSave} />}
       {modalEdit   && <MahasiswaFormModal mode="edit" data={modalEdit} onClose={() => setModalEdit(null)}  onSave={handleEditSave} />}
       {modalReset  && <ResetPasswordModal mahasiswa={modalReset} onClose={() => setModalReset(null)} onDone={handleResetDone} />}

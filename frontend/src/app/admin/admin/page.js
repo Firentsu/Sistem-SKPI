@@ -504,6 +504,10 @@ export default function AdminManagementPage() {
   const [modalImport, setModalImport] = useState(false);
   const { toasts, add: toast, remove } = useToast();
 
+  useEffect (() => {
+    document.title = "Manajemen Admin | Admin SKPI";
+  }, []);
+
   const downloadTemplateAdmin = () => {
     const templateData = [
       {
@@ -592,7 +596,7 @@ export default function AdminManagementPage() {
         </div>
         <div className={styles.headerActions}>
           <button className={styles.btnOutline} onClick={downloadTemplateAdmin}>
-            <Download size={15} /> Template
+            <Download size={15} /> Cetak
           </button>
           <button className={styles.btnOutline} onClick={() => setModalImport(true)}>
             <Upload size={15} /> Import Excel
