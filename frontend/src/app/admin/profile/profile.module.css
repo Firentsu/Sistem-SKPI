@@ -1,9 +1,7 @@
 /* ===== PAGE ===== */
 .page {
   padding: 28px 32px 40px;
-  min-height: 100vh;
-  flex-direction: column;
-  gap: 20px;
+  min-height: 100%;
   background: #faf7f4;
   font-family: 'Segoe UI', ui-sans-serif, system-ui, sans-serif;
   position: relative;

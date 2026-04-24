@@ -323,3 +323,345 @@ export async function updateMahasiswaPassword({ password_lama, password_baru }) 
     return updateMahasiswaPassword({ password_lama, password_baru });
   }
 }
+// =============================================================================
+// MAHASISWA — Kegiatan
+// Fungsi-fungsi CRUD untuk kegiatan mahasiswa.
+// Base endpoint: /api/mahasiswa/kegiatan
+// =============================================================================
+
+/**
+ * Ambil daftar kegiatan mahasiswa yang sedang login.
+ * Endpoint : GET /api/mahasiswa/kegiatan
+ */
+export async function getMahasiswaKegiatan() {
+  if (_mockMode || !API_URL) return null;
+  try {
+    const res = await apiFetch("/api/mahasiswa/kegiatan");
+    if (res.ok) return res.json();
+    return null;
+  } catch {
+    _mockMode = true;
+    return null;
+  }
+}
+
+/**
+ * Tambah kegiatan baru.
+ * Endpoint : POST /api/mahasiswa/kegiatan
+ * Body     : payload kegiatan (JSON)
+ */
+export async function submitKegiatan(payload) {
+  if (_mockMode || !API_URL) {
+    return { ok: true, data: { success: true, message: "Kegiatan ditambahkan (mode demo)" } };
+  }
+  try {
+    const res  = await apiFetch("/api/mahasiswa/kegiatan", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    return { ok: res.ok, data };
+  } catch {
+    _mockMode = true;
+    return { ok: true, data: { success: true, message: "Kegiatan ditambahkan (mode demo)" } };
+  }
+}
+
+/**
+ * Edit kegiatan yang sudah ada.
+ * Endpoint : PATCH /api/mahasiswa/kegiatan/:id
+ * Body     : payload kegiatan (JSON)
+ */
+export async function editKegiatan(id, payload) {
+  if (_mockMode || !API_URL) {
+    return { ok: true, data: { success: true, message: "Kegiatan diupdate (mode demo)" } };
+  }
+  try {
+    const res  = await apiFetch(`/api/mahasiswa/kegiatan/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    return { ok: res.ok, data };
+  } catch {
+    _mockMode = true;
+    return { ok: true, data: { success: true, message: "Kegiatan diupdate (mode demo)" } };
+  }
+}
+
+/**
+ * Hapus kegiatan.
+ * Endpoint : DELETE /api/mahasiswa/kegiatan/:id
+ */
+export async function deleteKegiatan(id) {
+  if (_mockMode || !API_URL) {
+    return { ok: true, data: { success: true, message: "Kegiatan dihapus (mode demo)" } };
+  }
+  try {
+    const res  = await apiFetch(`/api/mahasiswa/kegiatan/${id}`, {
+      method: "DELETE",
+    });
+    const data = await res.json();
+    return { ok: res.ok, data };
+  } catch {
+    _mockMode = true;
+    return { ok: true, data: { success: true, message: "Kegiatan dihapus (mode demo)" } };
+  }
+}
+
+/**
+ * Upload bukti kegiatan (file).
+ * Endpoint : POST /api/mahasiswa/kegiatan/:id/bukti
+ * Body     : FormData dengan field "file"
+ */
+export async function uploadBuktiKegiatan(id, formData) {
+  if (_mockMode || !API_URL) {
+    return { ok: true, data: { success: true, file_path: "/uploads/bukti/demo.pdf" } };
+  }
+  try {
+    const url = `${API_URL}/api/mahasiswa/kegiatan/${id}/bukti`;
+    const res = await fetch(url, {
+      method: "POST",
+      credentials: "include",
+      body: formData,
+    });
+    const data = await res.json();
+    return { ok: res.ok, data };
+  } catch {
+    _mockMode = true;
+    return { ok: true, data: { success: true, file_path: "/uploads/bukti/demo.pdf" } };
+  }
+}
+
+// =============================================================================
+// ADMIN — Manajemen Akun Administrator
+// Base endpoint: /api/admin/admins
+// =============================================================================
+
+/**
+ * In-memory mock store — mensimulasikan tabel admin + users di database.
+ * Dipakai saat backend tidak aktif (NEXT_PUBLIC_API_URL kosong / server mati).
+ * Semua operasi CRUD berjalan di sini sehingga frontend bisa dikembangkan
+ * sepenuhnya tanpa backend.
+ */
+let _mockAdmins = [
+  {
+    id: 1,
+    nama: "Dr. Antonius Wibowo",
+    username: "antonius",
+    email: "antonius@isb.ac.id",
+    aktif: true,
+    created_at: "2022-01-10",
+    last_login: "2026-04-17",
+  },
+  {
+    id: 2,
+    nama: "Maria Goreti, S.Kom",
+    username: "maria_g",
+    email: "mariag@isb.ac.id",
+    aktif: true,
+    created_at: "2022-03-05",
+    last_login: "2026-04-16",
+  },
+  {
+    id: 3,
+    nama: "Benediktus Hartono",
+    username: "bene_h",
+    email: "benediktus@isb.ac.id",
+    aktif: true,
+    created_at: "2023-07-14",
+    last_login: "2026-04-10",
+  },
+  {
+    id: 4,
+    nama: "Theresia Lestari",
+    username: "theresia",
+    email: "theresia@isb.ac.id",
+    aktif: true,
+    created_at: "2024-01-20",
+    last_login: "2026-03-28",
+  },
+  {
+    id: 5,
+    nama: "Fransiskus Daud",
+    username: "fran_d",
+    email: "fransiskus@isb.ac.id",
+    aktif: false,
+    created_at: "2023-09-01",
+    last_login: "2025-12-01",
+  },
+  {
+    id: 6,
+    nama: "Yosefina Kartika",
+    username: "yosefina_k",
+    email: "yosefina@isb.ac.id",
+    aktif: true,
+    created_at: "2024-06-15",
+    last_login: "2026-04-20",
+  },
+  {
+    id: 7,
+    nama: "Robertus Hendra",
+    username: "robertus_h",
+    email: "robertus@isb.ac.id",
+    aktif: false,
+    created_at: "2023-03-22",
+    last_login: "2026-01-05",
+  },
+];
+
+let _mockAdminNextId = 8;
+
+function _mockGetAdmins({ q = "", page = 1, perPage = 10 }) {
+  const lower = q.toLowerCase();
+  const filtered = q
+    ? _mockAdmins.filter(
+        a =>
+          a.nama.toLowerCase().includes(lower) ||
+          a.username.toLowerCase().includes(lower) ||
+          a.email.toLowerCase().includes(lower)
+      )
+    : [..._mockAdmins];
+
+  const total      = filtered.length;
+  const totalPages = Math.ceil(total / perPage) || 1;
+  const safePage   = Math.min(Math.max(1, page), totalPages);
+  const rows       = filtered.slice((safePage - 1) * perPage, safePage * perPage);
+
+  return { rows, total, page: safePage, totalPages };
+}
+
+/**
+ * Ambil daftar semua admin.
+ * Endpoint : GET /api/admin/admins?q=&page=1
+ */
+export async function getAdmins({ q = "", page = 1 } = {}) {
+  if (_mockMode || !API_URL) {
+    _mockMode = true;
+    return _mockGetAdmins({ q, page });
+  }
+  try {
+    const params = new URLSearchParams({ q, page });
+    const res = await apiFetch(`/api/admin/admins?${params}`);
+    if (res.ok) return res.json();
+    return null;
+  } catch {
+    _mockMode = true;
+    return _mockGetAdmins({ q, page });
+  }
+}
+
+/**
+ * Tambah admin baru.
+ * Endpoint : POST /api/admin/admins
+ * Body     : { nama, username, email, password, aktif }
+ */
+export async function createAdmin(payload) {
+  if (_mockMode || !API_URL) {
+    _mockMode = true;
+    // Cek duplikat username
+    if (_mockAdmins.find(a => a.username === payload.username)) {
+      return { ok: false, data: { error: "Username sudah digunakan (mode demo)" } };
+    }
+    const today = new Date().toISOString().split("T")[0];
+    const newAdmin = {
+      id:         _mockAdminNextId++,
+      nama:       payload.nama,
+      username:   payload.username,
+      email:      payload.email,
+      aktif:      payload.aktif ?? true,
+      created_at: today,
+      last_login: "-",
+    };
+    _mockAdmins = [newAdmin, ..._mockAdmins];
+    return { ok: true, data: { success: true, message: "Admin ditambahkan (mode demo)", id: newAdmin.id } };
+  }
+  try {
+    const res  = await apiFetch("/api/admin/admins", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    return { ok: res.ok, data };
+  } catch {
+    _mockMode = true;
+    return createAdmin(payload);
+  }
+}
+
+/**
+ * Edit data admin (nama, email, status aktif).
+ * Endpoint : PATCH /api/admin/admins/:id
+ */
+export async function updateAdmin(id, payload) {
+  if (_mockMode || !API_URL) {
+    _mockMode = true;
+    _mockAdmins = _mockAdmins.map(a =>
+      a.id === id
+        ? {
+            ...a,
+            ...(payload.nama  !== undefined && { nama:  payload.nama }),
+            ...(payload.email !== undefined && { email: payload.email }),
+            ...(payload.aktif !== undefined && { aktif: payload.aktif }),
+          }
+        : a
+    );
+    return { ok: true, data: { success: true, message: "Admin diupdate (mode demo)" } };
+  }
+  try {
+    const res  = await apiFetch(`/api/admin/admins/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    return { ok: res.ok, data };
+  } catch {
+    _mockMode = true;
+    return updateAdmin(id, payload);
+  }
+}
+
+/**
+ * Hapus admin.
+ * Endpoint : DELETE /api/admin/admins/:id
+ */
+export async function deleteAdmin(id) {
+  if (_mockMode || !API_URL) {
+    _mockMode = true;
+    _mockAdmins = _mockAdmins.filter(a => a.id !== id);
+    return { ok: true, data: { success: true, message: "Admin dihapus (mode demo)" } };
+  }
+  try {
+    const res  = await apiFetch(`/api/admin/admins/${id}`, { method: "DELETE" });
+    const data = await res.json();
+    return { ok: res.ok, data };
+  } catch {
+    _mockMode = true;
+    return deleteAdmin(id);
+  }
+}
+
+/**
+ * Reset password admin.
+ * Endpoint : POST /api/admin/admins/:id/reset
+ * Body     : { password? }  — opsional, default = "Admin1234!"
+ */
+export async function resetAdminPassword(id, password) {
+  if (_mockMode || !API_URL) {
+    _mockMode = true;
+    const admin = _mockAdmins.find(a => a.id === id);
+    if (!admin) return { ok: false, data: { error: "Admin tidak ditemukan (mode demo)" } };
+    return { ok: true, data: { success: true, message: `Password ${admin.username} direset ke Admin1234! (mode demo)` } };
+  }
+  try {
+    const res  = await apiFetch(`/api/admin/admins/${id}/reset`, {
+      method: "POST",
+      body: JSON.stringify({ password }),
+    });
+    const data = await res.json();
+    return { ok: res.ok, data };
+  } catch {
+    _mockMode = true;
+    return resetAdminPassword(id, password);
+  }
+}

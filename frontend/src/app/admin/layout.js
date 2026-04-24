@@ -6,32 +6,99 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import {
   LayoutDashboard, Users, FileText, Settings, LogOut, Menu,
   ChevronLeft, ChevronRight, Bell, Shield, BookOpen, Award,
-  Camera, X, Check, Upload, WifiOff, Trash2,
+  Camera, X, Check, Upload, WifiOff,
 } from "lucide-react";
 import styles from "./admin.module.css";
 import { useRouter, usePathname } from "next/navigation";
 import { getMe, logout as apiLogout, uploadAvatar, isMockMode, getAvatarUrl } from "@/lib/api";
 
-const NOTIF_COLORS = {
-  skpi: "#765439",
-  verifikasi: "#b45309",
-  published: "#047857",
-  revisi: "#b91c1c",
-};
-const NOTIF_BG = {
-  skpi: "#fdf4ec",
-  verifikasi: "#fffbeb",
-  published: "#f0fdf4",
-  revisi: "#fff5f5",
-};
-
 function AvatarEditorModal({ currentSrc, onClose, onSave }) {
-  // ... (kode sama seperti sebelumnya, tidak diubah)
+  const [preview, setPreview] = useState(null);
+  const [dragging, setDragging] = useState(false);
+  const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
+  const inputRef = useRef(null);
+  const ACCEPTED = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+
+  function processFile(file) {
+    setError("");
+    if (!ACCEPTED.includes(file.type)) { setError("Format tidak didukung. Gunakan JPG, PNG, WebP, atau GIF."); return; }
+    if (file.size > 2 * 1024 * 1024) { setError("Ukuran file maksimal 2 MB."); return; }
+    setPreview(URL.createObjectURL(file));
+  }
+
+  async function handleSave() {
+    if (!preview) return;
+    setSaving(true);
+    try {
+      const blob = await fetch(preview).then(r => r.blob());
+      const form = new FormData();
+      form.append("avatar", blob, "avatar.jpg");
+      const result = await uploadAvatar(form);
+      if (!result.ok) { setError(result.data?.error ?? "Gagal menyimpan foto."); return; }
+      onSave(getAvatarUrl(result.data.avatar));
+    } catch { setError("Gagal menyimpan foto. Coba lagi."); }
+    finally { setSaving(false); }
+  }
+
+  useEffect(() => () => { if (preview) URL.revokeObjectURL(preview); }, [preview]);
+  useEffect(() => {
+    function onKey(e) { if (e.key === "Escape") onClose(); }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  return (
+    <div className={styles.modalOverlay} onClick={onClose}>
+      <div className={styles.modal} onClick={e => e.stopPropagation()}>
+        <div className={styles.modalHeader}>
+          <div className={styles.modalHeaderLeft}>
+            <div className={styles.modalHeaderIcon}><Camera size={15} /></div>
+            <span className={styles.modalTitle}>Edit Foto Profil</span>
+          </div>
+          <button className={styles.modalClose} onClick={onClose} aria-label="Tutup"><X size={15} /></button>
+        </div>
+        <div className={styles.modalPreviewRow}>
+          <div className={styles.modalPreviewWrap}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={preview || currentSrc} alt="Preview" className={styles.modalPreviewImg} />
+            {preview && <button className={styles.modalPreviewClear} onClick={() => { setPreview(null); setError(""); }}><X size={10} /></button>}
+            {preview && <div className={styles.modalPreviewBadge}><Check size={10} /> Baru</div>}
+          </div>
+          <div className={styles.modalPreviewInfo}>
+            <p className={styles.modalPreviewLabel}>{preview ? "Foto baru dipilih" : "Foto saat ini"}</p>
+            <p className={styles.modalPreviewHint}>JPG, PNG, WebP, GIF · maks. 2 MB</p>
+          </div>
+        </div>
+        <div
+          className={`${styles.dropZone} ${dragging ? styles.dropZoneActive : ""}`}
+          onDragOver={e => { e.preventDefault(); setDragging(true); }}
+          onDragLeave={() => setDragging(false)}
+          onDrop={e => { e.preventDefault(); setDragging(false); const f = e.dataTransfer.files?.[0]; if (f) processFile(f); }}
+          onClick={() => inputRef.current?.click()}
+          role="button" tabIndex={0} onKeyDown={e => e.key === "Enter" && inputRef.current?.click()}
+        >
+          <div className={styles.dropIconWrap}><Upload size={20} className={styles.dropIcon} /></div>
+          <span className={styles.dropText}>{dragging ? "Lepaskan di sini…" : "Klik atau seret foto ke sini"}</span>
+          <span className={styles.dropSubText}>PNG, JPG, WebP hingga 2MB</span>
+          <input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif"
+            className={styles.fileInput} onChange={e => { const f = e.target.files?.[0]; if (f) processFile(f); }} />
+        </div>
+        {error && <div className={styles.modalErrorBox}><X size={13} /><p className={styles.modalError}>{error}</p></div>}
+        <div className={styles.modalActions}>
+          <button className={styles.modalBtnCancel} onClick={onClose}>Batal</button>
+          <button className={styles.modalBtnSave} onClick={handleSave} disabled={!preview || saving}>
+            {saving ? <><span className={styles.savingSpinner} /> Menyimpan…</> : <><Check size={14} /> Simpan Foto</>}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export default function AdminLayout({ children }) {
   const [collapsed, setCollapsed] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false); // Mobile sidebar state
   const [loggingOut, setLoggingOut] = useState(false);
   const [checking, setChecking] = useState(true);
   const [showEditor, setShowEditor] = useState(false);
@@ -40,29 +107,6 @@ export default function AdminLayout({ children }) {
   const [avatarSrc, setAvatarSrc] = useState("/img/avatar.jpg");
   const [adminName, setAdminName] = useState("Admin");
   const [adminRole, setAdminRole] = useState("Administrator");
-
-  // State notifikasi
-  const [notifications, setNotifications] = useState([
-    { id: 1, type: "skpi", text: "Mahasiswa Andi Pratama (TI-2021) mengajukan SKPI", time: "5 menit lalu", read: false },
-    { id: 2, type: "verifikasi", text: "Kegiatan 'Seminar AI 2024' menunggu verifikasi", time: "12 menit lalu", read: false },
-    { id: 3, type: "published", text: "SKPI Mahasiswa Sari Dewi telah diterbitkan", time: "28 menit lalu", read: false },
-    { id: 4, type: "revisi", text: "Bukti kegiatan Budi Santoso diminta revisi", time: "1 jam lalu", read: false },
-    { id: 5, type: "published", text: "SKPI batch Manajemen 2020 berhasil digenerate", time: "2 jam lalu", read: false },
-  ]);
-  const [notifDropdownOpen, setNotifDropdownOpen] = useState(false);
-  const unreadCount = notifications.filter(n => !n.read).length;
-
-  const markAsRead = (id) => {
-    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
-  };
-
-  const markAllAsRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-  };
-
-  const deleteNotification = (id) => {
-    setNotifications(prev => prev.filter(n => n.id !== id));
-  };
 
   const router = useRouter();
   const pathname = usePathname();
@@ -98,10 +142,12 @@ export default function AdminLayout({ children }) {
     };
   }, []);
 
+  // ── Close sidebar saat navigate (mobile) ──
   useEffect(() => {
     setSidebarOpen(false);
   }, [pathname]);
 
+  // ── Keyboard escape untuk close sidebar ────
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === "Escape" && sidebarOpen) {
@@ -166,6 +212,7 @@ export default function AdminLayout({ children }) {
         <AvatarEditorModal currentSrc={avatarSrc} onClose={() => setShowEditor(false)} onSave={handleAvatarSave} />
       )}
 
+      {/* Mobile Overlay untuk close sidebar */}
       {sidebarOpen && (
         <div 
           className={styles.sidebarOverlay}
@@ -186,6 +233,7 @@ export default function AdminLayout({ children }) {
           {!collapsed && <div className={styles.brandText}><strong>SKPI</strong><span>Admin Panel</span></div>}
           <button aria-label="Toggle sidebar" className={styles.collapseBtn} onClick={() => {
             setCollapsed(!collapsed);
+            // Di mobile, juga close overlay
             setSidebarOpen(false);
           }}>
             {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
@@ -225,61 +273,13 @@ export default function AdminLayout({ children }) {
           </div>
 
           <div className={styles.topbarRight}>
-            <div className={styles.notifWrapper}>
-              <button 
-                className={styles.iconBtn} 
-                onClick={() => setNotifDropdownOpen(!notifDropdownOpen)}
-                aria-label="Notifications"
-              >
-                <Bell size={17} />
-                {unreadCount > 0 && <span className={styles.badge}>{unreadCount}</span>}
-              </button>
-              {notifDropdownOpen && (
-                <div className={styles.notifDropdown}>
-                  <div className={styles.notifHeader}>
-                    <span>Notifikasi</span>
-                    {unreadCount > 0 && (
-                      <button onClick={markAllAsRead} className={styles.notifMarkAll}>
-                        <Check size={12} /> Tandai semua
-                      </button>
-                    )}
-                  </div>
-                  <div className={styles.notifList}>
-                    {notifications.length === 0 ? (
-                      <div className={styles.notifEmpty}>Tidak ada notifikasi</div>
-                    ) : (
-                      notifications.map(n => (
-                        <div 
-                          key={n.id} 
-                          className={`${styles.notifItem} ${!n.read ? styles.notifUnread : ''}`}
-                          onClick={() => markAsRead(n.id)}
-                        >
-                          <div className={styles.notifIcon} style={{ background: NOTIF_BG[n.type], color: NOTIF_COLORS[n.type] }}>
-                            <Bell size={12} />
-                          </div>
-                          <div className={styles.notifContent}>
-                            <p>{n.text}</p>
-                            <span>{n.time}</span>
-                          </div>
-                          <button 
-                            className={styles.notifDelete} 
-                            onClick={(e) => { e.stopPropagation(); deleteNotification(n.id); }}
-                          >
-                            <Trash2 size={12} />
-                          </button>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                  <div className={styles.notifFooter}>
-                    <button className={styles.notifSeeAll}>Lihat semua notifikasi</button>
-                  </div>
-                </div>
-              )}
-            </div>
+            <button className={styles.iconBtn} aria-label="Notifications">
+              <Bell size={17} /><span className={styles.badge}>3</span>
+            </button>
             <span className={styles.divider} />
             <div className={styles.userBlock}>
               <button className={styles.avatarBtn} onClick={() => router.push("/admin/profile")} aria-label="Lihat profil">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={avatarSrc} alt="avatar" className={styles.avatar} />
                 <span className={styles.onlineDot} />
                 <span className={styles.avatarOverlay}><Camera size={11} /></span>

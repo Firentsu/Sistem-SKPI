@@ -8,22 +8,23 @@ import {
   ChevronLeft, ChevronRight, X, Check, AlertCircle, Users,
   Filter, MoreVertical, Eye, EyeOff, RefreshCw, CheckCircle2,
   Shield, UserCog, Mail, AtSign, Trash2, ShieldCheck, ShieldOff,
-  ChevronDown, Upload, Download, FileSpreadsheet,
+  ChevronDown, Upload, Download, FileSpreadsheet, Loader2,
 } from "lucide-react";
 import styles from "./page.module.css";
+import {
+  getAdmins,
+  createAdmin,
+  updateAdmin,
+  deleteAdmin,
+  resetAdminPassword,
+} from "@/lib/api";
 
 /* ─────────────────────────────────────────
-   CONSTANTS & MOCK DATA
+   CONSTANTS
+   Mock data sudah ada di api.js (_mockAdmins).
+   Halaman ini cukup konsumsi dari getAdmins().
 ───────────────────────────────────────── */
 const PER_PAGE = 10;
-
-const MOCK_ADMINS = [
-  { id: 1, nama: "Dr. Antonius Wibowo", username: "antonius", email: "antonius@isb.ac.id", aktif: true, created_at: "2022-01-10", last_login: "2026-04-17" },
-  { id: 2, nama: "Maria Goreti, S.Kom", username: "maria_g", email: "mariag@isb.ac.id", aktif: true, created_at: "2022-03-05", last_login: "2026-04-16" },
-  { id: 3, nama: "Benediktus Hartono", username: "bene_h", email: "benediktus@isb.ac.id", aktif: true, created_at: "2023-07-14", last_login: "2026-04-10" },
-  { id: 4, nama: "Theresia Lestari", username: "theresia", email: "theresia@isb.ac.id", aktif: true, created_at: "2024-01-20", last_login: "2026-03-28" },
-  { id: 5, nama: "Fransiskus Daud", username: "fran_d", email: "fransiskus@isb.ac.id", aktif: false, created_at: "2023-09-01", last_login: "2025-12-01" },
-];
 
 /* ─────────────────────────────────────────
    TOAST
@@ -72,12 +73,11 @@ function StatCard({ icon: Icon, title, value, subtitle, color }) {
 /* ─────────────────────────────────────────
    PASSWORD INPUT
 ───────────────────────────────────────── */
-function PasswordInput({ value, onChange, placeholder, id }) {
+function PasswordInput({ value, onChange, placeholder }) {
   const [show, setShow] = useState(false);
   return (
     <div className={styles.pwWrap}>
       <input
-        id={id}
         type={show ? "text" : "password"}
         className={styles.input}
         value={value}
@@ -96,11 +96,10 @@ function PasswordInput({ value, onChange, placeholder, id }) {
    MODAL TAMBAH / EDIT ADMIN
 ───────────────────────────────────────── */
 function AdminFormModal({ mode, data, onClose, onSave }) {
-  const initial = data || {
-    nama: "", username: "", email: "",
-    password: "", password_confirm: "",
-    aktif: true,
-  };
+  const initial = data
+    ? { nama: data.nama, username: data.username, email: data.email, aktif: data.aktif, password: "", password_confirm: "" }
+    : { nama: "", username: "", email: "", password: "", password_confirm: "", aktif: true };
+
   const [form, setForm] = useState(initial);
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
@@ -129,9 +128,8 @@ function AdminFormModal({ mode, data, onClose, onSave }) {
     const err = validate();
     if (Object.keys(err).length) { setErrors(err); return; }
     setSaving(true);
-    await new Promise(r => setTimeout(r, 600));
-    const { password_confirm, ...toSave } = form;
-    onSave(toSave);
+    const { password_confirm, ...payload } = form;
+    await onSave(payload);
     setSaving(false);
   };
 
@@ -179,6 +177,7 @@ function AdminFormModal({ mode, data, onClose, onSave }) {
                   value={form.username}
                   onChange={e => setField("username", e.target.value)}
                   placeholder="contoh: admin_isb"
+                  disabled={mode === "edit"}
                 />
               </div>
               {errors.username && <small className={styles.errMsg}>{errors.username}</small>}
@@ -260,8 +259,8 @@ function ResetPasswordModal({ admin, onClose, onDone }) {
   const [loading, setLoading] = useState(false);
   const handle = async () => {
     setLoading(true);
-    await new Promise(r => setTimeout(r, 800));
-    onDone();
+    await onDone();
+    setLoading(false);
   };
   return (
     <div className={styles.modalOverlay} onClick={onClose}>
@@ -271,7 +270,7 @@ function ResetPasswordModal({ admin, onClose, onDone }) {
             <div className={`${styles.modalHeaderIcon} ${styles.iconWarn}`}><KeyRound size={16} /></div>
             <div>
               <h3 className={styles.modalTitle}>Reset Password</h3>
-              <p className={styles.modalSub}>Kirim password baru ke email admin</p>
+              <p className={styles.modalSub}>Reset password admin ke default</p>
             </div>
           </div>
           <button className={styles.modalCloseBtn} onClick={onClose}><X size={17} /></button>
@@ -279,7 +278,7 @@ function ResetPasswordModal({ admin, onClose, onDone }) {
         <div className={styles.modalBody}>
           <div className={styles.confirmBox}>
             <p>Reset password untuk <strong>{admin.nama}</strong>?</p>
-            <p className={styles.confirmNote}>Password baru dikirim ke <strong>{admin.email}</strong></p>
+            <p className={styles.confirmNote}>Password baru: <strong>Admin1234!</strong></p>
           </div>
         </div>
         <div className={styles.modalFooter}>
@@ -301,8 +300,8 @@ function DeleteAdminModal({ admin, onClose, onDone }) {
   const [loading, setLoading] = useState(false);
   const handle = async () => {
     setLoading(true);
-    await new Promise(r => setTimeout(r, 700));
-    onDone();
+    await onDone();
+    setLoading(false);
   };
   return (
     <div className={styles.modalOverlay} onClick={onClose}>
@@ -348,14 +347,8 @@ function ImportExcelModal({ onClose, onDone }) {
   const handleFile = f => {
     if (!f) return;
     const ext = f.name.split(".").pop().toLowerCase();
-    if (!["xlsx", "xls", "csv"].includes(ext)) {
-      setError("Format harus .xlsx, .xls, atau .csv");
-      return;
-    }
-    if (f.size > 5 * 1024 * 1024) {
-      setError("Ukuran maksimal 5 MB");
-      return;
-    }
+    if (!["xlsx", "xls", "csv"].includes(ext)) { setError("Format harus .xlsx, .xls, atau .csv"); return; }
+    if (f.size > 5 * 1024 * 1024) { setError("Ukuran maksimal 5 MB"); return; }
     setError("");
     setFile(f);
   };
@@ -366,30 +359,23 @@ function ImportExcelModal({ onClose, onDone }) {
     setError("");
     try {
       const data = await file.arrayBuffer();
-      const workbook = XLSX.read(data);
-      const sheet = workbook.Sheets[workbook.SheetNames[0]];
-      const rows = XLSX.utils.sheet_to_json(sheet);
+      const wb = XLSX.read(data);
+      const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
       if (rows.length === 0) throw new Error("File kosong");
 
-      const requiredColumns = ["Nama", "Username", "Email", "Status Akun"];
-      const firstRow = rows[0];
-      const missing = requiredColumns.filter(col => !(col in firstRow));
-      if (missing.length) {
-        throw new Error(`Kolom tidak lengkap: ${missing.join(", ")}`);
-      }
+      const required = ["Nama", "Username", "Email", "Status Akun"];
+      const missing = required.filter(col => !(col in rows[0]));
+      if (missing.length) throw new Error(`Kolom tidak lengkap: ${missing.join(", ")}`);
 
-      const newAdmins = rows.map((row, idx) => ({
-        id: Date.now() + idx,
+      const admins = rows.map(row => ({
         nama: row["Nama"],
         username: row["Username"],
         email: row["Email"],
         aktif: row["Status Akun"] === "Aktif",
-        password: row["Password"] || row["Username"], // default = username
-        created_at: new Date().toISOString().split("T")[0],
-        last_login: "-",
+        password: row["Password"] || row["Username"],
       }));
 
-      onDone(newAdmins);
+      onDone(admins);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -439,7 +425,6 @@ function ImportExcelModal({ onClose, onDone }) {
           <div className={styles.importNote}>
             <AlertCircle size={13} />
             <span>Pastikan kolom sesuai template. Kolom Password opsional, default = Username.</span>
-            <button className={styles.linkBtn} onClick={() => window.downloadTemplateAdmin?.()}>Unduh template</button>
           </div>
         </div>
         <div className={styles.modalFooter}>
@@ -493,7 +478,10 @@ function RowActions({ row, onEdit, onResetPw, onToggleActive, onDelete }) {
    HALAMAN UTAMA
 ───────────────────────────────────────── */
 export default function AdminManagementPage() {
-  const [data, setData] = useState(MOCK_ADMINS);
+  const [data, setData] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filterOpen, setFilterOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -504,86 +492,116 @@ export default function AdminManagementPage() {
   const [modalImport, setModalImport] = useState(false);
   const { toasts, add: toast, remove } = useToast();
 
-  useEffect (() => {
-    document.title = "Manajemen Admin | Admin SKPI";
+  // ── Load data dari API (atau mock jika backend mati) ────
+  const loadData = useCallback(async (q = search, page = currentPage) => {
+    setLoading(true);
+    const result = await getAdmins({ q, page });
+    if (result?.rows) {
+      setData(result.rows);
+      setTotal(result.total);
+      setTotalPages(result.totalPages);
+    }
+    setLoading(false);
+  }, [search, currentPage]);
+
+  useEffect(() => { loadData(); }, [loadData]);
+
+  useEffect(() => {
+    document.title = "Manajemen Admin | SKPI";
   }, []);
 
-  const downloadTemplateAdmin = () => {
-    const templateData = [
-      {
-        "Nama": "Contoh Admin",
-        "Username": "admin_example",
-        "Email": "admin@isb.ac.id",
-        "Status Akun": "Aktif",
-        "Password": "admin123"
-      }
-    ];
-    const ws = XLSX.utils.json_to_sheet(templateData);
+  // Debounce search
+  useEffect(() => {
+    const t = setTimeout(() => { setCurrentPage(1); loadData(search, 1); }, 400);
+    return () => clearTimeout(t);
+  }, [search]);
+
+  // ── Download template Excel ──────────────────────────────
+  const downloadTemplate = () => {
+    const ws = XLSX.utils.json_to_sheet([{
+      "Nama": "Contoh Admin", "Username": "admin_example",
+      "Email": "admin@isb.ac.id", "Status Akun": "Aktif", "Password": "admin123",
+    }]);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Template Admin");
     XLSX.writeFile(wb, "template_admin.xlsx");
     toast("Template berhasil diunduh");
   };
 
-  if (typeof window !== "undefined") {
-    window.downloadTemplateAdmin = downloadTemplateAdmin;
-  }
-
-  const filtered = data.filter(row =>
-    !search || 
-    row.nama.toLowerCase().includes(search.toLowerCase()) ||
-    row.username.toLowerCase().includes(search.toLowerCase()) ||
-    row.email.toLowerCase().includes(search.toLowerCase())
-  );
-
-  const totalPages = Math.ceil(filtered.length / PER_PAGE);
-  const safePage = Math.min(currentPage, totalPages || 1);
-  const start = (safePage - 1) * PER_PAGE;
-  const paged = filtered.slice(start, start + PER_PAGE);
-
-  const total = data.length;
-  const aktifCount = data.filter(r => r.aktif).length;
-
-  const handleAddSave = d => {
-    setData(prev => [{ ...d, id: Math.max(0, ...prev.map(x => x.id)) + 1, created_at: new Date().toISOString().split("T")[0], last_login: "-" }, ...prev]);
-    setModalAdd(false);
-    toast("Admin baru berhasil ditambahkan");
+  // ── CRUD handlers ────────────────────────────────────────
+  const handleAddSave = async (payload) => {
+    const res = await createAdmin(payload);
+    if (res.ok) {
+      toast("Admin baru berhasil ditambahkan");
+      setModalAdd(false);
+      setCurrentPage(1);
+      loadData(search, 1);
+    } else {
+      toast(res.data?.error || "Gagal menambah admin", "error");
+    }
   };
 
-  const handleEditSave = d => {
-    setData(prev => prev.map(r => r.id === d.id ? { ...r, ...d } : r));
-    setModalEdit(null);
-    toast("Data admin diperbarui");
+  const handleEditSave = async (payload) => {
+    const res = await updateAdmin(modalEdit.id, payload);
+    if (res.ok) {
+      toast("Data admin diperbarui");
+      setModalEdit(null);
+      loadData();
+    } else {
+      toast(res.data?.error || "Gagal update admin", "error");
+    }
   };
 
-  const handleResetDone = () => {
+  const handleResetDone = async () => {
+    const res = await resetAdminPassword(modalReset.id);
+    if (res.ok) {
+      toast("Password direset ke Admin1234!");
+    } else {
+      toast(res.data?.error || "Gagal reset password", "error");
+    }
     setModalReset(null);
-    toast("Password direset, email telah dikirim");
   };
 
-  const handleDeleteDone = () => {
-    setData(prev => prev.filter(r => r.id !== modalDelete.id));
-    setModalDelete(null);
-    toast("Admin berhasil dihapus", "error");
+  const handleDeleteDone = async () => {
+    const res = await deleteAdmin(modalDelete.id);
+    if (res.ok) {
+      toast("Admin berhasil dihapus", "error");
+      setModalDelete(null);
+      loadData(search, Math.max(1, currentPage));
+    } else {
+      toast(res.data?.error || "Gagal menghapus admin", "error");
+      setModalDelete(null);
+    }
   };
 
-  const handleToggleActive = row => {
-    setData(prev => prev.map(r => r.id === row.id ? { ...r, aktif: !r.aktif } : r));
-    toast(`Akun ${row.nama} ${row.aktif ? "dinonaktifkan" : "diaktifkan"}`);
+  const handleToggleActive = async (row) => {
+    const res = await updateAdmin(row.id, { aktif: !row.aktif });
+    if (res.ok) {
+      toast(`Akun ${row.nama} ${row.aktif ? "dinonaktifkan" : "diaktifkan"}`);
+      loadData();
+    } else {
+      toast(res.data?.error || "Gagal mengubah status", "error");
+    }
   };
 
-  const handleImportDone = (newAdmins) => {
-    setData(prev => [...newAdmins, ...prev]);
+  const handleImportDone = async (admins) => {
     setModalImport(false);
-    toast(`Berhasil mengimport ${newAdmins.length} data admin`);
+    let success = 0, failed = 0;
+    for (const a of admins) {
+      const res = await createAdmin(a);
+      res.ok ? success++ : failed++;
+    }
+    toast(`Import selesai: ${success} berhasil${failed ? `, ${failed} gagal` : ""}`,
+      failed > 0 ? "error" : "success");
+    loadData(search, 1);
   };
 
-  const resetFilter = () => {
-    setSearch("");
-    setCurrentPage(1);
-  };
-
+  // ── Stats ────────────────────────────────────────────────
+  const aktifCount = data.filter(r => r.aktif).length;
   const activeFilters = search ? 1 : 0;
+
+  const safePage = currentPage;
+  const start = (safePage - 1) * PER_PAGE;
 
   return (
     <div className={styles.page}>
@@ -595,8 +613,8 @@ export default function AdminManagementPage() {
           <p className={styles.pageSub}>Kelola akun admin, reset password, dan status akun</p>
         </div>
         <div className={styles.headerActions}>
-          <button className={styles.btnOutline} onClick={downloadTemplateAdmin}>
-            <Download size={15} /> Cetak
+          <button className={styles.btnOutline} onClick={downloadTemplate}>
+            <Download size={15} /> Template
           </button>
           <button className={styles.btnOutline} onClick={() => setModalImport(true)}>
             <Upload size={15} /> Import Excel
@@ -620,7 +638,7 @@ export default function AdminManagementPage() {
             className={styles.searchInput}
             placeholder="Cari nama, username, atau email…"
             value={search}
-            onChange={e => { setSearch(e.target.value); setCurrentPage(1); }}
+            onChange={e => setSearch(e.target.value)}
           />
           {search && <button className={styles.searchClear} onClick={() => setSearch("")}><X size={14} /></button>}
         </div>
@@ -633,7 +651,10 @@ export default function AdminManagementPage() {
             {activeFilters > 0 && <span className={styles.filterBadge}>{activeFilters}</span>}
             <ChevronDown size={13} className={filterOpen ? styles.chevUp : ""} />
           </button>
-          <span className={styles.resultCount}>{filtered.length} admin</span>
+          <span className={styles.resultCount}>{total} admin</span>
+          <button className={styles.btnOutline} onClick={() => loadData()} title="Refresh">
+            <RefreshCw size={14} />
+          </button>
         </div>
       </div>
 
@@ -642,11 +663,11 @@ export default function AdminManagementPage() {
           <div className={styles.filterGroup}>
             <p className={styles.filterLabel}>Pencarian aktif</p>
             <div className={styles.chipRow}>
-              <span className={styles.filterInfo}>Menampilkan admin yang sesuai dengan kata kunci "{search || '-'}"</span>
+              <span className={styles.filterInfo}>Kata kunci: "{search || '-'}"</span>
             </div>
           </div>
           {activeFilters > 0 && (
-            <button className={styles.btnResetFilter} onClick={resetFilter}>
+            <button className={styles.btnResetFilter} onClick={() => setSearch("")}>
               <RefreshCw size={13} /> Reset Filter
             </button>
           )}
@@ -668,7 +689,16 @@ export default function AdminManagementPage() {
             </tr>
           </thead>
           <tbody>
-            {paged.length === 0 ? (
+            {loading ? (
+              <tr>
+                <td colSpan={8} className={styles.emptyTd}>
+                  <div className={styles.emptyState}>
+                    <Loader2 size={32} className={styles.spin} />
+                    <p>Memuat data...</p>
+                  </div>
+                </td>
+              </tr>
+            ) : data.length === 0 ? (
               <tr>
                 <td colSpan={8} className={styles.emptyTd}>
                   <div className={styles.emptyState}>
@@ -678,7 +708,7 @@ export default function AdminManagementPage() {
                   </div>
                 </td>
               </tr>
-            ) : paged.map((row, idx) => (
+            ) : data.map((row, idx) => (
               <tr key={row.id} className={!row.aktif ? styles.rowInactive : ""}>
                 <td className={styles.tdNo}>{start + idx + 1}</td>
                 <td>
@@ -714,7 +744,7 @@ export default function AdminManagementPage() {
       {totalPages > 1 && (
         <div className={styles.pagination}>
           <span className={styles.paginInfo}>
-            {filtered.length === 0 ? 0 : start + 1}–{Math.min(start + PER_PAGE, filtered.length)} dari {filtered.length}
+            {total === 0 ? 0 : start + 1}–{Math.min(start + PER_PAGE, total)} dari {total}
           </span>
           <div className={styles.paginBtns}>
             <button className={styles.pBtn} onClick={() => setCurrentPage(1)} disabled={safePage === 1}>«</button>

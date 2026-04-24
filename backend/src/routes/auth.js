@@ -1,27 +1,38 @@
-import { Router }      from "express";
-import bcrypt          from "bcryptjs";
-import multer          from "multer";
-import path            from "path";
-import { writeFile, mkdir, unlink } from "fs/promises";
-import { existsSync }  from "fs";
+/**
+ * /api/auth — Autentikasi Admin
+ * Menggunakan express-session (MySQL Store), tanpa JWT
+ *
+ * POST   /login    → login admin
+ * POST   /logout   → logout, hapus sesi
+ * GET    /me       → cek sesi aktif
+ * GET    /profile  → ambil profil
+ * PATCH  /profile  → update username / email / password
+ * POST   /avatar   → upload foto profil
+ */
 
-import prisma          from "../lib/prisma.js";
-import { signToken, verifyToken } from "../lib/auth.js";
+import { Router } from "express";
+import bcrypt from "bcryptjs";
+import multer from "multer";
+import path from "path";
+import { writeFile, mkdir, unlink } from "fs/promises";
+import { existsSync } from "fs";
+
+import prisma from "../lib/prisma.js";
 import { requireAuth } from "../middleware/auth.js";
 
 const router = Router();
 
-// ── Konfigurasi Multer (upload avatar ke memori dulu) ──────
+// ── Multer untuk avatar ─────────────────────────────────────
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits:  { fileSize: 2 * 1024 * 1024 },      // maks 2 MB
+  limits: { fileSize: 2 * 1024 * 1024 }, // max 2 MB
   fileFilter: (_req, file, cb) => {
     const allowed = ["image/jpeg", "image/png", "image/webp", "image/gif"];
     cb(null, allowed.includes(file.mimetype));
   },
 });
 
-const EXT_MAP    = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "image/gif": "gif" };
+const EXT_MAP = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "image/gif": "gif" };
 const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads", "avatars");
 
 // ════════════════════════════════════════════════════════════
@@ -30,32 +41,32 @@ const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads", "avatars");
 router.post("/login", async (req, res) => {
   try {
     const { username, password } = req.body;
+
     if (!username || !password) {
       return res.status(400).json({ error: "Username dan password wajib diisi" });
     }
 
-    const user = await prisma.users.findFirst({ where: { username } });
+    const user = await prisma.users.findFirst({
+      where: { username },
+      include: { admin: true },
+    });
+
     if (!user || user.role !== "admin") {
       return res.status(401).json({ error: "Username tidak ditemukan atau bukan admin" });
+    }
+
+    if (user.status_akun === "nonaktif") {
+      return res.status(403).json({ error: "Akun dinonaktifkan. Hubungi administrator." });
     }
 
     const ok = await bcrypt.compare(password, user.password);
     if (!ok) return res.status(401).json({ error: "Password salah" });
 
-    const token = signToken({
-      userId: user.user_id,
-      role:   user.role,
-      exp:    Date.now() + 1000 * 60 * 60 * 24,   // 1 hari
-    });
+    // Simpan data ke session
+    req.session.userId = user.user_id;
+    req.session.role = "admin";
 
-    res.cookie("skpi_auth", token, {
-      httpOnly: true,
-      sameSite: "lax",
-      maxAge:   86400 * 1000,
-      secure:   process.env.NODE_ENV === "production",
-    });
-
-    res.json({ ok: true });
+    return res.json({ ok: true });
   } catch (err) {
     console.error("POST /auth/login error:", err);
     res.status(500).json({ error: "Internal server error" });
@@ -65,9 +76,12 @@ router.post("/login", async (req, res) => {
 // ════════════════════════════════════════════════════════════
 //  POST /api/auth/logout
 // ════════════════════════════════════════════════════════════
-router.post("/logout", (_req, res) => {
-  res.clearCookie("skpi_auth");
-  res.json({ ok: true });
+router.post("/logout", (req, res) => {
+  req.session.destroy((err) => {
+    if (err) console.error("Logout error:", err);
+    res.clearCookie("skpi_session");
+    res.json({ ok: true });
+  });
 });
 
 // ════════════════════════════════════════════════════════════
@@ -80,15 +94,15 @@ router.get("/me", requireAuth, async (req, res) => {
 
     res.json({
       user: {
-        user_id:  user.user_id,
+        user_id: user.user_id,
         username: user.username,
-        email:    user.email,
+        email: user.email,
       },
       admin: admin ? {
-        id_admin:   admin.id_admin,
+        id_admin: admin.id_admin,
         nama_admin: admin.nama_admin,
-        email:      admin.email,
-        avatar:     admin.avatar,
+        email: admin.email,
+        avatar: admin.avatar,
       } : null,
     });
   } catch (err) {
@@ -98,8 +112,7 @@ router.get("/me", requireAuth, async (req, res) => {
 });
 
 // ════════════════════════════════════════════════════════════
-//  GET  /api/auth/profile      → ambil profil
-//  PATCH /api/auth/profile     → update username / email / password
+//  GET /api/auth/profile
 // ════════════════════════════════════════════════════════════
 router.get("/profile", requireAuth, async (req, res) => {
   try {
@@ -107,12 +120,12 @@ router.get("/profile", requireAuth, async (req, res) => {
     const admin = user.admin ?? null;
 
     res.json({
-      user_id:    user.user_id,
-      username:   user.username,
-      email:      user.email,
+      user_id: user.user_id,
+      username: user.username,
+      email: user.email,
       nama_admin: admin?.nama_admin ?? user.username,
-      avatar:     admin?.avatar ?? null,
-      id_admin:   admin?.id_admin ?? null,
+      avatar: admin?.avatar ?? null,
+      id_admin: admin?.id_admin ?? null,
       created_at: user.created_at,
     });
   } catch (err) {
@@ -121,13 +134,17 @@ router.get("/profile", requireAuth, async (req, res) => {
   }
 });
 
+// ════════════════════════════════════════════════════════════
+//  PATCH /api/auth/profile
+//  Body: { action: "username" | "email" | "password", ... }
+// ════════════════════════════════════════════════════════════
 router.patch("/profile", requireAuth, async (req, res) => {
   try {
-    const { user }   = req;
+    const { user } = req;
     const { action } = req.body;
-    const admin      = user.admin ?? null;
+    const admin = user.admin ?? null;
 
-    // ── Update username ─────────────────────────────────────
+    // Update username
     if (action === "username") {
       const { username } = req.body;
       if (!username || username.trim().length < 3) {
@@ -140,32 +157,37 @@ router.patch("/profile", requireAuth, async (req, res) => {
       const existing = await prisma.users.findFirst({
         where: { username: trimmed, NOT: { user_id: user.user_id } },
       });
-      if (existing) return res.status(409).json({ error: "Username sudah digunakan akun lain" });
+      if (existing) return res.status(409).json({ error: "Username sudah digunakan" });
 
-      await prisma.users.update({ where: { user_id: user.user_id }, data: { username: trimmed } });
+      await prisma.users.update({
+        where: { user_id: user.user_id },
+        data: { username: trimmed, updated_at: new Date() },
+      });
       return res.json({ success: true, message: "Username berhasil diperbarui" });
     }
 
-    // ── Update email ────────────────────────────────────────
+    // Update email
     if (action === "email") {
       const { email } = req.body;
       if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
         return res.status(400).json({ error: "Format email tidak valid" });
       }
-      const trimmed  = email.trim().toLowerCase();
-      const existing = await prisma.users.findFirst({
-        where: { email: trimmed, NOT: { user_id: user.user_id } },
-      });
-      if (existing) return res.status(409).json({ error: "Email sudah digunakan akun lain" });
+      const trimmed = email.trim().toLowerCase();
 
-      await prisma.users.update({ where: { user_id: user.user_id }, data: { email: trimmed } });
+      await prisma.users.update({
+        where: { user_id: user.user_id },
+        data: { email: trimmed, updated_at: new Date() },
+      });
       if (admin) {
-        await prisma.admin.update({ where: { id_admin: admin.id_admin }, data: { email: trimmed } });
+        await prisma.admin.update({
+          where: { id_admin: admin.id_admin },
+          data: { email: trimmed },
+        });
       }
       return res.json({ success: true, message: "Email berhasil diperbarui" });
     }
 
-    // ── Update password ─────────────────────────────────────
+    // Update password
     if (action === "password") {
       const { currentPassword, newPassword } = req.body;
       if (!currentPassword || !newPassword) {
@@ -178,7 +200,10 @@ router.patch("/profile", requireAuth, async (req, res) => {
       if (!valid) return res.status(400).json({ error: "Password saat ini tidak tepat" });
 
       const hashed = await bcrypt.hash(newPassword, 12);
-      await prisma.users.update({ where: { user_id: user.user_id }, data: { password: hashed } });
+      await prisma.users.update({
+        where: { user_id: user.user_id },
+        data: { password: hashed, updated_at: new Date() },
+      });
       return res.json({ success: true, message: "Password berhasil diperbarui" });
     }
 
@@ -190,32 +215,35 @@ router.patch("/profile", requireAuth, async (req, res) => {
 });
 
 // ════════════════════════════════════════════════════════════
-//  POST /api/auth/avatar    → upload foto profil
+//  POST /api/auth/avatar
 // ════════════════════════════════════════════════════════════
 router.post("/avatar", requireAuth, upload.single("avatar"), async (req, res) => {
   try {
     const { user } = req;
-    const admin    = user.admin ?? null;
-    const file     = req.file;
+    const admin = user.admin ?? null;
+    const file = req.file;
 
     if (!file) return res.status(400).json({ error: "File avatar tidak ditemukan" });
 
     // Hapus avatar lama jika ada
     if (admin?.avatar) {
       const oldPath = path.join(process.cwd(), "public", admin.avatar);
-      if (existsSync(oldPath)) await unlink(oldPath).catch(() => {});
+      if (existsSync(oldPath)) await unlink(oldPath).catch(() => { });
     }
 
     if (!existsSync(UPLOAD_DIR)) await mkdir(UPLOAD_DIR, { recursive: true });
 
-    const ext      = EXT_MAP[file.mimetype];
+    const ext = EXT_MAP[file.mimetype];
     const filename = `admin_${admin?.id_admin ?? user.user_id}_${Date.now()}.${ext}`;
     await writeFile(path.join(UPLOAD_DIR, filename), file.buffer);
 
     const publicUrl = `/uploads/avatars/${filename}`;
 
     if (admin) {
-      await prisma.admin.update({ where: { id_admin: admin.id_admin }, data: { avatar: publicUrl } });
+      await prisma.admin.update({
+        where: { id_admin: admin.id_admin },
+        data: { avatar: publicUrl },
+      });
     } else {
       await prisma.admin.create({
         data: { id_user: user.user_id, nama_admin: user.username, email: user.email ?? "", avatar: publicUrl },
@@ -225,37 +253,6 @@ router.post("/avatar", requireAuth, upload.single("avatar"), async (req, res) =>
     res.json({ success: true, avatar: publicUrl });
   } catch (err) {
     console.error("POST /auth/avatar error:", err);
-    res.status(500).json({ error: "Server error" });
-  }
-});
-
-// ════════════════════════════════════════════════════════════
-//  POST /api/auth/register
-// ════════════════════════════════════════════════════════════
-router.post("/register", async (req, res) => {
-  try {
-    const { username, password, email } = req.body;
-
-    const existing = await prisma.users.findFirst({ where: { username } });
-    if (existing) {
-      return res.status(400).json({ error: "Username sudah digunakan" });
-    }
-
-    const hashed = await bcrypt.hash(password, 12);
-    const user   = await prisma.users.create({
-      data: {
-        username,
-        password:    hashed,
-        email,
-        role:        "mahasiswa",
-        status_akun: "aktif",
-        updated_at:  new Date(),
-      },
-    });
-
-    res.status(201).json({ message: "Register berhasil", user_id: user.user_id });
-  } catch (err) {
-    console.error("POST /auth/register error:", err);
     res.status(500).json({ error: "Server error" });
   }
 });
