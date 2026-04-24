@@ -71,7 +71,7 @@ export async function login(username, password) {
     return { ok: false, error: "Username atau password salah (mode demo)" };
   }
   try {
-    const res  = await apiFetch("/api/auth/login", {
+    const res = await apiFetch("/api/auth/login", {
       method: "POST",
       body: JSON.stringify({ username, password }),
     });
@@ -87,7 +87,7 @@ export async function login(username, password) {
 
 export async function logout() {
   if (_mockMode || !API_URL) return;
-  try { await apiFetch("/api/auth/logout", { method: "POST" }); } catch {}
+  try { await apiFetch("/api/auth/logout", { method: "POST" }); } catch { }
   _mockMode = false;
 }
 
@@ -120,7 +120,7 @@ export async function updateProfile(payload) {
     return { ok: true, data: { success: true, message: "Tersimpan (mode demo)" } };
   }
   try {
-    const res  = await apiFetch("/api/auth/profile", {
+    const res = await apiFetch("/api/auth/profile", {
       method: "PATCH",
       body: JSON.stringify(payload),
     });
@@ -137,7 +137,7 @@ export async function uploadAvatar(formData) {
     return { ok: true, data: { success: true, avatar: "/img/avatar.jpg" } };
   }
   try {
-    const res  = await apiFetchForm("/api/auth/avatar", formData);
+    const res = await apiFetchForm("/api/auth/avatar", formData);
     const data = await res.json();
     return { ok: res.ok, data };
   } catch {
@@ -150,7 +150,7 @@ export async function getMahasiswa({ q = "", prodi = "Semua", page = 1 } = {}) {
   if (_mockMode || !API_URL) return null;
   try {
     const params = new URLSearchParams({ q, prodi, page });
-    const res    = await apiFetch(`/api/mahasiswa?${params}`);
+    const res = await apiFetch(`/api/mahasiswa?${params}`);
     if (res.ok) return res.json();
     return null;
   } catch {
@@ -161,43 +161,33 @@ export async function getMahasiswa({ q = "", prodi = "Semua", page = 1 } = {}) {
 
 // =============================================================================
 // MAHASISWA — Auth & Profile
-// Setiap fungsi adalah padanan 1-to-1 dari fungsi admin di atas,
-// sehingga layout & halaman mahasiswa bekerja dengan pola yang sama persis.
 // =============================================================================
 
-/** Mock sesi mahasiswa — dipakai saat backend tidak aktif */
 const MOCK_MAHASISWA_SESSION = {
   user: { user_id: 2, username: "mhs_demo", email: "mhs@isb.ac.id", role: "mahasiswa" },
   mahasiswa: {
     id_mahasiswa: 1,
-    nim:          "2021001",
-    nama:         "Mio Haimiya",
-    email:        "mhs@isb.ac.id",
-    prodi:        "Teknik Informatika",
-    angkatan:     2021,
-    avatar:       "/img/avatar.jpg",
+    nim: "2021001",
+    nama: "Mio Haimiya",
+    email: "mhs@isb.ac.id",
+    prodi: "Teknik Informatika",
+    angkatan: 2021,
+    avatar: "/img/avatar.jpg",
   },
 };
 
-/** Mock profil mahasiswa — dipakai saat backend tidak aktif */
 const MOCK_MAHASISWA_PROFILE = {
   id_mahasiswa: 1,
-  nim:          "2021001",
-  nama:         "Mio Haimiya",
-  email:        "mhs@isb.ac.id",
-  username:     "mhs_demo",
-  prodi:        "Teknik Informatika",
-  angkatan:     2021,
-  avatar:       "/img/avatar.jpg",
-  created_at:   "2026-01-01T00:00:00.000Z",
+  nim: "2021001",
+  nama: "Mio Haimiya",
+  email: "mhs@isb.ac.id",
+  username: "mhs_demo",
+  prodi: "Teknik Informatika",
+  angkatan: 2021,
+  avatar: "/img/avatar.jpg",
+  created_at: "2026-01-01T00:00:00.000Z",
 };
 
-/**
- * Login mahasiswa — padanan login() admin.
- * Endpoint : POST /api/mahasiswa/auth/login
- * Body     : { nim, password }
- * Demo     : nim bebas + password "mhs123"
- */
 export async function loginMahasiswa(nim, password) {
   if (!API_URL) {
     _mockMode = true;
@@ -205,7 +195,7 @@ export async function loginMahasiswa(nim, password) {
     return { ok: false, error: "NIM atau password salah (mode demo)" };
   }
   try {
-    const res  = await apiFetch("/api/mahasiswa/auth/login", {
+    const res = await apiFetch("/api/mahasiswa/auth/login", {
       method: "POST",
       body: JSON.stringify({ nim, password }),
     });
@@ -219,11 +209,6 @@ export async function loginMahasiswa(nim, password) {
   }
 }
 
-/**
- * Ambil sesi mahasiswa — padanan getMe() admin.
- * Dipakai layout mahasiswa untuk auth-check pertama kali.
- * Endpoint : GET /api/mahasiswa/auth/me
- */
 export async function getMahasiswaMe() {
   if (_mockMode || !API_URL) return MOCK_MAHASISWA_SESSION;
   try {
@@ -236,10 +221,6 @@ export async function getMahasiswaMe() {
   }
 }
 
-/**
- * Ambil profil mahasiswa yang sedang login — padanan getProfile() admin.
- * Endpoint : GET /api/mahasiswa/auth/profile
- */
 export async function getMahasiswaProfile() {
   if (_mockMode || !API_URL) return MOCK_MAHASISWA_PROFILE;
   try {
@@ -252,16 +233,12 @@ export async function getMahasiswaProfile() {
   }
 }
 
-/**
- * Update profil mahasiswa — padanan updateProfile() admin.
- * Endpoint : PATCH /api/mahasiswa/auth/profile
- */
 export async function updateMahasiswaProfile(payload) {
   if (_mockMode || !API_URL) {
     return { ok: true, data: { success: true, message: "Tersimpan (mode demo)" } };
   }
   try {
-    const res  = await apiFetch("/api/mahasiswa/auth/profile", {
+    const res = await apiFetch("/api/mahasiswa/auth/profile", {
       method: "PATCH",
       body: JSON.stringify(payload),
     });
@@ -273,16 +250,12 @@ export async function updateMahasiswaProfile(payload) {
   }
 }
 
-/**
- * Upload avatar mahasiswa — padanan uploadAvatar() admin.
- * Endpoint : POST /api/mahasiswa/auth/avatar
- */
 export async function uploadMahasiswaAvatar(formData) {
   if (_mockMode || !API_URL) {
     return { ok: true, data: { success: true, avatar: "/img/avatar.jpg" } };
   }
   try {
-    const res  = await apiFetchForm("/api/mahasiswa/auth/avatar", formData);
+    const res = await apiFetchForm("/api/mahasiswa/auth/avatar", formData);
     const data = await res.json();
     return { ok: res.ok, data };
   } catch {
@@ -291,20 +264,11 @@ export async function uploadMahasiswaAvatar(formData) {
   }
 }
 
-/**
- * Logout mahasiswa — padanan logout() admin.
- * Endpoint : POST /api/mahasiswa/auth/logout
- */
 export async function logoutMahasiswa() {
   if (_mockMode || !API_URL) return;
-  try { await apiFetch("/api/mahasiswa/auth/logout", { method: "POST" }); } catch {}
+  try { await apiFetch("/api/mahasiswa/auth/logout", { method: "POST" }); } catch { }
 }
 
-/**
- * Ganti password mahasiswa.
- * Endpoint : PATCH /api/mahasiswa/auth/password
- * Body     : { password_lama, password_baru }
- */
 export async function updateMahasiswaPassword({ password_lama, password_baru }) {
   if (_mockMode || !API_URL) {
     if (password_lama !== "mhs123")
@@ -312,7 +276,7 @@ export async function updateMahasiswaPassword({ password_lama, password_baru }) 
     return { ok: true, data: { success: true, message: "Password berhasil diubah (mode demo)" } };
   }
   try {
-    const res  = await apiFetch("/api/mahasiswa/auth/password", {
+    const res = await apiFetch("/api/mahasiswa/auth/password", {
       method: "PATCH",
       body: JSON.stringify({ password_lama, password_baru }),
     });
@@ -323,16 +287,11 @@ export async function updateMahasiswaPassword({ password_lama, password_baru }) 
     return updateMahasiswaPassword({ password_lama, password_baru });
   }
 }
+
 // =============================================================================
 // MAHASISWA — Kegiatan
-// Fungsi-fungsi CRUD untuk kegiatan mahasiswa.
-// Base endpoint: /api/mahasiswa/kegiatan
 // =============================================================================
 
-/**
- * Ambil daftar kegiatan mahasiswa yang sedang login.
- * Endpoint : GET /api/mahasiswa/kegiatan
- */
 export async function getMahasiswaKegiatan() {
   if (_mockMode || !API_URL) return null;
   try {
@@ -345,17 +304,12 @@ export async function getMahasiswaKegiatan() {
   }
 }
 
-/**
- * Tambah kegiatan baru.
- * Endpoint : POST /api/mahasiswa/kegiatan
- * Body     : payload kegiatan (JSON)
- */
 export async function submitKegiatan(payload) {
   if (_mockMode || !API_URL) {
     return { ok: true, data: { success: true, message: "Kegiatan ditambahkan (mode demo)" } };
   }
   try {
-    const res  = await apiFetch("/api/mahasiswa/kegiatan", {
+    const res = await apiFetch("/api/mahasiswa/kegiatan", {
       method: "POST",
       body: JSON.stringify(payload),
     });
@@ -367,17 +321,12 @@ export async function submitKegiatan(payload) {
   }
 }
 
-/**
- * Edit kegiatan yang sudah ada.
- * Endpoint : PATCH /api/mahasiswa/kegiatan/:id
- * Body     : payload kegiatan (JSON)
- */
 export async function editKegiatan(id, payload) {
   if (_mockMode || !API_URL) {
     return { ok: true, data: { success: true, message: "Kegiatan diupdate (mode demo)" } };
   }
   try {
-    const res  = await apiFetch(`/api/mahasiswa/kegiatan/${id}`, {
+    const res = await apiFetch(`/api/mahasiswa/kegiatan/${id}`, {
       method: "PATCH",
       body: JSON.stringify(payload),
     });
@@ -389,16 +338,12 @@ export async function editKegiatan(id, payload) {
   }
 }
 
-/**
- * Hapus kegiatan.
- * Endpoint : DELETE /api/mahasiswa/kegiatan/:id
- */
 export async function deleteKegiatan(id) {
   if (_mockMode || !API_URL) {
     return { ok: true, data: { success: true, message: "Kegiatan dihapus (mode demo)" } };
   }
   try {
-    const res  = await apiFetch(`/api/mahasiswa/kegiatan/${id}`, {
+    const res = await apiFetch(`/api/mahasiswa/kegiatan/${id}`, {
       method: "DELETE",
     });
     const data = await res.json();
@@ -409,11 +354,6 @@ export async function deleteKegiatan(id) {
   }
 }
 
-/**
- * Upload bukti kegiatan (file).
- * Endpoint : POST /api/mahasiswa/kegiatan/:id/bukti
- * Body     : FormData dengan field "file"
- */
 export async function uploadBuktiKegiatan(id, formData) {
   if (_mockMode || !API_URL) {
     return { ok: true, data: { success: true, file_path: "/uploads/bukti/demo.pdf" } };
@@ -439,12 +379,8 @@ export async function uploadBuktiKegiatan(id, formData) {
 // =============================================================================
 
 /**
-<<<<<<< HEAD
-=======
  * In-memory mock store — mensimulasikan tabel admin + users di database.
  * Dipakai saat backend tidak aktif (NEXT_PUBLIC_API_URL kosong / server mati).
- * Semua operasi CRUD berjalan di sini sehingga frontend bisa dikembangkan
- * sepenuhnya tanpa backend.
  */
 let _mockAdmins = [
   {
@@ -518,35 +454,30 @@ function _mockGetAdmins({ q = "", page = 1, perPage = 10 }) {
   const lower = q.toLowerCase();
   const filtered = q
     ? _mockAdmins.filter(
-        a =>
-          a.nama.toLowerCase().includes(lower) ||
-          a.username.toLowerCase().includes(lower) ||
-          a.email.toLowerCase().includes(lower)
-      )
+      a =>
+        a.nama.toLowerCase().includes(lower) ||
+        a.username.toLowerCase().includes(lower) ||
+        a.email.toLowerCase().includes(lower)
+    )
     : [..._mockAdmins];
 
-  const total      = filtered.length;
+  const total = filtered.length;
   const totalPages = Math.ceil(total / perPage) || 1;
-  const safePage   = Math.min(Math.max(1, page), totalPages);
-  const rows       = filtered.slice((safePage - 1) * perPage, safePage * perPage);
+  const safePage = Math.min(Math.max(1, page), totalPages);
+  const rows = filtered.slice((safePage - 1) * perPage, safePage * perPage);
 
   return { rows, total, page: safePage, totalPages };
 }
 
 /**
->>>>>>> 1cc4b7730fac70fe7ec2aa981923a055fb7dbfd4
  * Ambil daftar semua admin.
  * Endpoint : GET /api/admin/admins?q=&page=1
  */
 export async function getAdmins({ q = "", page = 1 } = {}) {
-<<<<<<< HEAD
-  if (_mockMode || !API_URL) return null;
-=======
   if (_mockMode || !API_URL) {
     _mockMode = true;
     return _mockGetAdmins({ q, page });
   }
->>>>>>> 1cc4b7730fac70fe7ec2aa981923a055fb7dbfd4
   try {
     const params = new URLSearchParams({ q, page });
     const res = await apiFetch(`/api/admin/admins?${params}`);
@@ -554,11 +485,7 @@ export async function getAdmins({ q = "", page = 1 } = {}) {
     return null;
   } catch {
     _mockMode = true;
-<<<<<<< HEAD
-    return null;
-=======
     return _mockGetAdmins({ q, page });
->>>>>>> 1cc4b7730fac70fe7ec2aa981923a055fb7dbfd4
   }
 }
 
@@ -569,30 +496,25 @@ export async function getAdmins({ q = "", page = 1 } = {}) {
  */
 export async function createAdmin(payload) {
   if (_mockMode || !API_URL) {
-<<<<<<< HEAD
-    return { ok: true, data: { success: true, message: "Admin ditambahkan (mode demo)" } };
-=======
     _mockMode = true;
-    // Cek duplikat username
     if (_mockAdmins.find(a => a.username === payload.username)) {
       return { ok: false, data: { error: "Username sudah digunakan (mode demo)" } };
     }
     const today = new Date().toISOString().split("T")[0];
     const newAdmin = {
-      id:         _mockAdminNextId++,
-      nama:       payload.nama,
-      username:   payload.username,
-      email:      payload.email,
-      aktif:      payload.aktif ?? true,
+      id: _mockAdminNextId++,
+      nama: payload.nama,
+      username: payload.username,
+      email: payload.email,
+      aktif: payload.aktif ?? true,
       created_at: today,
       last_login: "-",
     };
     _mockAdmins = [newAdmin, ..._mockAdmins];
     return { ok: true, data: { success: true, message: "Admin ditambahkan (mode demo)", id: newAdmin.id } };
->>>>>>> 1cc4b7730fac70fe7ec2aa981923a055fb7dbfd4
   }
   try {
-    const res  = await apiFetch("/api/admin/admins", {
+    const res = await apiFetch("/api/admin/admins", {
       method: "POST",
       body: JSON.stringify(payload),
     });
@@ -600,11 +522,7 @@ export async function createAdmin(payload) {
     return { ok: res.ok, data };
   } catch {
     _mockMode = true;
-<<<<<<< HEAD
-    return { ok: true, data: { success: true, message: "Admin ditambahkan (mode demo)" } };
-=======
     return createAdmin(payload);
->>>>>>> 1cc4b7730fac70fe7ec2aa981923a055fb7dbfd4
   }
 }
 
@@ -614,24 +532,21 @@ export async function createAdmin(payload) {
  */
 export async function updateAdmin(id, payload) {
   if (_mockMode || !API_URL) {
-<<<<<<< HEAD
-=======
     _mockMode = true;
     _mockAdmins = _mockAdmins.map(a =>
       a.id === id
         ? {
-            ...a,
-            ...(payload.nama  !== undefined && { nama:  payload.nama }),
-            ...(payload.email !== undefined && { email: payload.email }),
-            ...(payload.aktif !== undefined && { aktif: payload.aktif }),
-          }
+          ...a,
+          ...(payload.nama !== undefined && { nama: payload.nama }),
+          ...(payload.email !== undefined && { email: payload.email }),
+          ...(payload.aktif !== undefined && { aktif: payload.aktif }),
+        }
         : a
     );
->>>>>>> 1cc4b7730fac70fe7ec2aa981923a055fb7dbfd4
     return { ok: true, data: { success: true, message: "Admin diupdate (mode demo)" } };
   }
   try {
-    const res  = await apiFetch(`/api/admin/admins/${id}`, {
+    const res = await apiFetch(`/api/admin/admins/${id}`, {
       method: "PATCH",
       body: JSON.stringify(payload),
     });
@@ -639,11 +554,7 @@ export async function updateAdmin(id, payload) {
     return { ok: res.ok, data };
   } catch {
     _mockMode = true;
-<<<<<<< HEAD
-    return { ok: true, data: { success: true, message: "Admin diupdate (mode demo)" } };
-=======
     return updateAdmin(id, payload);
->>>>>>> 1cc4b7730fac70fe7ec2aa981923a055fb7dbfd4
   }
 }
 
@@ -653,24 +564,17 @@ export async function updateAdmin(id, payload) {
  */
 export async function deleteAdmin(id) {
   if (_mockMode || !API_URL) {
-<<<<<<< HEAD
-=======
     _mockMode = true;
     _mockAdmins = _mockAdmins.filter(a => a.id !== id);
->>>>>>> 1cc4b7730fac70fe7ec2aa981923a055fb7dbfd4
     return { ok: true, data: { success: true, message: "Admin dihapus (mode demo)" } };
   }
   try {
-    const res  = await apiFetch(`/api/admin/admins/${id}`, { method: "DELETE" });
+    const res = await apiFetch(`/api/admin/admins/${id}`, { method: "DELETE" });
     const data = await res.json();
     return { ok: res.ok, data };
   } catch {
     _mockMode = true;
-<<<<<<< HEAD
-    return { ok: true, data: { success: true, message: "Admin dihapus (mode demo)" } };
-=======
     return deleteAdmin(id);
->>>>>>> 1cc4b7730fac70fe7ec2aa981923a055fb7dbfd4
   }
 }
 
@@ -681,17 +585,13 @@ export async function deleteAdmin(id) {
  */
 export async function resetAdminPassword(id, password) {
   if (_mockMode || !API_URL) {
-<<<<<<< HEAD
-    return { ok: true, data: { success: true, message: "Password direset (mode demo)" } };
-=======
     _mockMode = true;
     const admin = _mockAdmins.find(a => a.id === id);
     if (!admin) return { ok: false, data: { error: "Admin tidak ditemukan (mode demo)" } };
     return { ok: true, data: { success: true, message: `Password ${admin.username} direset ke Admin1234! (mode demo)` } };
->>>>>>> 1cc4b7730fac70fe7ec2aa981923a055fb7dbfd4
   }
   try {
-    const res  = await apiFetch(`/api/admin/admins/${id}/reset`, {
+    const res = await apiFetch(`/api/admin/admins/${id}/reset`, {
       method: "POST",
       body: JSON.stringify({ password }),
     });
@@ -699,10 +599,6 @@ export async function resetAdminPassword(id, password) {
     return { ok: res.ok, data };
   } catch {
     _mockMode = true;
-<<<<<<< HEAD
-    return { ok: true, data: { success: true, message: "Password direset (mode demo)" } };
-=======
     return resetAdminPassword(id, password);
->>>>>>> 1cc4b7730fac70fe7ec2aa981923a055fb7dbfd4
   }
 }
