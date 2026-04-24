@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useMemo, useCallback } from "react";
 import { useState, useRef } from "react";
 import styles from "./page.module.css";
 import {
@@ -80,7 +80,7 @@ export default function Home() {
   const clearError = () => { setMessage(""); setShake(false); };
 
   // ── handleLogin — deteksi role dari input ─────────────────
-  async function handleLogin() {
+  const handleLogin = useCallback(async () => {
     clearError();
     setLoadingLogin(true);
     try {
@@ -111,9 +111,9 @@ export default function Home() {
     } finally {
       setLoadingLogin(false);
     }
-  }
+  }, [username, password]);
 
-  const slides = [
+  const slides = useMemo(() => [
     {
       id: "login",
       title: "Login",
@@ -189,22 +189,28 @@ export default function Home() {
         </div>
       ),
     },
-  ];
+  ], []);
 
-  const handleDragStart = (e) => {
+  const handleDragStart = useCallback((e) => {
     const tag = e.target.tagName;
     if (tag === "INPUT" || tag === "BUTTON" || tag === "TEXTAREA") return;
-    setIsDragging(true); setStartX(e.clientX);
-  };
-  const handleDragMove = (e) => { if (!isDragging) return; setTranslateX(e.clientX - startX); };
-  const handleDragEnd  = () => {
+    setIsDragging(true);
+    setStartX(e.clientX);
+  }, []);
+
+  const handleDragMove = useCallback((e) => {
+    if (!isDragging) return;
+    setTranslateX(e.clientX - startX);
+  }, [isDragging, startX]);
+
+  const handleDragEnd = useCallback(() => {
     setIsDragging(false);
     if (Math.abs(translateX) > 80) {
       if (translateX > 0 && currentIndex > 0) setCurrentIndex(currentIndex - 1);
       else if (translateX < 0 && currentIndex < slides.length - 1) setCurrentIndex(currentIndex + 1);
     }
     setTranslateX(0);
-  };
+  }, [isDragging, translateX, currentIndex, slides.length]);
 
   return (
     <div className={styles.container}>
