@@ -1,3 +1,4 @@
+// frontend/src/app/mahasiswa/layout.js
 "use client";
 
 import Link from "next/link";
@@ -7,7 +8,7 @@ import {
   LayoutDashboard, FileText, LogOut, Menu,
   ChevronLeft, ChevronRight, Bell,
   Camera, X, Check, Upload, WifiOff,
-  BookOpen, ClipboardList, History, Trash2,
+  BookOpen, ClipboardList, History,
 } from "lucide-react";
 import styles from "./mahasiswa.module.css";
 import { useRouter, usePathname } from "next/navigation";
@@ -20,21 +21,9 @@ import {
   getAvatarUrl,
 } from "@/lib/api";
 
-// ========== KONSTANTA WARNA NOTIFIKASI ==========
-const NOTIF_COLORS = {
-  skpi: "#765439",
-  verifikasi: "#b45309",
-  published: "#047857",
-  revisi: "#b91c1c",
-};
-const NOTIF_BG = {
-  skpi: "#fdf4ec",
-  verifikasi: "#fffbeb",
-  published: "#f0fdf4",
-  revisi: "#fff5f5",
-};
-
-// ========== AVATAR EDITOR MODAL ==========
+// ============================================================
+// Avatar Editor Modal (sama persis dengan admin)
+// ============================================================
 function AvatarEditorModal({ currentSrc, onClose, onSave }) {
   const [preview, setPreview] = useState(null);
   const [dragging, setDragging] = useState(false);
@@ -133,7 +122,9 @@ function AvatarEditorModal({ currentSrc, onClose, onSave }) {
   );
 }
 
-// ========== LAYOUT INNER ==========
+// ============================================================
+// Layout Inner (menggunakan useMahasiswa)
+// ============================================================
 function MahasiswaLayoutInner({ children }) {
   const [collapsed, setCollapsed] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -142,18 +133,12 @@ function MahasiswaLayoutInner({ children }) {
   const [showEditor, setShowEditor] = useState(false);
   const [mockMode, setMockMode] = useState(false);
   const [avatarSrc, setAvatarSrc] = useState("/img/avatar-default.jpg");
-  const [notifDropdownOpen, setNotifDropdownOpen] = useState(false);
-  const [notifications, setNotifications] = useState([
-    { id: 1, type: "skpi", text: "SKPI Anda telah siap digenerate", time: "5 menit lalu", read: false },
-    { id: 2, type: "verifikasi", text: "Kegiatan 'Workshop AI' telah diverifikasi", time: "1 jam lalu", read: false },
-    { id: 3, type: "published", text: "SKPI Anda telah diterbitkan", time: "2 jam lalu", read: false },
-  ]);
-  const unreadCount = notifications.filter(n => !n.read).length;
 
   const router = useRouter();
   const pathname = usePathname();
   const { user, updateUser, prodiConfig } = useMahasiswa();
 
+  // Cek sesi mahasiswa
   useEffect(() => {
     let mounted = true;
     (async () => {
@@ -171,10 +156,12 @@ function MahasiswaLayoutInner({ children }) {
     return () => { mounted = false; };
   }, [router]);
 
+  // Sinkron foto dari user context
   useEffect(() => {
     if (user?.foto) setAvatarSrc(getAvatarUrl(user.foto));
   }, [user?.foto]);
 
+  // Event listeners untuk update profil/avatar
   useEffect(() => {
     const onAvatarUpdated = (e) => {
       if (e.detail?.avatar) {
@@ -194,6 +181,7 @@ function MahasiswaLayoutInner({ children }) {
     };
   }, [updateUser]);
 
+  // Menu mahasiswa (sesuai dengan route yang ada)
   const navItems = [
     { href: "/mahasiswa/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { href: "/mahasiswa/kegiatan",  label: "Kegiatan",  icon: BookOpen },
@@ -201,11 +189,13 @@ function MahasiswaLayoutInner({ children }) {
     { href: "/mahasiswa/riwayat",   label: "Riwayat",   icon: History },
   ];
 
+  // Close sidebar saat navigasi (mobile)
   const closeSidebar = useCallback(() => setSidebarOpen(false), []);
   useEffect(() => {
     closeSidebar();
   }, [pathname, closeSidebar]);
 
+  // Escape key untuk close sidebar
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === "Escape" && sidebarOpen) setSidebarOpen(false);
@@ -214,6 +204,7 @@ function MahasiswaLayoutInner({ children }) {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [sidebarOpen]);
 
+  // Logout
   const handleLogout = async () => {
     if (loggingOut) return;
     setLoggingOut(true);
@@ -222,21 +213,12 @@ function MahasiswaLayoutInner({ children }) {
     setTimeout(() => { try { window.location.replace("/"); } catch {} }, 200);
   };
 
+  // Simpan avatar
   const handleAvatarSave = useCallback((newUrl) => {
     setAvatarSrc(newUrl);
     updateUser({ foto: newUrl });
     setShowEditor(false);
   }, [updateUser]);
-
-  const markAsRead = (id) => {
-    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
-  };
-  const markAllAsRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-  };
-  const deleteNotification = (id) => {
-    setNotifications(prev => prev.filter(n => n.id !== id));
-  };
 
   const activeNav = navItems.find(n => pathname.startsWith(n.href));
   const breadcrumb = activeNav ? activeNav.label : "Dashboard";
@@ -252,6 +234,7 @@ function MahasiswaLayoutInner({ children }) {
 
   return (
     <div className={styles.wrapper}>
+      {/* Banner mode demo */}
       {mockMode && (
         <div style={{
           position: "fixed", top: 0, left: 0, right: 0, zIndex: 9999,
@@ -266,6 +249,7 @@ function MahasiswaLayoutInner({ children }) {
 
       {showEditor && <AvatarEditorModal currentSrc={avatarSrc} onClose={() => setShowEditor(false)} onSave={handleAvatarSave} />}
 
+      {/* Overlay untuk mobile */}
       {sidebarOpen && (
         <div className={styles.sidebarOverlay} onClick={() => setSidebarOpen(false)} role="button" tabIndex={0} onKeyDown={(e) => e.key === "Escape" && setSidebarOpen(false)} aria-label="Close menu" />
       )}
@@ -312,54 +296,12 @@ function MahasiswaLayoutInner({ children }) {
           </div>
 
           <div className={styles.topbarRight}>
-            <div className={styles.notifWrapper}>
-              <button className={styles.iconBtn} onClick={() => setNotifDropdownOpen(!notifDropdownOpen)} aria-label="Notifikasi">
-                <Bell size={17} />
-                {unreadCount > 0 && <span className={styles.badge}>{unreadCount}</span>}
-              </button>
-              {notifDropdownOpen && (
-                <div className={styles.notifDropdown}>
-                  <div className={styles.notifHeader}>
-                    <span>Notifikasi</span>
-                    {unreadCount > 0 && (
-                      <button onClick={markAllAsRead} className={styles.notifMarkAll}>
-                        <Check size={12} /> Tandai semua
-                      </button>
-                    )}
-                  </div>
-                  <div className={styles.notifList}>
-                    {notifications.length === 0 ? (
-                      <div className={styles.notifEmpty}>Tidak ada notifikasi</div>
-                    ) : (
-                      notifications.map(n => (
-                        <div
-                          key={n.id}
-                          className={`${styles.notifItem} ${!n.read ? styles.notifUnread : ''}`}
-                          onClick={() => markAsRead(n.id)}
-                        >
-                          <div className={styles.notifIcon} style={{ background: NOTIF_BG[n.type], color: NOTIF_COLORS[n.type] }}>
-                            <Bell size={12} />
-                          </div>
-                          <div className={styles.notifContent}>
-                            <p>{n.text}</p>
-                            <span>{n.time}</span>
-                          </div>
-                          <button className={styles.notifDelete} onClick={(e) => { e.stopPropagation(); deleteNotification(n.id); }}>
-                            <Trash2 size={12} />
-                          </button>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                  <div className={styles.notifFooter}>
-                    <button className={styles.notifSeeAll}>Lihat semua notifikasi</button>
-                  </div>
-                </div>
-              )}
-            </div>
+            <button className={styles.iconBtn} aria-label="Notifikasi">
+              <Bell size={17} /><span className={styles.badge}>3</span>
+            </button>
             <span className={styles.divider} />
             <div className={styles.userBlock}>
-              <button className={styles.avatarBtn} onClick={() => router.push("/mahasiswa/profile")}>
+              <button className={styles.avatarBtn} onClick={() => setShowEditor(true)}>
                 <img src={avatarSrc} alt="avatar" className={styles.avatar} />
                 <span className={styles.onlineDot} />
                 <span className={styles.avatarOverlay}><Camera size={11} /></span>
@@ -381,6 +323,9 @@ function MahasiswaLayoutInner({ children }) {
   );
 }
 
+// ============================================================
+// Ekspor default dengan Provider
+// ============================================================
 export default function MahasiswaLayout({ children }) {
   return (
     <MahasiswaProvider>

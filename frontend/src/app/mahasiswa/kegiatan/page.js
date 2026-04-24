@@ -1,5 +1,9 @@
 "use client";
 
+<<<<<<< HEAD
+=======
+// ── Conflict 1 resolved: keep useCallback (needed) + Link (used in JSX) ──
+>>>>>>> 1cc4b7730fac70fe7ec2aa981923a055fb7dbfd4
 import { useState, useRef, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useMahasiswa } from "@/context/MahasiswaContext";
@@ -88,6 +92,11 @@ const KELOMPOK_OPTIONS = getKelompokAktivitas();
 const LEVEL_OPTIONS = getLevelKegiatan();
 const TINGKAT_PRESTASI = getTingkatPrestasi();
 
+<<<<<<< HEAD
+=======
+// ── Conflict 2 resolved: removed duplicate const declarations from HEAD;
+//    kept only STATUS_LABEL which is genuinely new and used in loadKegiatan ──
+>>>>>>> 1cc4b7730fac70fe7ec2aa981923a055fb7dbfd4
 // Mapping status verifikasi DB → label UI
 const STATUS_LABEL = {
   diproses:  "Menunggu",
@@ -255,8 +264,15 @@ function EditKegiatanModal({ isOpen, onClose, onSave, kegiatan, prodiColor }) {
 // ========== HALAMAN UTAMA ==========
 export default function KegiatanPage() {
   const { prodiConfig } = useMahasiswa();
+<<<<<<< HEAD
   const [kegiatan, setKegiatan] = useState([]);
   const [loading, setLoading] = useState(true);
+=======
+
+  // ── Conflict 3 resolved: keep loading (used by loadKegiatan) + modalEditOpen (used in JSX) ──
+  const [kegiatan, setKegiatan] = useState([]);
+  const [loading, setLoading]   = useState(true);
+>>>>>>> 1cc4b7730fac70fe7ec2aa981923a055fb7dbfd4
   const [modalEditOpen, setModalEditOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [toast, setToast] = useState(null);
@@ -268,6 +284,10 @@ export default function KegiatanPage() {
     setLoading(true);
     const data = await getMahasiswaKegiatan();
     if (data?.rows) {
+<<<<<<< HEAD
+=======
+      // Normalise field names agar cocok dengan struktur mock yang digunakan UI
+>>>>>>> 1cc4b7730fac70fe7ec2aa981923a055fb7dbfd4
       setKegiatan(data.rows.map(k => ({
         id:              k.id_kegiatan,
         nama_id:         k.nama_kegiatan,
@@ -287,7 +307,11 @@ export default function KegiatanPage() {
         catatan_admin:   k.catatan_admin || "",
         bukti:           k.buktikegiatan?.[0]?.file_path || null,
         created_at:      k.created_at,
+<<<<<<< HEAD
         _raw:            k,
+=======
+        _raw:            k, // simpan raw untuk edit
+>>>>>>> 1cc4b7730fac70fe7ec2aa981923a055fb7dbfd4
       })));
     } else if (isMockMode()) {
       setKegiatan(MOCK_KEGIATAN);
@@ -306,6 +330,7 @@ export default function KegiatanPage() {
     setTimeout(() => setToast(null), 3000);
   };
 
+<<<<<<< HEAD
   const handleSave = async (data) => {
     if (editing) {
       const result = await editKegiatan(editing.id, data);
@@ -323,6 +348,16 @@ export default function KegiatanPage() {
       } else {
         showToast(result.data?.error || "Gagal menambah kegiatan", "error");
       }
+=======
+  // ── Conflict 4 resolved: use handleSaveEdit (matches JSX) with real API call from HEAD ──
+  const handleSaveEdit = async (data) => {
+    const result = await editKegiatan(editing.id, data);
+    if (result.ok) {
+      showToast("Kegiatan berhasil diupdate");
+      await loadKegiatan();
+    } else {
+      showToast(result.data?.error || "Gagal update kegiatan", "error");
+>>>>>>> 1cc4b7730fac70fe7ec2aa981923a055fb7dbfd4
     }
     setModalEditOpen(false);
     setEditing(null);

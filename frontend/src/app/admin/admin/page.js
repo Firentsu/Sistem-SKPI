@@ -17,21 +17,22 @@ import {
   updateAdmin,
   deleteAdmin,
   resetAdminPassword,
+<<<<<<< HEAD
   isMockMode,
 } from "@/lib/api";
 
 /* ─────────────────────────────────────────
    CONSTANTS & MOCK DATA (fallback)
+=======
+} from "@/lib/api";
+
+/* ─────────────────────────────────────────
+   CONSTANTS
+   Mock data sudah ada di api.js (_mockAdmins).
+   Halaman ini cukup konsumsi dari getAdmins().
+>>>>>>> 1cc4b7730fac70fe7ec2aa981923a055fb7dbfd4
 ───────────────────────────────────────── */
 const PER_PAGE = 10;
-
-const MOCK_ADMINS = [
-  { id: 1, nama: "Dr. Antonius Wibowo", username: "antonius", email: "antonius@isb.ac.id", aktif: true, created_at: "2022-01-10", last_login: "2026-04-17" },
-  { id: 2, nama: "Maria Goreti, S.Kom", username: "maria_g", email: "mariag@isb.ac.id", aktif: true, created_at: "2022-03-05", last_login: "2026-04-16" },
-  { id: 3, nama: "Benediktus Hartono", username: "bene_h", email: "benediktus@isb.ac.id", aktif: true, created_at: "2023-07-14", last_login: "2026-04-10" },
-  { id: 4, nama: "Theresia Lestari", username: "theresia", email: "theresia@isb.ac.id", aktif: true, created_at: "2024-01-20", last_login: "2026-03-28" },
-  { id: 5, nama: "Fransiskus Daud", username: "fran_d", email: "fransiskus@isb.ac.id", aktif: false, created_at: "2023-09-01", last_login: "2025-12-01" },
-];
 
 /* ─────────────────────────────────────────
    TOAST
@@ -500,6 +501,7 @@ export default function AdminManagementPage() {
   const { toasts, add: toast, remove } = useToast();
 
 <<<<<<< HEAD
+<<<<<<< HEAD
   useEffect (() => {
     document.title = "Manajemen Admin | Admin SKPI";
   }, []);
@@ -545,6 +547,26 @@ export default function AdminManagementPage() {
     document.title = "Manajemen Admin | SKPI";
   }, []);
 
+=======
+  // ── Load data dari API (atau mock jika backend mati) ────
+  const loadData = useCallback(async (q = search, page = currentPage) => {
+    setLoading(true);
+    const result = await getAdmins({ q, page });
+    if (result?.rows) {
+      setData(result.rows);
+      setTotal(result.total);
+      setTotalPages(result.totalPages);
+    }
+    setLoading(false);
+  }, [search, currentPage]);
+
+  useEffect(() => { loadData(); }, [loadData]);
+
+  useEffect(() => {
+    document.title = "Manajemen Admin | SKPI";
+  }, []);
+
+>>>>>>> 1cc4b7730fac70fe7ec2aa981923a055fb7dbfd4
   // Debounce search
   useEffect(() => {
     const t = setTimeout(() => { setCurrentPage(1); loadData(search, 1); }, 400);
@@ -557,7 +579,10 @@ export default function AdminManagementPage() {
       "Nama": "Contoh Admin", "Username": "admin_example",
       "Email": "admin@isb.ac.id", "Status Akun": "Aktif", "Password": "admin123",
     }]);
+<<<<<<< HEAD
 >>>>>>> 75f95f147ac7d3064c6d328a782a6045e64cc6b4
+=======
+>>>>>>> 1cc4b7730fac70fe7ec2aa981923a055fb7dbfd4
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Template Admin");
     XLSX.writeFile(wb, "template_admin.xlsx");
@@ -650,12 +675,17 @@ export default function AdminManagementPage() {
         </div>
         <div className={styles.headerActions}>
 <<<<<<< HEAD
+<<<<<<< HEAD
           <button className={styles.btnOutline} onClick={downloadTemplateAdmin}>
             <Download size={15} /> Cetak
 =======
           <button className={styles.btnOutline} onClick={downloadTemplate}>
             <Download size={15} /> Template
 >>>>>>> 75f95f147ac7d3064c6d328a782a6045e64cc6b4
+=======
+          <button className={styles.btnOutline} onClick={downloadTemplate}>
+            <Download size={15} /> Template
+>>>>>>> 1cc4b7730fac70fe7ec2aa981923a055fb7dbfd4
           </button>
           <button className={styles.btnOutline} onClick={() => setModalImport(true)}>
             <Upload size={15} /> Import Excel

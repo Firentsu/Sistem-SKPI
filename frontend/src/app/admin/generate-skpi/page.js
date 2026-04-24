@@ -4,7 +4,7 @@
 import { useState, useEffect } from "react";
 import {
   Search, Filter, ChevronLeft, ChevronRight, AlertCircle, CheckCircle2, X,
-  Download, Eye, FileText, Loader2, Zap, Users, Award, TrendingUp, Edit2, Save
+  Download, Eye, FileText, Loader2, Zap, Users, Award, TrendingUp
 } from "lucide-react";
 import styles from "./page.module.css";
 import { TEMPLATE_SECTIONS } from "../../../lib/template-sections";
@@ -14,75 +14,19 @@ const getActiveSections = () => {
   return TEMPLATE_SECTIONS.filter(s => s.enabled).sort((a, b) => a.order - b.order);
 };
 
-// Fungsi render konten per section (dengan data yang bisa diedit)
-const renderSectionContent = (section, mahasiswa, isEditing, onEditField) => {
+// Fungsi render konten per section (bisa diperluas dengan data riil)
+const renderSectionContent = (section, mahasiswa) => {
   switch (section.key) {
     case "identitas":
       return (
         <div className={styles.sectionContent}>
-          <div className={styles.editRow}>
-            <strong>Nama:</strong>
-            {isEditing ? (
-              <input type="text" value={mahasiswa.nama} onChange={(e) => onEditField("nama", e.target.value)} className={styles.editInput} />
-            ) : (
-              <span> {mahasiswa.nama}</span>
-            )}
-          </div>
-          <div className={styles.editRow}>
-            <strong>NIM:</strong>
-            {isEditing ? (
-              <input type="text" value={mahasiswa.nim} onChange={(e) => onEditField("nim", e.target.value)} className={styles.editInput} />
-            ) : (
-              <span> {mahasiswa.nim}</span>
-            )}
-          </div>
-          <div className={styles.editRow}>
-            <strong>Program Studi:</strong>
-            {isEditing ? (
-              <input type="text" value={mahasiswa.prodi} onChange={(e) => onEditField("prodi", e.target.value)} className={styles.editInput} />
-            ) : (
-              <span> {mahasiswa.prodi}</span>
-            )}
-          </div>
-          <div className={styles.editRow}>
-            <strong>Tempat, Tanggal Lahir:</strong>
-            {isEditing ? (
-              <input type="text" value={mahasiswa.tempat_lahir || "Jakarta, 1 Januari 2000"} onChange={(e) => onEditField("tempat_lahir", e.target.value)} className={styles.editInput} />
-            ) : (
-              <span> {mahasiswa.tempat_lahir || "Jakarta, 1 Januari 2000"}</span>
-            )}
-          </div>
-          <div className={styles.editRow}>
-            <strong>Gelar:</strong>
-            {isEditing ? (
-              <input type="text" value={mahasiswa.gelar || "S.Kom."} onChange={(e) => onEditField("gelar", e.target.value)} className={styles.editInput} />
-            ) : (
-              <span> {mahasiswa.gelar || "S.Kom."}</span>
-            )}
-          </div>
+          <p><strong>Nama:</strong> {mahasiswa.nama}</p>
+          <p><strong>NIM:</strong> {mahasiswa.nim}</p>
+          <p><strong>Program Studi:</strong> {mahasiswa.prodi}</p>
+          <p><strong>Tempat, Tanggal Lahir:</strong> Jakarta, 1 Januari 2000</p>
+          <p><strong>Gelar:</strong> S.Kom.</p>
         </div>
       );
-    case "poin_integritas":
-      return (
-        <div>
-          <div className={styles.editRow}>
-            <strong>Total ICP:</strong>
-            {isEditing ? (
-              <input type="number" value={mahasiswa.total_poin} onChange={(e) => onEditField("total_poin", parseInt(e.target.value))} className={styles.editInput} />
-            ) : (
-              <span> {mahasiswa.total_poin} poin</span>
-            )}
-          </div>
-          <p><strong>Kriteria:</strong> {mahasiswa.total_poin >= 150 ? "Silver" : mahasiswa.total_poin >= 100 ? "Bronze" : "Perlu ditingkatkan"}</p>
-        </div>
-      );
-    default:
-      return renderSectionContentDefault(section, mahasiswa);
-  }
-};
-
-const renderSectionContentDefault = (section, mahasiswa) => {
-  switch (section.key) {
     case "institusi":
       return (
         <div className={styles.sectionContent}>
@@ -131,6 +75,13 @@ const renderSectionContentDefault = (section, mahasiswa) => {
           <p><strong>Prestasi:</strong> Juara 2 Lomba Aplikasi</p>
         </div>
       );
+    case "poin_integritas":
+      return (
+        <div>
+          <p><strong>Total ICP:</strong> {mahasiswa.total_poin} poin</p>
+          <p><strong>Kriteria:</strong> {mahasiswa.total_poin >= 150 ? "Silver" : mahasiswa.total_poin >= 100 ? "Bronze" : "Perlu ditingkatkan"}</p>
+        </div>
+      );
     case "kkni":
       return <p>Kerangka Kualifikasi Nasional Indonesia (KKNI) level 6 (Sarjana)</p>;
     case "pengesahan":
@@ -148,12 +99,12 @@ const renderSectionContentDefault = (section, mahasiswa) => {
 
 // Mock data mahasiswa
 const MOCK_MAHASISWA = [
-  { id: 1, nim: "2021001001", nama: "Ahmad Rizki", prodi: "Teknik Informatika", total_aktivitas: 25, total_poin: 125, status: "Siap", tempat_lahir: "Jakarta, 1 Januari 2000", gelar: "S.Kom." },
-  { id: 2, nim: "2021002001", nama: "Budi Santoso", prodi: "Manajemen", total_aktivitas: 18, total_poin: 98, status: "Siap", tempat_lahir: "Bandung, 15 Mei 2001", gelar: "S.M." },
-  { id: 3, nim: "2021001002", nama: "Citra Dewi", prodi: "Teknik Informatika", total_aktivitas: 20, total_poin: 115, status: "Siap", tempat_lahir: "Surabaya, 20 Maret 2000", gelar: "S.Kom." },
-  { id: 4, nim: "2021003001", nama: "Dedi Wijaya", prodi: "Akuntansi", total_aktivitas: 15, total_poin: 88, status: "Kurang", tempat_lahir: "Medan, 10 Agustus 2000", gelar: "S.Ak." },
-  { id: 5, nim: "2021004001", nama: "Eka Putri", prodi: "Ilmu Komunikasi", total_aktivitas: 10, total_poin: 75, status: "Kurang", tempat_lahir: "Semarang, 5 Desember 2001", gelar: "S.I.Kom." },
-  { id: 6, nim: "2021005001", nama: "Fajar Rahman", prodi: "Sistem Informasi", total_aktivitas: 28, total_poin: 142, status: "Siap", tempat_lahir: "Makassar, 25 Juli 2000", gelar: "S.Kom." },
+  { id: 1, nim: "2021001001", nama: "Ahmad Rizki", prodi: "Teknik Informatika", total_aktivitas: 25, total_poin: 125, status: "Siap" },
+  { id: 2, nim: "2021002001", nama: "Budi Santoso", prodi: "Manajemen", total_aktivitas: 18, total_poin: 98, status: "Siap" },
+  { id: 3, nim: "2021001002", nama: "Citra Dewi", prodi: "Teknik Informatika", total_aktivitas: 20, total_poin: 115, status: "Siap" },
+  { id: 4, nim: "2021003001", nama: "Dedi Wijaya", prodi: "Akuntansi", total_aktivitas: 15, total_poin: 88, status: "Kurang" },
+  { id: 5, nim: "2021004001", nama: "Eka Putri", prodi: "Ilmu Komunikasi", total_aktivitas: 10, total_poin: 75, status: "Kurang" },
+  { id: 6, nim: "2021005001", nama: "Fajar Rahman", prodi: "Sistem Informasi", total_aktivitas: 28, total_poin: 142, status: "Siap" },
 ];
 
 // Toast Component
@@ -171,48 +122,17 @@ function Toast({ toast, onClose }) {
   );
 }
 
-// Preview Modal dengan Edit
-function PreviewModal({ item, isOpen, onClose, onDownload, onUpdate }) {
+// Preview Modal
+function PreviewModal({ item, isOpen, onClose, onGenerate, loading }) {
   const activeSections = getActiveSections();
-  const [isEditing, setIsEditing] = useState(false);
-  const [editedData, setEditedData] = useState(null);
-
-  useEffect(() => {
-    if (item) {
-      setEditedData(item);
-      setIsEditing(false);
-    }
-  }, [item]);
-
-  // Jangan render modal jika tidak terbuka atau data belum siap
-  if (!isOpen || !item || !editedData) return null;
-
-  const handleEditField = (field, value) => {
-    setEditedData(prev => ({ ...prev, [field]: value }));
-  };
-
-  const handleSaveEdit = () => {
-    onUpdate(editedData);
-    setIsEditing(false);
-  };
+  if (!isOpen || !item) return null;
 
   return (
     <div className={styles.modalOverlay} onClick={onClose}>
       <div className={styles.modalContainer} onClick={(e) => e.stopPropagation()}>
         <div className={styles.modalHeader}>
-          <h3>Preview SKPI - {editedData.nama}</h3>
-          <div className={styles.modalHeaderActions}>
-            {isEditing ? (
-              <button onClick={handleSaveEdit} className={styles.iconBtn} title="Simpan Perubahan">
-                <Save size={18} />
-              </button>
-            ) : (
-              <button onClick={() => setIsEditing(true)} className={styles.iconBtn} title="Edit Data">
-                <Edit2 size={18} />
-              </button>
-            )}
-            <button onClick={onClose} className={styles.modalClose}><X size={20} /></button>
-          </div>
+          <h3>Preview SKPI - {item.nama}</h3>
+          <button onClick={onClose} className={styles.modalClose}><X size={20} /></button>
         </div>
         <div className={styles.modalBody}>
           <div className={styles.previewCard}>
@@ -224,7 +144,7 @@ function PreviewModal({ item, isOpen, onClose, onDownload, onUpdate }) {
               {activeSections.map((section) => (
                 <div key={section.id} className={styles.previewSection}>
                   <h5>{section.titleID} / {section.titleEN}</h5>
-                  {renderSectionContent(section, editedData, isEditing, handleEditField)}
+                  {renderSectionContent(section, item)}
                   <hr className={styles.divider} />
                 </div>
               ))}
@@ -232,14 +152,10 @@ function PreviewModal({ item, isOpen, onClose, onDownload, onUpdate }) {
           </div>
         </div>
         <div className={styles.modalFooter}>
-          <button className={styles.btnSecondary} onClick={onClose}>Tutup</button>
-          <button 
-            onClick={() => onDownload(editedData)} 
-            className={`${styles.btnPrimary} ${styles.btnWithIcon}`}
-            disabled={editedData.status !== "Siap"}
-          >
-            <Download size={18} />
-            Unduh SKPI
+          <button onClick={onClose} className={styles.btnSecondary}>Batal</button>
+          <button onClick={() => onGenerate(item)} disabled={loading} className={`${styles.btnPrimary} ${styles.btnWithIcon}`}>
+            {loading ? <Loader2 size={18} className={styles.spin} /> : <Download size={18} />}
+            {loading ? "Memproses..." : "Generate & Download"}
           </button>
         </div>
       </div>
@@ -248,11 +164,12 @@ function PreviewModal({ item, isOpen, onClose, onDownload, onUpdate }) {
 }
 
 export default function GenerateSkpiPage() {
+  // Set document title di dalam komponen
   useEffect(() => {
     document.title = "Generate SKPI | Admin Panel";
   }, []);
 
-  const [mahasiswa, setMahasiswa] = useState(MOCK_MAHASISWA);
+  const [mahasiswa] = useState(MOCK_MAHASISWA);
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("Semua");
   const [filterProdi, setFilterProdi] = useState("Semua");
@@ -261,7 +178,6 @@ export default function GenerateSkpiPage() {
   const [selectedItem, setSelectedItem] = useState(null);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [selectedIds, setSelectedIds] = useState([]);
   const itemsPerPage = 5;
 
   const prodiList = ["Semua", ...new Set(mahasiswa.map((m) => m.prodi))];
@@ -276,11 +192,6 @@ export default function GenerateSkpiPage() {
   const totalPages = Math.ceil(filtered.length / itemsPerPage);
   const paginatedData = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
-  const selectedReady = selectedIds.filter(id => {
-    const m = mahasiswa.find(m => m.id === id);
-    return m && m.status === "Siap";
-  }).length;
-
   const showToast = (msg, type = "success") => {
     setToast({ msg, type });
     setTimeout(() => setToast(null), 3500);
@@ -291,55 +202,25 @@ export default function GenerateSkpiPage() {
     setPreviewOpen(true);
   };
 
-  const handleUpdateMahasiswa = (updatedData) => {
-    setMahasiswa(prev => prev.map(m => m.id === updatedData.id ? updatedData : m));
-    setSelectedItem(updatedData);
-    showToast(`Data ${updatedData.nama} berhasil diperbarui`, "success");
-  };
-
-  const handleDownload = async (item) => {
-    if (item.status !== "Siap") {
-      showToast("Mahasiswa belum memenuhi syarat untuk generate SKPI", "error");
-      return;
-    }
+  const handleGenerate = async (item) => {
     setLoading(true);
     setTimeout(() => {
-      showToast(`SKPI untuk ${item.nama} berhasil diunduh!`);
+      showToast(`SKPI untuk ${item.nama} berhasil digenerate sesuai template!`);
       setLoading(false);
       setPreviewOpen(false);
-      const link = document.createElement('a');
-      link.href = `#`;
-      link.download = `SKPI_${item.nim}_${item.nama}.pdf`;
-      link.click();
-    }, 1000);
+    }, 1500);
   };
 
   const handleBulkGenerate = async () => {
-    if (selectedReady === 0) {
-      showToast("Pilih minimal satu mahasiswa dengan status 'Siap' untuk digenerate", "error");
+    if (filtered.length === 0) {
+      showToast("Tidak ada mahasiswa untuk digenerate", "error");
       return;
     }
     setLoading(true);
     setTimeout(() => {
-      showToast(`${selectedReady} SKPI berhasil digenerate dan diunduh (simulasi)!`);
+      showToast(`${filtered.length} SKPI berhasil digenerate sesuai template!`);
       setLoading(false);
     }, 2000);
-  };
-
-  const toggleSelectAll = () => {
-    if (selectedIds.length === paginatedData.length && paginatedData.length > 0) {
-      setSelectedIds([]);
-    } else {
-      setSelectedIds(paginatedData.map(m => m.id));
-    }
-  };
-
-  const toggleSelect = (id) => {
-    if (selectedIds.includes(id)) {
-      setSelectedIds(selectedIds.filter(i => i !== id));
-    } else {
-      setSelectedIds([...selectedIds, id]);
-    }
   };
 
   const totalSiap = mahasiswa.filter((m) => m.status === "Siap").length;
@@ -348,21 +229,19 @@ export default function GenerateSkpiPage() {
 
   return (
     <div className={styles.container}>
+      {/* Header */}
       <div className={styles.header}>
         <div>
           <h1 className={styles.title}>Generate & Penerbitan SKPI</h1>
           <p className={styles.subtitle}>Buat SKPI berdasarkan template yang telah ditentukan (bilingual, urutan dinamis)</p>
         </div>
-        <button 
-          onClick={handleBulkGenerate} 
-          disabled={loading || selectedReady === 0}
-          className={`${styles.btnPrimary} ${styles.btnLg} ${styles.btnWithIcon}`}
-        >
+        <button onClick={handleBulkGenerate} disabled={loading} className={`${styles.btnPrimary} ${styles.btnLg} ${styles.btnWithIcon}`}>
           {loading ? <Loader2 size={18} className={styles.spin} /> : <Zap size={18} />}
-          {loading ? "Sedang Memproses..." : `Generate Terpilih (${selectedReady})`}
+          {loading ? "Sedang Generate..." : "Generate Semua"}
         </button>
       </div>
 
+      {/* Stat Cards */}
       <div className={styles.statsGrid}>
         <div className={styles.statCard}>
           <div className={styles.statIcon}><Users size={24} /></div>
@@ -394,6 +273,7 @@ export default function GenerateSkpiPage() {
         </div>
       </div>
 
+      {/* Filter Bar */}
       <div className={styles.filterBar}>
         <div className={styles.searchBox}>
           <Search size={18} />
@@ -417,14 +297,12 @@ export default function GenerateSkpiPage() {
         </div>
       </div>
 
+      {/* Table */}
       <div className={styles.tableWrapper}>
         {paginatedData.length > 0 ? (
           <table className={styles.table}>
             <thead>
               <tr>
-                <th className={styles.thCheckbox}>
-                  <input type="checkbox" checked={selectedIds.length === paginatedData.length && paginatedData.length > 0} onChange={toggleSelectAll} />
-                </th>
                 <th>NIM</th>
                 <th>Nama</th>
                 <th>Program Studi</th>
@@ -437,9 +315,6 @@ export default function GenerateSkpiPage() {
             <tbody>
               {paginatedData.map((item) => (
                 <tr key={item.id}>
-                  <td className={styles.tdCheckbox}>
-                    <input type="checkbox" checked={selectedIds.includes(item.id)} onChange={() => toggleSelect(item.id)} />
-                  </td>
                   <td><code className={styles.code}>{item.nim}</code></td>
                   <td><strong>{item.nama}</strong></td>
                   <td>{item.prodi}</td>
@@ -452,10 +327,10 @@ export default function GenerateSkpiPage() {
                   </td>
                   <td>
                     <div className={styles.actionGroup}>
-                      <button onClick={() => handlePreview(item)} className={styles.actionBtn} title="Preview & Edit">
+                      <button onClick={() => handlePreview(item)} className={styles.actionBtn} title="Preview">
                         <Eye size={16} />
                       </button>
-                      <button onClick={() => handleDownload(item)} className={styles.actionBtn} title="Download" disabled={item.status !== "Siap"}>
+                      <button onClick={() => handleGenerate(item)} className={styles.actionBtn} title="Generate" disabled={loading}>
                         <Download size={16} />
                       </button>
                     </div>
@@ -472,6 +347,7 @@ export default function GenerateSkpiPage() {
         )}
       </div>
 
+      {/* Pagination */}
       {totalPages > 1 && (
         <div className={styles.pagination}>
           <div className={styles.paginationInfo}>Halaman {currentPage} dari {totalPages}</div>
@@ -491,14 +367,16 @@ export default function GenerateSkpiPage() {
         </div>
       )}
 
+      {/* Preview Modal */}
       <PreviewModal
         item={selectedItem}
         isOpen={previewOpen}
         onClose={() => setPreviewOpen(false)}
-        onDownload={handleDownload}
-        onUpdate={handleUpdateMahasiswa}
+        onGenerate={handleGenerate}
+        loading={loading}
       />
 
+      {/* Toast */}
       <Toast toast={toast} onClose={() => setToast(null)} />
     </div>
   );
