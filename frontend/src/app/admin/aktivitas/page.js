@@ -290,9 +290,6 @@ export default function AktivitasPage() {
           <h1 className={styles.title}>Manajemen Aktivitas</h1>
           <p className={styles.subtitle}>Kelola kegiatan, workshop, dan event SKPI</p>
         </div>
-        <button className={styles.btnPrimary} onClick={() => router.push("/admin/aktivitas/tambah")}>
-          <Plus size={16} /> Tambah Aktivitas
-        </button>
       </div>
 
       {/* Stat Cards */}
