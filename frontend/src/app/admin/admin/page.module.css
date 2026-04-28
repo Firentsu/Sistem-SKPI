@@ -3,9 +3,12 @@
 ───────────────────────────────────────── */
 .page {
   padding: 28px 32px 48px;
-  min-height: 100%;
+  min-height: 100vh;
   background: #faf7f4;
   font-family: 'Inter', 'Segoe UI', sans-serif;
+  flex-direction: column;
+  display: flex;
+  gap: 20px;
 }
 
 /* ─────────────────────────────────────────

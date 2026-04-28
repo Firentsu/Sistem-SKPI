@@ -617,7 +617,7 @@ export default function AdminManagementPage() {
         <div className={styles.headerActions}>
           {/* ── Conflict 4 resolved: use downloadTemplate + label "Template" ── */}
           <button className={styles.btnOutline} onClick={downloadTemplate}>
-            <Download size={15} /> Template
+            <Download size={15} /> Cetak
           </button>
           <button className={styles.btnOutline} onClick={() => setModalImport(true)}>
             <Upload size={15} /> Import Excel
