@@ -1,17 +1,15 @@
 "use client";
 
-import { useEffect, useMemo, useCallback } from "react";
+import { useEffect, useCallback } from "react";
 import { useState, useRef } from "react";
 import styles from "./page.module.css";
 import {
-  User, Lock, Mail, Info, ArrowLeft, ArrowRight,
-  GraduationCap, Award, Briefcase, ChevronRight,
-  Eye, EyeOff, CheckCircle, FileText, BookOpen, Users,
-  Phone, MapPin, Mail as MailIcon, Facebook, Twitter, Instagram,
-  AlertCircle, X, Wifi, WifiOff,
+  User, Lock, Info, ArrowLeft, ArrowRight,
+  GraduationCap, Award, ChevronRight,
+  Eye, EyeOff, CheckCircle, FileText, Users,
+  AlertCircle, X, WifiOff,
 } from "lucide-react";
 import Image from "next/image";
-// ↓ Tambah import loginMahasiswa — satu-satunya perubahan di baris import
 import { login, loginMahasiswa, isMockMode } from "@/lib/api";
 
 // ── Toast Notification ────────────────────────────────────────
@@ -34,7 +32,7 @@ function Toast({ message, onClose }) {
   );
 }
 
-// ── Mode Demo Banner — tampilkan kredensial kedua role ────────
+// ── Mode Demo Banner ──────────────────────────────────────────
 function DemoBanner() {
   return (
     <div style={{
@@ -76,17 +74,15 @@ export default function Home() {
     setShake(false);
     requestAnimationFrame(() => requestAnimationFrame(() => setShake(true)));
   };
-  
+
   const clearError = () => { setMessage(""); setShake(false); };
 
-  // ── handleLogin — deteksi role dari input ─────────────────
+  // ── handleLogin ───────────────────────────────────────────
   const handleLogin = useCallback(async () => {
     clearError();
     setLoadingLogin(true);
     try {
       const input = username.trim();
-
-      // Jika input hanya angka → dianggap NIM mahasiswa
       const isMahasiswa = /^\d+$/.test(input);
 
       if (isMahasiswa) {
@@ -113,7 +109,13 @@ export default function Home() {
     }
   }, [username, password]);
 
-  const slides = useMemo(() => [
+  // ── FIX UTAMA: slides sebagai const biasa (bukan useMemo) ─
+  // useMemo dengan [] membuat slides hanya dibuat SEKALI saat
+  // mount pertama, sehingga value={username} dan value={password}
+  // di dalam input selalu membaca nilai "" (frozen/stale).
+  // Dengan const biasa, slides dibuat ulang tiap render dan
+  // selalu membaca state terbaru → input bisa diketik normal.
+  const slides = [
     {
       id: "login",
       title: "Login",
@@ -128,31 +130,49 @@ export default function Home() {
           >
             <div className={`${styles.input} ${message ? styles.inputError : ""}`}>
               <User size={18} />
-              <input type="text" placeholder="Username / NIM"
-                value={username} onChange={(e) => { setUsername(e.target.value); clearError(); }}
-                onFocus={() => setIsDragging(false)} required />
+              <input
+                type="text"
+                placeholder="Username / NIM"
+                value={username}
+                onChange={(e) => { setUsername(e.target.value); clearError(); }}
+                onFocus={() => setIsDragging(false)}
+                required
+              />
             </div>
             <div className={`${styles.input} ${message ? styles.inputError : ""}`}>
               <Lock size={18} />
-              <input type={showPassword ? "text" : "password"} placeholder="Password"
-                value={password} onChange={(e) => { setPassword(e.target.value); clearError(); }}
-                onFocus={() => setIsDragging(false)} required />
-              <button type="button" className={styles.eyeButton}
-                onClick={() => setShowPassword(!showPassword)} aria-label="Toggle password">
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="Password"
+                value={password}
+                onChange={(e) => { setPassword(e.target.value); clearError(); }}
+                onFocus={() => setIsDragging(false)}
+                required
+              />
+              <button
+                type="button"
+                className={styles.eyeButton}
+                onClick={() => setShowPassword(v => !v)}
+                aria-label="Toggle password"
+              >
                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
           </form>
 
           <div className={styles.loginOptions}>
-            <label className={styles.checkbox}><input type="checkbox" /><span>Ingat saya</span></label>
+            <label className={styles.checkbox}>
+              <input type="checkbox" /><span>Ingat saya</span>
+            </label>
             <a href="#" className={styles.forgotPassword}>Lupa password?</a>
           </div>
 
           <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 12 }}>
-            <button className={styles.button}
+            <button
+              className={styles.button}
               onClick={(e) => { e.preventDefault(); handleLogin(); }}
-              disabled={loadingLogin}>
+              disabled={loadingLogin}
+            >
               {loadingLogin
                 ? <><span className={styles.spinner} />Memproses...</>
                 : <>Login<ChevronRight size={16} /></>}
@@ -184,13 +204,16 @@ export default function Home() {
             ))}
           </div>
           <div className={styles.aboutFooter}>
-            <div className={styles.infoBox}><Info size={14} /><span>Diakui oleh Dunia Industri & Pendidikan</span></div>
+            <div className={styles.infoBox}>
+              <Info size={14} /><span>Diakui oleh Dunia Industri & Pendidikan</span>
+            </div>
           </div>
         </div>
       ),
     },
-  ], []);
+  ];
 
+  // ── Drag handlers ─────────────────────────────────────────
   const handleDragStart = useCallback((e) => {
     const tag = e.target.tagName;
     if (tag === "INPUT" || tag === "BUTTON" || tag === "TEXTAREA") return;
@@ -219,6 +242,7 @@ export default function Home() {
       <header className={styles.header} style={showDemo ? { marginTop: 32 } : {}}>
         <div className={styles.headerContent}>
           <div className={styles.headerLogo}>
+            {/* FIX: nama file asli "Logo_isb.png" — huruf L kapital */}
             <Image src="/img/Logo_isb.png" alt="ISB Logo" width={70} height={40} className={styles.headerLogoImg} />
             <div className={styles.headerTitle}><span>INSTITUT</span><span>SHANTI BHUANA</span></div>
           </div>
@@ -229,7 +253,8 @@ export default function Home() {
         <div className={styles.left}>
           <div className={styles.leftContent}>
             <div className={styles.logoWrapper}>
-              <Image src="/img/logo_isb.png" alt="ISB Logo" width={150} height={90} className={styles.logo} />
+              {/* FIX: konsisten "Logo_isb.png" — huruf L kapital */}
+              <Image src="/img/Logo_isb.png" alt="ISB Logo" width={150} height={90} className={styles.logo} />
             </div>
             <h1>SKPI ISB</h1>
             <h2>Surat Keterangan<br />Pendamping Ijazah</h2>
@@ -255,14 +280,20 @@ export default function Home() {
               </button>
             )}
 
-            <div className={styles.sliderWrapper}
-              onMouseDown={handleDragStart} onMouseMove={handleDragMove}
-              onMouseUp={handleDragEnd} onMouseLeave={handleDragEnd}>
-              <div className={styles.sliderTrack}
+            <div
+              className={styles.sliderWrapper}
+              onMouseDown={handleDragStart}
+              onMouseMove={handleDragMove}
+              onMouseUp={handleDragEnd}
+              onMouseLeave={handleDragEnd}
+            >
+              <div
+                className={styles.sliderTrack}
                 style={{
                   transform: `translateX(calc(-${currentIndex * 100}% + ${translateX}px))`,
                   transition: isDragging ? "none" : "transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
-                }}>
+                }}
+              >
                 {slides.map((slide) => (
                   <div key={slide.id} className={styles.slide}>
                     <div className={styles.card}>
@@ -277,9 +308,11 @@ export default function Home() {
 
             <div className={styles.dots}>
               {slides.map((_, index) => (
-                <button key={index}
+                <button
+                  key={index}
                   className={`${styles.dot} ${currentIndex === index ? styles.activeDot : ""}`}
-                  onClick={() => setCurrentIndex(index)} />
+                  onClick={() => setCurrentIndex(index)}
+                />
               ))}
             </div>
           </div>
