@@ -599,7 +599,7 @@ export default function MahasiswaPage() {
         </div>
         <div className={styles.headerActions}>
           <button className={styles.btnOutline} onClick={downloadTemplate}>
-            <Download size={15} /> Template
+            <Download size={15} /> Cetak
           </button>
           <button className={styles.btnOutline} onClick={() => setModalImport(true)}>
             <Upload size={15} /> Import Excel

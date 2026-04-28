@@ -1,9 +1,13 @@
 /* admin/master-data/page.module.css */
 
 .container {
-  padding: 24px;
+  padding: 28px 32px 48px;
   background: #f8f4f0;
   min-height: 100vh;
+  font-family: 'Segoe UI', ui-sans-serif, sans-serif;
+  flex-direction: column;
+  gap: 20px;
+  display: flex;
 }
 
 /* ========== HEADER ========== */
