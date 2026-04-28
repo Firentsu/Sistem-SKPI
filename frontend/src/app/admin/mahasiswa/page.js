@@ -8,43 +8,25 @@ import {
   X, Check, AlertCircle, Users, FileSpreadsheet,
   GraduationCap, Filter, MoreVertical,
   Eye, EyeOff, RefreshCw, CheckCircle2,
-  TrendingUp, UserCheck, ChevronDown,
+  TrendingUp, UserCheck, ChevronDown, Loader2,
 } from "lucide-react";
 import styles from "./page.module.css";
+import {
+  getMahasiswaList,
+  createMahasiswa,
+  updateMahasiswa,
+  resetMahasiswaPassword,
+  toggleMahasiswaAkun,
+  importMahasiswaBulk,
+  getProdiList,
+} from "@/lib/api";
 
 /* ─────────────────────────────────────────
-   CONSTANTS & MOCK DATA
+   CONSTANTS
 ───────────────────────────────────────── */
-const PER_PAGE = 10;
-const PRODI_LIST    = ["Semua", "Teknik Informatika", "Manajemen", "Akuntansi", "Sistem Informasi", "Ilmu Komunikasi"];
+const PER_PAGE      = 10;
 const ANGKATAN_LIST = ["Semua", "2025", "2024", "2023", "2022", "2021", "2020"];
 const STATUS_SKPI   = ["Semua", "Belum", "Proses", "Selesai"];
-
-function generateMock() {
-  const prodiList  = PRODI_LIST.filter(p => p !== "Semua");
-  const statusList = ["Belum", "Proses", "Selesai"];
-  const names = [
-    "Andi Pratama","Budi Santoso","Citra Dewi","Dian Pertiwi","Eko Wibowo",
-    "Fitri Handayani","Galuh Pramesti","Hendra Kusuma","Indah Permata","Joko Widodo",
-    "Kartika Sari","Luthfi Hakim","Maya Sari","Nando Pratama","Oktavia Putri",
-    "Prima Yudha","Riani Astuti","Surya Darma","Tania Lestari","Umar Said",
-    "Vera Kusuma","Wahyu Ramadan","Xena Pratiwi","Yoga Santoso","Zahra Nadia",
-  ];
-  return names.map((nama, i) => ({
-    id: i + 1,
-    nama,
-    nim: `20${String(20 + (i % 5)).slice(-2)}${String(1001 + i).padStart(6, "0")}`,
-    id_prodi: prodiList[i % prodiList.length],
-    angkatan: String(2019 + (i % 6)),
-    email: `${nama.split(" ")[0].toLowerCase()}@student.isb.ac.id`,
-    status_skpi: statusList[i % statusList.length],
-    jumlah_kegiatan: Math.floor(Math.random() * 25) + 1,
-    total_icp: Math.floor(Math.random() * 180) + 20,
-    aktif: i % 7 !== 0,
-  }));
-}
-
-const MOCK_DATA = generateMock();
 
 /* ─────────────────────────────────────────
    TOAST
@@ -129,9 +111,9 @@ function PasswordInput({ value, onChange, placeholder, id }) {
 /* ─────────────────────────────────────────
    MODAL TAMBAH / EDIT MAHASISWA
 ───────────────────────────────────────── */
-function MahasiswaFormModal({ mode, data, onClose, onSave }) {
+function MahasiswaFormModal({ mode, data, onClose, onSave, prodiList }) {
   const initial = data || {
-    nama: "", nim: "", id_prodi: PRODI_LIST[1], angkatan: "2024",
+    nama: "", nim: "", id_prodi: "", angkatan: "2024",
     email: "", password: "", password_confirm: "",
     status_skpi: "Belum", aktif: true,
   };
@@ -151,7 +133,7 @@ function MahasiswaFormModal({ mode, data, onClose, onSave }) {
     if (!form.email.trim()) err.email = "Email wajib diisi.";
     else if (!/\S+@\S+\.\S+/.test(form.email)) err.email = "Format email tidak valid.";
     if (mode === "add") {
-      if (!form.password)           err.password = "Password wajib diisi.";
+      if (!form.password)            err.password = "Password wajib diisi.";
       else if (form.password.length < 8) err.password = "Minimal 8 karakter.";
       if (form.password !== form.password_confirm) err.password_confirm = "Konfirmasi tidak cocok.";
     }
@@ -162,9 +144,8 @@ function MahasiswaFormModal({ mode, data, onClose, onSave }) {
     const err = validate();
     if (Object.keys(err).length) { setErrors(err); return; }
     setSaving(true);
-    await new Promise(r => setTimeout(r, 600));
     const { password_confirm, ...toSave } = form;
-    onSave(toSave);
+    await onSave(toSave);
     setSaving(false);
   };
 
@@ -204,13 +185,17 @@ function MahasiswaFormModal({ mode, data, onClose, onSave }) {
               <label className={styles.fl}>NIM <span className={styles.req}>*</span></label>
               <input className={`${styles.input} ${errors.nim ? styles.inputErr : ""}`}
                 value={form.nim} onChange={e => set("nim", e.target.value)}
-                placeholder="Contoh: 202200001001" />
+                placeholder="Contoh: 202200001001"
+                disabled={mode === "edit"} />
               {errors.nim && <small className={styles.errMsg}>{errors.nim}</small>}
             </div>
             <div className={styles.fg}>
               <label className={styles.fl}>Program Studi</label>
               <select className={styles.input} value={form.id_prodi} onChange={e => set("id_prodi", e.target.value)}>
-                {PRODI_LIST.filter(p => p !== "Semua").map(p => <option key={p}>{p}</option>)}
+                <option value="">-- Pilih Prodi --</option>
+                {prodiList.map(p => (
+                  <option key={p.id_prodi} value={p.id_prodi}>{p.nama_prodi}</option>
+                ))}
               </select>
             </div>
             <div className={styles.fg}>
@@ -250,7 +235,7 @@ function MahasiswaFormModal({ mode, data, onClose, onSave }) {
             </>
           )}
 
-          <div className={styles.formSection}>STATUS AKUN</div>
+          <div className={styles.formSection}>STATUS</div>
           <div className={styles.formGrid2}>
             <div className={styles.fg}>
               <label className={styles.fl}>Status SKPI</label>
@@ -289,8 +274,8 @@ function ResetPasswordModal({ mahasiswa, onClose, onDone }) {
   const [loading, setLoading] = useState(false);
   const handle = async () => {
     setLoading(true);
-    await new Promise(r => setTimeout(r, 800));
-    onDone();
+    await onDone();
+    setLoading(false);
   };
   return (
     <div className={styles.modalOverlay} onClick={onClose}>
@@ -300,7 +285,7 @@ function ResetPasswordModal({ mahasiswa, onClose, onDone }) {
             <div className={`${styles.modalHeaderIcon} ${styles.iconWarn}`}><KeyRound size={16} /></div>
             <div>
               <h3 className={styles.modalTitle}>Reset Password</h3>
-              <p className={styles.modalSub}>Kirim password baru ke email mahasiswa</p>
+              <p className={styles.modalSub}>Reset password ke default (NIM mahasiswa)</p>
             </div>
           </div>
           <button className={styles.modalCloseBtn} onClick={onClose}><X size={17} /></button>
@@ -308,7 +293,7 @@ function ResetPasswordModal({ mahasiswa, onClose, onDone }) {
         <div className={styles.modalBody}>
           <div className={styles.confirmBox}>
             <p>Reset password untuk <strong>{mahasiswa.nama}</strong>?</p>
-            <p className={styles.confirmNote}>Password baru akan dikirim ke <strong>{mahasiswa.email}</strong></p>
+            <p className={styles.confirmNote}>Password baru: <strong>{mahasiswa.nim}</strong> (NIM mahasiswa)</p>
           </div>
         </div>
         <div className={styles.modalFooter}>
@@ -324,26 +309,20 @@ function ResetPasswordModal({ mahasiswa, onClose, onDone }) {
 }
 
 /* ─────────────────────────────────────────
-   MODAL IMPORT EXCEL (dengan validasi kolom & password default = NIM)
+   MODAL IMPORT EXCEL
 ───────────────────────────────────────── */
 function ImportExcelModal({ onClose, onDone }) {
-  const [file, setFile] = useState(null);
+  const [file, setFile]       = useState(null);
   const [dragging, setDragging] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError]     = useState("");
   const inputRef = useRef(null);
 
   const handleFile = f => {
     if (!f) return;
     const ext = f.name.split(".").pop().toLowerCase();
-    if (!["xlsx", "xls", "csv"].includes(ext)) {
-      setError("Format harus .xlsx, .xls, atau .csv");
-      return;
-    }
-    if (f.size > 5 * 1024 * 1024) {
-      setError("Ukuran maksimal 5 MB");
-      return;
-    }
+    if (!["xlsx", "xls", "csv"].includes(ext)) { setError("Format harus .xlsx, .xls, atau .csv"); return; }
+    if (f.size > 5 * 1024 * 1024) { setError("Ukuran maksimal 5 MB"); return; }
     setError("");
     setFile(f);
   };
@@ -353,36 +332,25 @@ function ImportExcelModal({ onClose, onDone }) {
     setLoading(true);
     setError("");
     try {
-      const data = await file.arrayBuffer();
+      const data     = await file.arrayBuffer();
       const workbook = XLSX.read(data);
-      const sheet = workbook.Sheets[workbook.SheetNames[0]];
-      const rows = XLSX.utils.sheet_to_json(sheet);
+      const rows     = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
       if (rows.length === 0) throw new Error("File kosong");
 
-      // Kolom yang diperlukan (Password opsional, default = NIM)
-      const requiredColumns = ["Nama", "NIM", "Program Studi", "Angkatan", "Email", "Status SKPI", "Jumlah Kegiatan", "Total ICP", "Status Akun"];
-      const firstRow = rows[0];
-      const missing = requiredColumns.filter(col => !(col in firstRow));
-      if (missing.length) {
-        throw new Error(`Kolom tidak lengkap: ${missing.join(", ")}`);
-      }
+      const required = ["Nama", "NIM", "Program Studi", "Angkatan", "Email"];
+      const missing  = required.filter(col => !(col in rows[0]));
+      if (missing.length) throw new Error(`Kolom tidak lengkap: ${missing.join(", ")}`);
 
-      // Konversi ke format data mahasiswa
-      const newMahasiswa = rows.map((row, idx) => ({
-        id: Date.now() + idx, // ID sementara
-        nama: row["Nama"],
-        nim: row["NIM"].toString(),
+      const list = rows.map(row => ({
+        nama:     row["Nama"],
+        nim:      row["NIM"].toString(),
         id_prodi: row["Program Studi"],
         angkatan: row["Angkatan"].toString(),
-        email: row["Email"],
-        status_skpi: row["Status SKPI"],
-        jumlah_kegiatan: parseInt(row["Jumlah Kegiatan"]) || 0,
-        total_icp: parseInt(row["Total ICP"]) || 0,
-        aktif: row["Status Akun"] === "Aktif",
-        password: row["Password"] || row["NIM"].toString(), // jika tidak ada, pakai NIM
+        email:    row["Email"],
+        password: row["Password"] || row["NIM"].toString(),
       }));
 
-      onDone(newMahasiswa);
+      await onDone(list);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -431,8 +399,7 @@ function ImportExcelModal({ onClose, onDone }) {
           {error && <p className={styles.errMsg}>{error}</p>}
           <div className={styles.importNote}>
             <AlertCircle size={13} />
-            <span>Pastikan kolom sesuai template. Kolom Password opsional, default = NIM.</span>
-            <button className={styles.linkBtn} onClick={() => window.downloadTemplate?.()}>Unduh template</button>
+            <span>Kolom wajib: Nama, NIM, Program Studi, Angkatan, Email. Password opsional (default = NIM).</span>
           </div>
         </div>
         <div className={styles.modalFooter}>
@@ -453,13 +420,11 @@ function ImportExcelModal({ onClose, onDone }) {
 function RowActions({ row, onEdit, onResetPw, onToggleActive }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
-
   useEffect(() => {
     const fn = e => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
     document.addEventListener("mousedown", fn);
     return () => document.removeEventListener("mousedown", fn);
   }, []);
-
   return (
     <div className={styles.ddWrap} ref={ref}>
       <button className={styles.ddTrigger} onClick={() => setOpen(o => !o)}>
@@ -487,93 +452,135 @@ function RowActions({ row, onEdit, onResetPw, onToggleActive }) {
    HALAMAN UTAMA
 ───────────────────────────────────────── */
 export default function MahasiswaPage() {
-  const [data, setData] = useState(MOCK_DATA);
-  const [search, setSearch] = useState("");
-  const [filterProdi, setFilterProdi] = useState("Semua");
-  const [filterAngkatan, setFilterAngkatan] = useState("Semua");
-  const [filterStatus, setFilterStatus] = useState("Semua");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [filterOpen, setFilterOpen] = useState(false);
-  const [modalAdd, setModalAdd] = useState(false);
-  const [modalEdit, setModalEdit] = useState(null);
-  const [modalReset, setModalReset] = useState(null);
-  const [modalImport, setModalImport] = useState(false);
-  const { toasts, add: toast, remove } = useToast();
+  const [data, setData]           = useState([]);
+  const [total, setTotal]         = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading]     = useState(true);
+  const [prodiList, setProdiList] = useState([]);
 
-  // Fungsi download template Excel (termasuk kolom Password)
+  const [search, setSearch]               = useState("");
+  const [filterProdi, setFilterProdi]     = useState("Semua");
+  const [filterAngkatan, setFilterAngkatan] = useState("Semua");
+  const [filterStatus, setFilterStatus]   = useState("Semua");
+  const [currentPage, setCurrentPage]     = useState(1);
+  const [filterOpen, setFilterOpen]       = useState(false);
+  const [modalAdd, setModalAdd]           = useState(false);
+  const [modalEdit, setModalEdit]         = useState(null);
+  const [modalReset, setModalReset]       = useState(null);
+  const [modalImport, setModalImport]     = useState(false);
+  const { toasts, add: toast, remove }    = useToast();
+
+  // ── Load prodi list sekali saat mount ─────────────────────
+  useEffect(() => {
+    getProdiList().then(list => { if (list) setProdiList(list); });
+    document.title = "Manajemen Mahasiswa | Admin SKPI";
+  }, []);
+
+  // ── Load data dari API ─────────────────────────────────────
+  const loadData = useCallback(async (
+    q       = search,
+    prodi   = filterProdi,
+    page    = currentPage,
+  ) => {
+    setLoading(true);
+    const result = await getMahasiswaList({ q, prodi, page });
+    if (result) {
+      // Normalise field dari backend ke format UI
+      const rows = (result.rows ?? []).map(m => ({
+        id:               m.id_mahasiswa,
+        nama:             m.nama,
+        nim:              m.nim,
+        id_prodi:         m.id_prodi,
+        nama_prodi:       m.programstudi?.nama_prodi ?? "-",
+        angkatan:         m.angkatan ?? "-",
+        email:            m.email ?? "-",
+        status_skpi:      m.status_skpi ?? "Belum",
+        jumlah_kegiatan:  m._count?.kegiatanmahasiswa ?? m.jumlah_kegiatan ?? 0,
+        total_icp:        m.total_icp ?? 0,
+        aktif:            m.users ? m.users.status_akun === "aktif" : false,
+        has_akun:         !!m.id_user,
+      }));
+      setData(rows);
+      setTotal(result.total ?? rows.length);
+      setTotalPages(Math.ceil((result.total ?? rows.length) / PER_PAGE) || 1);
+    }
+    setLoading(false);
+  }, [search, filterProdi, currentPage]);
+
+  useEffect(() => { loadData(); }, [loadData]);
+
+  // Debounce search
+  useEffect(() => {
+    const t = setTimeout(() => { setCurrentPage(1); loadData(search, filterProdi, 1); }, 400);
+    return () => clearTimeout(t);
+  }, [search]);
+
+  // ── Download template ──────────────────────────────────────
   const downloadTemplate = () => {
-    const templateData = [
-      {
-        "Nama": "Contoh Mahasiswa",
-        "NIM": "202200001001",
-        "Program Studi": "Teknik Informatika",
-        "Angkatan": "2024",
-        "Email": "contoh@student.isb.ac.id",
-        "Status SKPI": "Belum",
-        "Jumlah Kegiatan": 0,
-        "Total ICP": 0,
-        "Status Akun": "Aktif",
-        "Password": "contoh123" // contoh password (opsional)
-      }
-    ];
-    const ws = XLSX.utils.json_to_sheet(templateData);
+    const ws = XLSX.utils.json_to_sheet([{
+      "Nama": "Contoh Mahasiswa", "NIM": "202200001001",
+      "Program Studi": "Teknik Informatika", "Angkatan": "2024",
+      "Email": "contoh@student.isb.ac.id", "Password": "contoh123",
+    }]);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Template Mahasiswa");
     XLSX.writeFile(wb, "template_mahasiswa.xlsx");
     toast("Template berhasil diunduh");
   };
 
-  // Pasang fungsi ke window agar bisa dipanggil dari modal import
-  if (typeof window !== "undefined") {
-    window.downloadTemplate = downloadTemplate;
-  }
-
-  const filtered = data.filter(row => {
-    const q = search.toLowerCase();
-    return (
-      (!search || row.nama.toLowerCase().includes(q) || row.nim.includes(q)) &&
-      (filterProdi    === "Semua" || row.id_prodi    === filterProdi) &&
-      (filterAngkatan === "Semua" || row.angkatan    === filterAngkatan) &&
-      (filterStatus   === "Semua" || row.status_skpi === filterStatus)
-    );
-  });
-
-  const totalPages = Math.ceil(filtered.length / PER_PAGE);
-  const safePage   = Math.min(currentPage, totalPages || 1);
-  const start      = (safePage - 1) * PER_PAGE;
-  const paged      = filtered.slice(start, start + PER_PAGE);
-
-  const totalM   = data.length;
-  const aktifC   = data.filter(r => r.aktif).length;
-  const selesaiC = data.filter(r => r.status_skpi === "Selesai").length;
-  const avgICP   = Math.round(data.reduce((s, r) => s + r.total_icp, 0) / totalM);
-
-  const handleAddSave = d => {
-    setData(prev => [{ ...d, id: Math.max(0,...prev.map(x=>x.id))+1, jumlah_kegiatan:0, total_icp:0 }, ...prev]);
-    setModalAdd(false);
-    toast("Mahasiswa berhasil ditambahkan");
+  // ── CRUD handlers ──────────────────────────────────────────
+  const handleAddSave = async (form) => {
+    const res = await createMahasiswa(form);
+    if (res.ok) {
+      toast("Mahasiswa berhasil ditambahkan");
+      setModalAdd(false);
+      setCurrentPage(1);
+      loadData(search, filterProdi, 1);
+    } else {
+      toast(res.data?.error || "Gagal menambah mahasiswa", "error");
+    }
   };
 
-  const handleEditSave = d => {
-    setData(prev => prev.map(r => r.id === d.id ? { ...r, ...d } : r));
-    setModalEdit(null);
-    toast("Data mahasiswa diperbarui");
+  const handleEditSave = async (form) => {
+    const res = await updateMahasiswa(modalEdit.id, form);
+    if (res.ok) {
+      toast("Data mahasiswa diperbarui");
+      setModalEdit(null);
+      loadData();
+    } else {
+      toast(res.data?.error || "Gagal update data", "error");
+    }
   };
 
-  const handleResetDone = () => {
+  const handleResetDone = async () => {
+    const res = await resetMahasiswaPassword(modalReset.id);
+    if (res.ok) {
+      toast(`Password ${modalReset.nama} berhasil direset ke NIM`);
+    } else {
+      toast(res.data?.error || "Gagal reset password", "error");
+    }
     setModalReset(null);
-    toast("Password direset, email telah dikirim");
   };
 
-  const handleToggle = row => {
-    setData(prev => prev.map(r => r.id === row.id ? { ...r, aktif: !r.aktif } : r));
-    toast(`Akun ${row.nama} ${row.aktif ? "dinonaktifkan" : "diaktifkan"}`);
+  const handleToggle = async (row) => {
+    const res = await toggleMahasiswaAkun(row.id);
+    if (res.ok) {
+      toast(`Akun ${row.nama} ${row.aktif ? "dinonaktifkan" : "diaktifkan"}`);
+      loadData();
+    } else {
+      toast(res.data?.error || "Gagal mengubah status akun", "error");
+    }
   };
 
-  const handleImportDone = (newMahasiswa) => {
-    setData(prev => [...newMahasiswa, ...prev]);
+  const handleImportDone = async (list) => {
+    const res = await importMahasiswaBulk(list);
     setModalImport(false);
-    toast(`Berhasil mengimport ${newMahasiswa.length} data mahasiswa`);
+    if (res.ok) {
+      toast(`Import selesai: ${res.data?.success ?? list.length} berhasil${res.data?.failed ? `, ${res.data.failed} gagal` : ""}`);
+      loadData(search, filterProdi, 1);
+    } else {
+      toast(res.data?.error || "Gagal import data", "error");
+    }
   };
 
   const resetFilter = () => {
@@ -582,10 +589,23 @@ export default function MahasiswaPage() {
   };
 
   const activeFilters =
-    (filterProdi !== "Semua" ? 1 : 0) +
+    (filterProdi    !== "Semua" ? 1 : 0) +
     (filterAngkatan !== "Semua" ? 1 : 0) +
-    (filterStatus !== "Semua" ? 1 : 0) +
+    (filterStatus   !== "Semua" ? 1 : 0) +
     (search ? 1 : 0);
+
+  // Filter angkatan & status di client (sudah difilter server untuk prodi & search)
+  const filtered = data.filter(row =>
+    (filterAngkatan === "Semua" || row.angkatan === filterAngkatan) &&
+    (filterStatus   === "Semua" || row.status_skpi === filterStatus)
+  );
+
+  const aktifC   = data.filter(r => r.aktif).length;
+  const selesaiC = data.filter(r => r.status_skpi === "Selesai").length;
+  const avgICP   = data.length ? Math.round(data.reduce((s, r) => s + (r.total_icp || 0), 0) / data.length) : 0;
+
+  const safePage = currentPage;
+  const start    = (safePage - 1) * PER_PAGE;
 
   return (
     <div className={styles.page}>
@@ -599,7 +619,7 @@ export default function MahasiswaPage() {
         </div>
         <div className={styles.headerActions}>
           <button className={styles.btnOutline} onClick={downloadTemplate}>
-            <Download size={15} /> Cetak
+            <Download size={15} /> Template
           </button>
           <button className={styles.btnOutline} onClick={() => setModalImport(true)}>
             <Upload size={15} /> Import Excel
@@ -610,51 +630,75 @@ export default function MahasiswaPage() {
         </div>
       </div>
 
-      {/* ── Stats ── */}
+      {/* ── Stat Cards ── */}
       <div className={styles.statsGrid}>
-        <StatCard icon={Users}         title="Total Mahasiswa"  value={totalM}   subtitle={`${aktifC} akun aktif`}       color="blue"   />
-        <StatCard icon={CheckCircle2}  title="SKPI Selesai"     value={selesaiC} subtitle={`${Math.round(selesaiC/totalM*100)}%`} color="green"  />
-        <StatCard icon={TrendingUp}    title="Rata-rata ICP"    value={avgICP}   subtitle="poin integritas"               color="purple" />
-        <StatCard icon={UserCheck}     title="Akun Aktif"       value={aktifC}   subtitle={`${totalM-aktifC} nonaktif`}   color="orange" />
+        <StatCard icon={Users}     title="Total Mahasiswa" value={total}    subtitle={`${aktifC} akun aktif`}     color="blue"   />
+        <StatCard icon={UserCheck} title="Akun Aktif"      value={aktifC}   subtitle="dapat login sistem"          color="green"  />
+        <StatCard icon={GraduationCap} title="SKPI Selesai" value={selesaiC} subtitle="SKPI sudah diterbitkan"    color="teal"   />
+        <StatCard icon={TrendingUp} title="Rata-rata ICP"  value={avgICP}   subtitle="poin kegiatan mahasiswa"     color="orange" />
       </div>
 
-      {/* ── Search & Filter ── */}
+      {/* ── Toolbar ── */}
       <div className={styles.toolbar}>
         <div className={styles.searchWrap}>
           <Search size={15} className={styles.searchIcon} />
-          <input className={styles.searchInput} placeholder="Cari nama atau NIM…"
-            value={search} onChange={e => { setSearch(e.target.value); setCurrentPage(1); }} />
+          <input
+            className={styles.searchInput}
+            placeholder="Cari nama atau NIM..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
           {search && <button className={styles.searchClear} onClick={() => setSearch("")}><X size={14} /></button>}
         </div>
         <div className={styles.toolbarRight}>
-          <button className={`${styles.btnFilter} ${filterOpen || activeFilters ? styles.btnFilterActive : ""}`}
-            onClick={() => setFilterOpen(o => !o)}>
+          <button
+            className={`${styles.btnFilter} ${filterOpen || activeFilters ? styles.btnFilterActive : ""}`}
+            onClick={() => setFilterOpen(o => !o)}
+          >
             <Filter size={14} /> Filter
             {activeFilters > 0 && <span className={styles.filterBadge}>{activeFilters}</span>}
             <ChevronDown size={13} className={filterOpen ? styles.chevUp : ""} />
           </button>
-          <span className={styles.resultCount}>{filtered.length} mahasiswa</span>
+          <span className={styles.resultCount}>{total} mahasiswa</span>
+          <button className={styles.btnOutline} onClick={() => loadData()} title="Refresh">
+            <RefreshCw size={14} />
+          </button>
         </div>
       </div>
 
       {/* ── Filter Panel ── */}
       {filterOpen && (
         <div className={styles.filterPanel}>
-          {[
-            { label: "Program Studi", list: PRODI_LIST, val: filterProdi, set: v => { setFilterProdi(v); setCurrentPage(1); } },
-            { label: "Angkatan",      list: ANGKATAN_LIST, val: filterAngkatan, set: v => { setFilterAngkatan(v); setCurrentPage(1); } },
-            { label: "Status SKPI",   list: STATUS_SKPI,   val: filterStatus,   set: v => { setFilterStatus(v);   setCurrentPage(1); } },
-          ].map(({ label, list, val, set: setVal }) => (
-            <div className={styles.filterGroup} key={label}>
-              <p className={styles.filterLabel}>{label}</p>
-              <div className={styles.chipRow}>
-                {list.map(item => (
-                  <button key={item} onClick={() => setVal(item)}
-                    className={`${styles.chip} ${val === item ? styles.chipActive : ""}`}>{item}</button>
-                ))}
-              </div>
+          <div className={styles.filterGroup}>
+            <p className={styles.filterLabel}>Program Studi</p>
+            <div className={styles.chipRow}>
+              {["Semua", ...prodiList.map(p => p.nama_prodi)].map(p => (
+                <button
+                  key={p}
+                  className={`${styles.chip} ${filterProdi === p ? styles.chipActive : ""}`}
+                  onClick={() => { setFilterProdi(p); setCurrentPage(1); loadData(search, p, 1); }}
+                >{p}</button>
+              ))}
             </div>
-          ))}
+          </div>
+          <div className={styles.filterGroup}>
+            <p className={styles.filterLabel}>Angkatan</p>
+            <div className={styles.chipRow}>
+              {ANGKATAN_LIST.map(a => (
+                <button key={a} className={`${styles.chip} ${filterAngkatan === a ? styles.chipActive : ""}`}
+                  onClick={() => { setFilterAngkatan(a); setCurrentPage(1); }}>{a}</button>
+              ))}
+            </div>
+          </div>
+          <div className={styles.filterGroup}>
+            <p className={styles.filterLabel}>Status SKPI</p>
+            <div className={styles.chipRow}>
+              {STATUS_SKPI.map(s => (
+                <button key={s} className={`${styles.chip} ${filterStatus === s ? styles.chipActive : ""}`}
+                  onClick={() => { setFilterStatus(s); setCurrentPage(1); }}>{s}</button>
+              ))}
+            </div>
+          </div>
           {activeFilters > 0 && (
             <button className={styles.btnResetFilter} onClick={resetFilter}>
               <RefreshCw size={13} /> Reset Filter
@@ -663,7 +707,7 @@ export default function MahasiswaPage() {
         </div>
       )}
 
-      {/* ── Table ── */}
+      {/* ── Tabel ── */}
       <div className={styles.tableCard}>
         <table className={styles.table}>
           <thead>
@@ -673,51 +717,59 @@ export default function MahasiswaPage() {
               <th>NIM</th>
               <th>Program Studi</th>
               <th className={styles.thCenter}>Angkatan</th>
-              <th>Email</th>
               <th className={styles.thCenter}>Status SKPI</th>
-              <th className={styles.thCenter}>Kegiatan</th>
-              <th className={styles.thCenter}>ICP</th>
               <th className={styles.thCenter}>Akun</th>
               <th className={styles.thCenter}>Aksi</th>
             </tr>
           </thead>
           <tbody>
-            {paged.length === 0 ? (
+            {loading ? (
               <tr>
-                <td colSpan={11} className={styles.emptyTd}>
+                <td colSpan={8} className={styles.emptyTd}>
                   <div className={styles.emptyState}>
-                    <GraduationCap size={44} />
-                    <p>Tidak ada data mahasiswa</p>
-                    <span>Coba ubah filter atau tambah data baru</span>
+                    <Loader2 size={32} className={styles.spin} />
+                    <p>Memuat data...</p>
                   </div>
                 </td>
               </tr>
-            ) : paged.map((row, idx) => (
+            ) : filtered.length === 0 ? (
+              <tr>
+                <td colSpan={8} className={styles.emptyTd}>
+                  <div className={styles.emptyState}>
+                    <Users size={44} />
+                    <p>Tidak ada data mahasiswa</p>
+                    <span>Coba ubah filter atau tambah mahasiswa baru</span>
+                  </div>
+                </td>
+              </tr>
+            ) : filtered.map((row, idx) => (
               <tr key={row.id} className={!row.aktif ? styles.rowInactive : ""}>
                 <td className={styles.tdNo}>{start + idx + 1}</td>
                 <td>
                   <div className={styles.nameCell}>
                     <div className={styles.avatar}>{row.nama.charAt(0)}</div>
-                    <span className={styles.nameText}>{row.nama}</span>
+                    <div>
+                      <span className={styles.nameText}>{row.nama}</span>
+                      <span className={styles.emailText}>{row.email}</span>
+                    </div>
                   </div>
                 </td>
                 <td><span className={styles.nimBadge}>{row.nim}</span></td>
-                <td><span className={styles.prodiBadge}>{row.id_prodi}</span></td>
+                <td>{row.nama_prodi}</td>
                 <td className={styles.tdCenter}>{row.angkatan}</td>
-                <td className={styles.emailCell}>{row.email}</td>
                 <td className={styles.tdCenter}><StatusBadge status={row.status_skpi} /></td>
-                <td className={styles.tdCenter}><span className={styles.numChip}>{row.jumlah_kegiatan}</span></td>
-                <td className={styles.tdCenter}><span className={`${styles.numChip} ${styles.icpChip}`}>{row.total_icp}</span></td>
                 <td className={styles.tdCenter}>
-                  <span className={`${styles.akunDot} ${row.aktif ? styles.dotOn : styles.dotOff}`}>
-                    {row.aktif ? "Aktif" : "Nonaktif"}
+                  <span className={`${styles.akunDot} ${row.aktif ? styles.dotOn : (row.has_akun ? styles.dotOff : styles.dotNone)}`}>
+                    {row.aktif ? "Aktif" : row.has_akun ? "Nonaktif" : "Belum ada"}
                   </span>
                 </td>
                 <td className={styles.tdCenter}>
-                  <RowActions row={row}
+                  <RowActions
+                    row={row}
                     onEdit={() => setModalEdit(row)}
                     onResetPw={() => setModalReset(row)}
-                    onToggleActive={() => handleToggle(row)} />
+                    onToggleActive={() => handleToggle(row)}
+                  />
                 </td>
               </tr>
             ))}
@@ -729,33 +781,49 @@ export default function MahasiswaPage() {
       {totalPages > 1 && (
         <div className={styles.pagination}>
           <span className={styles.paginInfo}>
-            {filtered.length === 0 ? 0 : start+1}–{Math.min(start+PER_PAGE, filtered.length)} dari {filtered.length}
+            {total === 0 ? 0 : start + 1}–{Math.min(start + PER_PAGE, total)} dari {total}
           </span>
           <div className={styles.paginBtns}>
-            <button className={styles.pBtn} onClick={() => setCurrentPage(1)} disabled={safePage===1}>«</button>
-            <button className={styles.pBtn} onClick={() => setCurrentPage(p=>Math.max(1,p-1))} disabled={safePage===1}>
+            <button className={styles.pBtn} onClick={() => setCurrentPage(1)} disabled={safePage === 1}>«</button>
+            <button className={styles.pBtn} onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={safePage === 1}>
               <ChevronLeft size={13} />
             </button>
-            {Array.from({length:totalPages},(_,i)=>i+1)
-              .filter(p=>p===1||p===totalPages||Math.abs(p-safePage)<=1)
-              .reduce((acc,p,i,arr)=>{ if(i>0&&arr[i-1]!==p-1) acc.push("…"); acc.push(p); return acc; },[])
-              .map((p,i) => p==="…"
+            {Array.from({ length: totalPages }, (_, i) => i + 1)
+              .filter(p => p === 1 || p === totalPages || Math.abs(p - safePage) <= 1)
+              .reduce((acc, p, i, arr) => {
+                if (i > 0 && arr[i - 1] !== p - 1) acc.push("…");
+                acc.push(p);
+                return acc;
+              }, [])
+              .map((p, i) => p === "…"
                 ? <span key={`d${i}`} className={styles.pDots}>…</span>
-                : <button key={p} className={`${styles.pBtn} ${safePage===p?styles.pBtnActive:""}`} onClick={()=>setCurrentPage(p)}>{p}</button>
+                : <button key={p} className={`${styles.pBtn} ${safePage === p ? styles.pBtnActive : ""}`}
+                    onClick={() => setCurrentPage(p)}>{p}</button>
               )}
-            <button className={styles.pBtn} onClick={() => setCurrentPage(p=>Math.min(totalPages,p+1))} disabled={safePage===totalPages}>
+            <button className={styles.pBtn} onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={safePage === totalPages}>
               <ChevronRight size={13} />
             </button>
-            <button className={styles.pBtn} onClick={() => setCurrentPage(totalPages)} disabled={safePage===totalPages}>»</button>
+            <button className={styles.pBtn} onClick={() => setCurrentPage(totalPages)} disabled={safePage === totalPages}>»</button>
           </div>
         </div>
       )}
 
       {/* ── Modals ── */}
-      {modalAdd    && <MahasiswaFormModal mode="add"  onClose={() => setModalAdd(false)}  onSave={handleAddSave} />}
-      {modalEdit   && <MahasiswaFormModal mode="edit" data={modalEdit} onClose={() => setModalEdit(null)}  onSave={handleEditSave} />}
-      {modalReset  && <ResetPasswordModal mahasiswa={modalReset} onClose={() => setModalReset(null)} onDone={handleResetDone} />}
-      {modalImport && <ImportExcelModal onClose={() => setModalImport(false)} onDone={handleImportDone} />}
+      {modalAdd && (
+        <MahasiswaFormModal mode="add" prodiList={prodiList}
+          onClose={() => setModalAdd(false)} onSave={handleAddSave} />
+      )}
+      {modalEdit && (
+        <MahasiswaFormModal mode="edit" data={modalEdit} prodiList={prodiList}
+          onClose={() => setModalEdit(null)} onSave={handleEditSave} />
+      )}
+      {modalReset && (
+        <ResetPasswordModal mahasiswa={modalReset}
+          onClose={() => setModalReset(null)} onDone={handleResetDone} />
+      )}
+      {modalImport && (
+        <ImportExcelModal onClose={() => setModalImport(false)} onDone={handleImportDone} />
+      )}
     </div>
   );
 }

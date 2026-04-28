@@ -762,3 +762,147 @@ export async function deleteAdminNotifikasi(id) {
     return deleteAdminNotifikasi(id);
   }
 }
+
+// =============================================================================
+// ADMIN — Manajemen Mahasiswa
+// Base endpoint: /api/mahasiswa
+// =============================================================================
+
+/**
+ * Ambil daftar mahasiswa dengan filter & pagination.
+ * Endpoint : GET /api/mahasiswa?q=&prodi=&page=
+ */
+export async function getMahasiswaList({ q = "", prodi = "Semua", page = 1 } = {}) {
+  if (_mockMode || !API_URL) return null;
+  try {
+    const params = new URLSearchParams({ q, prodi, page });
+    const res    = await apiFetch(`/api/mahasiswa?${params}`);
+    if (res.ok) return res.json();
+    return null;
+  } catch {
+    _mockMode = true;
+    return null;
+  }
+}
+
+/**
+ * Ambil daftar program studi.
+ * Endpoint : GET /api/master-data/prodi
+ */
+export async function getProdiList() {
+  if (_mockMode || !API_URL) return [];
+  try {
+    const res = await apiFetch("/api/master-data/prodi");
+    if (res.ok) return res.json();
+    return [];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Tambah mahasiswa baru beserta akun login.
+ * Endpoint : POST /api/mahasiswa
+ * Body     : { nim, nama, id_prodi, angkatan, email, password }
+ */
+export async function createMahasiswa(payload) {
+  if (_mockMode || !API_URL) {
+    return { ok: true, data: { success: true, message: "Mahasiswa ditambahkan (mode demo)" } };
+  }
+  try {
+    const res  = await apiFetch("/api/mahasiswa", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    return { ok: res.ok, data };
+  } catch {
+    _mockMode = true;
+    return { ok: true, data: { success: true, message: "Mahasiswa ditambahkan (mode demo)" } };
+  }
+}
+
+/**
+ * Update data mahasiswa.
+ * Endpoint : PATCH /api/mahasiswa/:id
+ */
+export async function updateMahasiswa(id, payload) {
+  if (_mockMode || !API_URL) {
+    return { ok: true, data: { success: true, message: "Data diperbarui (mode demo)" } };
+  }
+  try {
+    const res  = await apiFetch(`/api/mahasiswa/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    return { ok: res.ok, data };
+  } catch {
+    _mockMode = true;
+    return { ok: true, data: { success: true, message: "Data diperbarui (mode demo)" } };
+  }
+}
+
+/**
+ * Reset password mahasiswa ke NIM.
+ * Endpoint : PATCH /api/admin/mahasiswa/:id/akun  { action: "reset_password" }
+ */
+export async function resetMahasiswaPassword(id) {
+  if (_mockMode || !API_URL) {
+    return { ok: true, data: { success: true, message: "Password direset (mode demo)" } };
+  }
+  try {
+    const res  = await apiFetch(`/api/admin/mahasiswa/${id}/akun`, {
+      method: "PATCH",
+      body: JSON.stringify({ action: "reset_password" }),
+    });
+    const data = await res.json();
+    return { ok: res.ok, data };
+  } catch {
+    _mockMode = true;
+    return { ok: true, data: { success: true, message: "Password direset (mode demo)" } };
+  }
+}
+
+/**
+ * Toggle status akun mahasiswa (aktif ↔ nonaktif).
+ * Endpoint : PATCH /api/admin/mahasiswa/:id/akun  { action: "toggle_status" }
+ */
+export async function toggleMahasiswaAkun(id) {
+  if (_mockMode || !API_URL) {
+    return { ok: true, data: { success: true, message: "Status diubah (mode demo)" } };
+  }
+  try {
+    const res  = await apiFetch(`/api/admin/mahasiswa/${id}/akun`, {
+      method: "PATCH",
+      body: JSON.stringify({ action: "toggle_status" }),
+    });
+    const data = await res.json();
+    return { ok: res.ok, data };
+  } catch {
+    _mockMode = true;
+    return { ok: true, data: { success: true, message: "Status diubah (mode demo)" } };
+  }
+}
+
+/**
+ * Import mahasiswa secara bulk dari Excel.
+ * Endpoint : POST /api/mahasiswa/bulk
+ * Body     : { list: [...] }
+ */
+export async function importMahasiswaBulk(list) {
+  if (_mockMode || !API_URL) {
+    return { ok: true, data: { success: list.length, failed: 0 } };
+  }
+  try {
+    const res  = await apiFetch("/api/mahasiswa/bulk", {
+      method: "POST",
+      body: JSON.stringify({ list }),
+    });
+    const data = await res.json();
+    return { ok: res.ok, data };
+  } catch {
+    _mockMode = true;
+    return { ok: true, data: { success: list.length, failed: 0 } };
+  }
+}
