@@ -193,7 +193,7 @@ export default function ProfilePage() {
         setProfileData(data);
         setEmail(data.email ?? "");
         setUsername(data.username ?? "");
-        if (data.avatar) setAvatarSrc(getAvatarUrl(data.avatar));
+        setAvatarSrc(data.avatar ? getAvatarUrl(data.avatar) : "/img/avatar.jpg");
       } catch {
         router.replace("/");
       } finally {
@@ -348,7 +348,7 @@ export default function ProfilePage() {
 
       {showViewer && (
         <AvatarViewModal
-          src={avatarSrc} name={displayName}
+          src={avatarSrc} name={displayName} onError={e => { e.currentTarget.onerror = null; e.currentTarget.src = "/img/avatar.jpg"; }}
           onClose={() => setShowViewer(false)}
           onEdit={() => { setShowViewer(false); setShowUploader(true); }}
         />

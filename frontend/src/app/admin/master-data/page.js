@@ -1,433 +1,465 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
-  Plus, Edit2, Trash2, Search, Filter, ChevronLeft, ChevronRight,
-  AlertCircle, CheckCircle2, X, TrendingUp
+  Plus, Edit2, Trash2, Search, X, Check,
+  ChevronLeft, ChevronRight, Loader2, AlertCircle,
 } from "lucide-react";
 import styles from "./page.module.css";
+import { apiFetch } from "@/lib/api";
 
-// ========== MASTER DATA TYPES ==========
+// ── Konfigurasi setiap tipe master data ─────────────────────
 const MASTER_TYPES = [
-  { value: "jenis_aktivitas", label: "Jenis Aktivitas", icon: "📋" },
-  { value: "kategori_aktivitas", label: "Kategori Aktivitas", icon: "🏷️" },
-  { value: "kelompok_aktivitas", label: "Kelompok Aktivitas", icon: "📁" },
-  { value: "level_kegiatan", label: "Level Kegiatan", icon: "⭐" },
-  { value: "tingkat_prestasi", label: "Tingkat Prestasi", icon: "🏆" },
+  {
+    key:      "jenis-aktivitas",
+    label:    "Jenis Aktivitas",
+    idField:  "id_jenis",
+    hasEng:   true,
+    desc:     "Jenis kegiatan mahasiswa sesuai standar SKPI",
+  },
+  {
+    key:      "kategori-aktivitas",
+    label:    "Kategori Aktivitas",
+    idField:  "id_kategori",
+    hasEng:   true,
+    desc:     "Pengelompokan kategori kegiatan aktivitas",
+  },
+  {
+    key:      "kelompok-aktivitas",
+    label:    "Kelompok Aktivitas",
+    idField:  "id_kelompok",
+    hasEng:   true,
+    desc:     "Kelompok besar aktivitas akademik dan non-akademik",
+  },
+  {
+    key:      "level-kegiatan",
+    label:    "Level Kegiatan",
+    idField:  "id_level",
+    nameField:"nama_level",
+    hasEng:   false,
+    desc:     "Tingkat penyelenggaraan kegiatan",
+  },
+  {
+    key:      "posisi-kegiatan",
+    label:    "Posisi Kegiatan",
+    idField:  "id_posisi",
+    nameField:"nama_posisi",
+    hasEng:   false,
+    desc:     "Posisi atau peran mahasiswa dalam kegiatan",
+  },
 ];
 
-// ========== DEFAULT DATA (Sesuai SKPI) ==========
-const DEFAULT_DATA = {
-  // Jenis Aktivitas berdasarkan SKPI (9 jenis)
-  jenis_aktivitas: [
-    "Prestasi dan Kegiatan",
-    "Peningkatan Keterampilan Profesional",
-    "Pengalaman Berorganisasi dan Kepemimpinan",
-    "Pengembangan Intelektual",
-    "Praktik Kerja",
-    "Pembinaan Spiritual",
-    "Pembangunan Karakter dan Kepribadian",
-    "Kursus - kursus",
-    "Skripsi"
-  ],
-  
-  // Kategori Aktivitas (12 kategori)
-  kategori_aktivitas: [
-    "Lomba/Kompetisi",
-    "Seminar",
-    "Workshop",
-    "Pelatihan",
-    "Organisasi",
-    "Kepanitian",
-    "Magang",
-    "Penelitian",
-    "Pengabdian Masyarakat",
-    "Publikasi Ilmiah",
-    "Kegiatan Kampus",
-    "Sertifikasi Profesional"
-  ],
-  
-  // Kelompok Aktivitas (6 kelompok)
-  kelompok_aktivitas: [
-    "Akademik",
-    "Non-Akademik",
-    "Organisasi",
-    "Kepemimpinan",
-    "Penelitian",
-    "Profesional"
-  ],
-  
-  // Level Kegiatan (3 level)
-  level_kegiatan: [
-    "Internal",
-    "Nasional",
-    "Internasional"
-  ],
-  
-  // Tingkat Prestasi (7 tingkat)
-  tingkat_prestasi: [
-    "Peserta",
-    "Juara 1",
-    "Juara 2",
-    "Juara 3",
-    "Harapan",
-    "Finalis",
-    "Partisipasi"
-  ],
-};
+// ── Toast ────────────────────────────────────────────────────
+function useToast() {
+  const [toast, setToast] = useState(null);
+  const show = useCallback((msg, type = "success") => {
+    setToast({ msg, type });
+    setTimeout(() => setToast(null), 3000);
+  }, []);
+  return { toast, show, clear: () => setToast(null) };
+}
 
-// ========== TOAST COMPONENT ==========
 function Toast({ toast, onClose }) {
   if (!toast) return null;
-  const isOk = toast.type === "success";
   return (
-    <div className={`${styles.toast} ${isOk ? styles.toastSuccess : styles.toastError}`}>
-      {isOk ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
+    <div className={`${styles.toast} ${styles[`toast_${toast.type}`]}`}>
+      {toast.type === "success" ? <Check size={14} /> : <AlertCircle size={14} />}
       <span>{toast.msg}</span>
-      <button onClick={onClose} className={styles.toastClose}><X size={14} /></button>
+      <button onClick={onClose}><X size={12} /></button>
     </div>
   );
 }
 
-// ========== MODAL ADD / EDIT ==========
-function ModalAddEdit({ type, data, isOpen, onClose, onSave }) {
-  const [value, setValue] = useState(data || "");
-  const [saving, setSaving] = useState(false);
+// ── Modal Tambah / Edit ──────────────────────────────────────
+function ItemModal({ type, item, onClose, onSaved }) {
+  const [namaIndo, setNamaIndo] = useState(item?.nama_indo ?? item?.nama_level ?? item?.nama_posisi ?? "");
+  const [namaEng,  setNamaEng]  = useState(item?.nama_eng ?? "");
+  const [status,   setStatus]   = useState(item ? (item.status ?? true) : true);
+  const [saving,   setSaving]   = useState(false);
+  const [error,    setError]    = useState("");
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!value.trim()) {
-      alert("Nilai tidak boleh kosong!");
-      return;
-    }
+  const nameField = type.nameField ?? "nama_indo";
+  const isEdit    = !!item;
+
+  async function handleSave() {
+    const label = namaIndo.trim();
+    if (!label) { setError("Nama wajib diisi"); return; }
+    if (type.hasEng && !namaEng.trim()) { setError("Nama Inggris wajib diisi"); return; }
+
     setSaving(true);
-    await new Promise(r => setTimeout(r, 500));
-    onSave(value.trim());
-    setSaving(false);
-  };
+    setError("");
+    try {
+      const body = type.hasEng
+        ? { nama_indo: label, nama_eng: namaEng.trim(), status }
+        : { [nameField]: label };
 
-  if (!isOpen) return null;
+      const url    = isEdit ? `/api/master-data/${type.key}/${item[type.idField]}` : `/api/master-data/${type.key}`;
+      const method = isEdit ? "PATCH" : "POST";
+      const res    = await apiFetch(url, { method, body: JSON.stringify(body) });
+      const data   = await res.json();
 
-  const typeLabel = MASTER_TYPES.find(t => t.value === type)?.label || type;
+      if (!res.ok) throw new Error(data.error || "Gagal menyimpan");
+      onSaved();
+      onClose();
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  useEffect(() => {
+    const fn = e => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", fn);
+    return () => window.removeEventListener("keydown", fn);
+  }, [onClose]);
 
   return (
-    <div className={styles.modalOverlay} onClick={onClose}>
-      <div className={styles.modalContainer} onClick={e => e.stopPropagation()}>
+    <div className={styles.overlay} onClick={onClose}>
+      <div className={styles.modal} onClick={e => e.stopPropagation()}>
         <div className={styles.modalHeader}>
-          <div className={styles.modalTitle}>
-            {data ? <Edit2 size={16} /> : <Plus size={16} />}
-            <span>{data ? `Edit ${typeLabel}` : `Tambah ${typeLabel}`}</span>
-          </div>
-          <button onClick={onClose} className={styles.modalClose}><X size={18} /></button>
+          <h3>{isEdit ? "Edit" : "Tambah"} {type.label}</h3>
+          <button className={styles.modalClose} onClick={onClose}><X size={16} /></button>
         </div>
-        <form onSubmit={handleSubmit}>
-          <div className={styles.modalBody}>
-            <div className={styles.formGroup}>
-              <label>Nilai <span className={styles.required}>*</span></label>
+
+        <div className={styles.modalBody}>
+          <div className={styles.field}>
+            <label>{type.hasEng ? "Nama (Indonesia)" : "Nama"} <span className={styles.req}>*</span></label>
+            <input
+              className={styles.input}
+              value={namaIndo}
+              onChange={e => { setNamaIndo(e.target.value); setError(""); }}
+              placeholder={`Masukkan nama ${type.label.toLowerCase()}`}
+              autoFocus
+            />
+          </div>
+
+          {type.hasEng && (
+            <div className={styles.field}>
+              <label>Nama (English) <span className={styles.req}>*</span></label>
               <input
-                type="text"
                 className={styles.input}
-                value={value}
-                onChange={e => setValue(e.target.value)}
-                placeholder={`Masukkan ${typeLabel.toLowerCase()} baru`}
-                autoFocus
+                value={namaEng}
+                onChange={e => { setNamaEng(e.target.value); setError(""); }}
+                placeholder="Enter name in English"
               />
             </div>
-            {type === "jenis_aktivitas" && (
-              <div className={styles.formHint}>
-                <small>Contoh: Prestasi dan Kegiatan, Praktik Kerja, Skripsi, dll.</small>
-              </div>
-            )}
-            {type === "kategori_aktivitas" && (
-              <div className={styles.formHint}>
-                <small>Contoh: Lomba/Kompetisi, Seminar, Workshop, Magang, dll.</small>
-              </div>
-            )}
-            {type === "kelompok_aktivitas" && (
-              <div className={styles.formHint}>
-                <small>Contoh: Akademik, Non-Akademik, Organisasi, Kepemimpinan, dll.</small>
-              </div>
-            )}
-          </div>
-          <div className={styles.modalFooter}>
-            <button type="button" className={styles.btnOutline} onClick={onClose}>Batal</button>
-            <button type="submit" className={styles.btnPrimary} disabled={saving}>
-              {saving ? "Menyimpan..." : (data ? "Update" : "Simpan")}
-            </button>
-          </div>
-        </form>
+          )}
+
+          {type.hasEng && isEdit && (
+            <div className={styles.field}>
+              <label>Status</label>
+              <button
+                type="button"
+                className={`${styles.toggleBtn} ${status ? styles.toggleOn : styles.toggleOff}`}
+                onClick={() => setStatus(v => !v)}
+              >
+                <span className={styles.toggleThumb} />
+                <span>{status ? "Aktif" : "Nonaktif"}</span>
+              </button>
+            </div>
+          )}
+
+          {error && <p className={styles.fieldError}><AlertCircle size={13} />{error}</p>}
+        </div>
+
+        <div className={styles.modalFooter}>
+          <button className={styles.btnGhost} onClick={onClose}>Batal</button>
+          <button className={styles.btnSave} onClick={handleSave} disabled={saving}>
+            {saving ? <Loader2 size={14} className={styles.spin} /> : <Check size={14} />}
+            {saving ? "Menyimpan..." : isEdit ? "Simpan Perubahan" : "Tambah Data"}
+          </button>
+        </div>
       </div>
     </div>
   );
 }
 
-// ========== DELETE MODAL ==========
-function DeleteModal({ isOpen, onClose, onConfirm, itemName }) {
-  if (!isOpen) return null;
+// ── Modal Hapus ──────────────────────────────────────────────
+function DeleteModal({ type, item, onClose, onDeleted }) {
+  const [loading, setLoading] = useState(false);
+  const [error,   setError]   = useState("");
+
+  const name = item?.nama_indo ?? item?.nama_level ?? item?.nama_posisi ?? "";
+
+  async function handleDelete() {
+    setLoading(true);
+    setError("");
+    try {
+      const res  = await apiFetch(`/api/master-data/${type.key}/${item[type.idField]}`, { method: "DELETE" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Gagal menghapus");
+      onDeleted();
+      onClose();
+    } catch (e) {
+      setError(e.message);
+      setLoading(false);
+    }
+  }
+
   return (
-    <div className={styles.modalOverlay} onClick={onClose}>
-      <div className={`${styles.modalContainer} ${styles.modalSm}`} onClick={e => e.stopPropagation()}>
+    <div className={styles.overlay} onClick={onClose}>
+      <div className={`${styles.modal} ${styles.modalSm}`} onClick={e => e.stopPropagation()}>
         <div className={styles.modalHeader}>
-          <div className={styles.modalTitle}>
-            <AlertCircle size={16} />
-            <span>Hapus Data</span>
-          </div>
-          <button onClick={onClose} className={styles.modalClose}><X size={18} /></button>
+          <h3>Hapus Data</h3>
+          <button className={styles.modalClose} onClick={onClose}><X size={16} /></button>
         </div>
         <div className={styles.modalBody}>
-          <p>Yakin ingin menghapus <strong>"{itemName}"</strong>?</p>
-          <p className={styles.warningText}>Data yang dihapus tidak dapat dikembalikan.</p>
-          {itemName === "Prestasi dan Kegiatan" && (
-            <p className={styles.warningText}>⚠️ Data ini adalah data default SKPI.</p>
-          )}
+          <p className={styles.deleteText}>
+            Hapus <strong>{name}</strong> dari {type.label}?
+          </p>
+          <p className={styles.deleteNote}>Data yang sedang dipakai tidak dapat dihapus.</p>
+          {error && <p className={styles.fieldError}><AlertCircle size={13} />{error}</p>}
         </div>
         <div className={styles.modalFooter}>
-          <button className={styles.btnOutline} onClick={onClose}>Batal</button>
-          <button className={`${styles.btnPrimary} ${styles.btnDanger}`} onClick={onConfirm}>Hapus</button>
+          <button className={styles.btnGhost} onClick={onClose}>Batal</button>
+          <button className={styles.btnDanger} onClick={handleDelete} disabled={loading}>
+            {loading ? <Loader2 size={14} className={styles.spin} /> : <Trash2 size={14} />}
+            {loading ? "Menghapus..." : "Hapus"}
+          </button>
         </div>
       </div>
     </div>
   );
 }
 
-// ========== MAIN PAGE ==========
+// ── Halaman Utama ────────────────────────────────────────────
 export default function MasterDataPage() {
-  const [activeType, setActiveType] = useState("jenis_aktivitas");
-  const [data, setData] = useState(DEFAULT_DATA);
-  const [search, setSearch] = useState("");
-  const [toast, setToast] = useState(null);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [modalDelete, setModalDelete] = useState(null);
-  const [editingItem, setEditingItem] = useState(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const [activeIdx, setActiveIdx]   = useState(0);
+  const [rows,      setRows]        = useState([]);
+  const [loading,   setLoading]     = useState(true);
+  const [search,    setSearch]      = useState("");
+  const [page,      setPage]        = useState(1);
+  const [modalAdd,  setModalAdd]    = useState(false);
+  const [modalEdit, setModalEdit]   = useState(null);
+  const [modalDel,  setModalDel]    = useState(null);
+  const { toast, show, clear }      = useToast();
+
+  const PER_PAGE   = 10;
+  const activeType = MASTER_TYPES[activeIdx];
+
+  // ── Load data dari API ─────────────────────────────────────
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    setRows([]);
+    try {
+      const res  = await apiFetch(`/api/master-data/${activeType.key}`);
+      if (res.ok) {
+        const data = await res.json();
+        setRows(Array.isArray(data) ? data : []);
+      }
+    } catch {
+      setRows([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [activeType.key]);
 
   useEffect(() => {
     document.title = "Master Data | Admin SKPI";
-  }, []);
+    loadData();
+    setSearch("");
+    setPage(1);
+  }, [loadData]);
 
-  const currentData = data[activeType] || [];
-  const typeLabel = MASTER_TYPES.find(t => t.value === activeType)?.label || activeType;
+  // ── Filter & paginate ──────────────────────────────────────
+  const nameField = activeType.nameField ?? "nama_indo";
 
-  // Filter data
-  const filtered = currentData.filter(item =>
-    item.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = rows.filter(r => {
+    const q = search.toLowerCase();
+    const n = (r[nameField] ?? r.nama_indo ?? "").toLowerCase();
+    const e = (r.nama_eng ?? "").toLowerCase();
+    return n.includes(q) || e.includes(q);
+  });
 
-  const totalPages = Math.ceil(filtered.length / itemsPerPage);
-  const startIdx = (currentPage - 1) * itemsPerPage;
-  const paginatedData = filtered.slice(startIdx, startIdx + itemsPerPage);
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
+  const safePage   = Math.min(page, totalPages);
+  const paged      = filtered.slice((safePage - 1) * PER_PAGE, safePage * PER_PAGE);
 
-  const showToast = (msg, type = "success") => {
-    setToast({ msg, type });
-    setTimeout(() => setToast(null), 3500);
-  };
-
-  const handleAdd = () => {
-    setEditingItem(null);
-    setModalOpen(true);
-  };
-
-  const handleEdit = (item) => {
-    setEditingItem(item);
-    setModalOpen(true);
-  };
-
-  const handleSave = (value) => {
-    if (editingItem) {
-      // Update existing item
-      const index = currentData.indexOf(editingItem);
-      if (index !== -1) {
-        const newData = [...currentData];
-        newData[index] = value;
-        setData(prev => ({ ...prev, [activeType]: newData }));
-        showToast(`${typeLabel} berhasil diupdate!`);
-      }
-    } else {
-      // Add new item
-      setData(prev => ({ ...prev, [activeType]: [...currentData, value] }));
-      showToast(`${typeLabel} berhasil ditambahkan!`);
-    }
-    setModalOpen(false);
-    setEditingItem(null);
-    setCurrentPage(1);
-  };
-
-  const handleDelete = (item) => {
-    const newData = currentData.filter(i => i !== item);
-    setData(prev => ({ ...prev, [activeType]: newData }));
-    setModalDelete(null);
-    showToast(`${typeLabel} berhasil dihapus!`, "error");
-  };
-
-  const getStats = () => {
-    return {
-      total: currentData.length,
-    };
-  };
-
-  const stats = getStats();
-
-  // Informasi untuk setiap tipe
-  const typeInfo = {
-    jenis_aktivitas: "Jenis kegiatan yang dilakukan mahasiswa sesuai dengan SKPI",
-    kategori_aktivitas: "Kategori kegiatan untuk mengelompokkan aktivitas mahasiswa",
-    kelompok_aktivitas: "Kelompok besar aktivitas (Akademik, Non-Akademik, dll)",
-    level_kegiatan: "Tingkat penyelenggaraan kegiatan",
-    tingkat_prestasi: "Tingkat pencapaian dalam kompetisi/lomba"
-  };
+  const getName = r => r[nameField] ?? r.nama_indo ?? "";
 
   return (
-    <div className={styles.container}>
-      <Toast toast={toast} onClose={() => setToast(null)} />
+    <div className={styles.page}>
+      <Toast toast={toast} onClose={clear} />
 
-      {/* Header */}
-      <div className={styles.header}>
+      {/* ── Header ── */}
+      <div className={styles.pageHeader}>
         <div>
-          <h1 className={styles.title}>Master Data</h1>
-          <p className={styles.subtitle}>Kelola data referensi untuk aktivitas mahasiswa sesuai SKPI</p>
+          <h1 className={styles.pageTitle}>Master Data</h1>
+          <p className={styles.pageSub}>Kelola data referensi untuk aktivitas mahasiswa</p>
         </div>
       </div>
 
-      {/* Type Tabs */}
+      {/* ── Tab navigasi ── */}
       <div className={styles.tabs}>
-        {MASTER_TYPES.map(type => (
+        {MASTER_TYPES.map((t, i) => (
           <button
-            key={type.value}
-            className={`${styles.tab} ${activeType === type.value ? styles.tabActive : ""}`}
-            onClick={() => { setActiveType(type.value); setSearch(""); setCurrentPage(1); }}
+            key={t.key}
+            className={`${styles.tab} ${activeIdx === i ? styles.tabActive : ""}`}
+            onClick={() => { setActiveIdx(i); setSearch(""); setPage(1); }}
           >
-            <span className={styles.tabIcon}>{type.icon}</span>
-            <span>{type.label}</span>
+            {t.label}
+            {activeIdx === i && (
+              <span className={styles.tabCount}>{rows.length}</span>
+            )}
           </button>
         ))}
       </div>
 
-      {/* Info Panel */}
-      <div className={styles.infoPanel}>
-        <AlertCircle size={14} />
-        <span>{typeInfo[activeType]}</span>
-      </div>
+      {/* ── Panel konten ── */}
+      <div className={styles.panel}>
 
-      {/* Stats */}
-      <div className={styles.statsGrid}>
-        <div className={styles.statCard}>
-          <div className={styles.statIcon}><AlertCircle size={20} /></div>
-          <div className={styles.statContent}>
-            <div className={styles.statValue}>{stats.total}</div>
-            <div className={styles.statTitle}>Total Data</div>
+        {/* Toolbar */}
+        <div className={styles.toolbar}>
+          <div className={styles.searchWrap}>
+            <Search size={14} className={styles.searchIcon} />
+            <input
+              className={styles.searchInput}
+              placeholder={`Cari ${activeType.label.toLowerCase()}...`}
+              value={search}
+              onChange={e => { setSearch(e.target.value); setPage(1); }}
+            />
+            {search && (
+              <button className={styles.searchClear} onClick={() => setSearch("")}>
+                <X size={13} />
+              </button>
+            )}
+          </div>
+          <div className={styles.toolbarRight}>
+            <span className={styles.countLabel}>{filtered.length} data</span>
+            <button className={styles.btnPrimary} onClick={() => setModalAdd(true)}>
+              <Plus size={14} /> Tambah
+            </button>
           </div>
         </div>
-        <div className={styles.statCard}>
-          <div className={styles.statIcon}><CheckCircle2 size={20} /></div>
-          <div className={styles.statContent}>
-            <div className={styles.statValue}>{typeLabel}</div>
-            <div className={styles.statTitle}>Aktif</div>
-          </div>
-        </div>
-      </div>
 
-      {/* Search & Add Button */}
-      <div className={styles.searchBar}>
-        <div className={styles.searchInput}>
-          <Search size={16} />
-          <input
-            type="text"
-            placeholder={`Cari ${typeLabel.toLowerCase()}...`}
-            value={search}
-            onChange={e => { setSearch(e.target.value); setCurrentPage(1); }}
-          />
-          {search && <button className={styles.clearSearch} onClick={() => setSearch("")}><X size={14} /></button>}
-        </div>
-        <button className={styles.btnPrimary} onClick={handleAdd}>
-          <Plus size={16} /> Tambah {typeLabel}
-        </button>
-      </div>
+        {/* Deskripsi tipe */}
+        <p className={styles.typeDesc}>{activeType.desc}</p>
 
-      {/* Table */}
-      <div className={styles.tableWrapper}>
-        {paginatedData.length > 0 ? (
+        {/* Tabel */}
+        <div className={styles.tableWrap}>
           <table className={styles.table}>
             <thead>
               <tr>
                 <th className={styles.thNo}>#</th>
-                <th>Nilai</th>
-                <th className={styles.thActions}>Aksi</th>
+                <th>Nama (Indonesia)</th>
+                {activeType.hasEng && <th>Nama (English)</th>}
+                {activeType.hasEng && <th className={styles.thCenter}>Status</th>}
+                <th className={styles.thRight}>Aksi</th>
               </tr>
             </thead>
             <tbody>
-              {paginatedData.map((item, idx) => (
-                <tr key={idx}>
-                  <td className={styles.tdNo}>{startIdx + idx + 1}</td>
-                  <td className={styles.valueCell}>
-                    {item}
+              {loading ? (
+                <tr>
+                  <td colSpan={activeType.hasEng ? 5 : 3} className={styles.loadingTd}>
+                    <Loader2 size={22} className={styles.spin} />
+                    <span>Memuat data...</span>
                   </td>
-                  <td className={styles.actionsCell}>
-                    <div className={styles.actionGroup}>
-                      <button onClick={() => handleEdit(item)} className={styles.actionBtn} title="Edit">
-                        <Edit2 size={14} />
+                </tr>
+              ) : paged.length === 0 ? (
+                <tr>
+                  <td colSpan={activeType.hasEng ? 5 : 3} className={styles.emptyTd}>
+                    {search ? `Tidak ada hasil untuk "${search}"` : `Belum ada data ${activeType.label}`}
+                  </td>
+                </tr>
+              ) : paged.map((row, idx) => (
+                <tr key={row[activeType.idField]} className={row.status === false ? styles.rowInactive : ""}>
+                  <td className={styles.tdNo}>{(safePage - 1) * PER_PAGE + idx + 1}</td>
+                  <td className={styles.tdName}>{getName(row)}</td>
+                  {activeType.hasEng && (
+                    <td className={styles.tdEng}>{row.nama_eng ?? "-"}</td>
+                  )}
+                  {activeType.hasEng && (
+                    <td className={styles.thCenter}>
+                      <span className={`${styles.statusDot} ${row.status ? styles.dotOn : styles.dotOff}`}>
+                        {row.status ? "Aktif" : "Nonaktif"}
+                      </span>
+                    </td>
+                  )}
+                  <td className={styles.thRight}>
+                    <div className={styles.actions}>
+                      <button
+                        className={styles.actEdit}
+                        onClick={() => setModalEdit(row)}
+                        title="Edit"
+                      >
+                        <Edit2 size={13} /> Edit
                       </button>
-                      <button onClick={() => setModalDelete(item)} className={`${styles.actionBtn} ${styles.actionDanger}`} title="Hapus">
-                        <Trash2 size={14} />
+                      <button
+                        className={styles.actDel}
+                        onClick={() => setModalDel(row)}
+                        title="Hapus"
+                      >
+                        <Trash2 size={13} />
                       </button>
                     </div>
-                   </td>
-                 </tr>
+                  </td>
+                </tr>
               ))}
             </tbody>
-           </table>
-        ) : (
-          <div className={styles.emptyState}>
-            <AlertCircle size={40} />
-            <p>Tidak ada data {typeLabel.toLowerCase()}</p>
-            <button className={styles.btnOutline} onClick={handleAdd}>Tambah Data</button>
+          </table>
+        </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className={styles.pagination}>
+            <span className={styles.paginInfo}>
+              {(safePage - 1) * PER_PAGE + 1}–{Math.min(safePage * PER_PAGE, filtered.length)} dari {filtered.length}
+            </span>
+            <div className={styles.paginBtns}>
+              <button className={styles.pBtn} onClick={() => setPage(1)} disabled={safePage === 1}>«</button>
+              <button className={styles.pBtn} onClick={() => setPage(p => Math.max(1, p - 1))} disabled={safePage === 1}>
+                <ChevronLeft size={13} />
+              </button>
+              {Array.from({ length: totalPages }, (_, i) => i + 1)
+                .filter(p => p === 1 || p === totalPages || Math.abs(p - safePage) <= 1)
+                .reduce((acc, p, i, arr) => {
+                  if (i > 0 && arr[i - 1] !== p - 1) acc.push("…");
+                  acc.push(p);
+                  return acc;
+                }, [])
+                .map((p, i) => p === "…"
+                  ? <span key={`d${i}`} className={styles.pDots}>…</span>
+                  : <button
+                      key={p}
+                      className={`${styles.pBtn} ${safePage === p ? styles.pBtnActive : ""}`}
+                      onClick={() => setPage(p)}
+                    >{p}</button>
+                )}
+              <button className={styles.pBtn} onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={safePage === totalPages}>
+                <ChevronRight size={13} />
+              </button>
+              <button className={styles.pBtn} onClick={() => setPage(totalPages)} disabled={safePage === totalPages}>»</button>
+            </div>
           </div>
         )}
       </div>
 
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className={styles.pagination}>
-          <div className={styles.paginationInfo}>Halaman {currentPage} dari {totalPages}</div>
-          <div className={styles.paginationControls}>
-            <button className={styles.pageBtn} onClick={() => setCurrentPage(1)} disabled={currentPage === 1}>«</button>
-            <button className={styles.pageBtn} onClick={() => setCurrentPage(p => Math.max(1, p-1))} disabled={currentPage === 1}><ChevronLeft size={14} /></button>
-            {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-              let pageNum;
-              if (totalPages <= 5) pageNum = i + 1;
-              else if (currentPage <= 3) pageNum = i + 1;
-              else if (currentPage >= totalPages - 2) pageNum = totalPages - 4 + i;
-              else pageNum = currentPage - 2 + i;
-              return (
-                <button
-                  key={pageNum}
-                  className={`${styles.pageBtn} ${currentPage === pageNum ? styles.pageBtnActive : ""}`}
-                  onClick={() => setCurrentPage(pageNum)}
-                >
-                  {pageNum}
-                </button>
-              );
-            })}
-            <button className={styles.pageBtn} onClick={() => setCurrentPage(p => Math.min(totalPages, p+1))} disabled={currentPage === totalPages}><ChevronRight size={14} /></button>
-            <button className={styles.pageBtn} onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages}>»</button>
-          </div>
-        </div>
+      {/* ── Modals ── */}
+      {modalAdd && (
+        <ItemModal
+          type={activeType}
+          item={null}
+          onClose={() => setModalAdd(false)}
+          onSaved={() => { loadData(); show(`${activeType.label} berhasil ditambahkan`); }}
+        />
       )}
-
-      {/* Modals */}
-      <ModalAddEdit
-        type={activeType}
-        data={editingItem}
-        isOpen={modalOpen}
-        onClose={() => { setModalOpen(false); setEditingItem(null); }}
-        onSave={handleSave}
-      />
-      <DeleteModal
-        isOpen={!!modalDelete}
-        onClose={() => setModalDelete(null)}
-        onConfirm={() => handleDelete(modalDelete)}
-        itemName={modalDelete}
-      />
+      {modalEdit && (
+        <ItemModal
+          type={activeType}
+          item={modalEdit}
+          onClose={() => setModalEdit(null)}
+          onSaved={() => { loadData(); show(`${activeType.label} berhasil diperbarui`); setModalEdit(null); }}
+        />
+      )}
+      {modalDel && (
+        <DeleteModal
+          type={activeType}
+          item={modalDel}
+          onClose={() => setModalDel(null)}
+          onDeleted={() => { loadData(); show(`Data berhasil dihapus`, "error"); setModalDel(null); }}
+        />
+      )}
     </div>
   );
 }

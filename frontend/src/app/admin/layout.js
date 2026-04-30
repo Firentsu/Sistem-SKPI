@@ -118,7 +118,7 @@ export default function AdminLayout({ children }) {
       if (!mounted) return;
       if (data) {
         setAdminName(data.admin?.nama_admin ?? data.user?.username ?? "Admin");
-        if (data.admin?.avatar) setAvatarSrc(getAvatarUrl(data.admin.avatar));
+        setAvatarSrc(data.admin?.avatar ? getAvatarUrl(data.admin.avatar) : "/img/avatar.jpg");
         setMockMode(isMockMode());
         setChecking(false);
       } else {
@@ -228,7 +228,7 @@ export default function AdminLayout({ children }) {
         style={mockMode ? { marginTop: 29 } : {}}>
         <div className={styles.brand}>
           <div className={styles.logo}>
-            <Image src="/img/logo_isb.png" alt="logo" width={80} height={35} loading="eager" />
+            <Image src="/img/Logo_isb.png" alt="logo" width={80} height={35} loading="eager" />
           </div>
           {!collapsed && <div className={styles.brandText}><strong>SKPI</strong><span>Admin Panel</span></div>}
           <button aria-label="Toggle sidebar" className={styles.collapseBtn} onClick={() => {
@@ -280,7 +280,8 @@ export default function AdminLayout({ children }) {
             <div className={styles.userBlock}>
               <button className={styles.avatarBtn} onClick={() => router.push("/admin/profile")} aria-label="Lihat profil">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={avatarSrc} alt="avatar" className={styles.avatar} />
+                <img src={avatarSrc} alt="avatar" className={styles.avatar}
+                  onError={e => { e.currentTarget.onerror = null; e.currentTarget.src = "/img/avatar.jpg"; }} />
                 <span className={styles.onlineDot} />
                 <span className={styles.avatarOverlay}><Camera size={11} /></span>
               </button>

@@ -17,7 +17,7 @@ import {
   updateAdmin,
   deleteAdmin,
   resetAdminPassword,
-  // ── Conflict 1 resolved: removed isMockMode — mock logic now lives in api.js ──
+  getAvatarUrl,
 } from "@/lib/api";
 
 /* ─────────────────────────────────────────
@@ -716,7 +716,17 @@ export default function AdminManagementPage() {
                 <td className={styles.tdNo}>{start + idx + 1}</td>
                 <td>
                   <div className={styles.nameCell}>
-                    <div className={styles.avatar}>{row.nama.charAt(0)}</div>
+                    {row.avatar ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={getAvatarUrl(row.avatar)}
+                        alt={row.nama}
+                        className={styles.avatarImg}
+                        onError={e => { e.currentTarget.onerror = null; e.currentTarget.src = "/img/avatar.jpg"; }}
+                      />
+                    ) : (
+                      <div className={styles.avatar}>{row.nama.charAt(0)}</div>
+                    )}
                     <span className={styles.nameText}>{row.nama}</span>
                   </div>
                 </td>

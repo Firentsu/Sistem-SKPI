@@ -9,6 +9,13 @@ import {
 } from "lucide-react";
 import styles from "../mahasiswa.module.css";
 import { useMahasiswa } from "@/context/MahasiswaContext";
+import {
+  getMahasiswaProfile,
+  updateMahasiswaProfile,
+  uploadMahasiswaAvatar,
+  updateMahasiswaPassword,
+  getAvatarUrl,
+} from "@/lib/api";
 
 /* ─────────────────────────────────────────
    Toast
@@ -156,7 +163,7 @@ export default function MahasiswaProfilePage() {
   const [loading, setLoading] = useState(true);
 
   /* ── Avatar ── */
-  const [avatarSrc,       setAvatarSrc]       = useState("/img/avatar-default.jpg");
+  const [avatarSrc,       setAvatarSrc]       = useState("/img/avatar.jpg");
   const [showViewer,      setShowViewer]       = useState(false);
   const [showUploader,    setShowUploader]     = useState(false);
   const [avatarFile,      setAvatarFile]       = useState(null);
@@ -180,11 +187,19 @@ export default function MahasiswaProfilePage() {
 
   /* ── Load data ── */
   useEffect(() => {
-    // TODO: ganti dengan panggilan API getProfile mahasiswa
-    // Simulasi: isi dari context user
-    setEmail(user?.email ?? "");
-    const timer = setTimeout(() => setLoading(false), 400);
-    return () => clearTimeout(timer);
+    (async () => {
+      try {
+        const data = await getMahasiswaProfile();
+        if (!data) { setLoading(false); return; }
+        setEmail(data.email ?? user?.email ?? "");
+        setAvatarSrc(data.avatar ? getAvatarUrl(data.avatar) : "/img/avatar.jpg");
+      } catch {
+        setEmail(user?.email ?? "");
+        setAvatarSrc("/img/avatar.jpg");
+      } finally {
+        setLoading(false);
+      }
+    })();
   }, [user]);
 
   /* ── Avatar helpers ── */
@@ -213,9 +228,12 @@ export default function MahasiswaProfilePage() {
     if (!avatarFile || uploadingAvatar) return;
     setUploadingAvatar(true);
     try {
-      // TODO: ganti dengan API upload avatar mahasiswa
-      await new Promise(r => setTimeout(r, 1000)); // simulasi
-      setAvatarSrc(avatarPreview);
+      const form = new FormData();
+      form.append("avatar", avatarFile);
+      const result = await uploadMahasiswaAvatar(form);
+      if (!result.ok) throw new Error(result.data?.error || "Upload gagal");
+      const newUrl = getAvatarUrl(result.data.avatar) || avatarPreview;
+      setAvatarSrc(newUrl);
       cancelAvatarSelect();
       setShowUploader(false);
       showToast("Foto profil berhasil diperbarui.");
@@ -239,8 +257,8 @@ export default function MahasiswaProfilePage() {
     }
     setEmailSaving(true);
     try {
-      // TODO: panggil API updateProfile mahasiswa { action: "email", email: trimmed }
-      await new Promise(r => setTimeout(r, 800));
+      const { ok, data } = await updateMahasiswaProfile({ action: "email", email: trimmed });
+      if (!ok) throw new Error(data?.error || "Gagal update email");
       showToast("Email berhasil diperbarui.");
     } catch {
       showToast("Gagal memperbarui email. Coba lagi.", "error");
@@ -261,8 +279,8 @@ export default function MahasiswaProfilePage() {
     }
     setPwSaving(true);
     try {
-      // TODO: panggil API updateProfile mahasiswa { action: "password", currentPassword, newPassword }
-      await new Promise(r => setTimeout(r, 800));
+      const { ok, data } = await updateMahasiswaPassword({ password_lama: pwCurrent, password_baru: pwNew });
+      if (!ok) throw new Error(data?.error || "Gagal update password");
       setPwCurrent(""); setPwNew(""); setPwConfirm("");
       showToast("Password berhasil diperbarui.");
     } catch {
@@ -339,6 +357,7 @@ export default function MahasiswaProfilePage() {
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={avatarSrc} alt="Foto Profil" className={styles.avatarImg}
+                  onError={e => { e.currentTarget.onerror = null; e.currentTarget.src = "/img/avatar.jpg"; }}
                   onClick={() => setShowViewer(true)} style={{ cursor: "pointer" }}
                   title="Klik untuk melihat foto penuh"
                 />

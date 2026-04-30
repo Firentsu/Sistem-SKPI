@@ -19,34 +19,15 @@ import {
   toggleMahasiswaAkun,
   importMahasiswaBulk,
   getProdiList,
+  getAvatarUrl,
 } from "@/lib/api";
 
 /* ─────────────────────────────────────────
-   KONSTANTA & MOCK DATA
+   CONSTANTS
 ───────────────────────────────────────── */
 const PER_PAGE      = 10;
 const ANGKATAN_LIST = ["Semua", "2025", "2024", "2023", "2022", "2021", "2020"];
 const STATUS_SKPI   = ["Semua", "Belum", "Proses", "Selesai"];
-
-const PRODI_COLORS = {
-  "Teknologi Informasi":           { primary: "#ff7f00", light: "#fff3e6" },
-  "Manajemen":                     { primary: "#0099cc", light: "#e6f5fa" },
-  "Kewirausahaan":                 { primary: "#ff3300", light: "#ffe6e0" },
-  "Pendidikan Guru Sekolah Dasar": { primary: "#800080", light: "#f3e6f3" },
-  "Agroekoteknologi":              { primary: "#00bfb3", light: "#e6faf8" },
-  "Sistem Informasi":              { primary: "#1a0909", light: "#f0ecec" },
-};
-
-const MOCK_MAHASISWA = [
-  { id:1, nim:"2021001", nama:"Ahmad Rizki",   nama_prodi:"Teknologi Informasi",           angkatan:"2021", email:"ahmad@student.isb.ac.id",   status_skpi:"Belum",  aktif:true,  has_akun:true },
-  { id:2, nim:"2021002", nama:"Budi Santoso",  nama_prodi:"Manajemen",                     angkatan:"2021", email:"budi@student.isb.ac.id",    status_skpi:"Proses", aktif:true,  has_akun:true },
-  { id:3, nim:"2021003", nama:"Citra Dewi",    nama_prodi:"Pendidikan Guru Sekolah Dasar", angkatan:"2022", email:"citra@student.isb.ac.id",   status_skpi:"Selesai",aktif:true,  has_akun:true },
-  { id:4, nim:"2021004", nama:"Dedi Wijaya",   nama_prodi:"Kewirausahaan",                 angkatan:"2023", email:"dedi@student.isb.ac.id",    status_skpi:"Belum",  aktif:false, has_akun:true },
-  { id:5, nim:"2021005", nama:"Eka Putri",     nama_prodi:"Sistem Informasi",              angkatan:"2022", email:"eka@student.isb.ac.id",     status_skpi:"Proses", aktif:true,  has_akun:true },
-];
-
-let toastIdCounter = 0;
-let backendWarningShown = false;
 
 /* ─────────────────────────────────────────
    TOAST
@@ -68,7 +49,7 @@ function Toast({ toasts, remove }) {
 function useToast() {
   const [toasts, setToasts] = useState([]);
   const add = useCallback((msg, type = "success") => {
-    const id = ++toastIdCounter;
+    const id = Date.now();
     setToasts(prev => [...prev, { id, msg, type }]);
     setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 3500);
   }, []);
@@ -108,11 +89,12 @@ function StatCard({ icon: Icon, title, value, subtitle, color }) {
 /* ─────────────────────────────────────────
    INPUT PASSWORD
 ───────────────────────────────────────── */
-function PasswordInput({ value, onChange, placeholder }) {
+function PasswordInput({ value, onChange, placeholder, id }) {
   const [show, setShow] = useState(false);
   return (
     <div className={styles.pwWrap}>
       <input
+        id={id}
         type={show ? "text" : "password"}
         className={styles.input}
         value={value}
@@ -136,7 +118,7 @@ function MahasiswaFormModal({ mode, data, onClose, onSave, prodiList }) {
     email: "", password: "", password_confirm: "",
     status_skpi: "Belum", aktif: true,
   };
-  const [form,   setForm]   = useState(initial);
+  const [form, setForm]     = useState(initial);
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
 
@@ -152,7 +134,7 @@ function MahasiswaFormModal({ mode, data, onClose, onSave, prodiList }) {
     if (!form.email.trim()) err.email = "Email wajib diisi.";
     else if (!/\S+@\S+\.\S+/.test(form.email)) err.email = "Format email tidak valid.";
     if (mode === "add") {
-      if (!form.password)                err.password = "Password wajib diisi.";
+      if (!form.password)            err.password = "Password wajib diisi.";
       else if (form.password.length < 8) err.password = "Minimal 8 karakter.";
       if (form.password !== form.password_confirm) err.password_confirm = "Konfirmasi tidak cocok.";
     }
@@ -331,18 +313,19 @@ function ResetPasswordModal({ mahasiswa, onClose, onDone }) {
    MODAL IMPORT EXCEL
 ───────────────────────────────────────── */
 function ImportExcelModal({ onClose, onDone }) {
-  const [file,     setFile]     = useState(null);
+  const [file, setFile]       = useState(null);
   const [dragging, setDragging] = useState(false);
-  const [loading,  setLoading]  = useState(false);
-  const [error,    setError]    = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError]     = useState("");
   const inputRef = useRef(null);
 
   const handleFile = f => {
     if (!f) return;
     const ext = f.name.split(".").pop().toLowerCase();
-    if (!["xlsx","xls","csv"].includes(ext)) { setError("Format harus .xlsx, .xls, atau .csv"); return; }
-    if (f.size > 5 * 1024 * 1024)            { setError("Ukuran maksimal 5 MB"); return; }
-    setError(""); setFile(f);
+    if (!["xlsx", "xls", "csv"].includes(ext)) { setError("Format harus .xlsx, .xls, atau .csv"); return; }
+    if (f.size > 5 * 1024 * 1024) { setError("Ukuran maksimal 5 MB"); return; }
+    setError("");
+    setFile(f);
   };
 
   const handleImport = async () => {
@@ -355,7 +338,7 @@ function ImportExcelModal({ onClose, onDone }) {
       const rows     = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
       if (rows.length === 0) throw new Error("File kosong");
 
-      const required = ["Nama","NIM","Program Studi","Angkatan","Email"];
+      const required = ["Nama", "NIM", "Program Studi", "Angkatan", "Email"];
       const missing  = required.filter(col => !(col in rows[0]));
       if (missing.length) throw new Error(`Kolom tidak lengkap: ${missing.join(", ")}`);
 
@@ -470,81 +453,71 @@ function RowActions({ row, onEdit, onResetPw, onToggleActive }) {
    HALAMAN UTAMA
 ───────────────────────────────────────── */
 export default function MahasiswaPage() {
-  const [data,        setData]        = useState([]);
-  const [total,       setTotal]       = useState(0);
-  const [totalPages,  setTotalPages]  = useState(1);
-  const [loading,     setLoading]     = useState(true);
-  const [prodiList,   setProdiList]   = useState([]);
+  const [data, setData]           = useState([]);
+  const [total, setTotal]         = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading]     = useState(true);
+  const [prodiList, setProdiList] = useState([]);
 
-  const [search,          setSearch]          = useState("");
-  const [filterProdi,     setFilterProdi]     = useState("Semua");
-  const [filterAngkatan,  setFilterAngkatan]  = useState("Semua");
-  const [filterStatus,    setFilterStatus]    = useState("Semua");
-  const [currentPage,     setCurrentPage]     = useState(1);
-  const [filterOpen,      setFilterOpen]      = useState(false);
-  const [modalAdd,        setModalAdd]        = useState(false);
-  const [modalEdit,       setModalEdit]       = useState(null);
-  const [modalReset,      setModalReset]      = useState(null);
-  const [modalImport,     setModalImport]     = useState(false);
-  const { toasts, add: toast, remove }        = useToast();
+  const [search, setSearch]               = useState("");
+  const [filterProdi, setFilterProdi]     = useState("Semua");
+  const [filterAngkatan, setFilterAngkatan] = useState("Semua");
+  const [filterStatus, setFilterStatus]   = useState("Semua");
+  const [currentPage, setCurrentPage]     = useState(1);
+  const [filterOpen, setFilterOpen]       = useState(false);
+  const [modalAdd, setModalAdd]           = useState(false);
+  const [modalEdit, setModalEdit]         = useState(null);
+  const [modalReset, setModalReset]       = useState(null);
+  const [modalImport, setModalImport]     = useState(false);
+  const { toasts, add: toast, remove }    = useToast();
 
+  // ── Load prodi list sekali saat mount ─────────────────────
   useEffect(() => {
     getProdiList().then(list => { if (list) setProdiList(list); });
     document.title = "Manajemen Mahasiswa | Admin SKPI";
   }, []);
 
-  const loadData = useCallback(async (q = search, prodi = filterProdi, page = currentPage) => {
+  // ── Load data dari API ─────────────────────────────────────
+  const loadData = useCallback(async (
+    q       = search,
+    prodi   = filterProdi,
+    page    = currentPage,
+  ) => {
     setLoading(true);
-    try {
-      const result = await getMahasiswaList({ q, prodi, page });
-      if (result && result.rows && result.rows.length > 0) {
-        const rows = result.rows.map(m => ({
-          id:              m.id_mahasiswa,
-          nama:            m.nama,
-          nim:             m.nim,
-          id_prodi:        m.id_prodi,
-          nama_prodi:      m.programstudi?.nama_prodi ?? "-",
-          angkatan:        m.angkatan ?? "-",
-          email:           m.email ?? "-",
-          status_skpi:     m.status_skpi ?? "Belum",
-          jumlah_kegiatan: m._count?.kegiatanmahasiswa ?? m.jumlah_kegiatan ?? 0,
-          total_icp:       m.total_icp ?? 0,
-          aktif:           m.users ? m.users.status_akun === "aktif" : false,
-          has_akun:        !!m.id_user,
-        }));
-        setData(rows);
-        setTotal(result.total ?? rows.length);
-        setTotalPages(Math.ceil((result.total ?? rows.length) / PER_PAGE) || 1);
-        if (backendWarningShown) backendWarningShown = false;
-      } else {
-        setData(MOCK_MAHASISWA);
-        setTotal(MOCK_MAHASISWA.length);
-        setTotalPages(1);
-        if (!backendWarningShown) {
-          toast("Backend tidak tersedia, menggunakan data demo", "error");
-          backendWarningShown = true;
-        }
-      }
-    } catch {
-      setData(MOCK_MAHASISWA);
-      setTotal(MOCK_MAHASISWA.length);
-      setTotalPages(1);
-      if (!backendWarningShown) {
-        toast("Gagal memuat data, menggunakan data demo", "error");
-        backendWarningShown = true;
-      }
-    } finally {
-      setLoading(false);
+    const result = await getMahasiswaList({ q, prodi, page });
+    if (result) {
+      // Normalise field dari backend ke format UI
+      const rows = (result.rows ?? []).map(m => ({
+        id:               m.id_mahasiswa,
+        nama:             m.nama,
+        nim:              m.nim,
+        id_prodi:         m.id_prodi,
+        nama_prodi:       m.programstudi?.nama_prodi ?? "-",
+        angkatan:         m.angkatan ?? "-",
+        email:            m.email ?? "-",
+        status_skpi:      m.status_skpi ?? "Belum",
+        jumlah_kegiatan:  m._count?.kegiatanmahasiswa ?? m.jumlah_kegiatan ?? 0,
+        total_icp:        m.total_icp ?? 0,
+        foto_profil:      m.foto_profil ?? null,
+        aktif:            m.users ? m.users.status_akun === "aktif" : false,
+        has_akun:         !!m.id_user,
+      }));
+      setData(rows);
+      setTotal(result.total ?? rows.length);
+      setTotalPages(Math.ceil((result.total ?? rows.length) / PER_PAGE) || 1);
     }
-  }, [search, filterProdi, currentPage, toast]);
+    setLoading(false);
+  }, [search, filterProdi, currentPage]);
 
   useEffect(() => { loadData(); }, [loadData]);
 
+  // Debounce search
   useEffect(() => {
     const t = setTimeout(() => { setCurrentPage(1); loadData(search, filterProdi, 1); }, 400);
     return () => clearTimeout(t);
-  }, [search]);  // eslint-disable-line
+  }, [search]);
 
+  // ── Download template ──────────────────────────────────────
   const downloadTemplate = () => {
     const ws = XLSX.utils.json_to_sheet([{
       "Nama": "Contoh Mahasiswa", "NIM": "202200001001",
@@ -557,6 +530,7 @@ export default function MahasiswaPage() {
     toast("Template berhasil diunduh");
   };
 
+  // ── CRUD handlers ──────────────────────────────────────────
   const handleAddSave = async (form) => {
     const res = await createMahasiswa(form);
     if (res.ok) {
@@ -622,16 +596,18 @@ export default function MahasiswaPage() {
     (filterStatus   !== "Semua" ? 1 : 0) +
     (search ? 1 : 0);
 
-  // Filter client-side untuk angkatan & status (prodi & search dihandle server)
+  // Filter angkatan & status di client (sudah difilter server untuk prodi & search)
   const filtered = data.filter(row =>
-    (filterAngkatan === "Semua" || row.angkatan    === filterAngkatan) &&
+    (filterAngkatan === "Semua" || row.angkatan === filterAngkatan) &&
     (filterStatus   === "Semua" || row.status_skpi === filterStatus)
   );
 
   const aktifC   = data.filter(r => r.aktif).length;
   const selesaiC = data.filter(r => r.status_skpi === "Selesai").length;
   const avgICP   = data.length ? Math.round(data.reduce((s, r) => s + (r.total_icp || 0), 0) / data.length) : 0;
-  const start    = (currentPage - 1) * PER_PAGE;
+
+  const safePage = currentPage;
+  const start    = (safePage - 1) * PER_PAGE;
 
   return (
     <div className={styles.page}>
@@ -656,20 +632,24 @@ export default function MahasiswaPage() {
         </div>
       </div>
 
-      {/* ── Stats ── */}
+      {/* ── Stat Cards ── */}
       <div className={styles.statsGrid}>
-        <StatCard icon={Users}        title="Total Mahasiswa" value={total}   subtitle={`${aktifC} akun aktif`}          color="blue"   />
-        <StatCard icon={UserCheck}    title="Akun Aktif"      value={aktifC}  subtitle="dapat login sistem"               color="green"  />
-        <StatCard icon={GraduationCap}title="SKPI Selesai"    value={selesaiC}subtitle="SKPI sudah diterbitkan"           color="teal"   />
-        <StatCard icon={TrendingUp}   title="Rata-rata ICP"   value={avgICP}  subtitle="poin kegiatan mahasiswa"          color="orange" />
+        <StatCard icon={Users}     title="Total Mahasiswa" value={total}    subtitle={`${aktifC} akun aktif`}     color="blue"   />
+        <StatCard icon={UserCheck} title="Akun Aktif"      value={aktifC}   subtitle="dapat login sistem"          color="green"  />
+        <StatCard icon={GraduationCap} title="SKPI Selesai" value={selesaiC} subtitle="SKPI sudah diterbitkan"    color="teal"   />
+        <StatCard icon={TrendingUp} title="Rata-rata ICP"  value={avgICP}   subtitle="poin kegiatan mahasiswa"     color="orange" />
       </div>
 
       {/* ── Toolbar ── */}
       <div className={styles.toolbar}>
         <div className={styles.searchWrap}>
           <Search size={15} className={styles.searchIcon} />
-          <input className={styles.searchInput} placeholder="Cari nama atau NIM…"
-            value={search} onChange={e => setSearch(e.target.value)} />
+          <input
+            className={styles.searchInput}
+            placeholder="Cari nama atau NIM..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
           {search && <button className={styles.searchClear} onClick={() => setSearch("")}><X size={14} /></button>}
         </div>
         <div className={styles.toolbarRight}>
@@ -695,7 +675,8 @@ export default function MahasiswaPage() {
             <p className={styles.filterLabel}>Program Studi</p>
             <div className={styles.chipRow}>
               {["Semua", ...prodiList.map(p => p.nama_prodi)].map(p => (
-                <button key={p}
+                <button
+                  key={p}
                   className={`${styles.chip} ${filterProdi === p ? styles.chipActive : ""}`}
                   onClick={() => { setFilterProdi(p); setCurrentPage(1); loadData(search, p, 1); }}
                 >{p}</button>
@@ -706,10 +687,8 @@ export default function MahasiswaPage() {
             <p className={styles.filterLabel}>Angkatan</p>
             <div className={styles.chipRow}>
               {ANGKATAN_LIST.map(a => (
-                <button key={a}
-                  className={`${styles.chip} ${filterAngkatan === a ? styles.chipActive : ""}`}
-                  onClick={() => { setFilterAngkatan(a); setCurrentPage(1); }}
-                >{a}</button>
+                <button key={a} className={`${styles.chip} ${filterAngkatan === a ? styles.chipActive : ""}`}
+                  onClick={() => { setFilterAngkatan(a); setCurrentPage(1); }}>{a}</button>
               ))}
             </div>
           </div>
@@ -717,10 +696,8 @@ export default function MahasiswaPage() {
             <p className={styles.filterLabel}>Status SKPI</p>
             <div className={styles.chipRow}>
               {STATUS_SKPI.map(s => (
-                <button key={s}
-                  className={`${styles.chip} ${filterStatus === s ? styles.chipActive : ""}`}
-                  onClick={() => { setFilterStatus(s); setCurrentPage(1); }}
-                >{s}</button>
+                <button key={s} className={`${styles.chip} ${filterStatus === s ? styles.chipActive : ""}`}
+                  onClick={() => { setFilterStatus(s); setCurrentPage(1); }}>{s}</button>
               ))}
             </div>
           </div>
@@ -732,7 +709,7 @@ export default function MahasiswaPage() {
         </div>
       )}
 
-      {/* ── Table ── */}
+      {/* ── Tabel ── */}
       <div className={styles.tableCard}>
         <table className={styles.table}>
           <thead>
@@ -742,29 +719,24 @@ export default function MahasiswaPage() {
               <th>NIM</th>
               <th>Program Studi</th>
               <th className={styles.thCenter}>Angkatan</th>
-              <th>Email</th>
               <th className={styles.thCenter}>Status SKPI</th>
               <th className={styles.thCenter}>Akun</th>
               <th className={styles.thCenter}>Aksi</th>
             </tr>
           </thead>
           <tbody>
-            {/* Loading state */}
-            {loading && (
+            {loading ? (
               <tr>
-                <td colSpan={9} className={styles.emptyTd}>
+                <td colSpan={8} className={styles.emptyTd}>
                   <div className={styles.emptyState}>
                     <Loader2 size={32} className={styles.spin} />
                     <p>Memuat data...</p>
                   </div>
                 </td>
               </tr>
-            )}
-
-            {/* Empty state */}
-            {!loading && filtered.length === 0 && (
+            ) : filtered.length === 0 ? (
               <tr>
-                <td colSpan={9} className={styles.emptyTd}>
+                <td colSpan={8} className={styles.emptyTd}>
                   <div className={styles.emptyState}>
                     <Users size={44} />
                     <p>Tidak ada data mahasiswa</p>
@@ -772,47 +744,47 @@ export default function MahasiswaPage() {
                   </div>
                 </td>
               </tr>
-            )}
-
-            {/* Data rows */}
-            {!loading && filtered.map((row, idx) => {
-              const prodiColor = PRODI_COLORS[row.nama_prodi]?.primary || "#6b7280";
-              const prodiLight = PRODI_COLORS[row.nama_prodi]?.light   || "#f1f5f9";
-              return (
-                <tr key={row.id} className={!row.aktif ? styles.rowInactive : ""}>
-                  <td className={styles.tdNo}>{start + idx + 1}</td>
-                  <td>
-                    <div className={styles.nameCell}>
+            ) : filtered.map((row, idx) => (
+              <tr key={row.id} className={!row.aktif ? styles.rowInactive : ""}>
+                <td className={styles.tdNo}>{start + idx + 1}</td>
+                <td>
+                  <div className={styles.nameCell}>
+                    {row.foto_profil ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={getAvatarUrl(row.foto_profil)}
+                        alt={row.nama}
+                        className={styles.avatarImg}
+                        onError={e => { e.currentTarget.onerror = null; e.currentTarget.src = "/img/avatar.jpg"; }}
+                      />
+                    ) : (
                       <div className={styles.avatar}>{row.nama.charAt(0)}</div>
+                    )}
+                    <div>
                       <span className={styles.nameText}>{row.nama}</span>
+                      <span className={styles.emailText}>{row.email}</span>
                     </div>
-                  </td>
-                  <td><span className={styles.nimBadge}>{row.nim}</span></td>
-                  <td>
-                    <span className={styles.prodiBadge}
-                      style={{ backgroundColor: prodiLight, color: prodiColor, borderLeft: `3px solid ${prodiColor}` }}>
-                      {row.nama_prodi}
-                    </span>
-                  </td>
-                  <td className={styles.tdCenter}>{row.angkatan}</td>
-                  <td className={styles.emailCell}>{row.email}</td>
-                  <td className={styles.tdCenter}><StatusBadge status={row.status_skpi} /></td>
-                  <td className={styles.tdCenter}>
-                    <span className={`${styles.akunDot} ${row.aktif ? styles.dotOn : (row.has_akun ? styles.dotOff : styles.dotNone)}`}>
-                      {row.aktif ? "Aktif" : row.has_akun ? "Nonaktif" : "Belum ada"}
-                    </span>
-                  </td>
-                  <td className={styles.tdCenter}>
-                    <RowActions
-                      row={row}
-                      onEdit={() => setModalEdit(row)}
-                      onResetPw={() => setModalReset(row)}
-                      onToggleActive={() => handleToggle(row)}
-                    />
-                  </td>
-                </tr>
-              );
-            })}
+                  </div>
+                </td>
+                <td><span className={styles.nimBadge}>{row.nim}</span></td>
+                <td>{row.nama_prodi}</td>
+                <td className={styles.tdCenter}>{row.angkatan}</td>
+                <td className={styles.tdCenter}><StatusBadge status={row.status_skpi} /></td>
+                <td className={styles.tdCenter}>
+                  <span className={`${styles.akunDot} ${row.aktif ? styles.dotOn : (row.has_akun ? styles.dotOff : styles.dotNone)}`}>
+                    {row.aktif ? "Aktif" : row.has_akun ? "Nonaktif" : "Belum ada"}
+                  </span>
+                </td>
+                <td className={styles.tdCenter}>
+                  <RowActions
+                    row={row}
+                    onEdit={() => setModalEdit(row)}
+                    onResetPw={() => setModalReset(row)}
+                    onToggleActive={() => handleToggle(row)}
+                  />
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
@@ -824,36 +796,46 @@ export default function MahasiswaPage() {
             {total === 0 ? 0 : start + 1}–{Math.min(start + PER_PAGE, total)} dari {total}
           </span>
           <div className={styles.paginBtns}>
-            <button className={styles.pBtn} onClick={() => setCurrentPage(1)} disabled={currentPage === 1}>«</button>
-            <button className={styles.pBtn} onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}>
+            <button className={styles.pBtn} onClick={() => setCurrentPage(1)} disabled={safePage === 1}>«</button>
+            <button className={styles.pBtn} onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={safePage === 1}>
               <ChevronLeft size={13} />
             </button>
             {Array.from({ length: totalPages }, (_, i) => i + 1)
-              .filter(p => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1)
+              .filter(p => p === 1 || p === totalPages || Math.abs(p - safePage) <= 1)
               .reduce((acc, p, i, arr) => {
-                if (i > 0 && arr[i-1] !== p - 1) acc.push("…");
+                if (i > 0 && arr[i - 1] !== p - 1) acc.push("…");
                 acc.push(p);
                 return acc;
               }, [])
               .map((p, i) => p === "…"
                 ? <span key={`d${i}`} className={styles.pDots}>…</span>
-                : <button key={p}
-                    className={`${styles.pBtn} ${currentPage === p ? styles.pBtnActive : ""}`}
+                : <button key={p} className={`${styles.pBtn} ${safePage === p ? styles.pBtnActive : ""}`}
                     onClick={() => setCurrentPage(p)}>{p}</button>
               )}
-            <button className={styles.pBtn} onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>
+            <button className={styles.pBtn} onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={safePage === totalPages}>
               <ChevronRight size={13} />
             </button>
-            <button className={styles.pBtn} onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages}>»</button>
+            <button className={styles.pBtn} onClick={() => setCurrentPage(totalPages)} disabled={safePage === totalPages}>»</button>
           </div>
         </div>
       )}
 
       {/* ── Modals ── */}
-      {modalAdd    && <MahasiswaFormModal mode="add"  prodiList={prodiList} onClose={() => setModalAdd(false)}   onSave={handleAddSave} />}
-      {modalEdit   && <MahasiswaFormModal mode="edit" data={modalEdit} prodiList={prodiList} onClose={() => setModalEdit(null)}  onSave={handleEditSave} />}
-      {modalReset  && <ResetPasswordModal mahasiswa={modalReset} onClose={() => setModalReset(null)} onDone={handleResetDone} />}
-      {modalImport && <ImportExcelModal   onClose={() => setModalImport(false)} onDone={handleImportDone} />}
+      {modalAdd && (
+        <MahasiswaFormModal mode="add" prodiList={prodiList}
+          onClose={() => setModalAdd(false)} onSave={handleAddSave} />
+      )}
+      {modalEdit && (
+        <MahasiswaFormModal mode="edit" data={modalEdit} prodiList={prodiList}
+          onClose={() => setModalEdit(null)} onSave={handleEditSave} />
+      )}
+      {modalReset && (
+        <ResetPasswordModal mahasiswa={modalReset}
+          onClose={() => setModalReset(null)} onDone={handleResetDone} />
+      )}
+      {modalImport && (
+        <ImportExcelModal onClose={() => setModalImport(false)} onDone={handleImportDone} />
+      )}
     </div>
   );
 }

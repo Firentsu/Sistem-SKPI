@@ -302,7 +302,8 @@ function MahasiswaLayoutInner({ children }) {
             <span className={styles.divider} />
             <div className={styles.userBlock}>
               <button className={styles.avatarBtn} onClick={() => setShowEditor(true)}>
-                <img src={avatarSrc} alt="avatar" className={styles.avatar} />
+                <img src={avatarSrc} alt="avatar" className={styles.avatar}
+                  onError={e => { e.currentTarget.onerror = null; e.currentTarget.src = "/img/avatar.jpg"; }} />
                 <span className={styles.onlineDot} />
                 <span className={styles.avatarOverlay}><Camera size={11} /></span>
               </button>
