@@ -3,7 +3,7 @@ import express      from "express";
 import cors         from "cors";
 import cookieParser from "cookie-parser";
 import session      from "express-session";
-import MySQLStore   from "express-mysql-session";
+import connectMySQL from "express-mysql-session";
 
 // ── Routes admin ────────────────────────────────────────────
 import authRoutes       from "./src/routes/auth.js";
@@ -24,18 +24,31 @@ const app  = express();
 const PORT = process.env.PORT || 5000;
 
 // ── MySQL Session Store ─────────────────────────────────────
-const SessionStore = MySQLStore(session);
-
-const sessionStore = new SessionStore({
+// FIX: gunakan pola default export yang kompatibel dengan ES modules
+const MySQLStore   = connectMySQL(session);
+const sessionStore = new MySQLStore({
   host:                    process.env.DB_HOST     || "localhost",
   port:               parseInt(process.env.DB_PORT) || 3306,
   user:                    process.env.DB_USER     || "root",
   password:                process.env.DB_PASSWORD || "",
   database:                process.env.DB_NAME     || "skpi_db",
   clearExpired:            true,
-  checkExpirationInterval: 900_000,   // cek sesi expired setiap 15 menit
+  checkExpirationInterval: 900_000,    // cek sesi expired setiap 15 menit
   expiration:              86_400_000, // sesi hidup 1 hari
-  createDatabaseTable:     true,       // otomatis buat tabel sessions
+  createDatabaseTable:     true,       // otomatis buat tabel sessions jika belum ada
+  schema: {
+    tableName:   "sessions",
+    columnNames: {
+      session_id: "session_id",
+      expires:    "expires",
+      data:       "data",
+    },
+  },
+});
+
+// Tangkap error session store agar tidak crash diam-diam
+sessionStore.on("error", (err) => {
+  console.error("❌ Session store error:", err.message);
 });
 
 // ── Middleware ──────────────────────────────────────────────
@@ -56,7 +69,7 @@ app.use(session({
   cookie: {
     httpOnly: true,
     sameSite: "lax",
-    maxAge:   86_400_000,                             // 1 hari
+    maxAge:   86_400_000,                            // 1 hari
     secure:   process.env.NODE_ENV === "production",
   },
 }));
@@ -64,7 +77,7 @@ app.use(session({
 // Sajikan folder uploads
 app.use("/uploads", express.static("public/uploads"));
 
-// ── Routes admin (daftar semua) ─────────────────────────────
+// ── Routes admin ─────────────────────────────────────────────
 app.use("/api/auth",        authRoutes);
 app.use("/api/admin",       adminRoutes);
 app.use("/api/aktivitas",   aktivitasRoutes);
@@ -72,29 +85,30 @@ app.use("/api/skpi",        skpiRoutes);
 app.use("/api/master-data", masterDataRoutes);
 app.use("/api/icp",         icpRoutes);
 
-// ── Routes mahasiswa (spesifik dulu, umum belakangan) ───────
+// ── Routes mahasiswa (spesifik dulu, umum belakangan) ────────
 app.use("/api/mahasiswa/auth",        mahasiswaAuthRoutes);
 app.use("/api/mahasiswa/kegiatan",    mahasiswaKegiatanRoutes);
 app.use("/api/mahasiswa/pengajuan",   mahasiswaPengajuanRoutes);
 app.use("/api/mahasiswa/master-data", mahasiswaMasterDataRoutes);
 app.use("/api/mahasiswa",             mahasiswaRoutes);
 
-// ── Health check ────────────────────────────────────────────
+// ── Health check ─────────────────────────────────────────────
 app.get("/api/health", (_req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
-// ── 404 ─────────────────────────────────────────────────────
+// ── 404 ──────────────────────────────────────────────────────
 app.use((_req, res) => {
   res.status(404).json({ error: "Route tidak ditemukan" });
 });
 
-// ── Error handler ───────────────────────────────────────────
+// ── Global error handler ──────────────────────────────────────
 app.use((err, _req, res, _next) => {
-  console.error(err);
+  console.error("❌ Unhandled error:", err);
   res.status(500).json({ error: "Internal server error" });
 });
 
+// ── Start server ──────────────────────────────────────────────
 app.listen(PORT, () => {
   console.log(`\n✅ SKPI Backend berjalan di http://localhost:${PORT}`);
   console.log(`   Auth     : Session-based (MySQL Store)`);

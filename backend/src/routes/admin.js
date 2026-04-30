@@ -405,6 +405,21 @@ router.patch("/mahasiswa/:id/akun", async (req, res) => {
         where: { user_id: mhs.id_user },
         data:  { status_akun: newStatus, updated_at: new Date() },
       });
+
+      // FIX: jika dinonaktifkan, hapus semua sesi aktif mahasiswa ini
+      // sehingga mahasiswa tidak bisa tetap login dengan sesi lama
+      if (newStatus === "nonaktif") {
+        try {
+          const uid = mhs.id_user;
+          await prisma.$executeRawUnsafe(
+            `DELETE FROM sessions WHERE data LIKE ?`,
+            `%"userId":${uid},%`
+          );
+        } catch (e) {
+          console.warn("Gagal hapus sesi mahasiswa nonaktif:", e.message);
+        }
+      }
+
       return res.json({
         success:     true,
         status_akun: newStatus,
@@ -459,6 +474,7 @@ router.get("/admins", async (req, res) => {
       nama:       a.nama_admin ?? "",
       email:      a.email      ?? a.users?.email ?? "",
       username:   a.users?.username  ?? "",
+      avatar:     a.avatar     ?? null,
       aktif:      a.is_active  ?? true,
       created_at: a.users?.created_at?.toISOString().split("T")[0] ?? "",
       last_login: a.users?.updated_at?.toISOString().split("T")[0] ?? "-",
@@ -537,6 +553,17 @@ router.patch("/admins/:id", async (req, res) => {
         where: { user_id: admin.id_user },
         data:  { status_akun: aktif ? "aktif" : "nonaktif", updated_at: new Date() },
       });
+
+      // FIX: jika akun dinonaktifkan, hapus semua sesi aktif milik admin ini
+      // supaya admin tidak bisa tetap login dengan sesi lama
+      if (!aktif && admin.id_user) {
+        try {
+          await prisma.$executeRaw`DELETE FROM sessions WHERE data LIKE ${'%"userId":' + admin.id_user + ',%'}`;
+        } catch (sessionErr) {
+          // Jika tabel sessions belum ada atau query gagal, abaikan
+          console.warn("Gagal hapus sesi nonaktif admin:", sessionErr.message);
+        }
+      }
     }
 
     return res.json({ success: true, message: "Data admin diperbarui" });

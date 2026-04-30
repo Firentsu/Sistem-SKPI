@@ -11,11 +11,11 @@ const router = express.Router();
 router.get("/", requireAuth, async (req, res) => {
   try {
     const { status, mahasiswa_id, page: pageStr } = req.query;
-    const page     = parseInt(pageStr || "1", 10) || 1;
+    const page = parseInt(pageStr || "1", 10) || 1;
     const pageSize = 10;
-
+    
     const where = {};
-    if (status)       where.status_verifikasi = status;
+    if (status) where.status_verifikasi = status;
     if (mahasiswa_id) where.id_mahasiswa = parseInt(mahasiswa_id);
 
     const [total, rows] = await Promise.all([
@@ -25,13 +25,13 @@ router.get("/", requireAuth, async (req, res) => {
         skip: (page - 1) * pageSize,
         take: pageSize,
         include: {
-          mahasiswa:        { select: { nama: true, nim: true } },
-          jenisaktivitas:   true,
-          kategoriaktivitas:true,
-          kelompokaktivitas:true,
-          levelkegiatan:    true,
-          posisikegiatan:   true,
-          buktikegiatan:    true,
+          mahasiswa: { select: { nama: true, nim: true } },
+          jenisaktivitas: true,
+          kategoriaktivitas: true,
+          kelompokaktivitas: true,
+          levelkegiatan: true,
+          posisikegiatan: true,
+          buktikegiatan: true,
         },
         orderBy: { tanggal_kegiatan: "desc" },
       }),
@@ -55,13 +55,13 @@ router.get("/:id", requireAuth, async (req, res) => {
     const aktivitas = await prisma.kegiatanmahasiswa.findUnique({
       where: { id_kegiatan: id },
       include: {
-        mahasiswa:        true,
-        jenisaktivitas:   true,
-        kategoriaktivitas:true,
-        kelompokaktivitas:true,
-        levelkegiatan:    true,
-        posisikegiatan:   true,
-        buktikegiatan:    true,
+        mahasiswa: true,
+        jenisaktivitas: true,
+        kategoriaktivitas: true,
+        kelompokaktivitas: true,
+        levelkegiatan: true,
+        posisikegiatan: true,
+        buktikegiatan: true,
       },
     });
 
