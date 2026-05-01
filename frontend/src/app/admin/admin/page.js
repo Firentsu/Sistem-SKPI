@@ -681,10 +681,9 @@ export default function AdminManagementPage() {
         <table className={styles.table}>
           <thead>
             <tr>
-              <th className={styles.thNo}>#</th>
+              <th className={styles.thNo}>No.</th>
               <th>Nama Administrator</th>
               <th>Username</th>
-              <th>Email</th>
               <th className={styles.thCenter}>Akun</th>
               <th className={styles.thCenter}>Dibuat</th>
               <th className={styles.thCenter}>Login Terakhir</th>
@@ -694,7 +693,7 @@ export default function AdminManagementPage() {
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={8} className={styles.emptyTd}>
+                <td colSpan={7} className={styles.emptyTd}>
                   <div className={styles.emptyState}>
                     <Loader2 size={32} className={styles.spin} />
                     <p>Memuat data...</p>
@@ -703,7 +702,7 @@ export default function AdminManagementPage() {
               </tr>
             ) : data.length === 0 ? (
               <tr>
-                <td colSpan={8} className={styles.emptyTd}>
+                <td colSpan={7} className={styles.emptyTd}>
                   <div className={styles.emptyState}>
                     <UserCog size={44} />
                     <p>Tidak ada data administrator</p>
@@ -727,11 +726,13 @@ export default function AdminManagementPage() {
                     ) : (
                       <div className={styles.avatar}>{row.nama.charAt(0)}</div>
                     )}
-                    <span className={styles.nameText}>{row.nama}</span>
+                    <div>
+                      <div className={styles.nameText}>{row.nama}</div>
+                      <div className={styles.emailText}>{row.email}</div>
+                    </div>
                   </div>
                 </td>
                 <td><span className={styles.nimBadge}>@{row.username}</span></td>
-                <td className={styles.emailCell}>{row.email}</td>
                 <td className={styles.tdCenter}>
                   <span className={`${styles.akunDot} ${row.aktif ? styles.dotOn : styles.dotOff}`}>
                     {row.aktif ? "Aktif" : "Nonaktif"}

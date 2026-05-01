@@ -58,12 +58,72 @@ function useToast() {
 }
 
 /* ─────────────────────────────────────────
+   PRODI CHIP — warna berbeda per prodi
+───────────────────────────────────────── */
+// Warna per program studi — konsisten & berbeda tiap prodi
+const PRODI_COLORS = {
+  // Teknik & Informatika → ungu
+  "Teknologi Informasi":      { bg: "#ede9fe", color: "#5b21b6", border: "#c4b5fd" },
+  "Teknik Informatika":       { bg: "#ede9fe", color: "#5b21b6", border: "#c4b5fd" },
+  "Sistem Informasi":         { bg: "#f5f3ff", color: "#4c1d95", border: "#a78bfa" },
+  // Bisnis & Ekonomi → biru
+  "Manajemen":                { bg: "#dbeafe", color: "#1d4ed8", border: "#93c5fd" },
+  "Akuntansi":                { bg: "#e0f2fe", color: "#0369a1", border: "#7dd3fc" },
+  "Ekonomi":                  { bg: "#cffafe", color: "#0e7490", border: "#67e8f9" },
+  // Sosial & Komunikasi → hijau toska
+  "Ilmu Komunikasi":          { bg: "#ccfbf1", color: "#0f766e", border: "#5eead4" },
+  "Hubungan Internasional":   { bg: "#d1fae5", color: "#065f46", border: "#6ee7b7" },
+  // Hukum → kuning
+  "Hukum":                    { bg: "#fef9c3", color: "#854d0e", border: "#fde047" },
+  // Psikologi → pink
+  "Psikologi":                { bg: "#fce7f3", color: "#be185d", border: "#f9a8d4" },
+  // Teknik sipil/mesin → oranye
+  "Teknik Sipil":             { bg: "#ffedd5", color: "#c2410c", border: "#fdba74" },
+  "Teknik Mesin":             { bg: "#fff7ed", color: "#9a3412", border: "#fb923c" },
+};
+
+// Fallback untuk prodi yang tidak terdaftar di atas
+// Warna dipilih berdasarkan hash nama prodi → selalu konsisten
+const PRODI_FALLBACK_COLORS = [
+  { bg: "#dbeafe", color: "#1e40af", border: "#93c5fd" },
+  { bg: "#dcfce7", color: "#166534", border: "#86efac" },
+  { bg: "#ede9fe", color: "#5b21b6", border: "#c4b5fd" },
+  { bg: "#fce7f3", color: "#9d174d", border: "#f9a8d4" },
+  { bg: "#ffedd5", color: "#c2410c", border: "#fdba74" },
+  { bg: "#ccfbf1", color: "#0f766e", border: "#5eead4" },
+  { bg: "#fef9c3", color: "#713f12", border: "#fde047" },
+  { bg: "#fee2e2", color: "#991b1b", border: "#fca5a5" },
+];
+
+function ProdiChip({ nama }) {
+  // Hash sederhana dari seluruh nama → warna konsisten untuk prodi yang tidak dikenal
+  const hash = (nama || "").split("").reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
+  const style = PRODI_COLORS[nama] ?? PRODI_FALLBACK_COLORS[hash % PRODI_FALLBACK_COLORS.length];
+  return (
+    <span style={{
+      display: "inline-block",
+      padding: "3px 10px",
+      borderRadius: "20px",
+      fontSize: "11.5px",
+      fontWeight: 600,
+      background: style.bg,
+      color: style.color,
+      border: `1px solid ${style.border}`,
+      whiteSpace: "nowrap",
+    }}>
+      {nama || "-"}
+    </span>
+  );
+}
+
+/* ─────────────────────────────────────────
    STATUS BADGE
 ───────────────────────────────────────── */
 function StatusBadge({ status }) {
   const cfg = {
     Selesai: { cls: styles.badgeSelesai, icon: <CheckCircle2 size={11} /> },
     Proses:  { cls: styles.badgeProses,  icon: <RefreshCw size={11} />    },
+    Revisi:  { cls: styles.badgeRevisi,  icon: <AlertCircle size={11} />  },
     Belum:   { cls: styles.badgeBelum,   icon: <AlertCircle size={11} />  },
   };
   const { cls, icon } = cfg[status] || cfg.Belum;
@@ -241,7 +301,7 @@ function MahasiswaFormModal({ mode, data, onClose, onSave, prodiList }) {
             <div className={styles.fg}>
               <label className={styles.fl}>Status SKPI</label>
               <select className={styles.input} value={form.status_skpi} onChange={e => set("status_skpi", e.target.value)}>
-                {["Belum", "Proses", "Selesai"].map(s => <option key={s}>{s}</option>)}
+                {["Belum", "Proses", "Revisi", "Selesai"].map(s => <option key={s}>{s}</option>)}
               </select>
             </div>
             <div className={styles.fg}>
@@ -495,7 +555,12 @@ export default function MahasiswaPage() {
         nama_prodi:       m.programstudi?.nama_prodi ?? "-",
         angkatan:         m.angkatan ?? "-",
         email:            m.email ?? "-",
-        status_skpi:      m.status_skpi ?? "Belum",
+        status_skpi: ({
+          diterbitkan: 'Selesai',
+          diajukan:    'Proses',
+          direvisi:    'Revisi',
+          belum:       'Belum',
+        })[m.status_skpi] ?? 'Belum',
         jumlah_kegiatan:  m._count?.kegiatanmahasiswa ?? m.jumlah_kegiatan ?? 0,
         total_icp:        m.total_icp ?? 0,
         foto_profil:      m.foto_profil ?? null,
@@ -544,7 +609,10 @@ export default function MahasiswaPage() {
   };
 
   const handleEditSave = async (form) => {
-    const res = await updateMahasiswa(modalEdit.id, form);
+    // Map label UI → enum Prisma
+    const STATUS_MAP = { Selesai: 'diterbitkan', Proses: 'diajukan', Revisi: 'direvisi', Belum: 'belum' };
+    const payload = { ...form, status_skpi: STATUS_MAP[form.status_skpi] ?? form.status_skpi };
+    const res = await updateMahasiswa(modalEdit.id, payload);
     if (res.ok) {
       toast("Data mahasiswa diperbarui");
       setModalEdit(null);
@@ -714,7 +782,7 @@ export default function MahasiswaPage() {
         <table className={styles.table}>
           <thead>
             <tr>
-              <th className={styles.thNo}>#</th>
+              <th className={styles.thNo}>No.</th>
               <th>Nama Mahasiswa</th>
               <th>NIM</th>
               <th>Program Studi</th>
@@ -738,9 +806,9 @@ export default function MahasiswaPage() {
               <tr>
                 <td colSpan={8} className={styles.emptyTd}>
                   <div className={styles.emptyState}>
-                    <Users size={44} />
+                    <GraduationCap size={44} />
                     <p>Tidak ada data mahasiswa</p>
-                    <span>Coba ubah filter atau tambah mahasiswa baru</span>
+                    <span>Coba ubah filter atau tambah data baru</span>
                   </div>
                 </td>
               </tr>
@@ -761,13 +829,13 @@ export default function MahasiswaPage() {
                       <div className={styles.avatar}>{row.nama.charAt(0)}</div>
                     )}
                     <div>
-                      <span className={styles.nameText}>{row.nama}</span>
-                      <span className={styles.emailText}>{row.email}</span>
+                      <div className={styles.nameText}>{row.nama}</div>
+                      <div className={styles.emailText}>{row.email}</div>
                     </div>
                   </div>
                 </td>
                 <td><span className={styles.nimBadge}>{row.nim}</span></td>
-                <td>{row.nama_prodi}</td>
+                <td><ProdiChip nama={row.nama_prodi} /></td>
                 <td className={styles.tdCenter}>{row.angkatan}</td>
                 <td className={styles.tdCenter}><StatusBadge status={row.status_skpi} /></td>
                 <td className={styles.tdCenter}>
@@ -776,12 +844,10 @@ export default function MahasiswaPage() {
                   </span>
                 </td>
                 <td className={styles.tdCenter}>
-                  <RowActions
-                    row={row}
+                  <RowActions row={row}
                     onEdit={() => setModalEdit(row)}
                     onResetPw={() => setModalReset(row)}
-                    onToggleActive={() => handleToggle(row)}
-                  />
+                    onToggleActive={() => handleToggle(row)} />
                 </td>
               </tr>
             ))}
