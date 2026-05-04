@@ -71,7 +71,7 @@ export async function login(username, password) {
     return { ok: false, error: "Username atau password salah (mode demo)" };
   }
   try {
-    const res  = await apiFetch("/api/auth/login", {
+    const res = await apiFetch("/api/auth/login", {
       method: "POST",
       body: JSON.stringify({ username, password }),
     });
@@ -87,7 +87,7 @@ export async function login(username, password) {
 
 export async function logout() {
   if (_mockMode || !API_URL) return;
-  try { await apiFetch("/api/auth/logout", { method: "POST" }); } catch {}
+  try { await apiFetch("/api/auth/logout", { method: "POST" }); } catch { }
   _mockMode = false;
 }
 
@@ -120,7 +120,7 @@ export async function updateProfile(payload) {
     return { ok: true, data: { success: true, message: "Tersimpan (mode demo)" } };
   }
   try {
-    const res  = await apiFetch("/api/auth/profile", {
+    const res = await apiFetch("/api/auth/profile", {
       method: "PATCH",
       body: JSON.stringify(payload),
     });
@@ -137,7 +137,7 @@ export async function uploadAvatar(formData) {
     return { ok: true, data: { success: true, avatar: "/img/avatar.jpg" } };
   }
   try {
-    const res  = await apiFetchForm("/api/auth/avatar", formData);
+    const res = await apiFetchForm("/api/auth/avatar", formData);
     const data = await res.json();
     return { ok: res.ok, data };
   } catch {
@@ -150,7 +150,7 @@ export async function getMahasiswa({ q = "", prodi = "Semua", page = 1 } = {}) {
   if (_mockMode || !API_URL) return null;
   try {
     const params = new URLSearchParams({ q, prodi, page });
-    const res    = await apiFetch(`/api/mahasiswa?${params}`);
+    const res = await apiFetch(`/api/mahasiswa?${params}`);
     if (res.ok) return res.json();
     return null;
   } catch {
@@ -167,25 +167,25 @@ const MOCK_MAHASISWA_SESSION = {
   user: { user_id: 2, username: "mhs_demo", email: "mhs@isb.ac.id", role: "mahasiswa" },
   mahasiswa: {
     id_mahasiswa: 1,
-    nim:          "2021001",
-    nama:         "Mio Haimiya",
-    email:        "mhs@isb.ac.id",
-    prodi:        "Teknik Informatika",
-    angkatan:     2021,
-    avatar:       "/img/avatar.jpg",
+    nim: "2021001",
+    nama: "Mio Haimiya",
+    email: "mhs@isb.ac.id",
+    prodi: "Teknik Informatika",
+    angkatan: 2021,
+    avatar: "/img/avatar.jpg",
   },
 };
 
 const MOCK_MAHASISWA_PROFILE = {
   id_mahasiswa: 1,
-  nim:          "2021001",
-  nama:         "Mio Haimiya",
-  email:        "mhs@isb.ac.id",
-  username:     "mhs_demo",
-  prodi:        "Teknik Informatika",
-  angkatan:     2021,
-  avatar:       "/img/avatar.jpg",
-  created_at:   "2026-01-01T00:00:00.000Z",
+  nim: "2021001",
+  nama: "Mio Haimiya",
+  email: "mhs@isb.ac.id",
+  username: "mhs_demo",
+  prodi: "Teknik Informatika",
+  angkatan: 2021,
+  avatar: "/img/avatar.jpg",
+  created_at: "2026-01-01T00:00:00.000Z",
 };
 
 export async function loginMahasiswa(nim, password) {
@@ -195,7 +195,7 @@ export async function loginMahasiswa(nim, password) {
     return { ok: false, error: "NIM atau password salah (mode demo)" };
   }
   try {
-    const res  = await apiFetch("/api/mahasiswa/auth/login", {
+    const res = await apiFetch("/api/mahasiswa/auth/login", {
       method: "POST",
       body: JSON.stringify({ nim, password }),
     });
@@ -238,7 +238,7 @@ export async function updateMahasiswaProfile(payload) {
     return { ok: true, data: { success: true, message: "Tersimpan (mode demo)" } };
   }
   try {
-    const res  = await apiFetch("/api/mahasiswa/auth/profile", {
+    const res = await apiFetch("/api/mahasiswa/auth/profile", {
       method: "PATCH",
       body: JSON.stringify(payload),
     });
@@ -255,7 +255,7 @@ export async function uploadMahasiswaAvatar(formData) {
     return { ok: true, data: { success: true, avatar: "/img/avatar.jpg" } };
   }
   try {
-    const res  = await apiFetchForm("/api/mahasiswa/auth/avatar", formData);
+    const res = await apiFetchForm("/api/mahasiswa/auth/avatar", formData);
     const data = await res.json();
     return { ok: res.ok, data };
   } catch {
@@ -266,7 +266,7 @@ export async function uploadMahasiswaAvatar(formData) {
 
 export async function logoutMahasiswa() {
   if (_mockMode || !API_URL) return;
-  try { await apiFetch("/api/mahasiswa/auth/logout", { method: "POST" }); } catch {}
+  try { await apiFetch("/api/mahasiswa/auth/logout", { method: "POST" }); } catch { }
 }
 
 export async function updateMahasiswaPassword({ password_lama, password_baru }) {
@@ -276,7 +276,7 @@ export async function updateMahasiswaPassword({ password_lama, password_baru }) 
     return { ok: true, data: { success: true, message: "Password berhasil diubah (mode demo)" } };
   }
   try {
-    const res  = await apiFetch("/api/mahasiswa/auth/password", {
+    const res = await apiFetch("/api/mahasiswa/auth/password", {
       method: "PATCH",
       body: JSON.stringify({ password_lama, password_baru }),
     });
@@ -309,7 +309,7 @@ export async function submitKegiatan(payload) {
     return { ok: true, data: { success: true, message: "Kegiatan ditambahkan (mode demo)" } };
   }
   try {
-    const res  = await apiFetch("/api/mahasiswa/kegiatan", {
+    const res = await apiFetch("/api/mahasiswa/kegiatan", {
       method: "POST",
       body: JSON.stringify(payload),
     });
@@ -326,7 +326,7 @@ export async function editKegiatan(id, payload) {
     return { ok: true, data: { success: true, message: "Kegiatan diupdate (mode demo)" } };
   }
   try {
-    const res  = await apiFetch(`/api/mahasiswa/kegiatan/${id}`, {
+    const res = await apiFetch(`/api/mahasiswa/kegiatan/${id}`, {
       method: "PATCH",
       body: JSON.stringify(payload),
     });
@@ -343,7 +343,7 @@ export async function deleteKegiatan(id) {
     return { ok: true, data: { success: true, message: "Kegiatan dihapus (mode demo)" } };
   }
   try {
-    const res  = await apiFetch(`/api/mahasiswa/kegiatan/${id}`, {
+    const res = await apiFetch(`/api/mahasiswa/kegiatan/${id}`, {
       method: "DELETE",
     });
     const data = await res.json();
@@ -454,17 +454,17 @@ function _mockGetAdmins({ q = "", page = 1, perPage = 10 }) {
   const lower = q.toLowerCase();
   const filtered = q
     ? _mockAdmins.filter(
-        a =>
-          a.nama.toLowerCase().includes(lower) ||
-          a.username.toLowerCase().includes(lower) ||
-          a.email.toLowerCase().includes(lower)
-      )
+      a =>
+        a.nama.toLowerCase().includes(lower) ||
+        a.username.toLowerCase().includes(lower) ||
+        a.email.toLowerCase().includes(lower)
+    )
     : [..._mockAdmins];
 
-  const total      = filtered.length;
+  const total = filtered.length;
   const totalPages = Math.ceil(total / perPage) || 1;
-  const safePage   = Math.min(Math.max(1, page), totalPages);
-  const rows       = filtered.slice((safePage - 1) * perPage, safePage * perPage);
+  const safePage = Math.min(Math.max(1, page), totalPages);
+  const rows = filtered.slice((safePage - 1) * perPage, safePage * perPage);
 
   return { rows, total, page: safePage, totalPages };
 }
@@ -502,11 +502,11 @@ export async function createAdmin(payload) {
     }
     const today = new Date().toISOString().split("T")[0];
     const newAdmin = {
-      id:         _mockAdminNextId++,
-      nama:       payload.nama,
-      username:   payload.username,
-      email:      payload.email,
-      aktif:      payload.aktif ?? true,
+      id: _mockAdminNextId++,
+      nama: payload.nama,
+      username: payload.username,
+      email: payload.email,
+      aktif: payload.aktif ?? true,
       created_at: today,
       last_login: "-",
     };
@@ -514,7 +514,7 @@ export async function createAdmin(payload) {
     return { ok: true, data: { success: true, message: "Admin ditambahkan (mode demo)", id: newAdmin.id } };
   }
   try {
-    const res  = await apiFetch("/api/admin/admins", {
+    const res = await apiFetch("/api/admin/admins", {
       method: "POST",
       body: JSON.stringify(payload),
     });
@@ -536,17 +536,17 @@ export async function updateAdmin(id, payload) {
     _mockAdmins = _mockAdmins.map(a =>
       a.id === id
         ? {
-            ...a,
-            ...(payload.nama  !== undefined && { nama:  payload.nama }),
-            ...(payload.email !== undefined && { email: payload.email }),
-            ...(payload.aktif !== undefined && { aktif: payload.aktif }),
-          }
+          ...a,
+          ...(payload.nama !== undefined && { nama: payload.nama }),
+          ...(payload.email !== undefined && { email: payload.email }),
+          ...(payload.aktif !== undefined && { aktif: payload.aktif }),
+        }
         : a
     );
     return { ok: true, data: { success: true, message: "Admin diupdate (mode demo)" } };
   }
   try {
-    const res  = await apiFetch(`/api/admin/admins/${id}`, {
+    const res = await apiFetch(`/api/admin/admins/${id}`, {
       method: "PATCH",
       body: JSON.stringify(payload),
     });
@@ -569,7 +569,7 @@ export async function deleteAdmin(id) {
     return { ok: true, data: { success: true, message: "Admin dihapus (mode demo)" } };
   }
   try {
-    const res  = await apiFetch(`/api/admin/admins/${id}`, { method: "DELETE" });
+    const res = await apiFetch(`/api/admin/admins/${id}`, { method: "DELETE" });
     const data = await res.json();
     return { ok: res.ok, data };
   } catch {
@@ -591,7 +591,7 @@ export async function resetAdminPassword(id, password) {
     return { ok: true, data: { success: true, message: `Password ${admin.username} direset ke Admin1234! (mode demo)` } };
   }
   try {
-    const res  = await apiFetch(`/api/admin/admins/${id}/reset`, {
+    const res = await apiFetch(`/api/admin/admins/${id}/reset`, {
       method: "POST",
       body: JSON.stringify({ password }),
     });
@@ -610,20 +610,20 @@ export async function resetAdminPassword(id, password) {
 
 /** Mock stats dashboard — dipakai saat backend tidak aktif */
 const MOCK_STATS = {
-  totalMahasiswa:    480,
-  totalKegiatan:     1340,
-  kegiatanMenunggu:  87,
+  totalMahasiswa: 480,
+  totalKegiatan: 1340,
+  kegiatanMenunggu: 87,
   kegiatanDisetujui: 620,
-  kegiatanRevisi:    43,
-  kegiatanDitolak:   28,
+  kegiatanRevisi: 43,
+  kegiatanDitolak: 28,
   pengajuanMenunggu: 15,
-  skpiResmi:         215,
-  kegiatanBulanan:   [],
+  skpiResmi: 215,
+  kegiatanBulanan: [],
   prodiStats: [
-    { id_prodi: 1, prodi: "Teknik Informatika", mahasiswa: 140, kegiatan: 420, menunggu: 30, disetujui: 190, verifikasi: 15, ditolak: 8,  skpi: 72 },
-    { id_prodi: 2, prodi: "Manajemen",          mahasiswa: 130, kegiatan: 370, menunggu: 22, disetujui: 170, verifikasi: 12, ditolak: 7,  skpi: 60 },
-    { id_prodi: 3, prodi: "Akuntansi",          mahasiswa: 110, kegiatan: 290, menunggu: 18, disetujui: 145, verifikasi: 9,  ditolak: 6,  skpi: 48 },
-    { id_prodi: 4, prodi: "Ilmu Komunikasi",    mahasiswa: 100, kegiatan: 260, menunggu: 17, disetujui: 115, verifikasi: 7,  ditolak: 7,  skpi: 35 },
+    { id_prodi: 1, prodi: "Teknik Informatika", mahasiswa: 140, kegiatan: 420, menunggu: 30, disetujui: 190, verifikasi: 15, ditolak: 8, skpi: 72 },
+    { id_prodi: 2, prodi: "Manajemen", mahasiswa: 130, kegiatan: 370, menunggu: 22, disetujui: 170, verifikasi: 12, ditolak: 7, skpi: 60 },
+    { id_prodi: 3, prodi: "Akuntansi", mahasiswa: 110, kegiatan: 290, menunggu: 18, disetujui: 145, verifikasi: 9, ditolak: 6, skpi: 48 },
+    { id_prodi: 4, prodi: "Ilmu Komunikasi", mahasiswa: 100, kegiatan: 260, menunggu: 17, disetujui: 115, verifikasi: 7, ditolak: 7, skpi: 35 },
   ],
 };
 
@@ -641,18 +641,18 @@ export async function getDashboardStats(prodiId = null) {
     if (!p) return MOCK_STATS;
     return {
       ...MOCK_STATS,
-      totalMahasiswa:    p.mahasiswa,
-      totalKegiatan:     p.kegiatan,
-      kegiatanMenunggu:  p.menunggu,
+      totalMahasiswa: p.mahasiswa,
+      totalKegiatan: p.kegiatan,
+      kegiatanMenunggu: p.menunggu,
       kegiatanDisetujui: p.disetujui,
-      kegiatanRevisi:    p.verifikasi,
-      kegiatanDitolak:   p.ditolak,
-      skpiResmi:         p.skpi,
+      kegiatanRevisi: p.verifikasi,
+      kegiatanDitolak: p.ditolak,
+      skpiResmi: p.skpi,
     };
   }
   try {
     const params = prodiId ? `?prodi=${prodiId}` : "";
-    const res    = await apiFetch(`/api/admin/stats${params}`);
+    const res = await apiFetch(`/api/admin/stats${params}`);
     if (res.ok) return res.json();
     return MOCK_STATS;
   } catch {
@@ -677,12 +677,12 @@ export function inferNotifType(judul = "") {
 
 /** Mock notifikasi — dipakai saat backend tidak aktif */
 let _mockNotifs = [
-  { id_notifikasi: 1, judul: "Pengajuan SKPI Baru", pesan: "Mahasiswa Andi Pratama (TI-2021) mengajukan SKPI",    status_baca: false, created_at: new Date(Date.now() - 5   * 60000).toISOString() },
-  { id_notifikasi: 2, judul: "Verifikasi Kegiatan",  pesan: "Kegiatan 'Seminar AI 2024' menunggu verifikasi",       status_baca: false, created_at: new Date(Date.now() - 12  * 60000).toISOString() },
-  { id_notifikasi: 3, judul: "SKPI Diterbitkan",     pesan: "SKPI Mahasiswa Sari Dewi telah diterbitkan",           status_baca: false, created_at: new Date(Date.now() - 28  * 60000).toISOString() },
-  { id_notifikasi: 4, judul: "Revisi Bukti",         pesan: "Bukti kegiatan Budi Santoso diminta revisi",           status_baca: false, created_at: new Date(Date.now() - 60  * 60000).toISOString() },
-  { id_notifikasi: 5, judul: "SKPI Diterbitkan",     pesan: "SKPI batch Manajemen 2020 berhasil digenerate",        status_baca: false, created_at: new Date(Date.now() - 120 * 60000).toISOString() },
-  { id_notifikasi: 6, judul: "Verifikasi Kegiatan",  pesan: "3 kegiatan baru dari prodi Akuntansi menunggu",        status_baca: false, created_at: new Date(Date.now() - 180 * 60000).toISOString() },
+  { id_notifikasi: 1, judul: "Pengajuan SKPI Baru", pesan: "Mahasiswa Andi Pratama (TI-2021) mengajukan SKPI", status_baca: false, created_at: new Date(Date.now() - 5 * 60000).toISOString() },
+  { id_notifikasi: 2, judul: "Verifikasi Kegiatan", pesan: "Kegiatan 'Seminar AI 2024' menunggu verifikasi", status_baca: false, created_at: new Date(Date.now() - 12 * 60000).toISOString() },
+  { id_notifikasi: 3, judul: "SKPI Diterbitkan", pesan: "SKPI Mahasiswa Sari Dewi telah diterbitkan", status_baca: false, created_at: new Date(Date.now() - 28 * 60000).toISOString() },
+  { id_notifikasi: 4, judul: "Revisi Bukti", pesan: "Bukti kegiatan Budi Santoso diminta revisi", status_baca: false, created_at: new Date(Date.now() - 60 * 60000).toISOString() },
+  { id_notifikasi: 5, judul: "SKPI Diterbitkan", pesan: "SKPI batch Manajemen 2020 berhasil digenerate", status_baca: false, created_at: new Date(Date.now() - 120 * 60000).toISOString() },
+  { id_notifikasi: 6, judul: "Verifikasi Kegiatan", pesan: "3 kegiatan baru dari prodi Akuntansi menunggu", status_baca: false, created_at: new Date(Date.now() - 180 * 60000).toISOString() },
 ];
 
 /**
@@ -692,7 +692,7 @@ let _mockNotifs = [
 export async function getAdminNotifikasi(limit = 20) {
   if (_mockMode || !API_URL) {
     _mockMode = true;
-    const rows   = _mockNotifs.slice(0, limit);
+    const rows = _mockNotifs.slice(0, limit);
     const unread = _mockNotifs.filter(n => !n.status_baca).length;
     return { rows, unread };
   }
@@ -776,7 +776,7 @@ export async function getMahasiswaList({ q = "", prodi = "Semua", page = 1 } = {
   if (_mockMode || !API_URL) return null;
   try {
     const params = new URLSearchParams({ q, prodi, page });
-    const res    = await apiFetch(`/api/mahasiswa?${params}`);
+    const res = await apiFetch(`/api/mahasiswa?${params}`);
     if (res.ok) return res.json();
     return null;
   } catch {
@@ -810,7 +810,7 @@ export async function createMahasiswa(payload) {
     return { ok: true, data: { success: true, message: "Mahasiswa ditambahkan (mode demo)" } };
   }
   try {
-    const res  = await apiFetch("/api/mahasiswa", {
+    const res = await apiFetch("/api/mahasiswa", {
       method: "POST",
       body: JSON.stringify(payload),
     });
@@ -831,7 +831,7 @@ export async function updateMahasiswa(id, payload) {
     return { ok: true, data: { success: true, message: "Data diperbarui (mode demo)" } };
   }
   try {
-    const res  = await apiFetch(`/api/mahasiswa/${id}`, {
+    const res = await apiFetch(`/api/mahasiswa/${id}`, {
       method: "PATCH",
       body: JSON.stringify(payload),
     });
@@ -852,7 +852,7 @@ export async function resetMahasiswaPassword(id) {
     return { ok: true, data: { success: true, message: "Password direset (mode demo)" } };
   }
   try {
-    const res  = await apiFetch(`/api/admin/mahasiswa/${id}/akun`, {
+    const res = await apiFetch(`/api/admin/mahasiswa/${id}/akun`, {
       method: "PATCH",
       body: JSON.stringify({ action: "reset_password" }),
     });
@@ -873,7 +873,7 @@ export async function toggleMahasiswaAkun(id) {
     return { ok: true, data: { success: true, message: "Status diubah (mode demo)" } };
   }
   try {
-    const res  = await apiFetch(`/api/admin/mahasiswa/${id}/akun`, {
+    const res = await apiFetch(`/api/admin/mahasiswa/${id}/akun`, {
       method: "PATCH",
       body: JSON.stringify({ action: "toggle_status" }),
     });
@@ -895,7 +895,7 @@ export async function importMahasiswaBulk(list) {
     return { ok: true, data: { success: list.length, failed: 0 } };
   }
   try {
-    const res  = await apiFetch("/api/mahasiswa/bulk", {
+    const res = await apiFetch("/api/mahasiswa/bulk", {
       method: "POST",
       body: JSON.stringify({ list }),
     });
@@ -905,4 +905,128 @@ export async function importMahasiswaBulk(list) {
     _mockMode = true;
     return { ok: true, data: { success: list.length, failed: 0 } };
   }
+}
+/* ══════════════════════════════════════════════════════════════
+   AKTIVITAS — admin verifikasi kegiatan mahasiswa
+══════════════════════════════════════════════════════════════ */
+
+/** GET /api/aktivitas?status=&q=&page= */
+export async function getAktivitasList({ status = "", q = "", page = 1 } = {}) {
+  if (_mockMode || !API_URL) return null;
+  try {
+    const params = new URLSearchParams();
+    if (status && status !== "Semua") params.set("status", status);
+    if (q) params.set("q", q);
+    params.set("page", page);
+    const res = await apiFetch(`/api/aktivitas?${params}`);
+    if (res.ok) return res.json();
+    return null;
+  } catch { _mockMode = true; return null; }
+}
+
+/** GET /api/aktivitas/:id */
+export async function getAktivitasDetail(id) {
+  if (_mockMode || !API_URL) return null;
+  try {
+    const res = await apiFetch(`/api/aktivitas/${id}`);
+    if (res.ok) return res.json();
+    return null;
+  } catch { return null; }
+}
+
+/** PATCH /api/aktivitas/:id/verifikasi — ubah status verifikasi */
+export async function verifikasiAktivitas(id, status, catatan_admin = "") {
+  if (_mockMode || !API_URL) {
+    return { ok: true, data: { id_kegiatan: id, status_verifikasi: status } };
+  }
+  try {
+    const res = await apiFetch(`/api/aktivitas/${id}/verifikasi`, {
+      method: "PATCH",
+      body: JSON.stringify({ status, catatan_admin }),
+    });
+    const data = await res.json();
+    return { ok: res.ok, data };
+  } catch { return { ok: false, data: { error: "Network error" } }; }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   ICP — Integrity Credit Points
+══════════════════════════════════════════════════════════════ */
+
+/** GET /api/icp/summary?page= — ringkasan ICP semua mahasiswa */
+export async function getIcpSummary({ page = 1 } = {}) {
+  if (_mockMode || !API_URL) return null;
+  try {
+    const res = await apiFetch(`/api/icp/summary?page=${page}`);
+    if (res.ok) return res.json();
+    return null;
+  } catch { return null; }
+}
+
+/** GET /api/icp/mahasiswa/:id — ICP satu mahasiswa */
+export async function getIcpMahasiswa(id) {
+  if (_mockMode || !API_URL) return null;
+  try {
+    const res = await apiFetch(`/api/icp/mahasiswa/${id}`);
+    if (res.ok) return res.json();
+    return null;
+  } catch { return null; }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   SKPI — Generate & Terbitkan
+══════════════════════════════════════════════════════════════ */
+
+/** POST /api/skpi/generate — generate SKPI untuk satu mahasiswa */
+export async function generateSkpi(id_mahasiswa, nomor_skpi = "") {
+  if (_mockMode || !API_URL) {
+    return { ok: true, data: { id_skpi: Date.now(), nomor_skpi, status: "draft" } };
+  }
+  try {
+    const res = await apiFetch("/api/skpi/generate", {
+      method: "POST",
+      body: JSON.stringify({ id_mahasiswa, nomor_skpi: nomor_skpi || undefined }),
+    });
+    const data = await res.json();
+    return { ok: res.ok, data };
+  } catch { return { ok: false, data: { error: "Network error" } }; }
+}
+
+/** PATCH /api/skpi/:id/status — set status draft|resmi */
+export async function publishSkpi(id_skpi, status = "resmi") {
+  if (_mockMode || !API_URL) {
+    return { ok: true, data: { id_skpi, status } };
+  }
+  try {
+    const res = await apiFetch(`/api/skpi/${id_skpi}/status`, {
+      method: "PATCH",
+      body: JSON.stringify({ status }),
+    });
+    const data = await res.json();
+    return { ok: res.ok, data };
+  } catch { return { ok: false, data: { error: "Network error" } }; }
+}
+
+/** GET /api/skpi?status=&page= — daftar SKPI */
+export async function getSkpiList({ status = "", mahasiswa_id = "", page = 1 } = {}) {
+  if (_mockMode || !API_URL) return null;
+  try {
+    const params = new URLSearchParams();
+    if (status) params.set("status", status);
+    if (mahasiswa_id) params.set("mahasiswa_id", mahasiswa_id);
+    params.set("page", page);
+    const res = await apiFetch(`/api/skpi?${params}`);
+    if (res.ok) return res.json();
+    return null;
+  } catch { return null; }
+}
+
+/** GET /api/mahasiswa/:id — detail satu mahasiswa (untuk SKPI preview) */
+export async function getMahasiswaDetail(id) {
+  if (_mockMode || !API_URL) return null;
+  try {
+    const res = await apiFetch(`/api/mahasiswa/${id}`);
+    if (res.ok) return res.json();
+    return null;
+  } catch { return null; }
 }

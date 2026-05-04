@@ -257,7 +257,7 @@ function MahasiswaLayoutInner({ children }) {
       <aside className={`${styles.sidebar} ${collapsed ? styles.collapsed : ""} ${sidebarOpen ? styles.open : ""}`} style={mockMode ? { marginTop: 29 } : {}}>
         <div className={styles.brand}>
           <div className={styles.logo}>
-            <Image src="/img/logo_isb.png" alt="logo" width={80} height={35} loading="eager" />
+            <Image src="/img/logo_isb.png" alt="logo" width={80} height={35} priority style={{ height: "auto" }} />
           </div>
           {!collapsed && <div className={styles.brandText}><strong>SKPI</strong><span>Mahasiswa</span></div>}
           <button className={styles.collapseBtn} onClick={() => { setCollapsed(!collapsed); setSidebarOpen(false); }}>

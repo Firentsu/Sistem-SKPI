@@ -158,26 +158,24 @@ export default function Home() {
                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
-          </form>
 
-          <div className={styles.loginOptions}>
-            <label className={styles.checkbox}>
-              <input type="checkbox" /><span>Ingat saya</span>
-            </label>
-            <a href="#" className={styles.forgotPassword}>Lupa password?</a>
-          </div>
+            <div className={styles.loginOptions}>
+              <label className={styles.checkbox}>
+                <input type="checkbox" /><span>Ingat saya</span>
+              </label>
+              <a href="#" className={styles.forgotPassword}>Lupa password?</a>
+            </div>
 
-          <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 12 }}>
             <button
+              type="submit"
               className={styles.button}
-              onClick={(e) => { e.preventDefault(); handleLogin(); }}
               disabled={loadingLogin}
             >
               {loadingLogin
                 ? <><span className={styles.spinner} />Memproses...</>
                 : <>Login<ChevronRight size={16} /></>}
             </button>
-          </div>
+          </form>
 
           <p className={styles.noteText}>* Gunakan username dan password SIAKAD Anda</p>
           <Toast message={message} onClose={clearError} />
@@ -243,7 +241,7 @@ export default function Home() {
         <div className={styles.headerContent}>
           <div className={styles.headerLogo}>
             {/* FIX: nama file asli "Logo_isb.png" — huruf L kapital */}
-            <Image src="/img/Logo_isb.png" alt="ISB Logo" width={70} height={40} className={styles.headerLogoImg} />
+            <Image src="/img/Logo_isb.png" alt="ISB Logo" width={70} height={40} className={styles.headerLogoImg} priority />
             <div className={styles.headerTitle}><span>INSTITUT</span><span>SHANTI BHUANA</span></div>
           </div>
         </div>
@@ -254,7 +252,7 @@ export default function Home() {
           <div className={styles.leftContent}>
             <div className={styles.logoWrapper}>
               {/* FIX: konsisten "Logo_isb.png" — huruf L kapital */}
-              <Image src="/img/Logo_isb.png" alt="ISB Logo" width={150} height={90} className={styles.logo} />
+              <Image src="/img/Logo_isb.png" alt="ISB Logo" width={150} height={90} className={styles.logo} priority />
             </div>
             <h1>SKPI ISB</h1>
             <h2>Surat Keterangan<br />Pendamping Ijazah</h2>

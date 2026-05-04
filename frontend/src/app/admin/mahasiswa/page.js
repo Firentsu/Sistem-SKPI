@@ -22,16 +22,66 @@ import {
   getAvatarUrl,
 } from "@/lib/api";
 
-/* ─────────────────────────────────────────
-   CONSTANTS
-───────────────────────────────────────── */
 const PER_PAGE      = 10;
 const ANGKATAN_LIST = ["Semua", "2025", "2024", "2023", "2022", "2021", "2020"];
 const STATUS_SKPI   = ["Semua", "Belum", "Proses", "Selesai"];
 
 /* ─────────────────────────────────────────
-   TOAST
+   PRODI COLOR SYSTEM — sesuai data DB
 ───────────────────────────────────────── */
+const PRODI_CONFIG = {
+  "Teknologi Informasi": {
+    bg: "#ede9fe", color: "#5b21b6", border: "#c4b5fd",
+    bgDark: "#7c3aed", bgLight: "#f5f3ff", label: "TI",
+    gradient: "linear-gradient(135deg,#7c3aed 0%,#5b21b6 100%)",
+    dot: "#a78bfa", fakultas: "Teknologi",
+  },
+  "Sistem Informasi": {
+    bg: "#dbeafe", color: "#1d4ed8", border: "#93c5fd",
+    bgDark: "#2563eb", bgLight: "#eff6ff", label: "SI",
+    gradient: "linear-gradient(135deg,#2563eb 0%,#1d4ed8 100%)",
+    dot: "#60a5fa", fakultas: "Teknologi",
+  },
+  "Manajemen": {
+    bg: "#e0f2fe", color: "#0369a1", border: "#7dd3fc",
+    bgDark: "#0284c7", bgLight: "#f0f9ff", label: "MJ",
+    gradient: "linear-gradient(135deg,#0284c7 0%,#0369a1 100%)",
+    dot: "#38bdf8", fakultas: "Bisnis",
+  },
+  "Kewirausahaan": {
+    bg: "#d1fae5", color: "#065f46", border: "#6ee7b7",
+    bgDark: "#059669", bgLight: "#ecfdf5", label: "KW",
+    gradient: "linear-gradient(135deg,#059669 0%,#065f46 100%)",
+    dot: "#34d399", fakultas: "Bisnis",
+  },
+  "Pendidikan Guru Sekolah Dasar": {
+    bg: "#fef9c3", color: "#854d0e", border: "#fde047",
+    bgDark: "#ca8a04", bgLight: "#fefce8", label: "PGSD",
+    gradient: "linear-gradient(135deg,#ca8a04 0%,#854d0e 100%)",
+    dot: "#facc15", fakultas: "Pendidikan",
+  },
+  "Agroekoteknologi": {
+    bg: "#dcfce7", color: "#166534", border: "#86efac",
+    bgDark: "#16a34a", bgLight: "#f0fdf4", label: "AGR",
+    gradient: "linear-gradient(135deg,#16a34a 0%,#166534 100%)",
+    dot: "#4ade80", fakultas: "Pertanian",
+  },
+};
+
+const PRODI_FALLBACK = [
+  { bg: "#f3e8ff", color: "#7e22ce", border: "#d8b4fe", bgDark: "#9333ea", bgLight: "#fdf4ff", label: "?", gradient: "linear-gradient(135deg,#9333ea,#7e22ce)", dot: "#c084fc" },
+  { bg: "#fce7f3", color: "#9d174d", border: "#f9a8d4", bgDark: "#db2777", bgLight: "#fdf2f8", label: "?", gradient: "linear-gradient(135deg,#db2777,#9d174d)", dot: "#f472b6" },
+  { bg: "#ffedd5", color: "#c2410c", border: "#fdba74", bgDark: "#ea580c", bgLight: "#fff7ed", label: "?", gradient: "linear-gradient(135deg,#ea580c,#c2410c)", dot: "#fb923c" },
+];
+
+function getProdiConfig(nama) {
+  if (!nama || nama === "-") return PRODI_FALLBACK[0];
+  if (PRODI_CONFIG[nama]) return PRODI_CONFIG[nama];
+  const hash = (nama || "").split("").reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
+  return PRODI_FALLBACK[hash % PRODI_FALLBACK.length];
+}
+
+/* ── TOAST ── */
 function Toast({ toasts, remove }) {
   return (
     <div className={styles.toastStack}>
@@ -57,82 +107,90 @@ function useToast() {
   return { toasts, add, remove };
 }
 
-/* ─────────────────────────────────────────
-   PRODI CHIP — warna berbeda per prodi
-───────────────────────────────────────── */
-// Warna per program studi — konsisten & berbeda tiap prodi
-const PRODI_COLORS = {
-  // Teknik & Informatika → ungu
-  "Teknologi Informasi":      { bg: "#ede9fe", color: "#5b21b6", border: "#c4b5fd" },
-  "Teknik Informatika":       { bg: "#ede9fe", color: "#5b21b6", border: "#c4b5fd" },
-  "Sistem Informasi":         { bg: "#f5f3ff", color: "#4c1d95", border: "#a78bfa" },
-  // Bisnis & Ekonomi → biru
-  "Manajemen":                { bg: "#dbeafe", color: "#1d4ed8", border: "#93c5fd" },
-  "Akuntansi":                { bg: "#e0f2fe", color: "#0369a1", border: "#7dd3fc" },
-  "Ekonomi":                  { bg: "#cffafe", color: "#0e7490", border: "#67e8f9" },
-  // Sosial & Komunikasi → hijau toska
-  "Ilmu Komunikasi":          { bg: "#ccfbf1", color: "#0f766e", border: "#5eead4" },
-  "Hubungan Internasional":   { bg: "#d1fae5", color: "#065f46", border: "#6ee7b7" },
-  // Hukum → kuning
-  "Hukum":                    { bg: "#fef9c3", color: "#854d0e", border: "#fde047" },
-  // Psikologi → pink
-  "Psikologi":                { bg: "#fce7f3", color: "#be185d", border: "#f9a8d4" },
-  // Teknik sipil/mesin → oranye
-  "Teknik Sipil":             { bg: "#ffedd5", color: "#c2410c", border: "#fdba74" },
-  "Teknik Mesin":             { bg: "#fff7ed", color: "#9a3412", border: "#fb923c" },
-};
-
-// Fallback untuk prodi yang tidak terdaftar di atas
-// Warna dipilih berdasarkan hash nama prodi → selalu konsisten
-const PRODI_FALLBACK_COLORS = [
-  { bg: "#dbeafe", color: "#1e40af", border: "#93c5fd" },
-  { bg: "#dcfce7", color: "#166534", border: "#86efac" },
-  { bg: "#ede9fe", color: "#5b21b6", border: "#c4b5fd" },
-  { bg: "#fce7f3", color: "#9d174d", border: "#f9a8d4" },
-  { bg: "#ffedd5", color: "#c2410c", border: "#fdba74" },
-  { bg: "#ccfbf1", color: "#0f766e", border: "#5eead4" },
-  { bg: "#fef9c3", color: "#713f12", border: "#fde047" },
-  { bg: "#fee2e2", color: "#991b1b", border: "#fca5a5" },
-];
-
+/* ── PRODI CHIP ── */
 function ProdiChip({ nama }) {
-  // Hash sederhana dari seluruh nama → warna konsisten untuk prodi yang tidak dikenal
-  const hash = (nama || "").split("").reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
-  const style = PRODI_COLORS[nama] ?? PRODI_FALLBACK_COLORS[hash % PRODI_FALLBACK_COLORS.length];
+  const cfg = getProdiConfig(nama);
   return (
     <span style={{
-      display: "inline-block",
-      padding: "3px 10px",
-      borderRadius: "20px",
-      fontSize: "11.5px",
-      fontWeight: 600,
-      background: style.bg,
-      color: style.color,
-      border: `1px solid ${style.border}`,
-      whiteSpace: "nowrap",
+      display: "inline-flex", alignItems: "center", gap: "5px",
+      padding: "4px 10px 4px 6px", borderRadius: "20px",
+      fontSize: "11.5px", fontWeight: 700,
+      background: cfg.bg, color: cfg.color,
+      border: `1.5px solid ${cfg.border}`, whiteSpace: "nowrap",
     }}>
+      <span style={{
+        width: "18px", height: "18px", borderRadius: "50%",
+        background: cfg.gradient, color: "#fff", fontSize: "8px",
+        fontWeight: 800, display: "inline-flex", alignItems: "center",
+        justifyContent: "center", flexShrink: 0,
+      }}>
+        {(cfg.label || "?").slice(0, 2)}
+      </span>
       {nama || "-"}
     </span>
   );
 }
 
-/* ─────────────────────────────────────────
-   STATUS BADGE
-───────────────────────────────────────── */
+/* ── PRODI FILTER CHIP ── */
+function ProdiFilterChip({ nama, active, onClick }) {
+  const cfg = getProdiConfig(nama === "Semua" ? null : nama);
+  const isSemua = nama === "Semua";
+  return (
+    <button onClick={onClick} style={{
+      display: "inline-flex", alignItems: "center", gap: "6px",
+      padding: "5px 14px 5px 9px", borderRadius: "20px",
+      fontSize: "12.5px", fontWeight: active ? 700 : 500,
+      cursor: "pointer", transition: "all 0.15s",
+      border: `1.5px solid ${active ? (isSemua ? "#765439" : cfg.border) : "#e8d5c4"}`,
+      background: active ? (isSemua ? "#765439" : cfg.bg) : "#fff",
+      color: active ? (isSemua ? "#fde68a" : cfg.color) : "#765439",
+    }}>
+      {!isSemua && (
+        <span style={{
+          width: "14px", height: "14px", borderRadius: "50%", flexShrink: 0,
+          background: active ? cfg.gradient : cfg.bg,
+          border: `1.5px solid ${cfg.border}`,
+          display: "inline-block",
+        }} />
+      )}
+      {nama}
+    </button>
+  );
+}
+
+/* ── AVATAR dengan warna prodi ── */
+function MhsAvatar({ row }) {
+  const cfg = getProdiConfig(row.nama_prodi);
+  if (row.foto_profil) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={getAvatarUrl(row.foto_profil)} alt={row.nama}
+        className={styles.avatarImg}
+        onError={e => { e.currentTarget.onerror = null; e.currentTarget.src = "/img/avatar.jpg"; }}
+      />
+    );
+  }
+  return (
+    <div className={styles.avatar} style={{ background: cfg.gradient }} title={row.nama_prodi}>
+      {row.nama.charAt(0)}
+    </div>
+  );
+}
+
+/* ── STATUS BADGE ── */
 function StatusBadge({ status }) {
   const cfg = {
     Selesai: { cls: styles.badgeSelesai, icon: <CheckCircle2 size={11} /> },
-    Proses:  { cls: styles.badgeProses,  icon: <RefreshCw size={11} />    },
-    Revisi:  { cls: styles.badgeRevisi,  icon: <AlertCircle size={11} />  },
-    Belum:   { cls: styles.badgeBelum,   icon: <AlertCircle size={11} />  },
+    Proses:  { cls: styles.badgeProses,  icon: <RefreshCw size={11} /> },
+    Revisi:  { cls: styles.badgeRevisi,  icon: <AlertCircle size={11} /> },
+    Belum:   { cls: styles.badgeBelum,   icon: <AlertCircle size={11} /> },
   };
   const { cls, icon } = cfg[status] || cfg.Belum;
   return <span className={`${styles.badge} ${cls}`}>{icon}{status}</span>;
 }
 
-/* ─────────────────────────────────────────
-   STAT CARD
-───────────────────────────────────────── */
+/* ── STAT CARD ── */
 function StatCard({ icon: Icon, title, value, subtitle, color }) {
   return (
     <div className={`${styles.statCard} ${styles[`stat_${color}`]}`}>
@@ -146,32 +204,65 @@ function StatCard({ icon: Icon, title, value, subtitle, color }) {
   );
 }
 
-/* ─────────────────────────────────────────
-   INPUT PASSWORD
-───────────────────────────────────────── */
+/* ── PRODI DISTRIBUTION BAR ── */
+function ProdiDistBar({ data }) {
+  const counts = {};
+  data.forEach(row => {
+    const k = row.nama_prodi || "-";
+    counts[k] = (counts[k] || 0) + 1;
+  });
+  const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+  const total  = data.length || 1;
+  if (sorted.length === 0) return null;
+
+  return (
+    <div className={styles.prodiDistCard}>
+      <div className={styles.prodiDistHeader}>
+        <GraduationCap size={14} />
+        <span>Distribusi per Program Studi</span>
+      </div>
+      <div className={styles.prodiDistList}>
+        {sorted.map(([nama, count]) => {
+          const cfg = getProdiConfig(nama);
+          const pct = Math.round((count / total) * 100);
+          return (
+            <div key={nama} className={styles.prodiDistRow}>
+              <div className={styles.prodiDistLabel}>
+                <span className={styles.prodiDistDot} style={{ background: cfg.gradient }} />
+                <span style={{ color: cfg.color, fontWeight: 600, fontSize: "12px" }}>{nama}</span>
+              </div>
+              <div className={styles.prodiDistBarWrap}>
+                <div className={styles.prodiDistBarFill}
+                  style={{ width: `${pct}%`, background: cfg.gradient }} />
+              </div>
+              <span className={styles.prodiDistCount} style={{ color: cfg.color }}>
+                {count}<small style={{ color: "#b09880", fontWeight: 400 }}> ({pct}%)</small>
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/* ── PASSWORD INPUT ── */
 function PasswordInput({ value, onChange, placeholder, id }) {
   const [show, setShow] = useState(false);
   return (
     <div className={styles.pwWrap}>
-      <input
-        id={id}
-        type={show ? "text" : "password"}
-        className={styles.input}
-        value={value}
-        onChange={onChange}
-        placeholder={placeholder}
-        autoComplete="new-password"
-      />
-      <button type="button" className={styles.pwEye} onClick={() => setShow(v => !v)} tabIndex={-1}>
+      <input id={id} type={show ? "text" : "password"}
+        className={styles.input} value={value} onChange={onChange}
+        placeholder={placeholder} autoComplete="new-password" />
+      <button type="button" className={styles.pwEye}
+        onClick={() => setShow(v => !v)} tabIndex={-1}>
         {show ? <EyeOff size={15} /> : <Eye size={15} />}
       </button>
     </div>
   );
 }
 
-/* ─────────────────────────────────────────
-   MODAL TAMBAH / EDIT MAHASISWA
-───────────────────────────────────────── */
+/* ── MODAL TAMBAH / EDIT ── */
 function MahasiswaFormModal({ mode, data, onClose, onSave, prodiList }) {
   const initial = data || {
     nama: "", nim: "", id_prodi: "", angkatan: "2024",
@@ -181,6 +272,9 @@ function MahasiswaFormModal({ mode, data, onClose, onSave, prodiList }) {
   const [form, setForm]     = useState(initial);
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
+
+  const selectedProdi = prodiList.find(p => String(p.id_prodi) === String(form.id_prodi));
+  const prodiCfg = getProdiConfig(selectedProdi?.nama_prodi);
 
   const set = (k, v) => {
     setForm(prev => ({ ...prev, [k]: v }));
@@ -219,14 +313,22 @@ function MahasiswaFormModal({ mode, data, onClose, onSave, prodiList }) {
   return (
     <div className={styles.modalOverlay} onClick={onClose}>
       <div className={styles.modalBox} onClick={e => e.stopPropagation()}>
-        <div className={styles.modalHeader}>
+        <div className={styles.modalHeader}
+          style={selectedProdi ? { borderBottom: `2.5px solid ${prodiCfg.border}` } : {}}>
           <div className={styles.modalHeaderLeft}>
-            <div className={styles.modalHeaderIcon}>
+            <div className={styles.modalHeaderIcon}
+              style={selectedProdi ? { background: prodiCfg.gradient, color: "#fff" } : {}}>
               {mode === "add" ? <Plus size={16} /> : <Edit2 size={16} />}
             </div>
             <div>
-              <h3 className={styles.modalTitle}>{mode === "add" ? "Tambah Mahasiswa" : "Edit Data Mahasiswa"}</h3>
-              <p className={styles.modalSub}>Isi data akun mahasiswa dengan benar</p>
+              <h3 className={styles.modalTitle}>
+                {mode === "add" ? "Tambah Mahasiswa" : "Edit Data Mahasiswa"}
+              </h3>
+              <p className={styles.modalSub}>
+                {selectedProdi
+                  ? <span style={{ color: prodiCfg.color, fontWeight: 700 }}>{selectedProdi.nama_prodi}</span>
+                  : "Isi data akun mahasiswa dengan benar"}
+              </p>
             </div>
           </div>
           <button className={styles.modalCloseBtn} onClick={onClose}><X size={17} /></button>
@@ -252,22 +354,35 @@ function MahasiswaFormModal({ mode, data, onClose, onSave, prodiList }) {
             </div>
             <div className={styles.fg}>
               <label className={styles.fl}>Program Studi</label>
-              <select className={styles.input} value={form.id_prodi} onChange={e => set("id_prodi", e.target.value)}>
+              <select className={styles.input} value={form.id_prodi}
+                onChange={e => set("id_prodi", e.target.value)}
+                style={selectedProdi ? {
+                  borderColor: prodiCfg.border,
+                  backgroundColor: prodiCfg.bgLight,
+                  color: prodiCfg.color, fontWeight: 700,
+                } : {}}>
                 <option value="">-- Pilih Prodi --</option>
                 {prodiList.map(p => (
                   <option key={p.id_prodi} value={p.id_prodi}>{p.nama_prodi}</option>
                 ))}
               </select>
+              {selectedProdi && (
+                <div style={{ marginTop: "5px" }}>
+                  <ProdiChip nama={selectedProdi.nama_prodi} />
+                </div>
+              )}
             </div>
             <div className={styles.fg}>
               <label className={styles.fl}>Angkatan</label>
-              <select className={styles.input} value={form.angkatan} onChange={e => set("angkatan", e.target.value)}>
+              <select className={styles.input} value={form.angkatan}
+                onChange={e => set("angkatan", e.target.value)}>
                 {ANGKATAN_LIST.filter(a => a !== "Semua").map(a => <option key={a}>{a}</option>)}
               </select>
             </div>
             <div className={`${styles.fg} ${styles.fullSpan}`}>
               <label className={styles.fl}>Email <span className={styles.req}>*</span></label>
-              <input type="email" className={`${styles.input} ${errors.email ? styles.inputErr : ""}`}
+              <input type="email"
+                className={`${styles.input} ${errors.email ? styles.inputErr : ""}`}
                 value={form.email} onChange={e => set("email", e.target.value)}
                 placeholder="email@student.isb.ac.id" />
               {errors.email && <small className={styles.errMsg}>{errors.email}</small>}
@@ -300,7 +415,8 @@ function MahasiswaFormModal({ mode, data, onClose, onSave, prodiList }) {
           <div className={styles.formGrid2}>
             <div className={styles.fg}>
               <label className={styles.fl}>Status SKPI</label>
-              <select className={styles.input} value={form.status_skpi} onChange={e => set("status_skpi", e.target.value)}>
+              <select className={styles.input} value={form.status_skpi}
+                onChange={e => set("status_skpi", e.target.value)}>
                 {["Belum", "Proses", "Revisi", "Selesai"].map(s => <option key={s}>{s}</option>)}
               </select>
             </div>
@@ -318,7 +434,8 @@ function MahasiswaFormModal({ mode, data, onClose, onSave, prodiList }) {
 
         <div className={styles.modalFooter}>
           <button className={styles.btnGhost} onClick={onClose}>Batal</button>
-          <button className={styles.btnSave} onClick={handleSave} disabled={saving}>
+          <button className={styles.btnSave} onClick={handleSave} disabled={saving}
+            style={selectedProdi ? { background: prodiCfg.gradient } : {}}>
             {saving ? <span className={styles.spin} /> : <Check size={15} />}
             {saving ? "Menyimpan…" : mode === "add" ? "Tambah Mahasiswa" : "Simpan Perubahan"}
           </button>
@@ -328,16 +445,10 @@ function MahasiswaFormModal({ mode, data, onClose, onSave, prodiList }) {
   );
 }
 
-/* ─────────────────────────────────────────
-   MODAL RESET PASSWORD
-───────────────────────────────────────── */
+/* ── MODAL RESET PASSWORD ── */
 function ResetPasswordModal({ mahasiswa, onClose, onDone }) {
   const [loading, setLoading] = useState(false);
-  const handle = async () => {
-    setLoading(true);
-    await onDone();
-    setLoading(false);
-  };
+  const handle = async () => { setLoading(true); await onDone(); setLoading(false); };
   return (
     <div className={styles.modalOverlay} onClick={onClose}>
       <div className={`${styles.modalBox} ${styles.modalSm}`} onClick={e => e.stopPropagation()}>
@@ -354,7 +465,7 @@ function ResetPasswordModal({ mahasiswa, onClose, onDone }) {
         <div className={styles.modalBody}>
           <div className={styles.confirmBox}>
             <p>Reset password untuk <strong>{mahasiswa.nama}</strong>?</p>
-            <p className={styles.confirmNote}>Password baru: <strong>{mahasiswa.nim}</strong> (NIM mahasiswa)</p>
+            <p className={styles.confirmNote}>Password baru: <strong>{mahasiswa.nim}</strong></p>
           </div>
         </div>
         <div className={styles.modalFooter}>
@@ -369,14 +480,12 @@ function ResetPasswordModal({ mahasiswa, onClose, onDone }) {
   );
 }
 
-/* ─────────────────────────────────────────
-   MODAL IMPORT EXCEL
-───────────────────────────────────────── */
+/* ── MODAL IMPORT EXCEL ── */
 function ImportExcelModal({ onClose, onDone }) {
-  const [file, setFile]       = useState(null);
+  const [file, setFile]         = useState(null);
   const [dragging, setDragging] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError]     = useState("");
+  const [loading, setLoading]   = useState(false);
+  const [error, setError]       = useState("");
   const inputRef = useRef(null);
 
   const handleFile = f => {
@@ -384,33 +493,25 @@ function ImportExcelModal({ onClose, onDone }) {
     const ext = f.name.split(".").pop().toLowerCase();
     if (!["xlsx", "xls", "csv"].includes(ext)) { setError("Format harus .xlsx, .xls, atau .csv"); return; }
     if (f.size > 5 * 1024 * 1024) { setError("Ukuran maksimal 5 MB"); return; }
-    setError("");
-    setFile(f);
+    setError(""); setFile(f);
   };
 
   const handleImport = async () => {
     if (!file) return;
-    setLoading(true);
-    setError("");
+    setLoading(true); setError("");
     try {
       const data     = await file.arrayBuffer();
       const workbook = XLSX.read(data);
       const rows     = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
       if (rows.length === 0) throw new Error("File kosong");
-
       const required = ["Nama", "NIM", "Program Studi", "Angkatan", "Email"];
       const missing  = required.filter(col => !(col in rows[0]));
       if (missing.length) throw new Error(`Kolom tidak lengkap: ${missing.join(", ")}`);
-
       const list = rows.map(row => ({
-        nama:     row["Nama"],
-        nim:      row["NIM"].toString(),
-        id_prodi: row["Program Studi"],
-        angkatan: row["Angkatan"].toString(),
-        email:    row["Email"],
-        password: row["Password"] || row["NIM"].toString(),
+        nama: row["Nama"], nim: row["NIM"].toString(),
+        id_prodi: row["Program Studi"], angkatan: row["Angkatan"].toString(),
+        email: row["Email"], password: row["Password"] || row["NIM"].toString(),
       }));
-
       await onDone(list);
     } catch (err) {
       setError(err.message);
@@ -475,9 +576,7 @@ function ImportExcelModal({ onClose, onDone }) {
   );
 }
 
-/* ─────────────────────────────────────────
-   ROW ACTION DROPDOWN
-───────────────────────────────────────── */
+/* ── ROW ACTIONS DROPDOWN ── */
 function RowActions({ row, onEdit, onResetPw, onToggleActive }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
@@ -509,63 +608,58 @@ function RowActions({ row, onEdit, onResetPw, onToggleActive }) {
   );
 }
 
-/* ─────────────────────────────────────────
-   HALAMAN UTAMA
-───────────────────────────────────────── */
+/* ── HALAMAN UTAMA ── */
 export default function MahasiswaPage() {
-  const [data, setData]           = useState([]);
-  const [total, setTotal]         = useState(0);
+  const [data, setData]             = useState([]);
+  const [total, setTotal]           = useState(0);
   const [totalPages, setTotalPages] = useState(1);
-  const [loading, setLoading]     = useState(true);
-  const [prodiList, setProdiList] = useState([]);
+  const [loading, setLoading]       = useState(true);
+  const [prodiList, setProdiList]   = useState([]);
 
-  const [search, setSearch]               = useState("");
-  const [filterProdi, setFilterProdi]     = useState("Semua");
+  const [search, setSearch]                 = useState("");
+  const [filterProdi, setFilterProdi]       = useState("Semua");
   const [filterAngkatan, setFilterAngkatan] = useState("Semua");
-  const [filterStatus, setFilterStatus]   = useState("Semua");
-  const [currentPage, setCurrentPage]     = useState(1);
-  const [filterOpen, setFilterOpen]       = useState(false);
-  const [modalAdd, setModalAdd]           = useState(false);
-  const [modalEdit, setModalEdit]         = useState(null);
-  const [modalReset, setModalReset]       = useState(null);
-  const [modalImport, setModalImport]     = useState(false);
-  const { toasts, add: toast, remove }    = useToast();
+  const [filterStatus, setFilterStatus]     = useState("Semua");
+  const [currentPage, setCurrentPage]       = useState(1);
+  const [filterOpen, setFilterOpen]         = useState(false);
+  const [modalAdd, setModalAdd]             = useState(false);
+  const [modalEdit, setModalEdit]           = useState(null);
+  const [modalReset, setModalReset]         = useState(null);
+  const [modalImport, setModalImport]       = useState(false);
+  const { toasts, add: toast, remove }      = useToast();
 
-  // ── Load prodi list sekali saat mount ─────────────────────
   useEffect(() => {
     getProdiList().then(list => { if (list) setProdiList(list); });
     document.title = "Manajemen Mahasiswa | Admin SKPI";
   }, []);
 
-  // ── Load data dari API ─────────────────────────────────────
   const loadData = useCallback(async (
-    q       = search,
-    prodi   = filterProdi,
-    page    = currentPage,
+    q     = search,
+    prodi = filterProdi,
+    page  = currentPage,
   ) => {
     setLoading(true);
     const result = await getMahasiswaList({ q, prodi, page });
     if (result) {
-      // Normalise field dari backend ke format UI
       const rows = (result.rows ?? []).map(m => ({
-        id:               m.id_mahasiswa,
-        nama:             m.nama,
-        nim:              m.nim,
-        id_prodi:         m.id_prodi,
-        nama_prodi:       m.programstudi?.nama_prodi ?? "-",
-        angkatan:         m.angkatan ?? "-",
-        email:            m.email ?? "-",
+        id:              m.id_mahasiswa,
+        nama:            m.nama,
+        nim:             m.nim,
+        id_prodi:        m.id_prodi,
+        nama_prodi:      m.programstudi?.nama_prodi ?? "-",
+        angkatan:        m.angkatan ?? "-",
+        email:           m.email ?? "-",
         status_skpi: ({
-          diterbitkan: 'Selesai',
-          diajukan:    'Proses',
-          direvisi:    'Revisi',
-          belum:       'Belum',
-        })[m.status_skpi] ?? 'Belum',
-        jumlah_kegiatan:  m._count?.kegiatanmahasiswa ?? m.jumlah_kegiatan ?? 0,
-        total_icp:        m.total_icp ?? 0,
-        foto_profil:      m.foto_profil ?? null,
-        aktif:            m.users ? m.users.status_akun === "aktif" : false,
-        has_akun:         !!m.id_user,
+          diterbitkan: "Selesai",
+          diajukan:    "Proses",
+          direvisi:    "Revisi",
+          belum:       "Belum",
+        })[m.status_skpi] ?? "Belum",
+        jumlah_kegiatan: m._count?.kegiatanmahasiswa ?? m.jumlah_kegiatan ?? 0,
+        total_icp:       m.total_icp ?? 0,
+        foto_profil:     m.foto_profil ?? null,
+        aktif:           m.users ? m.users.status_akun === "aktif" : false,
+        has_akun:        !!m.id_user,
       }));
       setData(rows);
       setTotal(result.total ?? rows.length);
@@ -575,18 +669,15 @@ export default function MahasiswaPage() {
   }, [search, filterProdi, currentPage]);
 
   useEffect(() => { loadData(); }, [loadData]);
-
-  // Debounce search
   useEffect(() => {
     const t = setTimeout(() => { setCurrentPage(1); loadData(search, filterProdi, 1); }, 400);
     return () => clearTimeout(t);
   }, [search]);
 
-  // ── Download template ──────────────────────────────────────
   const downloadTemplate = () => {
     const ws = XLSX.utils.json_to_sheet([{
       "Nama": "Contoh Mahasiswa", "NIM": "202200001001",
-      "Program Studi": "Teknik Informatika", "Angkatan": "2024",
+      "Program Studi": "Teknologi Informasi", "Angkatan": "2024",
       "Email": "contoh@student.isb.ac.id", "Password": "contoh123",
     }]);
     const wb = XLSX.utils.book_new();
@@ -595,13 +686,11 @@ export default function MahasiswaPage() {
     toast("Template berhasil diunduh");
   };
 
-  // ── CRUD handlers ──────────────────────────────────────────
   const handleAddSave = async (form) => {
     const res = await createMahasiswa(form);
     if (res.ok) {
       toast("Mahasiswa berhasil ditambahkan");
-      setModalAdd(false);
-      setCurrentPage(1);
+      setModalAdd(false); setCurrentPage(1);
       loadData(search, filterProdi, 1);
     } else {
       toast(res.data?.error || "Gagal menambah mahasiswa", "error");
@@ -609,37 +698,24 @@ export default function MahasiswaPage() {
   };
 
   const handleEditSave = async (form) => {
-    // Map label UI → enum Prisma
-    const STATUS_MAP = { Selesai: 'diterbitkan', Proses: 'diajukan', Revisi: 'direvisi', Belum: 'belum' };
+    const STATUS_MAP = { Selesai: "diterbitkan", Proses: "diajukan", Revisi: "direvisi", Belum: "belum" };
     const payload = { ...form, status_skpi: STATUS_MAP[form.status_skpi] ?? form.status_skpi };
     const res = await updateMahasiswa(modalEdit.id, payload);
-    if (res.ok) {
-      toast("Data mahasiswa diperbarui");
-      setModalEdit(null);
-      loadData();
-    } else {
-      toast(res.data?.error || "Gagal update data", "error");
-    }
+    if (res.ok) { toast("Data mahasiswa diperbarui"); setModalEdit(null); loadData(); }
+    else toast(res.data?.error || "Gagal update data", "error");
   };
 
   const handleResetDone = async () => {
     const res = await resetMahasiswaPassword(modalReset.id);
-    if (res.ok) {
-      toast(`Password ${modalReset.nama} berhasil direset ke NIM`);
-    } else {
-      toast(res.data?.error || "Gagal reset password", "error");
-    }
+    if (res.ok) toast(`Password ${modalReset.nama} berhasil direset ke NIM`);
+    else toast(res.data?.error || "Gagal reset password", "error");
     setModalReset(null);
   };
 
   const handleToggle = async (row) => {
     const res = await toggleMahasiswaAkun(row.id);
-    if (res.ok) {
-      toast(`Akun ${row.nama} ${row.aktif ? "dinonaktifkan" : "diaktifkan"}`);
-      loadData();
-    } else {
-      toast(res.data?.error || "Gagal mengubah status akun", "error");
-    }
+    if (res.ok) { toast(`Akun ${row.nama} ${row.aktif ? "dinonaktifkan" : "diaktifkan"}`); loadData(); }
+    else toast(res.data?.error || "Gagal mengubah status akun", "error");
   };
 
   const handleImportDone = async (list) => {
@@ -664,24 +740,25 @@ export default function MahasiswaPage() {
     (filterStatus   !== "Semua" ? 1 : 0) +
     (search ? 1 : 0);
 
-  // Filter angkatan & status di client (sudah difilter server untuk prodi & search)
   const filtered = data.filter(row =>
-    (filterAngkatan === "Semua" || row.angkatan === filterAngkatan) &&
+    (filterAngkatan === "Semua" || String(row.angkatan) === filterAngkatan) &&
     (filterStatus   === "Semua" || row.status_skpi === filterStatus)
   );
 
   const aktifC   = data.filter(r => r.aktif).length;
   const selesaiC = data.filter(r => r.status_skpi === "Selesai").length;
-  const avgICP   = data.length ? Math.round(data.reduce((s, r) => s + (r.total_icp || 0), 0) / data.length) : 0;
-
+  const avgICP   = data.length
+    ? Math.round(data.reduce((s, r) => s + (r.total_icp || 0), 0) / data.length) : 0;
   const safePage = currentPage;
   const start    = (safePage - 1) * PER_PAGE;
+
+  const activeProdiCfg = filterProdi !== "Semua" ? getProdiConfig(filterProdi) : null;
 
   return (
     <div className={styles.page}>
       <Toast toasts={toasts} remove={remove} />
 
-      {/* ── Header ── */}
+      {/* Header */}
       <div className={styles.pageHeader}>
         <div>
           <h1 className={styles.pageTitle}>Manajemen Mahasiswa</h1>
@@ -700,33 +777,41 @@ export default function MahasiswaPage() {
         </div>
       </div>
 
-      {/* ── Stat Cards ── */}
+      {/* Stat Cards */}
       <div className={styles.statsGrid}>
-        <StatCard icon={Users}     title="Total Mahasiswa" value={total}    subtitle={`${aktifC} akun aktif`}     color="blue"   />
-        <StatCard icon={UserCheck} title="Akun Aktif"      value={aktifC}   subtitle="dapat login sistem"          color="green"  />
-        <StatCard icon={GraduationCap} title="SKPI Selesai" value={selesaiC} subtitle="SKPI sudah diterbitkan"    color="teal"   />
-        <StatCard icon={TrendingUp} title="Rata-rata ICP"  value={avgICP}   subtitle="poin kegiatan mahasiswa"     color="orange" />
+        <StatCard icon={Users}         title="Total Mahasiswa" value={total}    subtitle={`${aktifC} akun aktif`}     color="blue"   />
+        <StatCard icon={UserCheck}     title="Akun Aktif"      value={aktifC}   subtitle="dapat login sistem"          color="green"  />
+        <StatCard icon={GraduationCap} title="SKPI Selesai"    value={selesaiC} subtitle="SKPI sudah diterbitkan"      color="teal"   />
+        <StatCard icon={TrendingUp}    title="Rata-rata ICP"   value={avgICP}   subtitle="poin kegiatan mahasiswa"     color="orange" />
       </div>
 
-      {/* ── Toolbar ── */}
+      {/* Prodi Distribution */}
+      {data.length > 0 && <ProdiDistBar data={data} />}
+
+      {/* Toolbar */}
       <div className={styles.toolbar}>
         <div className={styles.searchWrap}>
           <Search size={15} className={styles.searchIcon} />
-          <input
-            className={styles.searchInput}
+          <input className={styles.searchInput}
             placeholder="Cari nama atau NIM..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-          />
+            value={search} onChange={e => setSearch(e.target.value)} />
           {search && <button className={styles.searchClear} onClick={() => setSearch("")}><X size={14} /></button>}
         </div>
         <div className={styles.toolbarRight}>
           <button
             className={`${styles.btnFilter} ${filterOpen || activeFilters ? styles.btnFilterActive : ""}`}
             onClick={() => setFilterOpen(o => !o)}
+            style={activeProdiCfg ? {
+              background: activeProdiCfg.bg,
+              borderColor: activeProdiCfg.border,
+              color: activeProdiCfg.color,
+            } : {}}
           >
             <Filter size={14} /> Filter
-            {activeFilters > 0 && <span className={styles.filterBadge}>{activeFilters}</span>}
+            {activeFilters > 0 && <span className={styles.filterBadge}
+              style={activeProdiCfg ? { background: activeProdiCfg.bgDark, color: "#fff" } : {}}>
+              {activeFilters}
+            </span>}
             <ChevronDown size={13} className={filterOpen ? styles.chevUp : ""} />
           </button>
           <span className={styles.resultCount}>{total} mahasiswa</span>
@@ -736,18 +821,15 @@ export default function MahasiswaPage() {
         </div>
       </div>
 
-      {/* ── Filter Panel ── */}
+      {/* Filter Panel */}
       {filterOpen && (
         <div className={styles.filterPanel}>
           <div className={styles.filterGroup}>
             <p className={styles.filterLabel}>Program Studi</p>
             <div className={styles.chipRow}>
               {["Semua", ...prodiList.map(p => p.nama_prodi)].map(p => (
-                <button
-                  key={p}
-                  className={`${styles.chip} ${filterProdi === p ? styles.chipActive : ""}`}
-                  onClick={() => { setFilterProdi(p); setCurrentPage(1); loadData(search, p, 1); }}
-                >{p}</button>
+                <ProdiFilterChip key={p} nama={p} active={filterProdi === p}
+                  onClick={() => { setFilterProdi(p); setCurrentPage(1); loadData(search, p, 1); }} />
               ))}
             </div>
           </div>
@@ -777,7 +859,7 @@ export default function MahasiswaPage() {
         </div>
       )}
 
-      {/* ── Tabel ── */}
+      {/* Tabel */}
       <div className={styles.tableCard}>
         <table className={styles.table}>
           <thead>
@@ -797,8 +879,7 @@ export default function MahasiswaPage() {
               <tr>
                 <td colSpan={8} className={styles.emptyTd}>
                   <div className={styles.emptyState}>
-                    <Loader2 size={32} className={styles.spin} />
-                    <p>Memuat data...</p>
+                    <Loader2 size={32} className={styles.spin} /><p>Memuat data...</p>
                   </div>
                 </td>
               </tr>
@@ -817,17 +898,7 @@ export default function MahasiswaPage() {
                 <td className={styles.tdNo}>{start + idx + 1}</td>
                 <td>
                   <div className={styles.nameCell}>
-                    {row.foto_profil ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={getAvatarUrl(row.foto_profil)}
-                        alt={row.nama}
-                        className={styles.avatarImg}
-                        onError={e => { e.currentTarget.onerror = null; e.currentTarget.src = "/img/avatar.jpg"; }}
-                      />
-                    ) : (
-                      <div className={styles.avatar}>{row.nama.charAt(0)}</div>
-                    )}
+                    <MhsAvatar row={row} />
                     <div>
                       <div className={styles.nameText}>{row.nama}</div>
                       <div className={styles.emailText}>{row.email}</div>
@@ -836,7 +907,9 @@ export default function MahasiswaPage() {
                 </td>
                 <td><span className={styles.nimBadge}>{row.nim}</span></td>
                 <td><ProdiChip nama={row.nama_prodi} /></td>
-                <td className={styles.tdCenter}>{row.angkatan}</td>
+                <td className={styles.tdCenter}>
+                  <span className={styles.angkatanBadge}>{row.angkatan}</span>
+                </td>
                 <td className={styles.tdCenter}><StatusBadge status={row.status_skpi} /></td>
                 <td className={styles.tdCenter}>
                   <span className={`${styles.akunDot} ${row.aktif ? styles.dotOn : (row.has_akun ? styles.dotOff : styles.dotNone)}`}>
@@ -855,7 +928,7 @@ export default function MahasiswaPage() {
         </table>
       </div>
 
-      {/* ── Pagination ── */}
+      {/* Pagination */}
       {totalPages > 1 && (
         <div className={styles.pagination}>
           <span className={styles.paginInfo}>
@@ -870,8 +943,7 @@ export default function MahasiswaPage() {
               .filter(p => p === 1 || p === totalPages || Math.abs(p - safePage) <= 1)
               .reduce((acc, p, i, arr) => {
                 if (i > 0 && arr[i - 1] !== p - 1) acc.push("…");
-                acc.push(p);
-                return acc;
+                acc.push(p); return acc;
               }, [])
               .map((p, i) => p === "…"
                 ? <span key={`d${i}`} className={styles.pDots}>…</span>
@@ -886,7 +958,7 @@ export default function MahasiswaPage() {
         </div>
       )}
 
-      {/* ── Modals ── */}
+      {/* Modals */}
       {modalAdd && (
         <MahasiswaFormModal mode="add" prodiList={prodiList}
           onClose={() => setModalAdd(false)} onSave={handleAddSave} />

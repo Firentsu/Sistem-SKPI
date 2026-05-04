@@ -228,7 +228,7 @@ export default function AdminLayout({ children }) {
         style={mockMode ? { marginTop: 29 } : {}}>
         <div className={styles.brand}>
           <div className={styles.logo}>
-            <Image src="/img/Logo_isb.png" alt="logo" width={80} height={35} loading="eager" />
+            <Image src="/img/Logo_isb.png" alt="logo" width={80} height={35} priority style={{ height: "auto" }} />
           </div>
           {!collapsed && <div className={styles.brandText}><strong>SKPI</strong><span>Admin Panel</span></div>}
           <button aria-label="Toggle sidebar" className={styles.collapseBtn} onClick={() => {

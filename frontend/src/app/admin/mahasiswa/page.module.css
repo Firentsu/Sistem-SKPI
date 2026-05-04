@@ -1016,3 +1016,100 @@
   .modalBox   { max-height: 95vh; }
   .headerActions { flex-direction: column; align-items: flex-start; }
 }
+/* ─────────────────────────────────────────
+   PRODI DISTRIBUTION BAR
+───────────────────────────────────────── */
+.prodiDistCard {
+  background: #fff;
+  border: 1.5px solid #f0e0d0;
+  border-radius: 16px;
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 8px rgba(118,84,57,0.06);
+}
+
+.prodiDistHeader {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #a07858;
+  margin-bottom: 14px;
+}
+
+.prodiDistList {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.prodiDistRow {
+  display: grid;
+  grid-template-columns: 220px 1fr 80px;
+  align-items: center;
+  gap: 12px;
+}
+
+.prodiDistLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.prodiDistDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.prodiDistBarWrap {
+  background: #f5ece4;
+  border-radius: 20px;
+  height: 8px;
+  overflow: hidden;
+}
+
+.prodiDistBarFill {
+  height: 100%;
+  border-radius: 20px;
+  transition: width 0.6s cubic-bezier(.4,0,.2,1);
+  min-width: 6px;
+}
+
+.prodiDistCount {
+  font-size: 12px;
+  font-weight: 700;
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* ─────────────────────────────────────────
+   ANGKATAN BADGE
+───────────────────────────────────────── */
+.angkatanBadge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  background: #fdf4ec;
+  color: #765439;
+  border: 1px solid #f0dcc8;
+}
+
+/* ─────────────────────────────────────────
+   RESPONSIVE DIST BAR
+───────────────────────────────────────── */
+@media (max-width: 700px) {
+  .prodiDistRow {
+    grid-template-columns: 1fr 80px;
+  }
+  .prodiDistLabel {
+    grid-column: span 2;
+  }
+}
