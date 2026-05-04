@@ -22,49 +22,95 @@ import {
   getAvatarUrl,
 } from "@/lib/api";
 
-const PER_PAGE      = 10;
-const ANGKATAN_LIST = ["Semua", "2025", "2024", "2023", "2022", "2021", "2020"];
-const STATUS_SKPI   = ["Semua", "Belum", "Proses", "Selesai"];
+// ========== MOCK DATA (aktif jika USE_MOCK = true) ==========
+const USE_MOCK = true;  // ubah ke false untuk menggunakan API sungguhan
 
-/* ─────────────────────────────────────────
-   PRODI COLOR SYSTEM — sesuai data DB
-───────────────────────────────────────── */
-const PRODI_CONFIG = {
+// Data prodi beserta warna tema baru (disesuaikan dengan struktur komponen)
+export const PRODI_CONFIG = {
   "Teknologi Informasi": {
-    bg: "#ede9fe", color: "#5b21b6", border: "#c4b5fd",
-    bgDark: "#7c3aed", bgLight: "#f5f3ff", label: "TI",
-    gradient: "linear-gradient(135deg,#7c3aed 0%,#5b21b6 100%)",
-    dot: "#a78bfa", fakultas: "Teknologi",
-  },
-  "Sistem Informasi": {
-    bg: "#dbeafe", color: "#1d4ed8", border: "#93c5fd",
-    bgDark: "#2563eb", bgLight: "#eff6ff", label: "SI",
-    gradient: "linear-gradient(135deg,#2563eb 0%,#1d4ed8 100%)",
-    dot: "#60a5fa", fakultas: "Teknologi",
+    primary: "#ff7f00",
+    light: "#fff3e6",
+    dark: "#cc6600",
+    gradient: "linear-gradient(135deg, #ff7f00, #ffaa33)",
+    // mapping ke properti yang dipakai komponen
+    bg: "#fff3e6",
+    color: "#ff7f00",
+    border: "#ffaa33",
+    bgDark: "#cc6600",
+    bgLight: "#fff3e6",
+    dot: "#ff7f00",
+    label: "TI",
+    fakultas: "Teknologi",
   },
   "Manajemen": {
-    bg: "#e0f2fe", color: "#0369a1", border: "#7dd3fc",
-    bgDark: "#0284c7", bgLight: "#f0f9ff", label: "MJ",
-    gradient: "linear-gradient(135deg,#0284c7 0%,#0369a1 100%)",
-    dot: "#38bdf8", fakultas: "Bisnis",
+    primary: "#0099cc",
+    light: "#e6f5fa",
+    dark: "#0077aa",
+    gradient: "linear-gradient(135deg, #0099cc, #33ccff)",
+    bg: "#e6f5fa",
+    color: "#0099cc",
+    border: "#33ccff",
+    bgDark: "#0077aa",
+    bgLight: "#e6f5fa",
+    dot: "#0099cc",
+    label: "MJ",
+    fakultas: "Bisnis",
   },
   "Kewirausahaan": {
-    bg: "#d1fae5", color: "#065f46", border: "#6ee7b7",
-    bgDark: "#059669", bgLight: "#ecfdf5", label: "KW",
-    gradient: "linear-gradient(135deg,#059669 0%,#065f46 100%)",
-    dot: "#34d399", fakultas: "Bisnis",
+    primary: "#ff3300",
+    light: "#ffe6e0",
+    dark: "#cc2900",
+    gradient: "linear-gradient(135deg, #ff3300, #ff7755)",
+    bg: "#ffe6e0",
+    color: "#ff3300",
+    border: "#ff7755",
+    bgDark: "#cc2900",
+    bgLight: "#ffe6e0",
+    dot: "#ff3300",
+    label: "KW",
+    fakultas: "Bisnis",
   },
   "Pendidikan Guru Sekolah Dasar": {
-    bg: "#fef9c3", color: "#854d0e", border: "#fde047",
-    bgDark: "#ca8a04", bgLight: "#fefce8", label: "PGSD",
-    gradient: "linear-gradient(135deg,#ca8a04 0%,#854d0e 100%)",
-    dot: "#facc15", fakultas: "Pendidikan",
+    primary: "#800080",
+    light: "#f3e6f3",
+    dark: "#660066",
+    gradient: "linear-gradient(135deg, #800080, #b300b3)",
+    bg: "#f3e6f3",
+    color: "#800080",
+    border: "#b300b3",
+    bgDark: "#660066",
+    bgLight: "#f3e6f3",
+    dot: "#800080",
+    label: "PGSD",
+    fakultas: "Pendidikan",
   },
   "Agroekoteknologi": {
-    bg: "#dcfce7", color: "#166534", border: "#86efac",
-    bgDark: "#16a34a", bgLight: "#f0fdf4", label: "AGR",
-    gradient: "linear-gradient(135deg,#16a34a 0%,#166534 100%)",
-    dot: "#4ade80", fakultas: "Pertanian",
+    primary: "#00bfb3",
+    light: "#e6faf8",
+    dark: "#009988",
+    gradient: "linear-gradient(135deg, #00bfb3, #33ffdd)",
+    bg: "#e6faf8",
+    color: "#00bfb3",
+    border: "#33ffdd",
+    bgDark: "#009988",
+    bgLight: "#e6faf8",
+    dot: "#00bfb3",
+    label: "AGR",
+    fakultas: "Pertanian",
+  },
+  "Sistem Informasi": {
+    primary: "#1a0909",
+    light: "#f0ecec",
+    dark: "#0d0404",
+    gradient: "linear-gradient(135deg, #1a0909, #4a2525)",
+    bg: "#f0ecec",
+    color: "#1a0909",
+    border: "#4a2525",
+    bgDark: "#0d0404",
+    bgLight: "#f0ecec",
+    dot: "#1a0909",
+    label: "SI",
+    fakultas: "Teknologi",
   },
 };
 
@@ -80,6 +126,110 @@ function getProdiConfig(nama) {
   const hash = (nama || "").split("").reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
   return PRODI_FALLBACK[hash % PRODI_FALLBACK.length];
 }
+
+// Mock data untuk prodi jika API gagal/kosong
+const MOCK_PRODI_LIST = [
+  { id_prodi: "1", nama_prodi: "Teknologi Informasi" },
+  { id_prodi: "2", nama_prodi: "Sistem Informasi" },
+  { id_prodi: "3", nama_prodi: "Manajemen" },
+  { id_prodi: "4", nama_prodi: "Kewirausahaan" },
+  { id_prodi: "5", nama_prodi: "Pendidikan Guru Sekolah Dasar" },
+  { id_prodi: "6", nama_prodi: "Agroekoteknologi" },
+];
+
+// Mock data mahasiswa
+const MOCK_MAHASISWA = [
+  {
+    id_mahasiswa: "M001",
+    nama: "Andi Saputra",
+    nim: "202200001001",
+    id_prodi: "1",
+    programstudi: { nama_prodi: "Teknologi Informasi" },
+    angkatan: "2024",
+    email: "andi@student.isb.ac.id",
+    status_skpi: "belum",
+    _count: { kegiatanmahasiswa: 3 },
+    total_icp: 45,
+    foto_profil: null,
+    id_user: "U001",
+    users: { status_akun: "aktif" },
+  },
+  {
+    id_mahasiswa: "M002",
+    nama: "Budi Wibowo",
+    nim: "202200001002",
+    id_prodi: "3",
+    programstudi: { nama_prodi: "Manajemen" },
+    angkatan: "2023",
+    email: "budi@student.isb.ac.id",
+    status_skpi: "diajukan",
+    _count: { kegiatanmahasiswa: 5 },
+    total_icp: 78,
+    foto_profil: null,
+    id_user: "U002",
+    users: { status_akun: "aktif" },
+  },
+  {
+    id_mahasiswa: "M003",
+    nama: "Citra Dewi",
+    nim: "202200001003",
+    id_prodi: "4",
+    programstudi: { nama_prodi: "Kewirausahaan" },
+    angkatan: "2022",
+    email: "citra@student.isb.ac.id",
+    status_skpi: "diterbitkan",
+    _count: { kegiatanmahasiswa: 8 },
+    total_icp: 120,
+    foto_profil: null,
+    id_user: "U003",
+    users: { status_akun: "aktif" },
+  },
+  {
+    id_mahasiswa: "M004",
+    nama: "Dian Permata",
+    nim: "202200001004",
+    id_prodi: "5",
+    programstudi: { nama_prodi: "Pendidikan Guru Sekolah Dasar" },
+    angkatan: "2024",
+    email: "dian@student.isb.ac.id",
+    status_skpi: "direvisi",
+    _count: { kegiatanmahasiswa: 2 },
+    total_icp: 30,
+    foto_profil: null,
+    id_user: "U004",
+    users: { status_akun: "nonaktif" },
+  },
+  {
+    id_mahasiswa: "M005",
+    nama: "Eka Pratama",
+    nim: "202200001005",
+    id_prodi: "2",
+    programstudi: { nama_prodi: "Sistem Informasi" },
+    angkatan: "2021",
+    email: "eka@student.isb.ac.id",
+    status_skpi: "belum",
+    _count: { kegiatanmahasiswa: 1 },
+    total_icp: 10,
+    foto_profil: null,
+    id_user: "U005",
+    users: { status_akun: "aktif" },
+  },
+  {
+    id_mahasiswa: "M006",
+    nama: "Fajar Nugroho",
+    nim: "202200001006",
+    id_prodi: "6",
+    programstudi: { nama_prodi: "Agroekoteknologi" },
+    angkatan: "2023",
+    email: "fajar@student.isb.ac.id",
+    status_skpi: "diajukan",
+    _count: { kegiatanmahasiswa: 4 },
+    total_icp: 62,
+    foto_profil: null,
+    id_user: "U006",
+    users: { status_akun: "aktif" },
+  },
+];
 
 /* ── TOAST ── */
 function Toast({ toasts, remove }) {
@@ -608,7 +758,11 @@ function RowActions({ row, onEdit, onResetPw, onToggleActive }) {
   );
 }
 
-/* ── HALAMAN UTAMA ── */
+/* ========== KOMPONEN UTAMA ========== */
+const PER_PAGE      = 10;
+const ANGKATAN_LIST = ["Semua", "2025", "2024", "2023", "2022", "2021", "2020"];
+const STATUS_SKPI   = ["Semua", "Belum", "Proses", "Selesai"];
+
 export default function MahasiswaPage() {
   const [data, setData]             = useState([]);
   const [total, setTotal]           = useState(0);
@@ -628,8 +782,33 @@ export default function MahasiswaPage() {
   const [modalImport, setModalImport]       = useState(false);
   const { toasts, add: toast, remove }      = useToast();
 
+  // Fungsi pembantu untuk mock data
+  const fetchMockProdi = async () => {
+    return MOCK_PRODI_LIST;
+  };
+
+  const fetchMockMahasiswa = async ({ q, prodi, page }) => {
+    let filtered = [...MOCK_MAHASISWA];
+    if (q) {
+      const lower = q.toLowerCase();
+      filtered = filtered.filter(m => m.nama.toLowerCase().includes(lower) || m.nim.includes(lower));
+    }
+    if (prodi && prodi !== "Semua") {
+      const prodiObj = MOCK_PRODI_LIST.find(p => p.nama_prodi === prodi);
+      if (prodiObj) filtered = filtered.filter(m => m.id_prodi === prodiObj.id_prodi);
+    }
+    const totalFiltered = filtered.length;
+    const start = (page - 1) * PER_PAGE;
+    const rows = filtered.slice(start, start + PER_PAGE);
+    return { rows, total: totalFiltered };
+  };
+
   useEffect(() => {
-    getProdiList().then(list => { if (list) setProdiList(list); });
+    if (USE_MOCK) {
+      fetchMockProdi().then(list => setProdiList(list));
+    } else {
+      getProdiList().then(list => { if (list) setProdiList(list); });
+    }
     document.title = "Manajemen Mahasiswa | Admin SKPI";
   }, []);
 
@@ -639,7 +818,12 @@ export default function MahasiswaPage() {
     page  = currentPage,
   ) => {
     setLoading(true);
-    const result = await getMahasiswaList({ q, prodi, page });
+    let result;
+    if (USE_MOCK) {
+      result = await fetchMockMahasiswa({ q, prodi, page });
+    } else {
+      result = await getMahasiswaList({ q, prodi, page });
+    }
     if (result) {
       const rows = (result.rows ?? []).map(m => ({
         id:              m.id_mahasiswa,
@@ -687,6 +871,12 @@ export default function MahasiswaPage() {
   };
 
   const handleAddSave = async (form) => {
+    if (USE_MOCK) {
+      toast("Mock: Mahasiswa berhasil ditambahkan (simulasi)");
+      setModalAdd(false); setCurrentPage(1);
+      loadData(search, filterProdi, 1);
+      return;
+    }
     const res = await createMahasiswa(form);
     if (res.ok) {
       toast("Mahasiswa berhasil ditambahkan");
@@ -698,6 +888,11 @@ export default function MahasiswaPage() {
   };
 
   const handleEditSave = async (form) => {
+    if (USE_MOCK) {
+      toast("Mock: Data mahasiswa diperbarui (simulasi)");
+      setModalEdit(null); loadData();
+      return;
+    }
     const STATUS_MAP = { Selesai: "diterbitkan", Proses: "diajukan", Revisi: "direvisi", Belum: "belum" };
     const payload = { ...form, status_skpi: STATUS_MAP[form.status_skpi] ?? form.status_skpi };
     const res = await updateMahasiswa(modalEdit.id, payload);
@@ -706,6 +901,11 @@ export default function MahasiswaPage() {
   };
 
   const handleResetDone = async () => {
+    if (USE_MOCK) {
+      toast(`Mock: Password ${modalReset.nama} berhasil direset ke NIM`);
+      setModalReset(null);
+      return;
+    }
     const res = await resetMahasiswaPassword(modalReset.id);
     if (res.ok) toast(`Password ${modalReset.nama} berhasil direset ke NIM`);
     else toast(res.data?.error || "Gagal reset password", "error");
@@ -713,12 +913,23 @@ export default function MahasiswaPage() {
   };
 
   const handleToggle = async (row) => {
+    if (USE_MOCK) {
+      toast(`Mock: Akun ${row.nama} ${row.aktif ? "dinonaktifkan" : "diaktifkan"} (simulasi)`);
+      loadData();
+      return;
+    }
     const res = await toggleMahasiswaAkun(row.id);
     if (res.ok) { toast(`Akun ${row.nama} ${row.aktif ? "dinonaktifkan" : "diaktifkan"}`); loadData(); }
     else toast(res.data?.error || "Gagal mengubah status akun", "error");
   };
 
   const handleImportDone = async (list) => {
+    if (USE_MOCK) {
+      toast(`Mock: Import selesai, ${list.length} data (simulasi)`);
+      setModalImport(false);
+      loadData(search, filterProdi, 1);
+      return;
+    }
     const res = await importMahasiswaBulk(list);
     setModalImport(false);
     if (res.ok) {

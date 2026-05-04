@@ -384,7 +384,7 @@
 .thNo     { width: 48px; text-align: center; }
 .thCenter { text-align: center; }
 .tdNo     { text-align: center; color: #b09880; font-size: 12px; }
-.tdCenter { text-align: center; }
+.tdCenter { text-align: auto; }
 
 .nameCell {
   display: flex;

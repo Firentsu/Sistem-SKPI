@@ -337,7 +337,8 @@
   background: #fff;
   border-radius: 18px;
   border: 1.5px solid #f0e0d0;
-  overflow: visible;
+  overflow-x: auto;
+  overflow-y: visible;
   box-shadow: 0 2px 16px rgba(118,84,57,0.07);
   scroll-margin: 0;
 }
@@ -388,7 +389,7 @@
 .thNo     { width: 48px; text-align: center; }
 .thCenter { text-align: center; }
 .tdNo     { text-align: center; color: #b09880; font-size: 12px; }
-.tdCenter { text-align: center; }
+.tdCenter { text-align: auto; }
 
 .nameCell {
   display: flex;
@@ -581,13 +582,9 @@
 /* ─────────────────────────────────────────
    ROW ACTION DROPDOWN
 ───────────────────────────────────────── */
-.ddWrap {
-  position: relative;
-  display: inline-flex;
-  isolation: isolate;
-}
+.ddWrap { position: relative; display: inline-flex; }
 
-/* Trigger button */
+/* ── Trigger button ── */
 .ddTrigger {
   background: #fdf7f3;
   border: 1.5px solid #e8d5c4;
@@ -607,7 +604,7 @@
   box-shadow: 0 2px 8px rgba(118,84,57,0.15);
 }
 
-/* Dropdown panel */
+/* ── Dropdown panel ── */
 .ddMenu {
   position: absolute;
   right: 0;
@@ -624,6 +621,7 @@
   min-width: 190px;
   pointer-events: auto;
   animation: ddSlideIn 0.15s cubic-bezier(0.16,1,0.3,1);
+  /* Keluar dari semua overflow context tabel */
 }
 
 @keyframes ddSlideIn {
@@ -631,13 +629,13 @@
   to   { opacity: 1; transform: translateY(0)   scale(1); }
 }
 
-/* Menu items */
+/* ── Menu items ── */
 .ddMenu button {
   display: flex;
   align-items: center;
   gap: 10px;
   width: 100%;
-  padding: 11px 16px;
+  padding: 10px 14px;
   background: none;
   border: none;
   cursor: pointer;
@@ -645,20 +643,36 @@
   font-weight: 500;
   color: #3d2006;
   text-align: left;
-  transition: background 0.12s;
+  transition: background 0.1s;
   border-radius: 0;
 }
-.ddMenu button:first-child { padding-top: 14px; }
-.ddMenu button:last-child  { padding-bottom: 14px; }
-.ddMenu button:hover { background: #fdf6f0; color: #5c3317; }
-.ddMenu button svg  { width: 14px; height: 14px; flex-shrink: 0; opacity: 0.7; }
+.ddMenu button:hover { background: #fdf6f0; }
 
+/* Icon wrapper — warna ikon per aksi */
+.ddMenu button svg {
+  flex-shrink: 0;
+  opacity: 0.75;
+}
+
+/* Label section di atas menu */
+.ddLabel {
+  padding: 8px 14px 4px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #b89880;
+  pointer-events: none;
+}
+
+/* Divider */
 .ddDivider {
   height: 1px;
   background: linear-gradient(to right, transparent, #f0e0d2, transparent);
   margin: 4px 10px;
 }
 
+/* Warna per tipe aksi */
 .ddDanger  { color: #dc2626 !important; }
 .ddDanger:hover  { background: #fff5f5 !important; }
 .ddDanger  svg   { color: #dc2626; opacity: 1; }
@@ -728,7 +742,7 @@
   inset: 0;
   background: rgba(15, 7, 2, 0.6);
   backdrop-filter: blur(5px);
-  z-index: 100;
+  z-index: 1000;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1002,21 +1016,6 @@
 @keyframes spinAnim { to { transform: rotate(360deg); } }
 
 /* ─────────────────────────────────────────
-   RESPONSIVE
-───────────────────────────────────────── */
-@media (max-width: 960px) {
-  .page      { padding: 20px 16px 36px; }
-  .statsGrid { grid-template-columns: repeat(2, 1fr); }
-}
-
-@media (max-width: 640px) {
-  .statsGrid  { grid-template-columns: 1fr 1fr; }
-  .formGrid2  { grid-template-columns: 1fr; }
-  .fullSpan   { grid-column: span 1; }
-  .modalBox   { max-height: 95vh; }
-  .headerActions { flex-direction: column; align-items: flex-start; }
-}
-/* ─────────────────────────────────────────
    PRODI DISTRIBUTION BAR
 ───────────────────────────────────────── */
 .prodiDistCard {
@@ -1111,5 +1110,21 @@
   }
   .prodiDistLabel {
     grid-column: span 2;
-  }
+  } 
+}
+
+/* ─────────────────────────────────────────
+   RESPONSIVE UMUM
+───────────────────────────────────────── */
+@media (max-width: 960px) {
+  .page      { padding: 20px 16px 36px; }
+  .statsGrid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 640px) {
+  .statsGrid  { grid-template-columns: 1fr 1fr; }
+  .formGrid2  { grid-template-columns: 1fr; }
+  .fullSpan   { grid-column: span 1; }
+  .modalBox   { max-height: 95vh; }
+  .headerActions { flex-direction: column; align-items: flex-start; }
 }
