@@ -1570,3 +1570,259 @@
 .spin {
   animation: spin 0.7s linear infinite;
 }
+
+/* ============================================
+   NOTIFICATION DROPDOWN (PREMIUM STYLE)
+   ============================================ */
+
+.notifWrapper {
+  position: relative;
+}
+
+/* Tombol notifikasi */
+.iconBtn {
+  position: relative;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 0.75rem;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #4b5563;
+}
+
+.iconBtn:hover {
+  background: #f3f4f6;
+  color: #1e3a8a;
+  transform: translateY(-1px);
+}
+
+.iconBtn .badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+  font-size: 0.65rem;
+  font-weight: 700;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  border: 1.5px solid white;
+}
+
+/* Dropdown container */
+.notifDropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 360px;
+  background: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(0, 0, 0, 0.02);
+  z-index: 1050;
+  overflow: hidden;
+  backdrop-filter: blur(0px);
+  animation: notifSlideDown 0.25s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+  transform-origin: top right;
+}
+
+@keyframes notifSlideDown {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Header dropdown */
+.notifHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  background: #f9fafb;
+  border-bottom: 1px solid #f0f2f5;
+}
+
+.notifHeader span:first-child {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #1e293b;
+  letter-spacing: -0.2px;
+}
+
+.notifMarkAllBtn {
+  background: none;
+  border: none;
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: #3b82f6;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  padding: 0.2rem 0.5rem;
+  border-radius: 20px;
+}
+
+.notifMarkAllBtn:hover {
+  background: #eef2ff;
+  opacity: 0.9;
+}
+
+/* Daftar notifikasi */
+.notifList {
+  max-height: 400px;
+  overflow-y: auto;
+  /* Removed 'scrollbar-color' for broader compatibility (Chrome <121, Safari, iOS Safari, Samsung Internet).
+     Rely on the ::-webkit-scrollbar rules below for WebKit/Chromium browsers; Firefox will still use its default/native coloring. */
+}
+
+.notifList::-webkit-scrollbar {
+  width: 4px;
+}
+
+.notifList::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+.notifList::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+
+/* Item notifikasi */
+.notifItem {
+  display: flex;
+  gap: 0.9rem;
+  padding: 0.9rem 1.25rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-bottom: 1px solid #f1f5f9;
+  position: relative;
+}
+
+.notifItem:hover {
+  background: #fefce8;
+  padding-left: 1.5rem;
+}
+
+.notifUnread {
+  background: #f0f9ff;
+}
+
+.notifUnread:hover {
+  background: #e0f2fe;
+}
+
+/* Ikon titik / indicator */
+.notifIcon {
+  flex-shrink: 0;
+  padding-top: 2px;
+}
+
+.notifIcon svg {
+  transition: transform 0.15s;
+}
+
+.notifItem:hover .notifIcon svg {
+  transform: scale(1.1);
+}
+
+/* Konten teks */
+.notifContent {
+  flex: 1;
+}
+
+.notifTitle {
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: #0f172a;
+  margin-bottom: 4px;
+  line-height: 1.3;
+}
+
+.notifMsg {
+  font-size: 0.75rem;
+  color: #475569;
+  margin-bottom: 6px;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.notifTime {
+  font-size: 0.65rem;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.notifTime::before {
+  content: "•";
+  font-size: 0.7rem;
+}
+
+/* Footer link */
+.notifFooter {
+  padding: 0.75rem 1rem;
+  text-align: center;
+  border-top: 1px solid #f0f2f5;
+  background: #ffffff;
+}
+
+.notifFooter a {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #3b82f6;
+  text-decoration: none;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.notifFooter a:hover {
+  gap: 8px;
+  color: #1d4ed8;
+}
+
+/* Empty state */
+.notifEmpty {
+  text-align: center;
+  padding: 2.5rem 1rem;
+  color: #9ca3af;
+  font-size: 0.8rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.notifEmpty::before {
+  content: "🔔";
+  font-size: 2rem;
+  opacity: 0.5;
+}
+
+/* Responsif untuk mobile */
+@media (max-width: 640px) {
+  .notifDropdown {
+    width: calc(100vw - 2rem);
+    right: -0.5rem;
+    left: auto;
+  }
+}

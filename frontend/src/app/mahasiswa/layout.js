@@ -8,7 +8,7 @@ import {
   LayoutDashboard, FileText, LogOut, Menu,
   ChevronLeft, ChevronRight, Bell,
   Camera, X, Check, Upload, WifiOff,
-  BookOpen, ClipboardList, History,
+  BookOpen, ClipboardList, History, Circle,
 } from "lucide-react";
 import styles from "./mahasiswa.module.css";
 import { useRouter, usePathname } from "next/navigation";
@@ -123,6 +123,71 @@ function AvatarEditorModal({ currentSrc, onClose, onSave }) {
 }
 
 // ============================================================
+// KOMPONEN NOTIFIKASI DROPDOWN (sama seperti admin)
+// ============================================================
+function NotificationDropdown({ isOpen, onClose, onMarkAsRead }) {
+  const [notifications, setNotifications] = useState([
+    { id: 1, title: "SKPI diajukan", message: "SKPI Anda sedang dalam proses review", time: "5 menit lalu", read: false },
+    { id: 2, title: "Kegiatan diverifikasi", message: "Kegiatan Webinar telah diverifikasi", time: "1 jam lalu", read: false },
+    { id: 3, title: "Template SKPI diperbarui", message: "Template SKPI terbaru tersedia", time: "3 jam lalu", read: true },
+    { id: 4, title: "Poin bertambah", message: "Anda mendapatkan 10 poin baru", time: "Kemarin", read: true },
+  ]);
+
+  const unreadCount = notifications.filter(n => !n.read).length;
+
+  const handleMarkAsRead = (id) => {
+    setNotifications(prev =>
+      prev.map(n => n.id === id ? { ...n, read: true } : n)
+    );
+    if (onMarkAsRead) onMarkAsRead(id);
+  };
+
+  const handleMarkAllRead = () => {
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className={styles.notifDropdown}>
+      <div className={styles.notifHeader}>
+        <span>Notifikasi</span>
+        {unreadCount > 0 && (
+          <button onClick={handleMarkAllRead} className={styles.notifMarkAllBtn}>
+            Tandai semua sudah dibaca
+          </button>
+        )}
+      </div>
+      <div className={styles.notifList}>
+        {notifications.length === 0 ? (
+          <div className={styles.notifEmpty}>Tidak ada notifikasi</div>
+        ) : (
+          notifications.map(notif => (
+            <div
+              key={notif.id}
+              className={`${styles.notifItem} ${!notif.read ? styles.notifUnread : ""}`}
+              onClick={() => handleMarkAsRead(notif.id)}
+            >
+              <div className={styles.notifIcon}>
+                {!notif.read && <Circle size={8} fill="#3b82f6" color="#3b82f6" />}
+              </div>
+              <div className={styles.notifContent}>
+                <div className={styles.notifTitle}>{notif.title}</div>
+                <div className={styles.notifMsg}>{notif.message}</div>
+                <div className={styles.notifTime}>{notif.time}</div>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+      <div className={styles.notifFooter}>
+        <Link href="/mahasiswa/notifications" onClick={onClose}>Lihat semua notifikasi</Link>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
 // Layout Inner (menggunakan useMahasiswa)
 // ============================================================
 function MahasiswaLayoutInner({ children }) {
@@ -133,6 +198,8 @@ function MahasiswaLayoutInner({ children }) {
   const [showEditor, setShowEditor] = useState(false);
   const [mockMode, setMockMode] = useState(false);
   const [avatarSrc, setAvatarSrc] = useState("/img/avatar-default.jpg");
+  const [notifOpen, setNotifOpen] = useState(false);
+  const notifRef = useRef(null);
 
   const router = useRouter();
   const pathname = usePathname();
@@ -181,7 +248,7 @@ function MahasiswaLayoutInner({ children }) {
     };
   }, [updateUser]);
 
-  // Menu mahasiswa (sesuai dengan route yang ada)
+  // Menu mahasiswa
   const navItems = [
     { href: "/mahasiswa/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { href: "/mahasiswa/kegiatan",  label: "Kegiatan",  icon: BookOpen },
@@ -195,14 +262,28 @@ function MahasiswaLayoutInner({ children }) {
     closeSidebar();
   }, [pathname, closeSidebar]);
 
-  // Escape key untuk close sidebar
+  // Escape key untuk close sidebar & notifikasi
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.key === "Escape" && sidebarOpen) setSidebarOpen(false);
+      if (e.key === "Escape") {
+        if (sidebarOpen) setSidebarOpen(false);
+        if (notifOpen) setNotifOpen(false);
+      }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [sidebarOpen]);
+  }, [sidebarOpen, notifOpen]);
+
+  // Tutup notifikasi saat klik di luar
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (notifRef.current && !notifRef.current.contains(event.target)) {
+        setNotifOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   // Logout
   const handleLogout = async () => {
@@ -296,9 +377,18 @@ function MahasiswaLayoutInner({ children }) {
           </div>
 
           <div className={styles.topbarRight}>
-            <button className={styles.iconBtn} aria-label="Notifikasi">
-              <Bell size={17} /><span className={styles.badge}>3</span>
-            </button>
+            {/* NOTIFICATION DROPDOWN */}
+            <div className={styles.notifWrapper} ref={notifRef}>
+              <button className={styles.iconBtn} aria-label="Notifikasi" onClick={() => setNotifOpen(!notifOpen)}>
+                <Bell size={17} />
+                <span className={styles.badge}>3</span>
+              </button>
+              <NotificationDropdown
+                isOpen={notifOpen}
+                onClose={() => setNotifOpen(false)}
+              />
+            </div>
+
             <span className={styles.divider} />
             <div className={styles.userBlock}>
               <button className={styles.avatarBtn} onClick={() => setShowEditor(true)}>

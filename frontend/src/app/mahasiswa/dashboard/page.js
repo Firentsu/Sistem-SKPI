@@ -1,15 +1,14 @@
-// frontend/src/app/mahasiswa/dashboard/page.js
 "use client";
 
 import { useEffect, useState } from "react";
 import { useMahasiswa } from "@/context/MahasiswaContext";
 import styles from "./dashboard.module.css";
 import {
-  CheckCircle2, Clock, XCircle, Award, FileText, Calendar,
-  TrendingUp, Bell, Users, Activity, ClipboardList
+  Activity, CheckCircle2, Clock, XCircle, Bell, Check, Trash2,
+  RefreshCw, ChevronRight, TrendingUp
 } from "lucide-react";
 
-// Mock data kegiatan (nanti dari API)
+// Mock data kegiatan mahasiswa
 const mockKegiatan = [
   { id: 1, nama: "Workshop React", status: "Disetujui", tanggal: "2026-03-20" },
   { id: 2, nama: "Seminar AI", status: "Menunggu", tanggal: "2026-03-25" },
@@ -19,180 +18,296 @@ const mockKegiatan = [
   { id: 6, nama: "Lomba Coding", status: "Menunggu", tanggal: "2026-03-30" },
 ];
 
-// Mock notifikasi
+// Mock notifikasi (sama persis dengan struktur admin)
 const mockNotifikasi = [
-  { id: 1, text: "Kegiatan 'Workshop React' telah disetujui", time: "5 menit lalu", read: false },
-  { id: 2, text: "SKPI Anda dapat diajukan setelah semua kegiatan terverifikasi", time: "1 jam lalu", read: false },
-  { id: 3, text: "Kegiatan 'Magang Startup' ditolak, silakan cek catatan", time: "3 jam lalu", read: true },
+  {
+    id_notifikasi: 1,
+    judul: "Kegiatan Disetujui",
+    pesan: "Kegiatan 'Workshop React' telah disetujui",
+    created_at: new Date(Date.now() - 5 * 60000).toISOString(),
+    status_baca: false,
+  },
+  {
+    id_notifikasi: 2,
+    judul: "Info SKPI",
+    pesan: "SKPI Anda dapat diajukan setelah semua kegiatan terverifikasi",
+    created_at: new Date(Date.now() - 3600000).toISOString(),
+    status_baca: false,
+  },
+  {
+    id_notifikasi: 3,
+    judul: "Kegiatan Ditolak",
+    pesan: "Kegiatan 'Magang Startup' ditolak, silakan cek catatan",
+    created_at: new Date(Date.now() - 3 * 3600000).toISOString(),
+    status_baca: true,
+  },
 ];
 
+function relativeTime(isoString) {
+  const diff = Math.floor((Date.now() - new Date(isoString)) / 1000);
+  if (diff < 60) return `${diff} detik lalu`;
+  if (diff < 3600) return `${Math.floor(diff / 60)} menit lalu`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)} jam lalu`;
+  return `${Math.floor(diff / 86400)} hari lalu`;
+}
+
+// Warna per tipe notifikasi (sama dengan admin)
+const NOTIF_COLORS = {
+  skpi: "#765439",
+  verifikasi: "#b45309",
+  published: "#047857",
+  revisi: "#b91c1c",
+};
+const NOTIF_BG = {
+  skpi: "#fdf4ec",
+  verifikasi: "#fffbeb",
+  published: "#f0fdf4",
+  revisi: "#fff5f5",
+};
+
+function inferNotifType(judul) {
+  if (judul.includes("SKPI")) return "skpi";
+  if (judul.includes("Ditolak")) return "revisi";
+  if (judul.includes("Disetujui")) return "published";
+  return "verifikasi";
+}
+
 export default function MahasiswaDashboard() {
-  const { user, prodiConfig } = useMahasiswa();
-  const [kegiatan, setKegiatan] = useState(mockKegiatan);
-  const [notifikasi, setNotifikasi] = useState(mockNotifikasi);
-  const [unreadCount, setUnreadCount] = useState(notifikasi.filter(n => !n.read).length);
+  const { user = {} } = useMahasiswa();
+
+  const [kegiatan] = useState(mockKegiatan);
+  const [notifs, setNotifs] = useState(mockNotifikasi);
+  const [unread, setUnread] = useState(mockNotifikasi.filter(n => !n.status_baca).length);
+  const [loadingStats, setLoadingStats] = useState(false);
+  const [loadingNotif, setLoadingNotif] = useState(false);
 
   useEffect(() => {
     document.title = "Dashboard Mahasiswa | SKPI";
   }, []);
 
-  // Statistik
   const totalKegiatan = kegiatan.length;
   const disetujui = kegiatan.filter(k => k.status === "Disetujui").length;
   const ditolak = kegiatan.filter(k => k.status === "Ditolak").length;
   const menunggu = kegiatan.filter(k => k.status === "Menunggu").length;
 
-  // Progress SKPI (misal berdasarkan jumlah kegiatan yang disetujui dari target 10 kegiatan)
-  const targetKegiatan = 10;
-  const progress = Math.min(100, Math.floor((disetujui / targetKegiatan) * 100));
+  const cards = [
+    { label: "Total Kegiatan", value: totalKegiatan, icon: Activity, accent: "#765439" },
+    { label: "Disetujui", value: disetujui, icon: CheckCircle2, accent: "#047857" },
+    { label: "Menunggu", value: menunggu, icon: Clock, accent: "#b45309" },
+    { label: "Ditolak", value: ditolak, icon: XCircle, accent: "#b91c1c" },
+  ];
 
-  // Fungsi menandai notifikasi dibaca (opsional)
-  const markAsRead = (id) => {
-    setNotifikasi(prev =>
-      prev.map(n => n.id === id ? { ...n, read: true } : n)
+  const handleMarkRead = async (id) => {
+    setNotifs(prev =>
+      prev.map(n =>
+        n.id_notifikasi === id ? { ...n, status_baca: true } : n
+      )
     );
-    setUnreadCount(prev => Math.max(0, prev - 1));
+    setUnread(prev => Math.max(0, prev - 1));
+  };
+
+  const handleMarkAllRead = async () => {
+    setNotifs(prev => prev.map(n => ({ ...n, status_baca: true })));
+    setUnread(0);
+  };
+
+  const handleDelete = async (id) => {
+    const target = notifs.find(n => n.id_notifikasi === id);
+    setNotifs(prev => prev.filter(n => n.id_notifikasi !== id));
+    if (target && !target.status_baca) setUnread(prev => Math.max(0, prev - 1));
   };
 
   return (
-    <div className={styles.container}>
-      {/* Welcome Card */}
-      <div className={styles.welcomeCard} style={{ background: prodiConfig.gradient }}>
+    <div className={styles.page}>
+      {/* ── Header ── */}
+      <div className={styles.header}>
         <div>
-          <h1 className={styles.welcomeTitle}>Selamat datang, {user.nama}!</h1>
-          <p className={styles.welcomeSub}>Pantau perkembangan SKPI Anda di sini.</p>
-        </div>
-        <div className={styles.welcomeIcon}>
-          <Award size={48} />
-        </div>
-      </div>
-
-      {/* Stat Cards (mirip admin) */}
-      <div className={styles.statsGrid}>
-        <div className={styles.statCard} style={{ borderLeftColor: prodiConfig.primary }}>
-          <div className={styles.statIcon} style={{ background: `${prodiConfig.primary}14`, color: prodiConfig.primary }}>
-            <ClipboardList size={24} />
-          </div>
-          <div>
-            <div className={styles.statValue}>{totalKegiatan}</div>
-            <div className={styles.statLabel}>Total Kegiatan</div>
-          </div>
-        </div>
-        <div className={styles.statCard} style={{ borderLeftColor: "#10b981" }}>
-          <div className={styles.statIcon} style={{ background: "#10b98114", color: "#10b981" }}>
-            <CheckCircle2 size={24} />
-          </div>
-          <div>
-            <div className={styles.statValue}>{disetujui}</div>
-            <div className={styles.statLabel}>Disetujui</div>
-          </div>
-        </div>
-        <div className={styles.statCard} style={{ borderLeftColor: "#f59e0b" }}>
-          <div className={styles.statIcon} style={{ background: "#f59e0b14", color: "#f59e0b" }}>
-            <Clock size={24} />
-          </div>
-          <div>
-            <div className={styles.statValue}>{menunggu}</div>
-            <div className={styles.statLabel}>Menunggu</div>
-          </div>
-        </div>
-        <div className={styles.statCard} style={{ borderLeftColor: "#ef4444" }}>
-          <div className={styles.statIcon} style={{ background: "#ef444414", color: "#ef4444" }}>
-            <XCircle size={24} />
-          </div>
-          <div>
-            <div className={styles.statValue}>{ditolak}</div>
-            <div className={styles.statLabel}>Ditolak</div>
-          </div>
-        </div>
-      </div>
-
-      {/* Two columns: Progress & Notifikasi */}
-      <div className={styles.twoColumns}>
-        {/* Progress SKPI */}
-        <div className={styles.card}>
-          <h3 className={styles.cardTitle}>
-            <TrendingUp size={18} /> Progress SKPI
-          </h3>
-          <div className={styles.progressWrapper}>
-            <div className={styles.progressBar}>
-              <div className={styles.progressFill} style={{ width: `${progress}%`, background: prodiConfig.primary }}></div>
-            </div>
-            <div className={styles.progressInfo}>
-              <span>{disetujui} dari {targetKegiatan} kegiatan disetujui</span>
-              <span>{progress}%</span>
-            </div>
-          </div>
-          <p className={styles.progressNote}>
-            Syarat pengajuan SKPI: minimal {targetKegiatan} kegiatan telah disetujui.
+          <h1 className={styles.title}>Dashboard Mahasiswa</h1>
+          <p className={styles.subtitle}>
+            Selamat datang, {user?.nama || "Mahasiswa"} • {user?.nim || "-"}
           </p>
-          {progress >= 100 && (
-            <button className={styles.ajukanBtn} style={{ background: prodiConfig.primary }}>
-              Ajukan SKPI Sekarang
-            </button>
-          )}
+        </div>
+        <div className={styles.headerRight}>
+          <button
+            className={styles.refreshBtn}
+            onClick={() => window.location.reload()}
+            title="Refresh"
+          >
+            <RefreshCw size={14} />
+          </button>
+        </div>
+      </div>
+
+      {/* ── Stat Cards ── */}
+      <div className={styles.cards}>
+        {cards.map((card, i) => {
+          const Icon = card.icon;
+          return (
+            <div
+              key={card.label}
+              className={styles.card}
+              style={{ "--accent": card.accent, animationDelay: `${i * 50}ms` }}
+            >
+              <div
+                className={styles.cardIcon}
+                style={{ background: `${card.accent}14`, color: card.accent }}
+              >
+                <Icon size={18} />
+              </div>
+              <div className={styles.cardBody}>
+                <div className={styles.cardValue} style={{ color: card.accent }}>
+                  {card.value}
+                </div>
+                <div className={styles.cardLabel}>{card.label}</div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* ── Bottom grid (tabel kegiatan + notifikasi) ── */}
+      <div className={styles.bottom}>
+        {/* Tabel Kegiatan Terbaru */}
+        <div className={styles.section}>
+          <div className={styles.sectionHead}>
+            <div className={styles.sectionTitle}>
+              <Activity size={15} /> Kegiatan Terbaru
+            </div>
+            <button className={styles.linkBtn}>Lihat Semua ➜</button>
+          </div>
+          <div className={styles.tableWrap}>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th>Nama Kegiatan</th>
+                  <th>Tanggal</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {kegiatan.slice(0, 5).map(k => (
+                  <tr key={k.id}>
+                    <td>{k.nama}</td>
+                    <td>{k.tanggal}</td>
+                    <td>
+                      <span className={`${styles.statusBadge} ${styles[k.status.toLowerCase()]}`}>
+                        {k.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+                {kegiatan.length === 0 && (
+                  <tr>
+                    <td colSpan="3" className={styles.emptyRow}>Belum ada kegiatan</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
 
-        {/* Notifikasi */}
-        <div className={styles.card}>
-          <h3 className={styles.cardTitle}>
-            <Bell size={18} /> Notifikasi Terbaru
-            {unreadCount > 0 && <span className={styles.notifBadge}>{unreadCount}</span>}
-          </h3>
-          <div className={styles.notifList}>
-            {notifikasi.length === 0 ? (
-              <p className={styles.emptyNotif}>Tidak ada notifikasi</p>
-            ) : (
-              notifikasi.slice(0, 5).map((n) => (
-                <div
-                  key={n.id}
-                  className={`${styles.notifItem} ${!n.read ? styles.notifUnread : ""}`}
-                  onClick={() => markAsRead(n.id)}
+        {/* Notifikasi (sama persis dengan admin) */}
+        <div className={styles.section}>
+          <div className={styles.sectionHead}>
+            <div className={styles.sectionTitle}>
+              <Bell size={15} /> Notifikasi Terbaru
+            </div>
+            <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+              {unread > 0 && (
+                <button
+                  className={styles.linkBtn}
+                  onClick={handleMarkAllRead}
+                  style={{ fontSize: "11px", padding: "2px 8px" }}
                 >
-                  <div className={styles.notifDot} style={{ background: prodiConfig.primary }} />
-                  <div className={styles.notifContent}>
-                    <p>{n.text}</p>
-                    <span>{n.time}</span>
+                  <Check size={12} /> Tandai semua
+                </button>
+              )}
+              {unread > 0 && <span className={styles.badge}>{unread}</span>}
+            </div>
+          </div>
+
+          <div className={styles.notifList}>
+            {loadingNotif ? (
+              <div style={{ padding: "16px", display: "flex", flexDirection: "column", gap: "12px" }}>
+                {[1, 2, 3].map(i => (
+                  <div key={i} style={{ height: "52px", background: "#f0ece8", borderRadius: "8px" }} />
+                ))}
+              </div>
+            ) : notifs.length === 0 ? (
+              <div className={styles.emptyNotif}>Tidak ada notifikasi</div>
+            ) : (
+              notifs.map(n => {
+                const type = inferNotifType(n.judul);
+                return (
+                  <div
+                    key={n.id_notifikasi}
+                    className={`${styles.notifItem} ${!n.status_baca ? styles.notifUnread : ""}`}
+                    onClick={() => !n.status_baca && handleMarkRead(n.id_notifikasi)}
+                    style={{ cursor: n.status_baca ? "default" : "pointer" }}
+                  >
+                    <div
+                      className={styles.notifDot}
+                      style={{
+                        background: NOTIF_BG[type],
+                        color: NOTIF_COLORS[type],
+                        border: `1px solid ${NOTIF_COLORS[type]}22`,
+                      }}
+                    >
+                      <Bell size={12} />
+                    </div>
+                    <div className={styles.notifText}>
+                      <p>{n.pesan}</p>
+                      <span>{relativeTime(n.created_at)}</span>
+                    </div>
+                    <button
+                      className={styles.notifMore}
+                      onClick={e => {
+                        e.stopPropagation();
+                        handleDelete(n.id_notifikasi);
+                      }}
+                      title="Hapus notifikasi"
+                    >
+                      <Trash2 size={13} />
+                    </button>
                   </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
-          <button className={styles.linkBtn}>Lihat Semua Notifikasi</button>
+
+          <button className={styles.linkBtn} style={{ marginTop: 10, width: "100%", justifyContent: "center" }}>
+            Semua Notifikasi <ChevronRight size={12} />
+          </button>
         </div>
       </div>
 
-      {/* Kegiatan Terbaru */}
-      <div className={styles.card}>
-        <h3 className={styles.cardTitle}>
-          <Activity size={18} /> Kegiatan Terbaru
-        </h3>
-        <div className={styles.tableWrapper}>
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th>Nama Kegiatan</th>
-                <th>Tanggal</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {kegiatan.slice(0, 5).map((k) => (
-                <tr key={k.id}>
-                  <td>{k.nama}</td>
-                  <td>{k.tanggal}</td>
-                  <td>
-                    <span className={`${styles.statusBadge} ${styles[k.status.toLowerCase()]}`}>
-                      {k.status}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-              {kegiatan.length === 0 && (
-                <tr><td colSpan="3" className={styles.emptyRow}>Belum ada kegiatan</td></tr>
-              )}
-            </tbody>
-          </table>
+      {/* ── Ringkasan Status Kegiatan (progress) ── */}
+      <div className={styles.section}>
+        <div className={styles.sectionHead}>
+          <div className={styles.sectionTitle}>
+            <TrendingUp size={15} /> Ringkasan Status Kegiatan
+          </div>
+        </div>
+        <div className={styles.progressGrid}>
+          {[
+            { label: "Disetujui", value: disetujui, color: "#047857" },
+            { label: "Menunggu", value: menunggu, color: "#b45309" },
+            { label: "Ditolak", value: ditolak, color: "#b91c1c" },
+          ].map(p => {
+            const pct = Math.round((p.value / totalKegiatan) * 100) || 0;
+            return (
+              <div key={p.label} className={styles.progressItem}>
+                <div className={styles.progressTop}>
+                  <span>{p.label}</span>
+                  <strong style={{ color: p.color }}>{pct}%</strong>
+                </div>
+                <div className={styles.track}>
+                  <div className={styles.fill} style={{ width: `${pct}%`, background: p.color }} />
+                </div>
+                <p className={styles.progressSub}>{p.value} kegiatan</p>
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>

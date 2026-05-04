@@ -6,12 +6,13 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import {
   LayoutDashboard, Users, FileText, Settings, LogOut, Menu,
   ChevronLeft, ChevronRight, Bell, Shield, BookOpen, Award,
-  Camera, X, Check, Upload, WifiOff,
+  Camera, X, Check, Upload, WifiOff, Circle,
 } from "lucide-react";
 import styles from "./admin.module.css";
 import { useRouter, usePathname } from "next/navigation";
 import { getMe, logout as apiLogout, uploadAvatar, isMockMode, getAvatarUrl } from "@/lib/api";
 
+// ======================== KOMPONEN EDITOR AVATAR (TIDAK BERUBAH) ========================
 function AvatarEditorModal({ currentSrc, onClose, onSave }) {
   const [preview, setPreview] = useState(null);
   const [dragging, setDragging] = useState(false);
@@ -96,13 +97,79 @@ function AvatarEditorModal({ currentSrc, onClose, onSave }) {
   );
 }
 
+// ======================== KOMPONEN NOTIFIKASI DROPDOWN ========================
+function NotificationDropdown({ isOpen, onClose, onMarkAsRead }) {
+  const [notifications, setNotifications] = useState([
+    { id: 1, title: "SKPI baru diajukan", message: "Mahasiswa Ahmad Rizki mengajukan SKPI", time: "5 menit lalu", read: false },
+    { id: 2, title: "Aktivitas diverifikasi", message: "Kegiatan Webinar telah diverifikasi", time: "1 jam lalu", read: false },
+    { id: 3, title: "Template SKPI diperbarui", message: "Admin mengubah template SKPI 2025", time: "3 jam lalu", read: true },
+    { id: 4, title: "Pengumuman", message: "Maintenance server jam 02.00 WIB", time: "Kemarin", read: true },
+  ]);
+
+  const unreadCount = notifications.filter(n => !n.read).length;
+
+  const handleMarkAsRead = (id) => {
+    setNotifications(prev =>
+      prev.map(n => n.id === id ? { ...n, read: true } : n)
+    );
+    if (onMarkAsRead) onMarkAsRead(id);
+  };
+
+  const handleMarkAllRead = () => {
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className={styles.notifDropdown}>
+      <div className={styles.notifHeader}>
+        <span>Notifikasi</span>
+        {unreadCount > 0 && (
+          <button onClick={handleMarkAllRead} className={styles.notifMarkAllBtn}>
+            Tandai semua sudah dibaca
+          </button>
+        )}
+      </div>
+      <div className={styles.notifList}>
+        {notifications.length === 0 ? (
+          <div className={styles.notifEmpty}>Tidak ada notifikasi</div>
+        ) : (
+          notifications.map(notif => (
+            <div
+              key={notif.id}
+              className={`${styles.notifItem} ${!notif.read ? styles.notifUnread : ""}`}
+              onClick={() => handleMarkAsRead(notif.id)}
+            >
+              <div className={styles.notifIcon}>
+                {!notif.read && <Circle size={8} fill="#3b82f6" color="#3b82f6" />}
+              </div>
+              <div className={styles.notifContent}>
+                <div className={styles.notifTitle}>{notif.title}</div>
+                <div className={styles.notifMsg}>{notif.message}</div>
+                <div className={styles.notifTime}>{notif.time}</div>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+      <div className={styles.notifFooter}>
+        <Link href="/admin/notifications" onClick={onClose}>Lihat semua notifikasi</Link>
+      </div>
+    </div>
+  );
+}
+
+// ======================== MAIN LAYOUT ========================
 export default function AdminLayout({ children }) {
   const [collapsed, setCollapsed] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(false); // Mobile sidebar state
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const [checking, setChecking] = useState(true);
   const [showEditor, setShowEditor] = useState(false);
   const [mockMode, setMockMode] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const notifRef = useRef(null);
 
   const [avatarSrc, setAvatarSrc] = useState("/img/avatar.jpg");
   const [adminName, setAdminName] = useState("Admin");
@@ -111,6 +178,7 @@ export default function AdminLayout({ children }) {
   const router = useRouter();
   const pathname = usePathname();
 
+  // Fetch data user
   useEffect(() => {
     let mounted = true;
     (async () => {
@@ -128,6 +196,7 @@ export default function AdminLayout({ children }) {
     return () => { mounted = false; };
   }, [router, pathname]);
 
+  // Global event listeners untuk avatar/profile update
   useEffect(() => {
     function onAvatarUpdated(e) { if (e.detail?.avatar) setAvatarSrc(e.detail.avatar); }
     function onProfileUpdated(e) {
@@ -142,21 +211,33 @@ export default function AdminLayout({ children }) {
     };
   }, []);
 
-  // ── Close sidebar saat navigate (mobile) ──
+  // Tutup sidebar saat navigasi (mobile)
   useEffect(() => {
     setSidebarOpen(false);
   }, [pathname]);
 
-  // ── Keyboard escape untuk close sidebar ────
+  // Tutup notifikasi saat klik di luar
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (notifRef.current && !notifRef.current.contains(event.target)) {
+        setNotifOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Escape key untuk close sidebar & notifikasi
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.key === "Escape" && sidebarOpen) {
-        setSidebarOpen(false);
+      if (e.key === "Escape") {
+        if (sidebarOpen) setSidebarOpen(false);
+        if (notifOpen) setNotifOpen(false);
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [sidebarOpen]);
+  }, [sidebarOpen, notifOpen]);
 
   const navItems = [
     { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -193,7 +274,7 @@ export default function AdminLayout({ children }) {
       </div>
     );
   }
-  
+
   return (
     <div className={styles.wrapper}>
       {mockMode && (
@@ -233,7 +314,6 @@ export default function AdminLayout({ children }) {
           {!collapsed && <div className={styles.brandText}><strong>SKPI</strong><span>Admin Panel</span></div>}
           <button aria-label="Toggle sidebar" className={styles.collapseBtn} onClick={() => {
             setCollapsed(!collapsed);
-            // Di mobile, juga close overlay
             setSidebarOpen(false);
           }}>
             {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
@@ -273,9 +353,23 @@ export default function AdminLayout({ children }) {
           </div>
 
           <div className={styles.topbarRight}>
-            <button className={styles.iconBtn} aria-label="Notifications">
-              <Bell size={17} /><span className={styles.badge}>3</span>
-            </button>
+            {/* NOTIFICATION BUTTON WITH DROPDOWN */}
+            <div className={styles.notifWrapper} ref={notifRef}>
+              <button
+                className={styles.iconBtn}
+                aria-label="Notifications"
+                onClick={() => setNotifOpen(!notifOpen)}
+              >
+                <Bell size={17} />
+                {/* Badge dinamis berdasarkan notifikasi belum dibaca */}
+                <span className={styles.badge}>3</span>
+              </button>
+              <NotificationDropdown
+                isOpen={notifOpen}
+                onClose={() => setNotifOpen(false)}
+              />
+            </div>
+
             <span className={styles.divider} />
             <div className={styles.userBlock}>
               <button className={styles.avatarBtn} onClick={() => router.push("/admin/profile")} aria-label="Lihat profil">
