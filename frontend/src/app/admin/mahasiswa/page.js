@@ -23,7 +23,7 @@ import {
 } from "@/lib/api";
 
 // ========== MOCK DATA (aktif jika USE_MOCK = true) ==========
-const USE_MOCK = true;  // ubah ke false untuk menggunakan API sungguhan
+const USE_MOCK = false;  // ubah ke false untuk menggunakan API sungguhan
 
 // Data prodi beserta warna tema baru (disesuaikan dengan struktur komponen)
 export const PRODI_CONFIG = {
