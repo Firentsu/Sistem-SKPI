@@ -8,6 +8,7 @@
   font-family: 'Inter', 'Segoe UI', sans-serif;
   flex-direction: column;
   gap: 20px;
+  display: flex;
 }
 
 /* ─────────────────────────────────────────
@@ -534,7 +535,7 @@
   background: #fff;
   border-radius: 20px;
   width: 100%;
-  max-width: 640px;
+  max-width: 720px;
   max-height: 90vh;
   display: flex; flex-direction: column;
   box-shadow: 0 28px 70px rgba(40,20,5,0.28), 0 0 0 1px rgba(118,84,57,0.08);
@@ -699,6 +700,7 @@
 }
 
 .fg { display: flex; flex-direction: column; gap: 5px; }
+.fullSpan { grid-column: span 2; }
 
 .fl {
   font-size: 11px;
@@ -709,6 +711,16 @@
 }
 
 .req { color: #dc2626; margin-left: 2px; }
+.optBadge {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: none;
+  color: #a07858;
+  background: #f5ece4;
+  padding: 1px 7px;
+  border-radius: 20px;
+  letter-spacing: 0;
+}
 
 .input {
   width: 100%;
@@ -725,7 +737,92 @@
 }
 .input:focus { border-color: #765439; background: #fff; box-shadow: 0 0 0 3px rgba(118,84,57,0.1); }
 
-/* Upload zone (edit modal) */
+.textarea {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1.5px solid #e8d5c4;
+  border-radius: 10px;
+  background: #fdfaf8;
+  font-size: 13px;
+  color: #3d2006;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  box-sizing: border-box;
+  font-family: inherit;
+  resize: vertical;
+}
+.textarea:focus {
+  border-color: #765439;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(118,84,57,0.1);
+}
+
+/* Auto‑fill pill */
+.autoFill {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 13px;
+  border: 1.5px solid;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  background: #fff;
+  opacity: 0.85;
+  user-select: none;
+}
+
+/* Kategori SKPI tombol (di modal edit) */
+.katGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.katBtn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border: 1.5px solid #e8d5c4;
+  border-radius: 11px;
+  background: #fdfaf8;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  color: #5c3317;
+  transition: all 0.15s;
+  width: 100%;
+}
+.katBtnActive {
+  font-weight: 700;
+}
+.katNo {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+.katCheck {
+  margin-left: auto;
+  flex-shrink: 0;
+}
+.cardInner {
+  margin-top: 6px;
+}
+
+.fieldNote {
+  font-size: 11px;
+  color: #9e7b5e;
+  font-style: italic;
+  margin-top: 2px;
+}
+
+/* Upload zone */
 .uploadZone {
   border: 1.5px dashed #d5bfaf;
   border-radius: 12px;
@@ -787,9 +884,7 @@
 
 .uploadExistingNote { color: #b09880; font-size: 11px; margin-left: 4px; }
 
-/* ─────────────────────────────────────────
-   Responsive
-───────────────────────────────────────── */
+/* Responsive */
 @media (max-width: 960px) {
   .container { padding: 20px 16px 36px; }
   .statsRow  { grid-template-columns: repeat(2, 1fr); }
@@ -798,6 +893,7 @@
 @media (max-width: 640px) {
   .statsRow   { grid-template-columns: 1fr 1fr; }
   .formRow2   { grid-template-columns: 1fr; }
+  .fullSpan   { grid-column: span 1; }
   .filterBar  { flex-direction: column; align-items: stretch; }
   .toolbarRight { justify-content: flex-end; }
   .modalContainer { max-height: 95vh; }

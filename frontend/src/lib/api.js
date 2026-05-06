@@ -374,6 +374,95 @@ export async function uploadBuktiKegiatan(id, formData) {
 }
 
 // =============================================================================
+// MAHASISWA — Detail & Update Kegiatan (untuk halaman edit)
+// =============================================================================
+
+/**
+ * Ambil detail satu kegiatan mahasiswa berdasarkan ID.
+ * Endpoint : GET /api/mahasiswa/kegiatan/:id
+ */
+export async function getDetailKegiatan(id) {
+  if (_mockMode || !API_URL) {
+    // Mock data untuk mode demo
+    return {
+      id_kegiatan: parseInt(id),
+      nama_kegiatan: "Workshop React.js",
+      nama_kegiatan_eng: "React.js Workshop",
+      jenisaktivitas: { nama_indo: "Peningkatan Keterampilan Profesional" },
+      kategori_skpi: "keterampilan",
+      kategoriaktivitas: { nama_indo: "Workshop" },
+      kelompokaktivitas: { nama_indo: "Akademik" },
+      levelkegiatan: { nama_level: "Nasional" },
+      periode_kegiatan: "Semester Genap 2025/2026",
+      tingkat_prestasi: "Peserta",
+      lokasi: "Kampus TI",
+      penyelenggara: "Himpunan Mahasiswa TI",
+      tanggal_kegiatan: "2026-03-20",
+      status_verifikasi: "menunggu",
+      catatan_admin: "",
+      bukti_deskripsi: "",
+      periode_mentor: "",
+      buktikegiatan: [{ file_path: "bukti1.pdf" }],
+    };
+  }
+  try {
+    const res = await apiFetch(`/api/mahasiswa/kegiatan/${id}`);
+    if (res.ok) return res.json();
+    return null;
+  } catch {
+    _mockMode = true;
+    return getDetailKegiatan(id);
+  }
+}
+
+/**
+ * Update kegiatan mahasiswa (termasuk opsional upload bukti baru).
+ * Endpoint : PUT /api/mahasiswa/kegiatan/:id
+ * Jika ada file, kirim sebagai FormData; jika tidak, kirim JSON biasa.
+ */
+export async function updateKegiatan(id, payload, file = null) {
+  if (_mockMode || !API_URL) {
+    return { ok: true, data: { success: true, message: "Kegiatan diperbarui (mode demo)" } };
+  }
+
+  // Jika ada file, gunakan FormData
+  if (file) {
+    const formData = new FormData();
+    for (const key in payload) {
+      if (payload[key] !== undefined && payload[key] !== null) {
+        formData.append(key, payload[key]);
+      }
+    }
+    formData.append("bukti", file);
+    try {
+      const url = `${API_URL}/api/mahasiswa/kegiatan/${id}`;
+      const res = await fetch(url, {
+        method: "PUT",
+        credentials: "include",
+        body: formData,
+      });
+      const data = await res.json();
+      return { ok: res.ok, data };
+    } catch {
+      _mockMode = true;
+      return { ok: true, data: { success: true, message: "Kegiatan diperbarui (mode demo)" } };
+    }
+  } else {
+    try {
+      const res = await apiFetch(`/api/mahasiswa/kegiatan/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      return { ok: res.ok, data };
+    } catch {
+      _mockMode = true;
+      return { ok: true, data: { success: true, message: "Kegiatan diperbarui (mode demo)" } };
+    }
+  }
+}
+
+// =============================================================================
 // ADMIN — Manajemen Akun Administrator
 // Base endpoint: /api/admin/admins
 // =============================================================================
