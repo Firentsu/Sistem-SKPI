@@ -282,7 +282,6 @@ export default function MasterDataPage() {
     <div className={styles.page}>
       <Toast toast={toast} onClose={clear} />
 
-      {/* ── Header ── */}
       <div className={styles.pageHeader}>
         <div>
           <h1 className={styles.pageTitle}>Master Data</h1>
@@ -290,7 +289,6 @@ export default function MasterDataPage() {
         </div>
       </div>
 
-      {/* ── Tab navigasi ── */}
       <div className={styles.tabs}>
         {MASTER_TYPES.map((t, i) => (
           <button
@@ -299,17 +297,12 @@ export default function MasterDataPage() {
             onClick={() => { setActiveIdx(i); setSearch(""); setPage(1); }}
           >
             {t.label}
-            {activeIdx === i && (
-              <span className={styles.tabCount}>{rows.length}</span>
-            )}
+            {activeIdx === i && <span className={styles.tabCount}>{rows.length}</span>}
           </button>
         ))}
       </div>
 
-      {/* ── Panel konten ── */}
       <div className={styles.panel}>
-
-        {/* Toolbar */}
         <div className={styles.toolbar}>
           <div className={styles.searchWrap}>
             <Search size={14} className={styles.searchIcon} />
@@ -333,10 +326,8 @@ export default function MasterDataPage() {
           </div>
         </div>
 
-        {/* Deskripsi tipe */}
         <p className={styles.typeDesc}>{activeType.desc}</p>
 
-        {/* Tabel */}
         <div className={styles.tableWrap}>
           <table className={styles.table}>
             <thead>
@@ -349,26 +340,26 @@ export default function MasterDataPage() {
               </tr>
             </thead>
             <tbody>
-              {loading ? (
+              {loading && (
                 <tr>
                   <td colSpan={activeType.hasEng ? 5 : 3} className={styles.loadingTd}>
                     <Loader2 size={22} className={styles.spin} />
                     <span>Memuat data...</span>
                   </td>
                 </tr>
-              ) : paged.length === 0 ? (
+              )}
+              {!loading && paged.length === 0 && (
                 <tr>
                   <td colSpan={activeType.hasEng ? 5 : 3} className={styles.emptyTd}>
                     {search ? `Tidak ada hasil untuk "${search}"` : `Belum ada data ${activeType.label}`}
                   </td>
                 </tr>
-              ) : paged.map((row, idx) => (
+              )}
+              {!loading && paged.length > 0 && paged.map((row, idx) => (
                 <tr key={row[activeType.idField]} className={row.status === false ? styles.rowInactive : ""}>
                   <td className={styles.tdNo}>{(safePage - 1) * PER_PAGE + idx + 1}</td>
                   <td className={styles.tdName}>{getName(row)}</td>
-                  {activeType.hasEng && (
-                    <td className={styles.tdEng}>{row.nama_eng ?? "-"}</td>
-                  )}
+                  {activeType.hasEng && <td className={styles.tdEng}>{row.nama_eng ?? "-"}</td>}
                   {activeType.hasEng && (
                     <td className={styles.thCenter}>
                       <span className={`${styles.statusDot} ${row.status ? styles.dotOn : styles.dotOff}`}>
@@ -378,18 +369,10 @@ export default function MasterDataPage() {
                   )}
                   <td className={styles.thRight}>
                     <div className={styles.actions}>
-                      <button
-                        className={styles.actEdit}
-                        onClick={() => setModalEdit(row)}
-                        title="Edit"
-                      >
+                      <button className={styles.actEdit} onClick={() => setModalEdit(row)} title="Edit">
                         <Edit2 size={13} /> Edit
                       </button>
-                      <button
-                        className={styles.actDel}
-                        onClick={() => setModalDel(row)}
-                        title="Hapus"
-                      >
+                      <button className={styles.actDel} onClick={() => setModalDel(row)} title="Hapus">
                         <Trash2 size={13} />
                       </button>
                     </div>
@@ -400,7 +383,6 @@ export default function MasterDataPage() {
           </table>
         </div>
 
-        {/* Pagination */}
         {totalPages > 1 && (
           <div className={styles.pagination}>
             <span className={styles.paginInfo}>
@@ -435,7 +417,6 @@ export default function MasterDataPage() {
         )}
       </div>
 
-      {/* ── Modals ── */}
       {modalAdd && (
         <ItemModal
           type={activeType}
