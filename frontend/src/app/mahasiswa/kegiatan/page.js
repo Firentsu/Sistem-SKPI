@@ -141,7 +141,7 @@ function BuktiModal({ bukti, namaKegiatan, onClose }) {
 // ========== HALAMAN UTAMA ==========
 export default function KegiatanPage() {
   const router = useRouter();
-  const { prodiConfig } = useMahasiswa();
+  const { prodiConfig, removePendingKegiatan } = useMahasiswa();
 
   const [kegiatan, setKegiatan] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -209,14 +209,27 @@ export default function KegiatanPage() {
 
   useEffect(() => { document.title = "Kegiatan Saya | SKPI Mahasiswa"; }, []);
 
-  const handleDelete = async (id) => {
-    const item = kegiatan.find(k => k.id === id);
-    if (item?.status === "Disetujui") {
+  const handleDelete = async (idOrTmp) => {
+    const item = kegiatan.find(k => k.id === idOrTmp || k.tmpId === idOrTmp);
+    if (!item) return showToast("Kegiatan tidak ditemukan", "error");
+
+    // If it's a frontend-only pending item (tmpId), remove locally
+    if (item.tmpId && !item.id) {
+      if (confirm(`Batalkan kegiatan "${item.nama_id}"?`)) {
+        try { removePendingKegiatan(item.tmpId); } catch {}
+        setKegiatan(prev => prev.filter(p => p.tmpId !== item.tmpId));
+        showToast("Kegiatan dibatalkan");
+      }
+      return;
+    }
+
+    // For server-backed (or persisted mock) items
+    if (item.status === "Disetujui") {
       showToast("Kegiatan yang sudah disetujui tidak dapat dihapus", "error");
       return;
     }
-    if (confirm(`Hapus kegiatan "${item?.nama_id}"?`)) {
-      const result = await deleteKegiatan(id);
+    if (confirm(`Hapus kegiatan "${item.nama_id}"?`)) {
+      const result = await deleteKegiatan(item.id);
       if (result.ok) {
         showToast("Kegiatan dihapus");
         await loadKegiatan();
@@ -227,8 +240,15 @@ export default function KegiatanPage() {
   };
 
   const handleEdit = (k) => {
-    if (k.status !== "Menunggu") {
+    const normalizedStatus = (k.status || "").toString().toLowerCase();
+    const isMenunggu = normalizedStatus === "menunggu" || normalizedStatus === "diproses";
+    if (!isMenunggu) {
       showToast("Hanya kegiatan berstatus 'Menunggu' yang dapat diedit", "error");
+      return;
+    }
+    if (!k.id) {
+      // pending frontend-only item: editing inline not implemented yet
+      showToast("Kegiatan sementara belum bisa diedit — hapus dan tambahkan ulang atau tunggu sinkronisasi.", "error");
       return;
     }
     router.push(`/mahasiswa/kegiatan/edit-kegiatan/${k.id}`);
@@ -371,9 +391,13 @@ export default function KegiatanPage() {
             <tbody>
               {filtered.map(k => {
                 const skpiKat = KATEGORI_SKPI_MAHASISWA.find(c => c.id === k.kategori_skpi);
-                const canEdit = k.status === "Menunggu";
+                // Normalize status and allow actions for pending (tmpId) items
+                const normalizedStatus = (k.status || "").toString().toLowerCase();
+                const isMenunggu = normalizedStatus === "menunggu" || normalizedStatus === "diproses" || normalizedStatus === "diproses";
+                const canEdit = isMenunggu && (!!k.id || !!k.tmpId);
+                const canDelete = !!k.tmpId || isMenunggu;
                 return (
-                  <tr key={k.id}>
+                  <tr key={k.tmpId ?? k.id}>
                     <td>
                       <div className={styles.namaCell}>
                         <strong className={styles.namaId}>{k.nama_id}</strong>
@@ -416,8 +440,8 @@ export default function KegiatanPage() {
                           style={canEdit ? { color: prodiConfig.primary } : {}}>
                           <Edit2 size={14} />
                         </button>
-                        <button title="Hapus" onClick={() => handleDelete(k.id)}
-                          disabled={!canEdit} className={`${styles.actionBtn} ${styles.actionDanger}`}>
+                        <button title="Hapus" onClick={() => handleDelete(k.tmpId ?? k.id)}
+                          disabled={!canDelete} className={`${styles.actionBtn} ${styles.actionDanger}`}>
                           <Trash2 size={14} />
                         </button>
                       </div>

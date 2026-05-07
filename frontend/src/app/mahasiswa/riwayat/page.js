@@ -2,76 +2,126 @@
 
 import { useState, useEffect } from "react";
 import { useMahasiswa } from "@/context/MahasiswaContext";
-import { Eye, FileText, Search, Filter, X, CheckCircle, AlertCircle, Clock } from "lucide-react";
+import { Eye, FileText, Search, Filter, X, CheckCircle, AlertCircle, Clock, Award } from "lucide-react";
 import styles from "./riwayat.module.css";
 
-// Mock data riwayat (nanti dari API)
-const MOCK_RIWAYAT = [
-  { id: 1, nama_id: "Workshop React", nama_en: "React Workshop", jenis: "Workshop", kategori: "Akademik", kelompok: "Akademik", level: "Nasional", tanggal: "2026-03-20", poin: 15, status: "Disetujui", catatan: "-", bukti: "/mock/bukti1.pdf" },
-  { id: 2, nama_id: "Seminar AI", nama_en: "AI Seminar", jenis: "Seminar", kategori: "Non-Akademik", kelompok: "Non-Akademik", level: "Internasional", tanggal: "2026-03-25", poin: 10, status: "Ditolak", catatan: "Bukti kurang jelas", bukti: null },
-  { id: 3, nama_id: "Magang Startup", nama_en: "Startup Internship", jenis: "Magang", kategori: "Profesional", kelompok: "Profesional", level: "Lokal", tanggal: "2026-03-10", poin: 20, status: "Revisi", catatan: "Lengkapi surat keterangan", bukti: "/mock/bukti3.pdf" },
-  { id: 4, nama_id: "Pelatihan Kepemimpinan", nama_en: "Leadership Training", jenis: "Pelatihan", kategori: "Pengembangan Diri", kelompok: "Kepemimpinan", level: "Internal", tanggal: "2026-02-15", poin: 12, status: "Menunggu", catatan: "-", bukti: null },
+// Mock data riwayat SKPI
+const DEFAULT_RIWAYAT_SKPI = [
+  {
+    id: "SKP001",
+    tanggal_pengajuan: "2025-03-15",
+    status: "Diproses",
+    tahap: "Menunggu verifikasi admin",
+    riwayat_tahap: [
+      { tahap: "Pengajuan", status: "Selesai", tanggal: "2025-03-15", catatan: "Pengajuan diterima sistem" },
+      { tahap: "Verifikasi Admin", status: "Proses", tanggal: "2025-03-15", catatan: "Menunggu admin memverifikasi kelengkapan" },
+    ],
+  },
+  {
+    id: "SKP002",
+    tanggal_pengajuan: "2024-12-10",
+    status: "Selesai",
+    tahap: "SKPI diterbitkan",
+    riwayat_tahap: [
+      { tahap: "Pengajuan", status: "Selesai", tanggal: "2024-12-10", catatan: "Pengajuan diterima" },
+      { tahap: "Verifikasi Admin", status: "Selesai", tanggal: "2024-12-12", catatan: "Berkas lengkap" },
+      { tahap: "Verifikasi Kaprodi", status: "Selesai", tanggal: "2024-12-14", catatan: "Disetujui Kaprodi" },
+      { tahap: "Verifikasi Wakil Rektor", status: "Selesai", tanggal: "2024-12-16", catatan: "Disetujui, SKPI terbit" },
+    ],
+    file_skpi: "/skpi/SKP002.pdf",
+  },
+  {
+    id: "SKP003",
+    tanggal_pengajuan: "2024-08-20",
+    status: "Ditolak",
+    tahap: "Ditolak oleh Kaprodi",
+    riwayat_tahap: [
+      { tahap: "Pengajuan", status: "Selesai", tanggal: "2024-08-20", catatan: "Pengajuan diterima" },
+      { tahap: "Verifikasi Admin", status: "Selesai", tanggal: "2024-08-22", catatan: "Berkas lengkap" },
+      { tahap: "Verifikasi Kaprodi", status: "Ditolak", tanggal: "2024-08-25", catatan: "Poin ICP belum mencukupi" },
+    ],
+  },
 ];
-
-const STATUS_COLORS = {
-  Disetujui: "#10b981",
-  Ditolak: "#ef4444",
-  Revisi: "#f59e0b",
-  Menunggu: "#3b82f6",
-};
 
 export default function RiwayatPage() {
   const { prodiConfig } = useMahasiswa();
+  const [riwayat, setRiwayat] = useState([]);
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("Semua");
   const [selected, setSelected] = useState(null);
-  const [previewUrl, setPreviewUrl] = useState(null);
 
   useEffect(() => {
-    document.title = "Riwayat Kegiatan | Mahasiswa SKPI";
+    const saved = localStorage.getItem("skpi_riwayat");
+    if (saved) {
+      setRiwayat(JSON.parse(saved));
+    } else {
+      setRiwayat(DEFAULT_RIWAYAT_SKPI);
+      localStorage.setItem("skpi_riwayat", JSON.stringify(DEFAULT_RIWAYAT_SKPI));
+    }
+    document.title = "Riwayat SKPI | Mahasiswa SKPI";
   }, []);
 
-  const filtered = MOCK_RIWAYAT.filter(r => {
-    const matchSearch = r.nama_id.toLowerCase().includes(search.toLowerCase()) || r.nama_en.toLowerCase().includes(search.toLowerCase());
+  const filtered = riwayat.filter(r => {
+    const matchId = r.id.toLowerCase().includes(search.toLowerCase());
     const matchStatus = filterStatus === "Semua" || r.status === filterStatus;
-    return matchSearch && matchStatus;
+    return (matchId || search === "") && matchStatus;
   });
 
   const stats = {
-    total: MOCK_RIWAYAT.length,
-    disetujui: MOCK_RIWAYAT.filter(r => r.status === "Disetujui").length,
-    ditolak: MOCK_RIWAYAT.filter(r => r.status === "Ditolak").length,
-    revisi: MOCK_RIWAYAT.filter(r => r.status === "Revisi").length,
-    menunggu: MOCK_RIWAYAT.filter(r => r.status === "Menunggu").length,
+    total: riwayat.length,
+    diproses: riwayat.filter(r => r.status === "Diproses").length,
+    selesai: riwayat.filter(r => r.status === "Selesai").length,
+    ditolak: riwayat.filter(r => r.status === "Ditolak").length,
   };
 
-  const handleViewDetail = (item) => {
-    setSelected(item);
-    // Simulasi preview bukti jika ada
-    if (item.bukti) {
-      // Untuk mock, bisa set previewUrl ke path gambar atau PDF viewer
-      setPreviewUrl(item.bukti);
-    } else {
-      setPreviewUrl(null);
-    }
+  const formatDate = (dateStr) => {
+    if (!dateStr) return "-";
+    return new Date(dateStr).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
+  };
+
+  const getStatusBadge = (status) => {
+    const map = {
+      Diproses: { class: styles.status_diproses, icon: <Clock size={12} /> },
+      Selesai: { class: styles.status_selesai, icon: <CheckCircle size={12} /> },
+      Ditolak: { class: styles.status_ditolak, icon: <AlertCircle size={12} /> },
+    };
+    const s = map[status] || map.Diproses;
+    return (
+      <span className={`${styles.statusBadge} ${s.class}`}>
+        {s.icon} {status}
+      </span>
+    );
   };
 
   return (
     <div className={styles.container}>
       <div className={styles.header}>
         <div>
-          <h1 className={styles.title}>Riwayat Kegiatan</h1>
-          <p className={styles.subtitle}>Semua kegiatan yang pernah Anda ajukan beserta statusnya</p>
+          <h1 className={styles.title}>Riwayat SKPI</h1>
+          <p className={styles.subtitle}>Lacak status pengajuan dan persetujuan SKPI Anda</p>
         </div>
       </div>
 
-      {/* Statistik */}
       <div className={styles.statsGrid}>
+        <div className={styles.statCard} style={{ borderLeftColor: prodiConfig.primary }}>
+          <Award size={20} style={{ color: prodiConfig.primary }} />
+          <div>
+            <div className={styles.statValue}>{stats.total}</div>
+            <div className={styles.statLabel}>Total Pengajuan</div>
+          </div>
+        </div>
+        <div className={styles.statCard} style={{ borderLeftColor: "#3b82f6" }}>
+          <Clock size={20} />
+          <div>
+            <div className={styles.statValue}>{stats.diproses}</div>
+            <div className={styles.statLabel}>Diproses</div>
+          </div>
+        </div>
         <div className={styles.statCard} style={{ borderLeftColor: "#10b981" }}>
           <CheckCircle size={20} />
           <div>
-            <div className={styles.statValue}>{stats.disetujui}</div>
-            <div className={styles.statLabel}>Disetujui</div>
+            <div className={styles.statValue}>{stats.selesai}</div>
+            <div className={styles.statLabel}>Selesai</div>
           </div>
         </div>
         <div className={styles.statCard} style={{ borderLeftColor: "#ef4444" }}>
@@ -81,29 +131,14 @@ export default function RiwayatPage() {
             <div className={styles.statLabel}>Ditolak</div>
           </div>
         </div>
-        <div className={styles.statCard} style={{ borderLeftColor: "#f59e0b" }}>
-          <Clock size={20} />
-          <div>
-            <div className={styles.statValue}>{stats.revisi}</div>
-            <div className={styles.statLabel}>Revisi</div>
-          </div>
-        </div>
-        <div className={styles.statCard} style={{ borderLeftColor: "#3b82f6" }}>
-          <FileText size={20} />
-          <div>
-            <div className={styles.statValue}>{stats.menunggu}</div>
-            <div className={styles.statLabel}>Menunggu</div>
-          </div>
-        </div>
       </div>
 
-      {/* Filter & Search */}
       <div className={styles.filterBar}>
         <div className={styles.searchBox}>
           <Search size={16} />
           <input
             type="text"
-            placeholder="Cari kegiatan (Indonesia/Inggris)..."
+            placeholder="Cari berdasarkan nomor pengajuan..."
             value={search}
             onChange={e => setSearch(e.target.value)}
           />
@@ -112,117 +147,98 @@ export default function RiwayatPage() {
           <Filter size={16} />
           <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
             <option value="Semua">Semua Status</option>
-            <option value="Disetujui">Disetujui</option>
+            <option value="Diproses">Diproses</option>
+            <option value="Selesai">Selesai</option>
             <option value="Ditolak">Ditolak</option>
-            <option value="Revisi">Revisi</option>
-            <option value="Menunggu">Menunggu</option>
           </select>
         </div>
       </div>
 
-      {/* Tabel */}
       <div className={styles.tableWrapper}>
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th>Nama Kegiatan (ID/EN)</th>
-              <th>Jenis</th>
-              <th>Tanggal</th>
-              <th>Status</th>
-              <th>Aksi</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map(r => (
-              <tr key={r.id}>
+        {filtered.length === 0 ? (
+          <div className={styles.emptyState}>
+            <FileText size={48} />
+            <p>Tidak ada riwayat pengajuan SKPI</p>
+            <span>Silakan ajukan SKPI melalui halaman Pengajuan</span>
+          </div>
+        ) : (
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th>No. Pengajuan</th>
+                <th>Tanggal Pengajuan</th>
+                <th>Status</th>
+                <th>Tahap Terakhir</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map(r => (
+                <tr key={r.id}>
+                <td><strong>{r.id}</strong></td>
+                <td>{formatDate(r.tanggal_pengajuan)}</td>
+                  <td>{getStatusBadge(r.status)}</td>
+                <td>{r.tahap}</td>
                 <td>
-                  <div className={styles.namaCell}>
-                    <strong>{r.nama_id}</strong>
-                    <small>{r.nama_en}</small>
-                  </div>
-                </td>
-                <td>{r.jenis}</td>
-                <td>{r.tanggal}</td>
-                <td>
-                  <span className={`${styles.statusBadge} ${styles[r.status.toLowerCase()]}`}>
-                    {r.status}
-                  </span>
-                </td>
-                <td>
-                  <button className={styles.detailBtn} onClick={() => handleViewDetail(r)}>
+                  <button className={styles.detailBtn} onClick={() => setSelected(r)}>
                     <Eye size={14} /> Detail
                   </button>
                 </td>
-              </tr>
-            ))}
-            {filtered.length === 0 && (
-              <tr><td colSpan="6" className={styles.emptyRow}>Tidak ada kegiatan yang sesuai</td></tr>
-            )}
-          </tbody>
-        </table>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
 
-      {/* Modal Detail */}
       {selected && (
         <div className={styles.modalOverlay} onClick={() => setSelected(null)}>
           <div className={styles.modalContainer} onClick={e => e.stopPropagation()}>
             <div className={styles.modalHeader}>
-              <h3>Detail Kegiatan</h3>
+              <h3>Detail Pengajuan SKPI</h3>
               <button className={styles.modalClose} onClick={() => setSelected(null)}><X size={18} /></button>
             </div>
             <div className={styles.modalBody}>
               <div className={styles.detailRow}>
-                <label>Nama (Indonesia)</label>
-                <p>{selected.nama_id}</p>
+                <label>Nomor Pengajuan</label>
+                <p><strong>{selected.id}</strong></p>
               </div>
               <div className={styles.detailRow}>
-                <label>Nama (English)</label>
-                <p>{selected.nama_en}</p>
-              </div>
-              <div className={styles.detailRow}>
-                <label>Jenis Aktivitas</label>
-                <p>{selected.jenis}</p>
-              </div>
-              <div className={styles.detailRow}>
-                <label>Kategori</label>
-                <p>{selected.kategori}</p>
-              </div>
-              <div className={styles.detailRow}>
-                <label>Kelompok</label>
-                <p>{selected.kelompok}</p>
-              </div>
-              <div className={styles.detailRow}>
-                <label>Level</label>
-                <p>{selected.level}</p>
-              </div>
-              <div className={styles.detailRow}>
-                <label>Tanggal</label>
-                <p>{selected.tanggal}</p>
+                <label>Tanggal Pengajuan</label>
+                <p>{formatDate(selected.tanggal_pengajuan)}</p>
               </div>
               <div className={styles.detailRow}>
                 <label>Status</label>
-                <p>
-                  <span className={`${styles.statusBadge} ${styles[selected.status.toLowerCase()]}`}>
-                    {selected.status}
-                  </span>
-                </p>
+                <p>{getStatusBadge(selected.status)}</p>
               </div>
-              {selected.catatan && selected.catatan !== "-" && (
-                <div className={styles.detailRow}>
-                  <label>Catatan</label>
-                  <p className={styles.catatanText}>{selected.catatan}</p>
+              <div className={styles.detailRow}>
+                <label>Tahap Terakhir</label>
+                <p>{selected.tahap}</p>
+              </div>
+              <div className={styles.detailRow}>
+                <label>Riwayat Tahapan</label>
+                <div className={styles.timeline}>
+                  {selected.riwayat_tahap.map((step, idx) => (
+                    <div key={idx} className={styles.timelineItem}>
+                      <div className={`${styles.timelineDot} ${step.status === "Selesai" ? styles.dotSuccess : step.status === "Ditolak" ? styles.dotDanger : styles.dotProcess}`} />
+                      <div className={styles.timelineContent}>
+                        <div className={styles.timelineHeader}>
+                          <span className={styles.timelineTitle}>{step.tahap}</span>
+                          <span className={styles.timelineStatus}>{step.status}</span>
+                        </div>
+                        <div className={styles.timelineDate}>{formatDate(step.tanggal)}</div>
+                        {step.catatan && <div className={styles.timelineNote}>{step.catatan}</div>}
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              )}
-              {selected.bukti && (
+              </div>
+              {selected.status === "Selesai" && selected.file_skpi && (
                 <div className={styles.detailRow}>
-                  <label>Bukti Kegiatan</label>
-                  <div className={styles.buktiPreview}>
-                    {previewUrl && (previewUrl.endsWith('.pdf') ? (
-                      <a href={previewUrl} target="_blank" rel="noopener noreferrer" className={styles.pdfLink}>Lihat PDF</a>
-                    ) : (
-                      <img src={previewUrl} alt="Bukti" className={styles.previewImage} />
-                    ))}
-                  </div>
+                  <label>File SKPI</label>
+                  <a href={selected.file_skpi} download className={styles.downloadLink}>
+                    Unduh SKPI
+                  </a>
                 </div>
               )}
             </div>

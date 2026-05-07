@@ -292,21 +292,116 @@ export async function updateMahasiswaPassword({ password_lama, password_baru }) 
 // MAHASISWA — Kegiatan
 // =============================================================================
 
+// In-memory mock store for mahasiswa kegiatan so frontend can add/edit/delete
+// while in demo/mock mode. These changes only live in memory and vanish on refresh.
+// Try to persist mock kegiatan across refreshes in localStorage (frontend-only).
+let _mockMahasiswaKegiatan = [];
+try {
+  if (typeof window !== "undefined") {
+    const raw = localStorage.getItem("mockMahasiswaKegiatan");
+    if (raw) _mockMahasiswaKegiatan = JSON.parse(raw);
+  }
+} catch {}
+if (!_mockMahasiswaKegiatan || _mockMahasiswaKegiatan.length === 0) {
+  _mockMahasiswaKegiatan = [
+  {
+    id_kegiatan: 1,
+    nama_kegiatan: "Workshop React.js",
+    nama_kegiatan_eng: "React.js Workshop",
+    jenisaktivitas: { nama_indo: "Peningkatan Keterampilan Profesional" },
+    kategori_skpi: "keterampilan",
+    kategoriaktivitas: { nama_indo: "Workshop" },
+    kelompokaktivitas: { nama_indo: "Akademik" },
+    levelkegiatan: { nama_level: "Nasional" },
+    periode_kegiatan: "Semester Genap 2025/2026",
+    tingkat_prestasi: "Peserta",
+    lokasi: "Kampus TI",
+    penyelenggara: "Himpunan Mahasiswa TI",
+    tanggal_kegiatan: "2026-03-20",
+    status_verifikasi: "disetujui",
+    catatan_admin: "",
+    bukti_deskripsi: "",
+    periode_mentor: "",
+    buktikegiatan: [{ file_path: "bukti1.pdf" }],
+    created_at: "2026-03-01",
+  },
+  {
+    id_kegiatan: 2,
+    nama_kegiatan: "Seminar AI",
+    nama_kegiatan_eng: "AI Seminar",
+    jenisaktivitas: { nama_indo: "Prestasi dan Kegiatan" },
+    kategori_skpi: "prestasi",
+    kategoriaktivitas: { nama_indo: "Seminar" },
+    kelompokaktivitas: { nama_indo: "Non-Akademik" },
+    levelkegiatan: { nama_level: "Internasional" },
+    periode_kegiatan: "Semester Ganjil 2025/2026",
+    tingkat_prestasi: "Peserta",
+    lokasi: "Online",
+    penyelenggara: "Tech Corp",
+    tanggal_kegiatan: "2026-03-25",
+    status_verifikasi: "menunggu",
+    catatan_admin: "",
+    bukti_deskripsi: "",
+    periode_mentor: "",
+    buktikegiatan: [],
+    created_at: "2026-03-10",
+  }
+  ];
+}
+let _mockMahasiswaNextId = (_mockMahasiswaKegiatan.reduce((m, i) => Math.max(m, Number(i.id_kegiatan || 0)), 0) || 0) + 1;
+
+function _persistMockMahasiswa() {
+  try {
+    if (typeof window !== "undefined") localStorage.setItem("mockMahasiswaKegiatan", JSON.stringify(_mockMahasiswaKegiatan));
+  } catch {}
+}
+
 export async function getMahasiswaKegiatan() {
-  if (_mockMode || !API_URL) return null;
+  if (_mockMode || !API_URL) {
+    _mockMode = true;
+    // Return shape similar to server: { rows: [...], total, page, totalPages }
+    return { rows: _mockMahasiswaKegiatan.slice(), total: _mockMahasiswaKegiatan.length, page: 1, totalPages: 1 };
+  }
   try {
     const res = await apiFetch("/api/mahasiswa/kegiatan");
     if (res.ok) return res.json();
     return null;
   } catch {
     _mockMode = true;
-    return null;
+    return { rows: _mockMahasiswaKegiatan.slice(), total: _mockMahasiswaKegiatan.length, page: 1, totalPages: 1 };
   }
 }
 
 export async function submitKegiatan(payload) {
   if (_mockMode || !API_URL) {
-    return { ok: true, data: { success: true, message: "Kegiatan ditambahkan (mode demo)" } };
+    _mockMode = true;
+    // emulate creation and return id_kegiatan
+    const newId = _mockMahasiswaNextId++;
+    const newItem = {
+      id_kegiatan: newId,
+      nama_kegiatan: payload.nama_id || payload.nama_kegiatan || "(nama)",
+      nama_kegiatan_eng: payload.nama_en || "",
+      jenisaktivitas: { nama_indo: payload.jenis_aktivitas || "" },
+      kategori_skpi: payload.kategori_skpi || "",
+      kategoriaktivitas: { nama_indo: payload.kategori || "" },
+      kelompokaktivitas: { nama_indo: payload.kelompok || "" },
+      levelkegiatan: { nama_level: payload.level || "" },
+      periode_kegiatan: payload.periode || "",
+      tingkat_prestasi: payload.tingkat_prestasi || "",
+      lokasi: payload.lokasi || "",
+      penyelenggara: payload.penyelenggara || "",
+      tanggal_kegiatan: payload.tanggal_kegiatan || payload.tanggal || "",
+      status_verifikasi: "menunggu",
+      catatan_admin: "",
+      bukti_deskripsi: payload.bukti_deskripsi || null,
+      periode_mentor: payload.periode_mentor || null,
+      buktikegiatan: [],
+      created_at: new Date().toISOString(),
+    };
+    // push to start
+  _mockMahasiswaKegiatan = [newItem, ..._mockMahasiswaKegiatan];
+  _persistMockMahasiswa();
+    return { ok: true, data: { id_kegiatan: newId, success: true, message: "Kegiatan ditambahkan (mode demo)" } };
   }
   try {
     const res = await apiFetch("/api/mahasiswa/kegiatan", {
@@ -317,13 +412,63 @@ export async function submitKegiatan(payload) {
     return { ok: res.ok, data };
   } catch {
     _mockMode = true;
-    return { ok: true, data: { success: true, message: "Kegiatan ditambahkan (mode demo)" } };
+    // fallback to mock creation if network fails
+    const newId = _mockMahasiswaNextId++;
+    const newItem = {
+      id_kegiatan: newId,
+      nama_kegiatan: payload.nama_id || payload.nama_kegiatan || "(nama)",
+      nama_kegiatan_eng: payload.nama_en || "",
+      jenisaktivitas: { nama_indo: payload.jenis_aktivitas || "" },
+      kategori_skpi: payload.kategori_skpi || "",
+      kategoriaktivitas: { nama_indo: payload.kategori || "" },
+      kelompokaktivitas: { nama_indo: payload.kelompok || "" },
+      levelkegiatan: { nama_level: payload.level || "" },
+      periode_kegiatan: payload.periode || "",
+      tingkat_prestasi: payload.tingkat_prestasi || "",
+      lokasi: payload.lokasi || "",
+      penyelenggara: payload.penyelenggara || "",
+      tanggal_kegiatan: payload.tanggal_kegiatan || payload.tanggal || "",
+      status_verifikasi: "menunggu",
+      catatan_admin: "",
+      bukti_deskripsi: payload.bukti_deskripsi || null,
+      periode_mentor: payload.periode_mentor || null,
+      buktikegiatan: [],
+      created_at: new Date().toISOString(),
+    };
+  _mockMahasiswaKegiatan = [newItem, ..._mockMahasiswaKegiatan];
+  _persistMockMahasiswa();
+  return { ok: true, data: { id_kegiatan: newId, success: true, message: "Kegiatan ditambahkan (mode demo)" } };
   }
 }
 
 export async function editKegiatan(id, payload) {
   if (_mockMode || !API_URL) {
-    return { ok: true, data: { success: true, message: "Kegiatan diupdate (mode demo)" } };
+    _mockMode = true;
+    const idx = _mockMahasiswaKegiatan.findIndex(i => String(i.id_kegiatan) === String(id));
+    if (idx !== -1) {
+      const existing = _mockMahasiswaKegiatan[idx];
+      const updated = {
+        ...existing,
+        nama_kegiatan: payload.nama_id ?? existing.nama_kegiatan,
+        nama_kegiatan_eng: payload.nama_en ?? existing.nama_kegiatan_eng,
+        jenisaktivitas: { nama_indo: payload.jenis_aktivitas ?? existing.jenisaktivitas?.nama_indo },
+        kategori_skpi: payload.kategori_skpi ?? existing.kategori_skpi,
+        kategoriaktivitas: { nama_indo: payload.kategori ?? existing.kategoriaktivitas?.nama_indo },
+        kelompokaktivitas: { nama_indo: payload.kelompok ?? existing.kelompokaktivitas?.nama_indo },
+        levelkegiatan: { nama_level: payload.level ?? existing.levelkegiatan?.nama_level },
+        periode_kegiatan: payload.periode ?? existing.periode_kegiatan,
+        tingkat_prestasi: payload.tingkat_prestasi ?? existing.tingkat_prestasi,
+        lokasi: payload.lokasi ?? existing.lokasi,
+        penyelenggara: payload.penyelenggara ?? existing.penyelenggara,
+        tanggal_kegiatan: payload.tanggal_kegiatan ?? existing.tanggal_kegiatan,
+        bukti_deskripsi: payload.bukti_deskripsi ?? existing.bukti_deskripsi,
+        periode_mentor: payload.periode_mentor ?? existing.periode_mentor,
+      };
+  _mockMahasiswaKegiatan[idx] = updated;
+  _persistMockMahasiswa();
+      return { ok: true, data: { success: true, message: "Kegiatan diupdate (mode demo)", id_kegiatan: id } };
+    }
+    return { ok: false, data: { error: "Kegiatan tidak ditemukan (mode demo)" } };
   }
   try {
     const res = await apiFetch(`/api/mahasiswa/kegiatan/${id}`, {
@@ -340,7 +485,13 @@ export async function editKegiatan(id, payload) {
 
 export async function deleteKegiatan(id) {
   if (_mockMode || !API_URL) {
-    return { ok: true, data: { success: true, message: "Kegiatan dihapus (mode demo)" } };
+    _mockMode = true;
+    const before = _mockMahasiswaKegiatan.length;
+  _mockMahasiswaKegiatan = _mockMahasiswaKegiatan.filter(i => String(i.id_kegiatan) !== String(id));
+  _persistMockMahasiswa();
+    const after = _mockMahasiswaKegiatan.length;
+    if (after < before) return { ok: true, data: { success: true, message: "Kegiatan dihapus (mode demo)" } };
+    return { ok: false, data: { error: "Kegiatan tidak ditemukan (mode demo)" } };
   }
   try {
     const res = await apiFetch(`/api/mahasiswa/kegiatan/${id}`, {
@@ -356,7 +507,16 @@ export async function deleteKegiatan(id) {
 
 export async function uploadBuktiKegiatan(id, formData) {
   if (_mockMode || !API_URL) {
-    return { ok: true, data: { success: true, file_path: "/uploads/bukti/demo.pdf" } };
+    _mockMode = true;
+    // Create a fake file path and attach to mock item if exists
+    const fp = `/uploads/bukti/demo-${Date.now()}.pdf`;
+    const idx = _mockMahasiswaKegiatan.findIndex(i => String(i.id_kegiatan) === String(id));
+    if (idx !== -1) {
+      _mockMahasiswaKegiatan[idx].buktikegiatan = _mockMahasiswaKegiatan[idx].buktikegiatan || [];
+      _mockMahasiswaKegiatan[idx].buktikegiatan.push({ file_path: fp });
+      _persistMockMahasiswa();
+    }
+    return { ok: true, data: { success: true, file_path: fp } };
   }
   try {
     const url = `${API_URL}/api/mahasiswa/kegiatan/${id}/bukti`;
@@ -383,26 +543,28 @@ export async function uploadBuktiKegiatan(id, formData) {
  */
 export async function getDetailKegiatan(id) {
   if (_mockMode || !API_URL) {
-    // Mock data untuk mode demo
+    _mockMode = true;
+    const found = _mockMahasiswaKegiatan.find(i => String(i.id_kegiatan) === String(id));
+    if (found) return found;
     return {
       id_kegiatan: parseInt(id),
-      nama_kegiatan: "Workshop React.js",
-      nama_kegiatan_eng: "React.js Workshop",
-      jenisaktivitas: { nama_indo: "Peningkatan Keterampilan Profesional" },
-      kategori_skpi: "keterampilan",
-      kategoriaktivitas: { nama_indo: "Workshop" },
-      kelompokaktivitas: { nama_indo: "Akademik" },
-      levelkegiatan: { nama_level: "Nasional" },
-      periode_kegiatan: "Semester Genap 2025/2026",
-      tingkat_prestasi: "Peserta",
-      lokasi: "Kampus TI",
-      penyelenggara: "Himpunan Mahasiswa TI",
-      tanggal_kegiatan: "2026-03-20",
+      nama_kegiatan: "(tidak ditemukan)",
+      nama_kegiatan_eng: "",
+      jenisaktivitas: { nama_indo: "" },
+      kategori_skpi: "",
+      kategoriaktivitas: { nama_indo: "" },
+      kelompokaktivitas: { nama_indo: "" },
+      levelkegiatan: { nama_level: "" },
+      periode_kegiatan: "",
+      tingkat_prestasi: "",
+      lokasi: "",
+      penyelenggara: "",
+      tanggal_kegiatan: "",
       status_verifikasi: "menunggu",
       catatan_admin: "",
       bukti_deskripsi: "",
       periode_mentor: "",
-      buktikegiatan: [{ file_path: "bukti1.pdf" }],
+      buktikegiatan: [],
     };
   }
   try {
@@ -422,7 +584,37 @@ export async function getDetailKegiatan(id) {
  */
 export async function updateKegiatan(id, payload, file = null) {
   if (_mockMode || !API_URL) {
-    return { ok: true, data: { success: true, message: "Kegiatan diperbarui (mode demo)" } };
+    _mockMode = true;
+    const idx = _mockMahasiswaKegiatan.findIndex(i => String(i.id_kegiatan) === String(id));
+    if (idx !== -1) {
+      const existing = _mockMahasiswaKegiatan[idx];
+      const updated = {
+        ...existing,
+        nama_kegiatan: payload.nama_id ?? existing.nama_kegiatan,
+        nama_kegiatan_eng: payload.nama_en ?? existing.nama_kegiatan_eng,
+        jenisaktivitas: { nama_indo: payload.jenis_aktivitas ?? existing.jenisaktivitas?.nama_indo },
+        kategori_skpi: payload.kategori_skpi ?? existing.kategori_skpi,
+        kategoriaktivitas: { nama_indo: payload.kategori ?? existing.kategoriaktivitas?.nama_indo },
+        kelompokaktivitas: { nama_indo: payload.kelompok ?? existing.kelompokaktivitas?.nama_indo },
+        levelkegiatan: { nama_level: payload.level ?? existing.levelkegiatan?.nama_level },
+        periode_kegiatan: payload.periode ?? existing.periode_kegiatan,
+        tingkat_prestasi: payload.tingkat_prestasi ?? existing.tingkat_prestasi,
+        lokasi: payload.lokasi ?? existing.lokasi,
+        penyelenggara: payload.penyelenggara ?? existing.penyelenggara,
+        tanggal_kegiatan: payload.tanggal_kegiatan ?? existing.tanggal_kegiatan,
+        bukti_deskripsi: payload.bukti_deskripsi ?? existing.bukti_deskripsi,
+        periode_mentor: payload.periode_mentor ?? existing.periode_mentor,
+      };
+      // If file provided, simulate attaching it
+      if (file) {
+        const fp = `/uploads/bukti/demo-update-${Date.now()}.pdf`;
+        updated.buktikegiatan = updated.buktikegiatan || [];
+        updated.buktikegiatan.push({ file_path: fp });
+      }
+      _mockMahasiswaKegiatan[idx] = updated;
+      return { ok: true, data: { success: true, message: "Kegiatan diperbarui (mode demo)", id_kegiatan: id } };
+    }
+    return { ok: false, data: { error: "Kegiatan tidak ditemukan (mode demo)" } };
   }
 
   // Jika ada file, gunakan FormData
