@@ -1,336 +1,717 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
   Eye, X, Upload, CheckCircle2, AlertCircle,
-  ChevronDown, ChevronRight, Search, Loader2,
-  BookOpen, FileText, Trash2, Download,
+  ChevronDown, Search, Loader2, BookOpen, FileText,
+  Trash2, Download, Edit3, Plus, Save, RotateCcw,
+  GraduationCap, Info, ChevronUp, Check,
 } from "lucide-react";
 import styles from "./page.module.css";
 import { PRODI_LIST, getProdiTemplate } from "@/lib/prodi-templates";
+import * as mammoth from "mammoth";
 
-import PreviewModal from "@/components/PreviewModal";
-
-const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
-
-/* ── WARNA PER PRODI ── */
+/* ─────────────────────────────────────────
+   KONFIGURASI WARNA PRODI
+───────────────────────────────────────── */
 const PRODI_CFG = {
-  "Teknologi Informasi": { color: "#cc6600", bg: "#fff3e6", border: "#ffaa33", gradient: "linear-gradient(135deg,#ff7f00,#ffaa33)", label: "TI" },
-  "Sistem Informasi": { color: "#3d1111", bg: "#f0ecec", border: "#8a4444", gradient: "linear-gradient(135deg,#3d1111,#7a3333)", label: "SI" },
-  "Manajemen": { color: "#0077aa", bg: "#e6f5fa", border: "#33ccff", gradient: "linear-gradient(135deg,#0099cc,#33ccff)", label: "MJ" },
-  "Kewirausahaan": { color: "#cc2900", bg: "#ffe6e0", border: "#ff7755", gradient: "linear-gradient(135deg,#ff3300,#ff7755)", label: "KW" },
-  "Pendidikan Guru Sekolah Dasar": { color: "#660066", bg: "#f3e6f3", border: "#b300b3", gradient: "linear-gradient(135deg,#800080,#b300b3)", label: "PGSD" },
-  "Agroekoteknologi": { color: "#007a70", bg: "#e6faf8", border: "#00bfb3", gradient: "linear-gradient(135deg,#00bfb3,#009988)", label: "AGR" },
+  "Teknologi Informasi":           { primary: "#ff7f00", light: "#fff3e6", border: "#ffaa33", gradient: "linear-gradient(135deg,#ff7f00,#e06000)", label: "TI"   },
+  "Sistem Informasi":              { primary: "#3d1111", light: "#f0ecec", border: "#8a4444", gradient: "linear-gradient(135deg,#3d1111,#7a3333)", label: "SI"   },
+  "Manajemen":                     { primary: "#0077aa", light: "#e6f4fa", border: "#33aadd", gradient: "linear-gradient(135deg,#0077aa,#005588)", label: "MJ"   },
+  "Kewirausahaan":                 { primary: "#cc2200", light: "#ffe8e0", border: "#ff6644", gradient: "linear-gradient(135deg,#cc2200,#992200)", label: "KW"   },
+  "Pendidikan Guru Sekolah Dasar": { primary: "#7a0087", light: "#f5e6f8", border: "#bb44cc", gradient: "linear-gradient(135deg,#7a0087,#550066)", label: "PGSD" },
+  "Agroekoteknologi":              { primary: "#008b80", light: "#e0f8f5", border: "#33ccbb", gradient: "linear-gradient(135deg,#008b80,#006655)", label: "AGR"  },
 };
-const getPC = (nama) => PRODI_CFG[nama] || { color: "#765439", bg: "#fdf4ec", border: "#e4d4c4", gradient: "linear-gradient(135deg,#765439,#4a2f1a)", label: "?" };
+const getPC  = (nama) => PRODI_CFG[nama] || { primary: "#765439", light: "#fdf4ec", border: "#c8945a", gradient: "linear-gradient(135deg,#765439,#3d200a)", label: "?" };
 const toSlug = (s) => s.trim().replace(/\s+/g, "_").replace(/[^a-zA-Z0-9_]/g, "");
 
+/* ─────────────────────────────────────────
+   SECTION CONFIG
+───────────────────────────────────────── */
+const SECTIONS = [
+  { key: "sikap",               label: "Sikap",               labelEn: "Proposition of Attitude", icon: "🧭" },
+  { key: "pengetahuan",         label: "Pengetahuan",          labelEn: "Knowledge",               icon: "📚" },
+  { key: "keterampilan_umum",   label: "Keterampilan Umum",    labelEn: "General Competence",      icon: "🛠️" },
+  { key: "keterampilan_khusus", label: "Keterampilan Khusus",  labelEn: "Specific Competences",    icon: "⚙️" },
+];
 
-/* ══ UPLOAD ZONE ══ */
-function UploadZone({ prodi, onSuccess, onCancel }) {
-  const [phase, setPhase] = useState("idle");
-  const [msg, setMsg] = useState("");
-  const [drag, setDrag] = useState(false);
-  const inputRef = useRef(null);
-  const cfg = getPC(prodi);
+/* ─────────────────────────────────────────
+   STORAGE HELPERS
+───────────────────────────────────────── */
+const storKey  = (p) => `cpl_override_${toSlug(p)}`;
+const storKeyT = (p) => `cpl_override_${toSlug(p)}_updated`;
 
-  const handleFile = async (file) => {
-    if (!file?.name.endsWith(".docx")) {
-      setPhase("error"); setMsg("Hanya file .docx yang diizinkan."); return;
-    }
-    setPhase("uploading"); setMsg("Mengupload...");
-    try {
-      const form = new FormData();
-      /* PENTING: nama_prodi harus di-append SEBELUM file agar
-         server bisa membaca field ini saat memproses multipart */
-      form.append("nama_prodi", prodi);
-      form.append("file", file);
-      const res = await fetch(`${API}/api/template-skpi/upload`, {
-        method: "POST", body: form, credentials: "include",
-      });
-      /* Pastikan response adalah JSON sebelum di-parse */
-      const contentType = res.headers.get("content-type") || "";
-      const json = contentType.includes("application/json")
-        ? await res.json()
-        : { error: `Server error (${res.status})` };
-      if (!res.ok || !json.ok) throw new Error(json.error || "Upload gagal");
-      setPhase("done");
-      setMsg(`Berhasil! ${(json.size / 1024).toFixed(1)} KB disimpan.`);
-      setTimeout(() => onSuccess(), 900);
-    } catch (e) {
-      /* Beri pesan yang lebih jelas untuk network error */
-      const msg = e.message === "Failed to fetch"
-        ? "Tidak dapat terhubung ke server. Pastikan backend berjalan di port 5000."
-        : "Gagal: " + e.message;
-      setPhase("error"); setMsg(msg);
-    }
+function loadOverride(p) {
+  try { const r = localStorage.getItem(storKey(p)); return r ? JSON.parse(r) : null; }
+  catch { return null; }
+}
+function saveOverride(p, data) {
+  localStorage.setItem(storKey(p), JSON.stringify(data));
+  localStorage.setItem(storKeyT(p), new Date().toISOString());
+}
+function clearOverride(p) {
+  localStorage.removeItem(storKey(p));
+  localStorage.removeItem(storKeyT(p));
+}
+function getEffective(p) {
+  const base = getProdiTemplate(p);
+  if (!base) return null;
+  const ov = loadOverride(p);
+  return ov ? { ...base, ...ov } : { ...base };
+}
+
+/* ─────────────────────────────────────────
+   TOAST
+───────────────────────────────────────── */
+function Toast({ msg, onClose }) {
+  useEffect(() => {
+    if (!msg) return;
+    const t = setTimeout(onClose, 4000);
+    return () => clearTimeout(t);
+  }, [msg, onClose]);
+  if (!msg) return null;
+  const ok = msg.type === "success";
+  return (
+    <div className={`${styles.toast} ${ok ? styles.toastSuccess : styles.toastError}`}>
+      {ok ? <CheckCircle2 size={15}/> : <AlertCircle size={15}/>}
+      <span>{msg.text}</span>
+      <button onClick={onClose}><X size={13}/></button>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────
+   PREVIEW MODAL
+───────────────────────────────────────── */
+function PreviewModal({ prodi, onClose }) {
+  const [loading, setLoading] = useState(true);
+  const [html,    setHtml]    = useState("");
+  const [err,     setErr]     = useState("");
+  const cfg  = getPC(prodi);
+  const slug = toSlug(prodi);
+
+  useEffect(() => {
+    (async () => {
+      setLoading(true); setErr("");
+      const b64 = localStorage.getItem(`template_${slug}`);
+      if (!b64) { setErr("Belum ada file .docx untuk prodi ini."); setLoading(false); return; }
+      try {
+        const bytes = atob(b64.split(",")[1]);
+        const ab = new ArrayBuffer(bytes.length);
+        const ia = new Uint8Array(ab);
+        for (let i = 0; i < bytes.length; i++) ia[i] = bytes.charCodeAt(i);
+        const result = await mammoth.convertToHtml({ arrayBuffer: ab });
+        setHtml(`<style>body{font-family:'Times New Roman',serif;line-height:1.5;margin:0;padding:20px;font-size:13px}
+          table{border-collapse:collapse;width:100%;margin:8px 0}td,th{border:1px solid #ccc;padding:6px 8px;vertical-align:top}
+          img{max-width:100%;height:auto}p{margin:0 0 6px}</style>${result.value}`);
+      } catch { setErr("Gagal memproses file. Pastikan .docx valid."); }
+      finally { setLoading(false); }
+    })();
+  }, [slug]);
+
+  useEffect(() => {
+    const fn = e => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", fn); return () => window.removeEventListener("keydown", fn);
+  }, [onClose]);
+
+  const download = () => {
+    const b64 = localStorage.getItem(`template_${slug}`); if (!b64) return;
+    const a = document.createElement("a"); a.href = b64;
+    a.download = localStorage.getItem(`template_${slug}_name`) || `Template_SKPI_${prodi}.docx`; a.click();
   };
 
-  const busy = phase === "uploading";
   return (
-    <div className={styles.uploadZoneWrap}>
-      <div className={styles.uploadZoneHeader}>
-        <span style={{ fontWeight: 700, color: cfg.color }}>Upload Template — {prodi}</span>
-        <button className={styles.btnCancel} onClick={onCancel}><X size={14} /></button>
+    <div className={styles.modalOverlay} onClick={onClose}>
+      <div className={styles.modalBox} style={{ maxWidth: 980 }} onClick={e => e.stopPropagation()}>
+        <div className={styles.modalHeader}>
+          <div className={styles.modalHeaderLeft}>
+            <div className={styles.modalHeaderIcon} style={{ background: cfg.gradient, color:"#fff" }}><FileText size={15}/></div>
+            <div><h3 className={styles.modalTitle}>Preview Template SKPI</h3><p className={styles.modalSub}>{prodi}</p></div>
+          </div>
+          <button className={styles.modalCloseBtn} onClick={onClose}><X size={17}/></button>
+        </div>
+        <div className={styles.modalBody} style={{ padding: 0, background: "#f5f0eb" }}>
+          {loading ? (
+            <div className={styles.previewLoading}><Loader2 size={28} className={styles.spin} style={{ color: cfg.primary }}/><p>Memuat dokumen…</p></div>
+          ) : err ? (
+            <div className={styles.previewError}><AlertCircle size={32} style={{ color:"#dc2626" }}/><p>{err}</p></div>
+          ) : (
+            <iframe srcDoc={html} title="Preview" className={styles.previewFrame}/>
+          )}
+        </div>
+        <div className={styles.modalFooter}>
+          <button className={styles.btnOutline} onClick={download}><Download size={14}/> Unduh .docx</button>
+          <button className={styles.btnSave} style={{ background: cfg.gradient }} onClick={onClose}>Tutup</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────
+   UPLOAD ZONE
+───────────────────────────────────────── */
+function UploadZone({ prodi, onSuccess, onCancel }) {
+  const [phase, setPhase] = useState("idle");
+  const [msg,   setMsg]   = useState("");
+  const [drag,  setDrag]  = useState(false);
+  const inputRef = useRef();
+  const cfg = getPC(prodi);
+
+  const handleFile = (file) => {
+    if (!file?.name.endsWith(".docx")) { setPhase("error"); setMsg("Hanya file .docx."); return; }
+    if (file.size > 15*1024*1024) { setPhase("error"); setMsg("Maksimal 15 MB."); return; }
+    setPhase("uploading"); setMsg("Memproses…");
+    const r = new FileReader();
+    r.onload = e => {
+      const slug = toSlug(prodi);
+      localStorage.setItem(`template_${slug}`, e.target.result);
+      localStorage.setItem(`template_${slug}_name`, file.name);
+      localStorage.setItem(`template_${slug}_size`, file.size);
+      localStorage.setItem(`template_${slug}_date`, new Date().toISOString());
+      setPhase("done"); setMsg(`Berhasil — ${(file.size/1024).toFixed(0)} KB tersimpan.`);
+      setTimeout(onSuccess, 800);
+    };
+    r.onerror = () => { setPhase("error"); setMsg("Gagal membaca file."); };
+    r.readAsDataURL(file);
+  };
+
+  return (
+    <div className={styles.uploadWrap}>
+      <div className={styles.uploadHeader}>
+        <span style={{ fontWeight:700, color: cfg.primary, fontSize:13 }}>
+          <Upload size={13} style={{ verticalAlign:"middle", marginRight:5 }}/>Upload / Ganti Template — {prodi}
+        </span>
+        <button className={styles.btnGhost} onClick={onCancel}><X size={13}/> Batal</button>
       </div>
       {phase !== "done" && (
-        <div
-          className={`${styles.dropZone} ${drag ? styles.dzDrag : ""} ${busy ? styles.dzBusy : ""}`}
-          style={{ borderColor: drag ? cfg.color : undefined }}
+        <div className={`${styles.dropZone} ${drag ? styles.dzDrag : ""}`}
+          style={{ borderColor: drag ? cfg.primary : undefined }}
           onDragOver={e => { e.preventDefault(); setDrag(true); }}
           onDragLeave={() => setDrag(false)}
           onDrop={e => { e.preventDefault(); setDrag(false); handleFile(e.dataTransfer.files[0]); }}
-          onClick={() => !busy && inputRef.current?.click()}
-        >
-          <input ref={inputRef} type="file" accept=".docx" hidden
-            onChange={e => e.target.files[0] && handleFile(e.target.files[0])} />
-          {busy
-            ? <div className={styles.dzContent}>
-              <Loader2 size={28} className={styles.spin} style={{ color: cfg.color }} />
-              <p>{msg}</p>
-            </div>
-            : <div className={styles.dzContent}>
-              <Upload size={28} style={{ color: "#b09880" }} />
-              <p>Drag & drop file <strong>.docx</strong> di sini</p>
-              <small>atau klik untuk pilih — maks 20 MB</small>
-            </div>
-          }
+          onClick={() => phase !== "uploading" && inputRef.current?.click()}>
+          <input ref={inputRef} type="file" accept=".docx" hidden onChange={e => handleFile(e.target.files[0])}/>
+          <div className={styles.dzContent}>
+            {phase === "uploading"
+              ? <><Loader2 size={26} className={styles.spin} style={{ color: cfg.primary }}/><p>{msg}</p></>
+              : <><Upload size={26} style={{ color:"#b09880" }}/><p>Seret file <strong>.docx</strong> ke sini atau klik</p><small>Maksimal 15 MB</small></>}
+          </div>
         </div>
       )}
-      {phase !== "idle" && !busy && (
+      {phase !== "idle" && phase !== "uploading" && (
         <div className={`${styles.uploadMsg} ${phase === "done" ? styles.msgOk : styles.msgErr}`}>
-          {phase === "done" ? <CheckCircle2 size={14} /> : <AlertCircle size={14} />}
-          <span>{msg}</span>
+          {phase === "done" ? <CheckCircle2 size={13}/> : <AlertCircle size={13}/>}<span>{msg}</span>
         </div>
       )}
     </div>
   );
 }
 
-/* ══ CPL ACCORDION ══ */
-function CplAccordion({ title, titleEN, items, color, open, onToggle, searchQ }) {
-  const filtered = searchQ
-    ? items.filter(s => s.text.toLowerCase().includes(searchQ.toLowerCase()) || s.en.toLowerCase().includes(searchQ.toLowerCase()))
-    : items;
-  return (
-    <div className={styles.accordion} style={{ borderLeft: `3px solid ${color}` }}>
-      <button className={styles.accordionBtn} onClick={onToggle}>
-        <div className={styles.accordionLeft}>
-          <span className={styles.accordionTitle} style={{ color: open ? color : "#2c1a0e" }}>{title}</span>
-          <span className={styles.accordionEN}>/ <em>{titleEN}</em></span>
-        </div>
-        <div className={styles.accordionRight}>
-          <span className={styles.countBadge} style={{ background: `${color}18`, color }}>{filtered.length}</span>
-          {open ? <ChevronDown size={14} style={{ color }} /> : <ChevronRight size={14} style={{ color: "#b09880" }} />}
-        </div>
-      </button>
-      {open && (
-        <div className={styles.accordionBody}>
-          {filtered.length === 0
-            ? <p className={styles.noResult}>Tidak ada hasil.</p>
-            : <table className={styles.cplTable}><tbody>
-              {filtered.map((s, i) => (
-                <tr key={i} className={styles.cplRow}>
-                  <td className={styles.cplNo} style={{ color }}>{i + 1}</td>
-                  <td className={styles.cplCell}>
-                    <div className={styles.cplID}>{s.text}</div>
-                    <div className={styles.cplEN}><em>{s.en}</em></div>
-                  </td>
-                </tr>
-              ))}
-            </tbody></table>
-          }
-        </div>
-      )}
-    </div>
-  );
-}
-
-/* ══ HALAMAN UTAMA ══ */
-export default function TemplateSkpiPage() {
-  const [activeProdi, setActiveProdi] = useState(PRODI_LIST[0]);
-  const [templateList, setTemplateList] = useState([]); // [{slug,nama_prodi,size,updated_at}]
-  const [openSecs, setOpenSecs] = useState({ capaian_sikap: true });
-  const [search, setSearch] = useState("");
-  const [showPreview, setShowPreview] = useState(false);
-  const [showUpload, setShowUpload] = useState(false);
+/* ─────────────────────────────────────────
+   MODAL EDIT / TAMBAH BUTIR CPL
+───────────────────────────────────────── */
+function EditCplModal({ item, sectionLabel, prodiColor, onSave, onClose }) {
+  const [textId, setTextId] = useState(item?.id || "");
+  const [textEn, setTextEn] = useState(item?.en || "");
 
   useEffect(() => {
-    document.title = "Template SKPI | Admin";
-    fetchList();
+    const fn = e => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", fn); return () => window.removeEventListener("keydown", fn);
+  }, [onClose]);
+
+  return (
+    <div className={styles.modalOverlay} onClick={onClose}>
+      <div className={styles.modalBox} style={{ maxWidth: 620 }} onClick={e => e.stopPropagation()}>
+        <div className={styles.modalHeader}>
+          <div className={styles.modalHeaderLeft}>
+            <div className={styles.modalHeaderIcon} style={{ background:`${prodiColor}20`, color: prodiColor }}><Edit3 size={15}/></div>
+            <div>
+              <h3 className={styles.modalTitle}>{item ? "Edit Butir CPL" : "Tambah Butir CPL"}</h3>
+              <p className={styles.modalSub}>{sectionLabel}</p>
+            </div>
+          </div>
+          <button className={styles.modalCloseBtn} onClick={onClose}><X size={17}/></button>
+        </div>
+        <div className={styles.modalBody}>
+          <div className={styles.cplEditGroup}>
+            <label className={styles.cplEditLabel}>
+              <span className={styles.langBadge} style={{ background:"#fef3c7", color:"#92400e" }}>🇮🇩 Indonesia</span>
+              Teks Bahasa Indonesia <span className={styles.req}>*</span>
+            </label>
+            <textarea className={styles.cplTextarea} rows={4} value={textId}
+              onChange={e => setTextId(e.target.value)}
+              placeholder="Tulis butir CPL dalam Bahasa Indonesia…"
+              style={{ borderColor: textId ? `${prodiColor}60` : undefined }}/>
+            <span className={styles.charCount}>{textId.length} karakter</span>
+          </div>
+          <div className={styles.cplEditGroup}>
+            <label className={styles.cplEditLabel}>
+              <span className={styles.langBadge} style={{ background:"#dbeafe", color:"#1d4ed8" }}>🇬🇧 English</span>
+              English Text <span className={styles.optBadge}>opsional</span>
+            </label>
+            <textarea className={styles.cplTextarea} rows={4} value={textEn}
+              onChange={e => setTextEn(e.target.value)}
+              placeholder="Write CPL item in English…"
+              style={{ borderColor: textEn ? `${prodiColor}60` : undefined }}/>
+            <span className={styles.charCount}>{textEn.length} karakter</span>
+          </div>
+        </div>
+        <div className={styles.modalFooter}>
+          <button className={styles.btnGhost} onClick={onClose}>Batal</button>
+          <button className={styles.btnSave} style={{ background: prodiColor }}
+            onClick={() => { if (textId.trim()) onSave({ id: textId.trim(), en: textEn.trim() }); }}
+            disabled={!textId.trim()}>
+            <Save size={14}/> {item ? "Simpan Perubahan" : "Tambah Butir"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────
+   CONFIRM DELETE MODAL
+───────────────────────────────────────── */
+function ConfirmDeleteModal({ item, index, onConfirm, onClose }) {
+  useEffect(() => {
+    const fn = e => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", fn); return () => window.removeEventListener("keydown", fn);
+  }, [onClose]);
+  return (
+    <div className={styles.modalOverlay} onClick={onClose}>
+      <div className={styles.modalBox} style={{ maxWidth: 420 }} onClick={e => e.stopPropagation()}>
+        <div className={styles.modalHeader}>
+          <div className={styles.modalHeaderLeft}>
+            <div className={styles.modalHeaderIcon} style={{ background:"#fee2e2", color:"#dc2626" }}><Trash2 size={15}/></div>
+            <div><h3 className={styles.modalTitle}>Hapus Butir CPL?</h3><p className={styles.modalSub}>Tindakan ini tidak dapat dibatalkan</p></div>
+          </div>
+          <button className={styles.modalCloseBtn} onClick={onClose}><X size={17}/></button>
+        </div>
+        <div className={styles.modalBody}>
+          <div className={styles.confirmBox}>
+            <p style={{ fontSize:13, color:"#3d2006", margin:0 }}>Hapus butir no. <strong>{index + 1}</strong>?</p>
+            <p style={{ fontSize:12, color:"#9e7b5e", margin:"6px 0 0", lineHeight:1.5 }}>
+              {item?.id?.slice(0, 100)}{item?.id?.length > 100 ? "…" : ""}
+            </p>
+          </div>
+        </div>
+        <div className={styles.modalFooter}>
+          <button className={styles.btnGhost} onClick={onClose}>Batal</button>
+          <button className={`${styles.btnSave} ${styles.btnDanger}`} onClick={onConfirm}><Trash2 size={14}/> Hapus</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────
+   SECTION CPL (satu accordion)
+───────────────────────────────────────── */
+function CplSection({ sectionKey, label, labelEn, icon, items, prodiColor, searchQ, isOpen, onToggle, onItemsChange }) {
+  const [editTarget, setEditTarget] = useState(null); // {index, item} | "new"
+  const [confirmDel, setConfirmDel] = useState(null); // index
+
+  const filtered = searchQ
+    ? items.filter(s => s.id.toLowerCase().includes(searchQ.toLowerCase()) || s.en.toLowerCase().includes(searchQ.toLowerCase()))
+    : items;
+
+  const handleSaveEdit = (newItem) => {
+    const upd = [...items];
+    if (editTarget === "new") upd.push(newItem);
+    else upd[editTarget.index] = newItem;
+    onItemsChange(upd);
+    setEditTarget(null);
+  };
+
+  const handleDelete = () => {
+    onItemsChange(items.filter((_, i) => i !== confirmDel));
+    setConfirmDel(null);
+  };
+
+  const move = (idx, dir) => {
+    const upd = [...items];
+    const to = idx + dir;
+    if (to < 0 || to >= upd.length) return;
+    [upd[idx], upd[to]] = [upd[to], upd[idx]];
+    onItemsChange(upd);
+  };
+
+  return (
+    <>
+      <div className={`${styles.accordion} ${isOpen ? styles.accordionOpen : ""}`}
+        style={{ borderLeft: `3px solid ${prodiColor}` }}>
+        <button className={styles.accordionBtn} onClick={onToggle}>
+          <div className={styles.accordionLeft}>
+            <span className={styles.accIcon}>{icon}</span>
+            <div>
+              <span className={styles.accordionTitle} style={{ color: isOpen ? prodiColor : "#2c1a0e" }}>{label}</span>
+              <span className={styles.accordionEN}> / <em>{labelEn}</em></span>
+            </div>
+          </div>
+          <div className={styles.accordionRight}>
+            <span className={styles.countBadge} style={{ background:`${prodiColor}16`, color: prodiColor }}>{items.length} butir</span>
+            {isOpen ? <ChevronUp size={14} style={{ color: prodiColor }}/> : <ChevronDown size={14} style={{ color:"#b09880" }}/>}
+          </div>
+        </button>
+
+        {isOpen && (
+          <div className={styles.accordionBody}>
+            {filtered.length === 0 && (
+              <p className={styles.noResult}>{searchQ ? "Tidak ada hasil pencarian." : "Belum ada butir CPL."}</p>
+            )}
+
+            {filtered.map((item) => {
+              const origIdx = items.indexOf(item);
+              return (
+                <div key={origIdx} className={styles.cplItem}>
+                  <div className={styles.cplNo} style={{ background:`${prodiColor}14`, color: prodiColor }}>{origIdx + 1}</div>
+                  <div className={styles.cplContent}>
+                    <p className={styles.cplId}>{item.id}</p>
+                    {item.en && <p className={styles.cplEn}><em>{item.en}</em></p>}
+                  </div>
+                  <div className={styles.cplActions}>
+                    <button className={styles.cplBtn} title="Naik" onClick={() => move(origIdx, -1)} disabled={origIdx === 0}><ChevronUp size={12}/></button>
+                    <button className={styles.cplBtn} title="Turun" onClick={() => move(origIdx, 1)} disabled={origIdx === items.length-1}><ChevronDown size={12}/></button>
+                    <button className={styles.cplBtnEdit} title="Edit" style={{ color: prodiColor }} onClick={() => setEditTarget({ index: origIdx, item })}><Edit3 size={13}/></button>
+                    <button className={styles.cplBtnDel} title="Hapus" onClick={() => setConfirmDel(origIdx)}><Trash2 size={13}/></button>
+                  </div>
+                </div>
+              );
+            })}
+
+            <button className={styles.addCplBtn} style={{ borderColor:`${prodiColor}50`, color: prodiColor }}
+              onClick={() => setEditTarget("new")}>
+              <Plus size={13}/> Tambah Butir CPL
+            </button>
+          </div>
+        )}
+      </div>
+
+      {editTarget !== null && (
+        <EditCplModal
+          item={editTarget === "new" ? null : editTarget.item}
+          sectionLabel={`${label} — ${editTarget === "new" ? "Butir Baru" : `No. ${editTarget.index + 1}`}`}
+          prodiColor={prodiColor}
+          onSave={handleSaveEdit}
+          onClose={() => setEditTarget(null)}
+        />
+      )}
+      {confirmDel !== null && (
+        <ConfirmDeleteModal
+          item={items[confirmDel]}
+          index={confirmDel}
+          onConfirm={handleDelete}
+          onClose={() => setConfirmDel(null)}
+        />
+      )}
+    </>
+  );
+}
+
+/* ─────────────────────────────────────────
+   HALAMAN UTAMA
+───────────────────────────────────────── */
+export default function TemplateSkpiPage() {
+  const [activeProdi,    setActiveProdi]    = useState(PRODI_LIST[0]);
+  const [cplData,        setCplData]        = useState(null);
+  const [isDirty,        setIsDirty]        = useState(false);
+  const [openSecs,       setOpenSecs]       = useState({ sikap: true });
+  const [search,         setSearch]         = useState("");
+  const [showPreview,    setShowPreview]    = useState(false);
+  const [showUpload,     setShowUpload]     = useState(false);
+  const [templateStatus, setTemplateStatus] = useState({});
+  const [toast,          setToast]          = useState(null);
+  const [hasOverride,    setHasOverride]    = useState(false);
+  const [saving,         setSaving]         = useState(false);
+
+  const showToast = useCallback((text, type = "success") => setToast({ text, type }), []);
+
+  /* ── Load data saat prodi berganti ── */
+  useEffect(() => {
+    setCplData(getEffective(activeProdi));
+    setIsDirty(false);
+    setHasOverride(!!loadOverride(activeProdi));
+    setSearch(""); setOpenSecs({ sikap: true });
+    setShowUpload(false); setShowPreview(false);
+  }, [activeProdi]);
+
+  /* ── Load status template Word ── */
+  useEffect(() => {
+    const st = {};
+    PRODI_LIST.forEach(p => { st[p] = !!localStorage.getItem(`template_${toSlug(p)}`); });
+    setTemplateStatus(st);
+    document.title = "Template SKPI — Admin SKPI";
   }, []);
 
-  const fetchList = async () => {
-    try {
-      const res = await fetch(`${API}/api/template-skpi/list`, { credentials: "include" });
-      const json = await res.json();
-      if (json.ok) setTemplateList(json.list);
-    } catch { }
+  const handleItemsChange = useCallback((secKey, newItems) => {
+    setCplData(prev => ({ ...prev, [secKey]: newItems }));
+    setIsDirty(true);
+  }, []);
+
+  /* ── Simpan ── */
+  const handleSave = async () => {
+    if (!cplData || !isDirty) return;
+    setSaving(true);
+    await new Promise(r => setTimeout(r, 350));
+    saveOverride(activeProdi, {
+      sikap:              cplData.sikap,
+      pengetahuan:        cplData.pengetahuan,
+      keterampilan_umum:  cplData.keterampilan_umum,
+      keterampilan_khusus:cplData.keterampilan_khusus,
+    });
+    setIsDirty(false); setHasOverride(true); setSaving(false);
+    showToast(`CPL ${activeProdi} berhasil disimpan!`);
   };
 
-  const handleDelete = async () => {
-    if (!confirm(`Hapus template Word untuk "${activeProdi}"?`)) return;
+  /* ── Reset ke data awal ── */
+  const handleReset = () => {
+    if (!confirm(`Reset CPL ${activeProdi} ke data awal? Semua perubahan manual akan hilang.`)) return;
+    clearOverride(activeProdi);
+    setCplData({ ...getProdiTemplate(activeProdi) });
+    setIsDirty(false); setHasOverride(false);
+    showToast(`CPL ${activeProdi} direset ke data awal.`);
+  };
+
+  /* ── Buang perubahan ── */
+  const handleDiscard = () => {
+    if (!confirm("Buang semua perubahan yang belum disimpan?")) return;
+    setCplData(getEffective(activeProdi)); setIsDirty(false);
+  };
+
+  /* ── Upload sukses ── */
+  const handleUploadSuccess = () => {
+    setTemplateStatus(prev => ({ ...prev, [activeProdi]: true }));
+    setShowUpload(false);
+    showToast(`Template .docx ${activeProdi} berhasil diperbarui!`);
+  };
+
+  /* ── Hapus template Word ── */
+  const handleDeleteTemplate = () => {
+    if (!confirm(`Hapus file .docx template untuk ${activeProdi}?`)) return;
     const slug = toSlug(activeProdi);
-    await fetch(`${API}/api/template-skpi/${slug}`, { method: "DELETE", credentials: "include" });
-    fetchList();
+    ["","_name","_size","_date"].forEach(s => localStorage.removeItem(`template_${slug}${s}`));
+    setTemplateStatus(prev => ({ ...prev, [activeProdi]: false }));
+    setShowPreview(false);
+    showToast(`Template .docx ${activeProdi} dihapus.`);
   };
 
-  const tpl = getProdiTemplate(activeProdi);
-  const cfg = getPC(activeProdi);
-  const slug = toSlug(activeProdi);
-  const uploaded = templateList.find(t => t.slug === slug);
+  /* ── Switch prodi dengan konfirmasi jika dirty ── */
+  const switchProdi = (p) => {
+    if (isDirty && !confirm("Ada perubahan belum disimpan. Lanjut pindah prodi?")) return;
+    setActiveProdi(p);
+  };
 
-  const CPL_GROUPS = tpl ? [
-    { key: "capaian_sikap", title: "Sikap", titleEN: "Proposition of Attitude", items: tpl.sikap || [] },
-    { key: "capaian_pengetahuan", title: "Pengetahuan", titleEN: "Knowledge", items: tpl.pengetahuan || [] },
-    { key: "keterampilan_umum", title: "Keterampilan Umum", titleEN: "General Competence", items: tpl.keterampilan_umum || [] },
-    { key: "keterampilan_khusus", title: "Keterampilan Khusus", titleEN: "Specific Competences", items: tpl.keterampilan_khusus || [] },
-  ] : [];
+  /* ── Derived ── */
+  const cfg      = getPC(activeProdi);
+  const tpl      = getProdiTemplate(activeProdi);
+  const uploaded = templateStatus[activeProdi];
+  const slug     = toSlug(activeProdi);
+
+  const fileSize = uploaded ? Math.round(Number(localStorage.getItem(`template_${slug}_size`)) / 1024) : null;
+  const fileDate = uploaded
+    ? new Date(localStorage.getItem(`template_${slug}_date`)).toLocaleDateString("id-ID", { day:"numeric", month:"short", year:"numeric" })
+    : null;
+  const overrideDate = hasOverride
+    ? new Date(localStorage.getItem(`${storKey(activeProdi)}_updated`)).toLocaleDateString("id-ID", { day:"numeric", month:"short", year:"numeric" })
+    : null;
+
+  const totalCpl = cplData
+    ? (cplData.sikap?.length||0)+(cplData.pengetahuan?.length||0)+(cplData.keterampilan_umum?.length||0)+(cplData.keterampilan_khusus?.length||0)
+    : 0;
 
   return (
     <div className={styles.page}>
+      <Toast msg={toast} onClose={() => setToast(null)}/>
 
-      {/* Header */}
+      {/* ── Header ── */}
       <div className={styles.header}>
         <div>
           <h1 className={styles.title}>Template SKPI</h1>
-          <p className={styles.sub}>Upload file Word (.docx) per prodi — digunakan sebagai template saat generate SKPI mahasiswa</p>
+          <p className={styles.sub}>Kelola CPL dan file template Word (.docx) per program studi</p>
         </div>
-        <div style={{ display: "flex", gap: 8 }}>
-          <button className={styles.btnUpload}
-            style={{ borderColor: cfg.border, color: cfg.color }}
-            onClick={() => setShowUpload(v => !v)}>
-            <Upload size={14} />
-            {uploaded ? "Ganti File Word" : "Upload File Word"}
-          </button>
-          <button className={styles.btnPreview}
-            style={{ background: cfg.gradient }}
-            onClick={() => setShowPreview(true)}>
-            <Eye size={14} /> Preview Template
+        <div className={styles.headerActions}>
+          {isDirty && <span className={styles.dirtyBadge}><AlertCircle size={12}/> Belum disimpan</span>}
+          {hasOverride && !isDirty && (
+            <button className={styles.btnReset} onClick={handleReset} title="Reset ke data awal">
+              <RotateCcw size={13}/> Reset
+            </button>
+          )}
+          <button className={styles.btnSave}
+            style={{ background: isDirty ? cfg.gradient : "#d5bfaf", cursor: isDirty ? "pointer":"default" }}
+            onClick={handleSave} disabled={!isDirty || saving}>
+            {saving ? <><Loader2 size={14} className={styles.spin}/> Menyimpan…</> : <><Save size={14}/> Simpan CPL</>}
           </button>
         </div>
       </div>
 
-      {/* Prodi Tabs */}
+      {/* ── Tab Prodi ── */}
       <div className={styles.tabs}>
-        {PRODI_LIST.map(prodi => {
-          const c = getPC(prodi);
-          const sl = toSlug(prodi);
-          const up = templateList.some(t => t.slug === sl);
-          const t = getProdiTemplate(prodi);
-          const tot = t ? (t.sikap?.length || 0) + (t.pengetahuan?.length || 0) + (t.keterampilan_umum?.length || 0) + (t.keterampilan_khusus?.length || 0) : 0;
-          const on = activeProdi === prodi;
+        {PRODI_LIST.map(p => {
+          const c   = getPC(p);
+          const up  = templateStatus[p];
+          const t   = getProdiTemplate(p);
+          const tot = t ? (t.sikap?.length||0)+(t.pengetahuan?.length||0)+(t.keterampilan_umum?.length||0)+(t.keterampilan_khusus?.length||0) : 0;
+          const on  = activeProdi === p;
+          const ov  = !!loadOverride(p);
           return (
-            <button key={prodi}
+            <button key={p}
               className={`${styles.tab} ${on ? styles.tabOn : ""}`}
-              style={on ? { borderColor: c.color, borderBottomColor: "transparent", color: c.color } : {}}
-              onClick={() => { setActiveProdi(prodi); setSearch(""); setShowUpload(false); }}>
-              <span className={styles.tabDot} style={{ background: on ? c.gradient : "#d4c0ac" }}>{c.label.slice(0, 2)}</span>
-              <span className={styles.tabName}>{prodi}</span>
-              {up && <span className={styles.tabUploaded} title="Template Word tersedia">✓</span>}
-              <span className={styles.tabCount} style={on ? { color: c.color, background: `${c.color}15` } : {}}>{tot} CPL</span>
+              style={on ? { borderColor: c.primary, color: c.primary } : {}}
+              onClick={() => switchProdi(p)}>
+              <span className={styles.tabDot}
+                style={{ background: on ? c.gradient : "#d4c0ac", color:"#fff", fontSize:10, fontWeight:800 }}>
+                {c.label.slice(0, 2)}
+              </span>
+              <span className={styles.tabName}>{p}</span>
+              <div className={styles.tabBadges}>
+                {up && <span className={styles.tabWord} title="Template Word tersedia">W</span>}
+                {ov && <span className={styles.tabEdited} title="CPL telah diubah">✎</span>}
+                <span className={styles.tabCount} style={on ? { color: c.primary, background:`${c.primary}14` } : {}}>{tot}</span>
+              </div>
             </button>
           );
         })}
       </div>
 
-      {/* Status Bar */}
-      <div className={styles.infoBar} style={{ borderColor: cfg.border }}>
+      {/* ── Info Bar ── */}
+      <div className={styles.infoBar} style={{ borderLeft:`4px solid ${cfg.primary}` }}>
         <div className={styles.infoLeft}>
-          {uploaded ? (
-            <>
-              <span className={styles.tagUploaded}><CheckCircle2 size={11} /> Template Word tersedia</span>
-              <span style={{ fontSize: 12, color: "#9c7a5e" }}>
-                {(uploaded.size / 1024).toFixed(0)} KB · {new Date(uploaded.updated_at).toLocaleDateString("id-ID")}
-              </span>
-            </>
-          ) : (
-            <span className={styles.tagDefault}><AlertCircle size={11} /> Belum ada template Word — silakan upload</span>
+          {tpl && (
+            <div className={styles.prodiInfo}>
+              <GraduationCap size={14} style={{ color: cfg.primary, flexShrink:0 }}/>
+              <strong>{tpl.nama}</strong>
+              <span className={styles.infoDot}>·</span>
+              <span>{tpl.gelar} / {tpl.gelar_en}</span>
+              <span className={styles.infoDot}>·</span>
+              <span>KKNI Level {tpl.level_kkni}</span>
+              <span className={styles.infoDot}>·</span>
+              <span className={styles.totalCpl} style={{ color: cfg.primary }}>{totalCpl} CPL</span>
+              {hasOverride && (
+                <><span className={styles.infoDot}>·</span>
+                <span className={styles.overrideBadge} style={{ background:`${cfg.primary}14`, color: cfg.primary }}>
+                  <Edit3 size={11}/> Diubah {overrideDate}
+                </span></>
+              )}
+            </div>
           )}
+          <div className={styles.wordInfo}>
+            {uploaded
+              ? <span className={styles.tagUploaded}><CheckCircle2 size={11}/> Template Word — {fileSize} KB — {fileDate}</span>
+              : <span className={styles.tagMissing}><AlertCircle size={11}/> Belum ada template Word</span>}
+          </div>
         </div>
         <div className={styles.infoActions}>
+          <button className={styles.btnOutlineSmall}
+            style={{ borderColor: cfg.border, color: cfg.primary }}
+            onClick={() => setShowUpload(v => !v)}>
+            <Upload size={13}/> {uploaded ? "Ganti File":"Upload .docx"}
+          </button>
+          <button className={styles.btnOutlineSmall}
+            style={{ borderColor: cfg.border, color: cfg.primary }}
+            onClick={() => setShowPreview(true)} disabled={!uploaded}>
+            <Eye size={13}/> Preview
+          </button>
           {uploaded && (
-            <>
-              <a href={`${API}/uploads/templates/${slug}.docx`}
-                download={`Template_SKPI_${activeProdi}.docx`}
-                className={styles.btnDownload} title="Download file Word">
-                <Download size={13} /> Download
-              </a>
-              <button className={styles.btnReset} onClick={handleDelete} title="Hapus template">
-                <Trash2 size={13} />
-              </button>
-            </>
+            <button className={styles.btnOutlineSmall}
+              style={{ borderColor:"#fca5a5", color:"#dc2626" }}
+              onClick={handleDeleteTemplate}>
+              <Trash2 size={13}/> Hapus File
+            </button>
           )}
         </div>
       </div>
 
-      {/* Upload Zone */}
+      {/* ── Upload Zone ── */}
       {showUpload && (
-        <UploadZone prodi={activeProdi}
-          onSuccess={() => { setShowUpload(false); fetchList(); }}
-          onCancel={() => setShowUpload(false)} />
+        <UploadZone prodi={activeProdi} onSuccess={handleUploadSuccess} onCancel={() => setShowUpload(false)}/>
       )}
 
-      {/* Hint jika belum upload */}
-      {!uploaded && !showUpload && (
-        <div style={{ background: "#fef9c3", border: "1.5px solid #fde047", borderRadius: 12, padding: "16px 20px", display: "flex", gap: 14, alignItems: "flex-start" }}>
-          <FileText size={22} style={{ color: "#854d0e", flexShrink: 0, marginTop: 2 }} />
-          <div>
-            <p style={{ fontWeight: 700, color: "#854d0e", margin: "0 0 5px" }}>Cara upload template untuk {activeProdi}:</p>
-            <ol style={{ fontSize: 13, color: "#92400e", margin: 0, paddingLeft: 16, lineHeight: 1.8 }}>
-              <li>Buka file Word template SKPI di Microsoft Word</li>
-              <li>Pastikan sudah sesuai format yang diinginkan</li>
-              <li>Simpan sebagai <strong>.docx</strong> (Word Document)</li>
-              <li>Klik <strong>"Upload File Word (.docx)"</strong> di atas → pilih file</li>
-              <li>Preview akan menampilkan isi dokumen Word langsung</li>
-            </ol>
-            <p style={{ fontSize: 12, color: "#78350f", marginTop: 6, margin: "6px 0 0", fontStyle: "italic" }}>
-              Saat generate SKPI mahasiswa, sistem akan menggunakan template Word ini dan mengisi data mahasiswa secara otomatis.
-            </p>
+      {/* ── CPL Toolbar ── */}
+      {cplData && (
+        <div className={styles.cplToolbar}>
+          <div className={styles.cplToolbarLeft}>
+            <BookOpen size={14} style={{ color: cfg.primary, flexShrink:0 }}/>
+            <span className={styles.cplToolbarTitle}>Capaian Pembelajaran Lulusan (CPL)</span>
+            <span className={styles.cplToolbarSub}>— edit, tambah, ubah urutan</span>
+          </div>
+          <div className={styles.cplToolbarRight}>
+            <button className={styles.btnMini}
+              onClick={() => setOpenSecs({ sikap:true, pengetahuan:true, keterampilan_umum:true, keterampilan_khusus:true })}>
+              Buka Semua
+            </button>
+            <button className={styles.btnMini} onClick={() => setOpenSecs({})}>Tutup Semua</button>
+            <div className={styles.searchBox}>
+              <Search size={13} style={{ color:"#b09880", flexShrink:0 }}/>
+              <input className={styles.searchInp} placeholder="Cari butir CPL…"
+                value={search} onChange={e => setSearch(e.target.value)}/>
+              {search && <button className={styles.searchClr} onClick={() => setSearch("")}><X size={12}/></button>}
+            </div>
           </div>
         </div>
       )}
 
-      {/* CPL Reference */}
-      {tpl && !showUpload && (
-        <div className={styles.cplPanel}>
-          <div className={styles.cplHead}>
-            <div className={styles.cplTitle}>
-              <BookOpen size={14} style={{ color: cfg.color }} />
-              <span>Referensi CPL — {activeProdi}</span>
-              <span style={{ fontSize: 11.5, color: "#9c7a5e", fontWeight: 400, marginLeft: 4 }}>
-                ({(tpl.sikap?.length || 0) + (tpl.pengetahuan?.length || 0) + (tpl.keterampilan_umum?.length || 0) + (tpl.keterampilan_khusus?.length || 0)} total CPL)
-              </span>
-            </div>
-            <div className={styles.cplActions}>
-              <button className={styles.btnMini}
-                onClick={() => setOpenSecs({ capaian_sikap: true, capaian_pengetahuan: true, keterampilan_umum: true, keterampilan_khusus: true })}>
-                Buka Semua
-              </button>
-              <button className={styles.btnMini} onClick={() => setOpenSecs({})}>Tutup Semua</button>
-              <div className={styles.searchBox}>
-                <Search size={13} style={{ color: "#b09880", flexShrink: 0 }} />
-                <input className={styles.searchInp} placeholder="Cari CPL..."
-                  value={search} onChange={e => setSearch(e.target.value)} />
-                {search && <button className={styles.searchClr} onClick={() => setSearch("")}><X size={12} /></button>}
-              </div>
-            </div>
+      {/* ── Accordion CPL ── */}
+      {cplData && (
+        <div className={styles.accordions}>
+          {SECTIONS.map(sec => (
+            <CplSection
+              key={sec.key}
+              sectionKey={sec.key} label={sec.label} labelEn={sec.labelEn} icon={sec.icon}
+              items={cplData[sec.key] || []}
+              prodiColor={cfg.primary}
+              searchQ={search}
+              isOpen={!!openSecs[sec.key]}
+              onToggle={() => setOpenSecs(p => ({ ...p, [sec.key]: !p[sec.key] }))}
+              onItemsChange={(items) => handleItemsChange(sec.key, items)}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* ── Info Prodi Card ── */}
+      {tpl && (
+        <div className={styles.prodiDetailCard}>
+          <div className={styles.prodiDetailHeader} style={{ background: cfg.gradient }}>
+            <Info size={13}/> Informasi Program Studi
           </div>
-          <div className={styles.accordions}>
-            {CPL_GROUPS.map(g => (
-              <CplAccordion key={g.key}
-                title={g.title} titleEN={g.titleEN} items={g.items}
-                color={cfg.color} open={!!openSecs[g.key]}
-                onToggle={() => setOpenSecs(p => ({ ...p, [g.key]: !p[g.key] }))}
-                searchQ={search} />
+          <div className={styles.prodiDetailGrid}>
+            {[
+              ["Program Studi", tpl.nama],
+              ["Nama (English)", tpl.nama_en],
+              ["Gelar", `${tpl.gelar} / ${tpl.gelar_en}`],
+              ["Jenjang", tpl.jenjang],
+              ["Level KKNI", `Level ${tpl.level_kkni}`],
+              ["Lama Studi", tpl.lama_studi],
+              ["Konsentrasi", tpl.konsentrasi || "—"],
+              ["Akreditasi", tpl.akreditasi],
+            ].map(([lbl, val]) => (
+              <div key={lbl} className={styles.prodiDetailItem}>
+                <span className={styles.prodiDetailLabel}>{lbl}</span>
+                <span className={styles.prodiDetailValue}>{val}</span>
+              </div>
             ))}
           </div>
         </div>
       )}
 
-      {/* Preview Modal */}
-      {showPreview && (
-        <PreviewModal prodi={activeProdi} onClose={() => setShowPreview(false)} />
+      {/* ── Sticky Save Bar ── */}
+      {isDirty && (
+        <div className={styles.stickyBar}>
+          <div className={styles.stickyLeft}>
+            <AlertCircle size={14} style={{ color:"#d97706" }}/>
+            <span>Ada perubahan yang belum disimpan</span>
+          </div>
+          <div className={styles.stickyRight}>
+            <button className={styles.btnGhost} onClick={handleDiscard}>Buang</button>
+            <button className={styles.btnSave} style={{ background: cfg.gradient }} onClick={handleSave} disabled={saving}>
+              {saving ? <><Loader2 size={14} className={styles.spin}/> Menyimpan…</> : <><Save size={14}/> Simpan CPL</>}
+            </button>
+          </div>
+        </div>
       )}
+
+      {showPreview && <PreviewModal prodi={activeProdi} onClose={() => setShowPreview(false)}/>}
     </div>
   );
 }
