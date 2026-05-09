@@ -1,17 +1,24 @@
-/* Container utama */
-.container {
+/* ============================================
+   PENGAJUAN SKPI — MAHASISWA
+   ============================================ */
+
+.page {
   padding: 28px 32px 48px;
-  max-width: 1200px;
-  margin: 0 auto;
+  min-height: 100vh;
+  background: #faf7f4;
+  font-family: 'Inter', 'Segoe UI', sans-serif;
   display: flex;
   flex-direction: column;
   gap: 20px;
-  font-family: 'Inter', 'Segoe UI', sans-serif;
-  background: #faf7f4;
-  min-height: 100vh;
 }
 
+/* ===== HEADER ===== */
 .header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
   margin-bottom: 8px;
 }
 
@@ -23,325 +30,844 @@
   letter-spacing: -0.4px;
 }
 
-.subtitle {
+.sub {
   font-size: 13px;
   color: #9c7a5e;
   margin: 0;
 }
 
-/* Summary grid 3 kolom */
-.summaryGrid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-}
-
-.summaryCard {
-  background: #fff;
-  border: 1.5px solid;
-  border-radius: 16px;
-  padding: 16px;
+.headerActions {
   display: flex;
-  align-items: center;
-  gap: 16px;
-  transition: box-shadow 0.15s;
-}
-
-.summaryCard:hover {
-  box-shadow: 0 4px 12px rgba(118,84,57,0.1);
-}
-
-.summaryIcon {
-  width: 48px;
-  height: 48px;
-  background: #fdf4ec;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  gap: 10px;
   flex-shrink: 0;
 }
 
-.summaryInfo {
-  flex: 1;
+.btnPreview {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 16px;
+  background: #fff;
+  border: 1.5px solid #e0c8b8;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btnPreview:hover {
+  background: #fdf3ec;
+  border-color: #c8945a;
 }
 
-.summaryValue {
-  font-size: 28px;
-  font-weight: 800;
-  display: block;
-  line-height: 1.2;
-  color: #2c1a0e;
+/* ===== INFO PRODI CARD ===== */
+.prodiCard {
+  background: #fff;
+  border: 1.5px solid #ede0d4;
+  border-radius: 12px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
-
-.summaryLabel {
+.prodiDetail {
   font-size: 12px;
+  color: #a07858;
+  margin-left: 6px;
+}
+
+/* ===== STATS GRID ===== */
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.statCard {
+  background: #fff;
+  border: 1.5px solid #ede0d4;
+  border-radius: 12px;
+  padding: 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: transform 0.15s;
+}
+.statCard:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(118,84,57,0.1);
+}
+.statIcon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.statVal {
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1.2;
+  display: block;
+}
+.statLbl {
+  font-size: 11.5px;
   color: #9c7a5e;
   font-weight: 500;
 }
 
-/* Progress card */
+/* ===== PROGRESS CARD ===== */
 .progressCard {
   background: #fff;
-  border: 1.5px solid #f0e0d0;
-  border-radius: 16px;
-  padding: 20px;
+  border: 1.5px solid #ede0d4;
+  border-radius: 12px;
+  padding: 16px 20px;
 }
-
-.progressHeader {
+.progressTop {
   display: flex;
   justify-content: space-between;
-  font-size: 13px;
-  font-weight: 600;
-  color: #3d2006;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px;
   margin-bottom: 8px;
 }
-
-.progressBarTrack {
+.progressTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: #5c3317;
+}
+.progressVal {
+  font-size: 13px;
+  font-weight: 700;
+}
+.progressTrack {
+  position: relative;
   height: 8px;
   background: #f0e4d8;
   border-radius: 99px;
   overflow: hidden;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
-
-.progressBarFill {
+.progressFill {
   height: 100%;
   border-radius: 99px;
   transition: width 0.5s ease;
 }
-
+.progressCheck {
+  position: absolute;
+  right: 0;
+  top: -3px;
+  background: #fff;
+  border-radius: 50%;
+  padding: 2px;
+}
 .progressNote {
   font-size: 12px;
-  color: #b09880;
   margin: 0;
 }
 
-/* Status card */
+/* ===== KEGIATAN CARD (accordion) ===== */
+.kegiatanCard {
+  background: #fff;
+  border: 1.5px solid #ede0d4;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.kegiatanCardHeader {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 18px;
+  background: none;
+  border: none;
+  border-bottom: 1px solid #f0e8e0;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.kegiatanCardHeader:hover {
+  background: #fdfaf7;
+}
+.kegiatanCardTitle {
+  font-size: 14px;
+  font-weight: 700;
+  color: #3d2006;
+}
+.kegiatanCount {
+  font-size: 11px;
+  font-weight: 700;
+  background: #f5ece4;
+  padding: 2px 8px;
+  border-radius: 20px;
+  color: #765439;
+}
+.kegiatanCardBody {
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.kegiatanKatGroup {
+  background: #fefcf9;
+  border-radius: 10px;
+  padding: 10px 12px;
+  border-left: 3px solid;
+}
+.kegiatanKatHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.kegiatanKatNo {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 800;
+}
+.kegiatanKatCount {
+  font-size: 10px;
+  font-weight: 700;
+  background: #f5ece4;
+  padding: 2px 8px;
+  border-radius: 20px;
+  margin-left: auto;
+}
+.kegiatanEmpty {
+  font-size: 12px;
+  color: #b09880;
+  font-style: italic;
+  padding: 8px 0 4px 30px;
+  margin: 0;
+}
+.kegiatanItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 8px;
+  border-bottom: 1px solid #f0e8e0;
+}
+.kegiatanItem:last-child {
+  border-bottom: none;
+}
+.kegiatanItemNo {
+  min-width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.kegiatanItemInfo {
+  flex: 1;
+  min-width: 0;
+}
+.kegiatanItemName {
+  font-size: 13px;
+  font-weight: 600;
+  color: #2c1a0e;
+  display: block;
+}
+.kegiatanItemEn {
+  font-size: 11.5px;
+  color: #a07858;
+  font-style: italic;
+  display: block;
+}
+.kegiatanItemMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 4px;
+  font-size: 11px;
+  color: #9c7a5e;
+}
+.kegiatanItemMeta svg {
+  width: 11px;
+  height: 11px;
+  vertical-align: middle;
+}
+.kegiatanItemPoin {
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 20px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.kegiatanAdminNote {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #fdf7f2;
+  border: 1px solid #f0e0d0;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 11.5px;
+  color: #9e7b5e;
+  margin-top: 8px;
+}
+
+/* ===== STATUS CARD ===== */
 .statusCard {
   background: #fff;
   border: 1.5px solid;
-  border-radius: 16px;
-  padding: 20px;
+  border-radius: 12px;
+  padding: 16px 20px;
+}
+.statusTop {
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  gap: 16px;
+  gap: 12px;
 }
-
-.statusHeader {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.statusLabel {
-  font-size: 14px;
-  font-weight: 600;
-  color: #3d2006;
-}
-
-.statusValue {
-  font-size: 18px;
-  font-weight: 800;
-}
-
-.ajukanBtn,
-.downloadBtn {
-  padding: 10px 24px;
-  border-radius: 10px;
-  font-size: 13px;
-  font-weight: 700;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-
-.ajukanBtn {
-  border: none;
-  color: #fff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.ajukanBtn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.ajukanBtn:hover:not(:disabled) {
-  transform: translateY(-1px);
-  opacity: 0.88;
-}
-
-.downloadBtn {
-  background: transparent;
-  border: 1.5px solid;
-}
-
-.downloadBtn:hover {
-  background: rgba(0, 0, 0, 0.03);
-  transform: translateY(-1px);
-}
-
-/* Toast notifikasi */
-.toast {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  z-index: 1100;
+.statusLeft {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px 20px;
+  flex-wrap: wrap;
+}
+.statusLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: #9c7a5e;
+}
+.statusVal {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
+}
+.btnAjukan, .btnDownload {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 20px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  transition: all 0.15s;
+}
+.btnAjukan {
+  background: #d5bfaf;
+  color: #fff;
+}
+.btnAjukan:not(:disabled) {
+  background: #765439;
+  box-shadow: 0 2px 8px rgba(118,84,57,0.25);
+}
+.btnAjukan:not(:disabled):hover {
+  transform: translateY(-1px);
+  opacity: 0.88;
+}
+.btnDownload {
+  background: #fff;
+  border: 1.5px solid;
+}
+.btnDownload:hover {
+  background: #fdf3ec;
+}
+.statusNote {
+  margin-top: 12px;
+  font-size: 12px;
+  color: #b45309;
+  background: #fef3c7;
+  padding: 8px 12px;
+  border-radius: 8px;
+  margin-bottom: 0;
+}
+
+/* ===== SYARAT CARD ===== */
+.syaratCard {
+  background: #fff;
+  border: 1.5px solid #ede0d4;
+  border-radius: 12px;
+  padding: 16px 20px;
+}
+.syaratTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #3d2006;
+  margin: 0 0 12px;
+}
+.syaratList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.syaratItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+}
+.syaratDot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+}
+.syaratOk svg, .syaratNo svg {
+  width: 14px;
+  height: 14px;
+}
+.syaratOk { color: #16a34a; }
+.syaratNo { color: #dc2626; }
+.syaratNote {
+  font-size: 12px;
+  color: #9e7b5e;
+  margin-top: 12px;
+  padding-top: 8px;
+  border-top: 1px solid #f0e0d0;
+}
+
+/* ===== RIWAYAT CARD ===== */
+.riwayatCard {
+  background: #fff;
+  border: 1.5px solid #ede0d4;
+  border-radius: 12px;
+  padding: 16px 20px;
+}
+.riwayatTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #3d2006;
+  margin: 0 0 12px;
+}
+.riwayatList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.riwayatItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  position: relative;
+  padding-left: 4px;
+}
+.riwayatDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-top: 6px;
+  flex-shrink: 0;
+}
+.riwayatItem div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: baseline;
+}
+.riwayatStatus {
+  font-weight: 700;
+  font-size: 13px;
+  color: #2c1a0e;
+}
+.riwayatTgl {
+  font-size: 11.5px;
+  color: #9e7b5e;
+}
+.riwayatIcp {
+  font-size: 11.5px;
+  background: #f5ece4;
+  padding: 2px 6px;
+  border-radius: 12px;
+  color: #765439;
+}
+
+/* ===== LOADING ===== */
+.loadingWrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 48px 20px;
+  color: #9e7b5e;
+}
+
+/* ===== TOAST ===== */
+.toast {
+  position: fixed;
+  top: 22px;
+  right: 26px;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
   border-radius: 12px;
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 600;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.12);
   animation: slideIn 0.25s ease;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
-
-.toastSuccess {
+.toastOk {
   background: #f0fdf4;
-  border-left: 4px solid #16a34a;
+  border: 1px solid #86efac;
   color: #15803d;
 }
-
-.toastError {
+.toastErr {
   background: #fff5f5;
-  border-left: 4px solid #dc2626;
+  border: 1px solid #fca5a5;
   color: #dc2626;
 }
-
 .toast button {
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 18px;
   margin-left: auto;
+  display: flex;
+  align-items: center;
   opacity: 0.6;
+}
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* ===== PREVIEW MODAL (override untuk skpi) ===== */
+.previewOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15,7,2,0.6);
+  backdrop-filter: blur(5px);
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+.previewBox {
+  background: #fff;
+  border-radius: 20px;
+  width: 100%;
+  max-width: 1100px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 28px 70px rgba(0,0,0,0.3);
+}
+.previewHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 20px;
+  background: #fdfaf8;
+  border-bottom: 1.5px solid #f0e6dc;
+}
+.previewHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.previewHeaderIcon {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.previewTitle {
+  font-size: 15px;
+  font-weight: 800;
+  color: #2c1a0e;
+  margin: 0;
+}
+.previewSub {
+  font-size: 12px;
+  color: #a07858;
+  margin: 2px 0 0;
+}
+.previewHeaderActions {
+  display: flex;
+  gap: 8px;
+}
+.previewPrintBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
   transition: opacity 0.15s;
 }
-
-.toast button:hover {
-  opacity: 1;
+.previewPrintBtn:hover {
+  opacity: 0.85;
 }
-
-@keyframes slideIn {
-  from {
-    transform: translateX(40px);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
-/* Riwayat card */
-.riwayatCard {
-  background: #fff;
-  border: 1.5px solid #f0e0d0;
-  border-radius: 16px;
-  padding: 20px;
-}
-
-.riwayatCard h3 {
-  font-size: 15px;
-  font-weight: 700;
+.previewCloseBtn {
+  background: none;
+  border: 1.5px solid #e8d5c4;
+  border-radius: 8px;
+  width: 30px;
+  height: 30px;
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin: 0 0 12px;
-  color: #3d2006;
+  justify-content: center;
+  cursor: pointer;
+  color: #9e7b5e;
 }
-
-.tableWrapper {
-  overflow-x: auto;
-}
-
-.table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13px;
-}
-
-.table th {
-  text-align: left;
-  padding: 10px 0;
-  color: #9c7a5e;
-  font-weight: 600;
-  border-bottom: 1px solid #f0e0d0;
-}
-
-.table td {
-  padding: 10px 0;
-  border-bottom: 1px solid #faf3ee;
-  color: #2c1a0e;
-}
-
-.statusCell {
-  font-weight: 600;
+.previewCloseBtn:hover {
+  background: #f5ece4;
   color: #765439;
 }
-
-.emptyRiwayat {
-  color: #b09880;
-  font-size: 13px;
-  margin: 0;
-  padding: 16px 0;
-  text-align: center;
-}
-
-/* Info card */
-.infoCard {
-  background: #fdfaf8;
-  border: 1.5px solid #f0e0d0;
-  border-radius: 16px;
+.previewBody {
+  flex: 1;
+  overflow-y: auto;
   padding: 20px;
+  background: #faf7f4;
 }
-
-.infoCard h3 {
-  font-size: 15px;
-  font-weight: 700;
+.skpiDoc {
+  background: #fff;
+  border-radius: 12px;
+  padding: 28px 32px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+  font-family: 'Times New Roman', Times, serif;
+  font-size: 11pt;
+  line-height: 1.5;
+  color: #1e293b;
+}
+.skpiKop {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+.skpiLogoPlaceholder {
+  width: 60px;
+  height: 60px;
+  background: #f0e4d8;
+  border-radius: 8px;
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin: 0 0 12px;
-  color: #3d2006;
+  justify-content: center;
+  font-weight: 800;
+  color: #765439;
 }
-
-.infoCard ul {
+.skpiKopCenter {
+  text-align: center;
+}
+.skpiInstName {
+  font-size: 13pt;
+  font-weight: 800;
   margin: 0;
-  padding-left: 20px;
 }
-
-.infoCard li {
-  font-size: 13px;
+.skpiInstNameEn {
+  font-size: 10pt;
+  font-style: italic;
+  margin: 2px 0;
+}
+.skpiDocName {
+  font-size: 12pt;
+  font-weight: 800;
+  margin: 8px 0 2px;
+}
+.skpiDocNameEn {
+  font-size: 10pt;
+  font-style: italic;
+  margin: 0;
+}
+.skpiNomor {
+  font-size: 10pt;
+  font-weight: 600;
+  margin-top: 6px;
+}
+.skpiDivider {
+  height: 2px;
+  margin: 12px 0;
+}
+.skpiIntro, .skpiIntroEn {
+  font-size: 9.5pt;
+  margin: 6px 0;
+  text-align: justify;
+}
+.skpiSectionHeader {
+  margin: 20px 0 8px;
+  padding: 6px 8px;
+  color: #fff;
+  font-weight: 800;
+  font-size: 11pt;
+  text-align: center;
+  border-radius: 6px;
+}
+.skpiSectionHeader small {
+  font-size: 9pt;
+  font-weight: normal;
+}
+.skpiTable {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 6px 0;
+}
+.skpiTable td, .skpiTable th {
+  border: 1px solid #ddd;
+  padding: 6px 8px;
+  vertical-align: top;
+}
+.skpiRowNo {
+  width: 40px;
+  text-align: center;
+}
+.skpiRowLabel {
+  width: 35%;
+}
+.skpiRowVal {
+  width: 50%;
+}
+.skpiEn {
+  font-size: 9pt;
+  color: #6b7280;
+}
+.skpiAktTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 9.5pt;
+}
+.skpiAktTable th, .skpiAktTable td {
+  border: 1px solid #ddd;
+  padding: 6px 8px;
+  vertical-align: top;
+}
+.skpiCplWrap {
+  margin: 8px 0;
+}
+.skpiCplGroup {
   margin-bottom: 8px;
-  color: #4a2f1a;
+}
+.skpiCplGroupBtn {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: #fefcf9;
+  border: 1px solid #ede0d4;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 11pt;
+}
+.skpiCplList {
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.skpiCplItem {
+  display: flex;
+  gap: 10px;
+  font-size: 10pt;
+}
+.skpiCplNo {
+  min-width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+}
+.cplCount {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 12px;
+}
+.skpiIcpWrap {
+  margin-top: 8px;
+}
+.skpiIcpTotal {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  justify-content: flex-end;
+  background: #fdf7f2;
+  padding: 6px 12px;
+  border-radius: 8px;
+}
+.skpiIcpTotalLabel {
+  font-weight: 600;
+}
+.skpiIcpTotalVal {
+  font-size: 18px;
+  font-weight: 800;
+}
+.skpiIcpLevel {
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+}
+.skpiTtd {
+  margin-top: 32px;
+  display: flex;
+  justify-content: flex-end;
+}
+.skpiTtdRight {
+  text-align: center;
+  width: 240px;
+}
+.skpiTtdSpace {
+  height: 24px;
 }
 
-/* Responsive */
+/* ===== SPINNER ===== */
+.spin {
+  animation: spinAnim 0.7s linear infinite;
+}
+@keyframes spinAnim {
+  to { transform: rotate(360deg); }
+}
+
+/* ===== RESPONSIVE ===== */
 @media (max-width: 960px) {
-  .container {
-    padding: 20px 16px 36px;
-  }
+  .page { padding: 20px 16px 36px; }
+  .statsGrid { grid-template-columns: repeat(2, 1fr); }
+  .skpiDoc { padding: 16px; }
+  .skpiKop { flex-direction: column; gap: 8px; }
+  .previewBox { max-width: 95%; }
+  .kegiatanItem { flex-wrap: wrap; }
+  .kegiatanItemPoin { margin-left: auto; }
 }
 
 @media (max-width: 640px) {
-  .summaryGrid {
-    grid-template-columns: 1fr;
-  }
-  .statusCard {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  .ajukanBtn,
-  .downloadBtn {
-    justify-content: center;
-  }
+  .statsGrid { grid-template-columns: 1fr; }
+  .header { flex-direction: column; align-items: stretch; }
+  .headerActions { align-self: flex-end; }
+  .statusTop { flex-direction: column; align-items: stretch; }
+  .statusLeft { justify-content: space-between; }
+  .btnAjukan, .btnDownload { justify-content: center; }
+  .kegiatanKatHeader { flex-wrap: wrap; }
+  .kegiatanKatCount { margin-left: 0; }
+  .kegiatanItemMeta { flex-direction: column; gap: 4px; }
+  .skpiTable td, .skpiTable th { padding: 4px; }
+  .skpiRowLabel { width: 40%; }
 }
