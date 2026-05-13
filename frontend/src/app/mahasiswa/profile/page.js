@@ -16,6 +16,7 @@ import {
   updateMahasiswaPassword,
   getAvatarUrl,
 } from "@/lib/api";
+import AvatarCropModal from "@/components/AvatarCropModal";
 
 /* ─────────────────────────────────────────
    Toast
@@ -167,7 +168,8 @@ export default function MahasiswaProfilePage() {
   const [avatarSrc,       setAvatarSrc]       = useState("/img/avatar.jpg");
   const [showViewer,      setShowViewer]       = useState(false);
   const [showUploader,    setShowUploader]     = useState(false);
-  const [avatarFile,      setAvatarFile]       = useState(null);
+  const [avatarCropFile,  setAvatarCropFile]   = useState(null);  // file waiting to be cropped
+  const [avatarFile,      setAvatarFile]       = useState(null);  // cropped File/Blob ready to upload
   const [avatarPreview,   setAvatarPreview]    = useState(null);
   const [uploadingAvatar, setUploadingAvatar]  = useState(false);
   const [draggingAvatar,  setDraggingAvatar]   = useState(false);
@@ -215,15 +217,23 @@ export default function MahasiswaProfilePage() {
     if (file.size > 2 * 1024 * 1024) {
       showToast("Ukuran file maksimal 2 MB.", "error"); return;
     }
+    setAvatarCropFile(file);
+    if (avatarInputRef.current) avatarInputRef.current.value = "";
+  }
+
+  function handleAvatarCropSave(blob) {
     if (avatarPreview) URL.revokeObjectURL(avatarPreview);
-    setAvatarFile(file);
-    setAvatarPreview(URL.createObjectURL(file));
+    const croppedFile = new File([blob], "avatar.jpg", { type: "image/jpeg" });
+    setAvatarFile(croppedFile);
+    setAvatarPreview(URL.createObjectURL(croppedFile));
+    setAvatarCropFile(null);
   }
 
   function cancelAvatarSelect() {
     if (avatarPreview) URL.revokeObjectURL(avatarPreview);
     setAvatarFile(null);
     setAvatarPreview(null);
+    setAvatarCropFile(null);
     if (avatarInputRef.current) avatarInputRef.current.value = "";
   }
 
@@ -318,6 +328,14 @@ export default function MahasiswaProfilePage() {
     <>
       <Toast toast={toast} onClose={hideToast} />
 
+      {avatarCropFile && (
+        <AvatarCropModal
+          file={avatarCropFile}
+          onClose={() => { setAvatarCropFile(null); if (avatarInputRef.current) avatarInputRef.current.value = ""; }}
+          onSave={handleAvatarCropSave}
+        />
+      )}
+
       {showViewer && (
         <AvatarViewModal
           src={avatarSrc}
@@ -411,7 +429,7 @@ export default function MahasiswaProfilePage() {
                       <span style={{ fontSize: 13, color: "#5c3317", fontWeight: 600, textAlign: "center" }}>
                         {draggingAvatar ? "Lepaskan di sini…" : "Klik atau seret foto"}
                       </span>
-                      <span style={{ fontSize: 11, color: "#b09880" }}>JPG, PNG, WebP, GIF · maks. 2 MB</span>
+                      <span style={{ fontSize: 11, color: "#b09880" }}>JPG, PNG, WebP, GIF · maks. 2 MB · akan dipangkas otomatis</span>
                     </div>
                     <input ref={avatarInputRef} type="file"
                       accept="image/jpeg,image/png,image/webp,image/gif" style={{ display: "none" }}

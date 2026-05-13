@@ -1675,6 +1675,7 @@
   cursor: pointer;
   transition: all 0.2s ease;
   border-bottom: 1px solid #f1f5f9;
+  position: relative;
 }
 
 .notifItem:hover {
@@ -1690,9 +1691,30 @@
   background: #e0f2fe;
 }
 
-.notifIcon {
+.notifTypeIcon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
-  padding-top: 2px;
+}
+.notifTypeApproved  { background: #dcfce7; color: #047857; }
+.notifTypeRejected  { background: #fee2e2; color: #b91c1c; }
+.notifTypeRevision  { background: #fff7ed; color: #b45309; }
+.notifTypePublished { background: #f0fdf4; color: #065f46; }
+.notifTypeInfo      { background: #eff6ff; color: #3b82f6; }
+
+.notifUnreadDot {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  width: 7px;
+  height: 7px;
+  background: #3b82f6;
+  border-radius: 50%;
+  border: 1.5px solid #fff;
 }
 
 .notifContent {
@@ -1723,11 +1745,6 @@
   display: flex;
   align-items: center;
   gap: 4px;
-}
-
-.notifTime::before {
-  content: "•";
-  font-size: 0.7rem;
 }
 
 .notifFooter {

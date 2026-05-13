@@ -3,10 +3,16 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useMahasiswa } from "@/context/MahasiswaContext";
-import { getMahasiswaKegiatan } from "@/lib/api";
+import {
+  getMahasiswaKegiatan,
+  getMahasiswaNotifikasi,
+  markMahasiswaNotifRead,
+  markAllMahasiswaNotifRead,
+  inferMahasiswaNotifType,
+} from "@/lib/api";
 import styles from "./dashboard.module.css";
 import {
-  Activity, CheckCircle2, Clock, XCircle, Bell, Check, Trash2,
+  Activity, CheckCircle2, Clock, XCircle, Bell, Check,
   RefreshCw, ChevronRight, TrendingUp, RotateCw
 } from "lucide-react";
 
@@ -17,23 +23,6 @@ const STATUS_LABEL = {
   revisi:    "Revisi",
 };
 
-// Mock notifikasi — notifikasi belum tersedia via API
-const mockNotifikasi = [
-  {
-    id_notifikasi: 1,
-    judul: "Info SKPI",
-    pesan: "SKPI Anda dapat diajukan setelah semua kegiatan terverifikasi",
-    created_at: new Date(Date.now() - 3600000).toISOString(),
-    status_baca: false,
-  },
-  {
-    id_notifikasi: 2,
-    judul: "Selamat Datang",
-    pesan: "Selamat datang di Sistem SKPI Institut Shanti Bhuana",
-    created_at: new Date(Date.now() - 86400000).toISOString(),
-    status_baca: true,
-  },
-];
 
 function relativeTime(isoString) {
   const diff = Math.floor((Date.now() - new Date(isoString)) / 1000);
@@ -43,36 +32,30 @@ function relativeTime(isoString) {
   return `${Math.floor(diff / 86400)} hari lalu`;
 }
 
-// Warna per tipe notifikasi (sama dengan admin)
 const NOTIF_COLORS = {
-  skpi: "#765439",
-  verifikasi: "#b45309",
-  published: "#047857",
-  revisi: "#b91c1c",
+  approved:  "#047857",
+  rejected:  "#b91c1c",
+  revision:  "#b45309",
+  published: "#065f46",
+  info:      "#3b82f6",
 };
 const NOTIF_BG = {
-  skpi: "#fdf4ec",
-  verifikasi: "#fffbeb",
+  approved:  "#dcfce7",
+  rejected:  "#fee2e2",
+  revision:  "#fff7ed",
   published: "#f0fdf4",
-  revisi: "#fff5f5",
+  info:      "#eff6ff",
 };
-
-function inferNotifType(judul) {
-  if (judul.includes("SKPI")) return "skpi";
-  if (judul.includes("Ditolak")) return "revisi";
-  if (judul.includes("Disetujui")) return "published";
-  return "verifikasi";
-}
 
 export default function MahasiswaDashboard() {
   const { user = {} } = useMahasiswa();
   const router = useRouter();
 
   const [kegiatan, setKegiatan] = useState([]);
-  const [notifs, setNotifs] = useState(mockNotifikasi);
-  const [unread, setUnread] = useState(mockNotifikasi.filter(n => !n.status_baca).length);
+  const [notifs, setNotifs] = useState([]);
+  const [unread, setUnread] = useState(0);
   const [loadingStats, setLoadingStats] = useState(true);
-  const [loadingNotif] = useState(false);
+  const [loadingNotif, setLoadingNotif] = useState(true);
 
   const loadKegiatan = useCallback(async () => {
     setLoadingStats(true);
@@ -86,10 +69,21 @@ export default function MahasiswaDashboard() {
     }
   }, []);
 
+  const loadNotif = useCallback(async () => {
+    setLoadingNotif(true);
+    const data = await getMahasiswaNotifikasi(5);
+    if (data) {
+      setNotifs(data.rows ?? []);
+      setUnread(data.unread ?? 0);
+    }
+    setLoadingNotif(false);
+  }, []);
+
   useEffect(() => {
     document.title = "Dashboard Mahasiswa | SKPI";
     loadKegiatan();
-  }, [loadKegiatan]);
+    loadNotif();
+  }, [loadKegiatan, loadNotif]);
 
   const totalKegiatan = kegiatan.length;
   const disetujui = kegiatan.filter(k => k.status_verifikasi === "disetujui").length;
@@ -106,23 +100,17 @@ export default function MahasiswaDashboard() {
   ];
 
   const handleMarkRead = async (id) => {
-    setNotifs(prev =>
-      prev.map(n =>
-        n.id_notifikasi === id ? { ...n, status_baca: true } : n
-      )
-    );
+    const notif = notifs.find(n => n.id_notifikasi === id);
+    if (notif?.status_baca) return;
+    await markMahasiswaNotifRead(id);
+    setNotifs(prev => prev.map(n => n.id_notifikasi === id ? { ...n, status_baca: true } : n));
     setUnread(prev => Math.max(0, prev - 1));
   };
 
   const handleMarkAllRead = async () => {
+    await markAllMahasiswaNotifRead();
     setNotifs(prev => prev.map(n => ({ ...n, status_baca: true })));
     setUnread(0);
-  };
-
-  const handleDelete = async (id) => {
-    const target = notifs.find(n => n.id_notifikasi === id);
-    setNotifs(prev => prev.filter(n => n.id_notifikasi !== id));
-    if (target && !target.status_baca) setUnread(prev => Math.max(0, prev - 1));
   };
 
   return (
@@ -138,7 +126,7 @@ export default function MahasiswaDashboard() {
         <div className={styles.headerRight}>
           <button
             className={`${styles.refreshBtn} ${loadingStats ? styles.spinning : ""}`}
-            onClick={loadKegiatan}
+            onClick={() => { loadKegiatan(); loadNotif(); }}
             title="Refresh"
             disabled={loadingStats}
           >
@@ -250,7 +238,7 @@ export default function MahasiswaDashboard() {
               <div className={styles.emptyNotif}>Tidak ada notifikasi</div>
             ) : (
               notifs.map(n => {
-                const type = inferNotifType(n.judul);
+                const type = inferMahasiswaNotifType(n.judul);
                 return (
                   <div
                     key={n.id_notifikasi}
@@ -272,23 +260,17 @@ export default function MahasiswaDashboard() {
                       <p>{n.pesan}</p>
                       <span>{relativeTime(n.created_at)}</span>
                     </div>
-                    <button
-                      className={styles.notifMore}
-                      onClick={e => {
-                        e.stopPropagation();
-                        handleDelete(n.id_notifikasi);
-                      }}
-                      title="Hapus notifikasi"
-                    >
-                      <Trash2 size={13} />
-                    </button>
                   </div>
                 );
               })
             )}
           </div>
 
-          <button className={styles.linkBtn} style={{ marginTop: 10, width: "100%", justifyContent: "center" }}>
+          <button
+            className={styles.linkBtn}
+            style={{ marginTop: 10, width: "100%", justifyContent: "center" }}
+            onClick={() => router.push("/mahasiswa/notifications")}
+          >
             Semua Notifikasi <ChevronRight size={12} />
           </button>
         </div>

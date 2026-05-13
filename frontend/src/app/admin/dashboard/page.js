@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
+import { useRouter } from "next/navigation";
 import styles from "./dashboard.module.css";
 import {
   Users, FileText, Clock, CheckCircle, AlertCircle,
@@ -68,6 +69,8 @@ function Skeleton({ w = "100%", h = "20px", radius = "6px" }) {
 }
 
 export default function DashboardPage() {
+  const router = useRouter();
+
   // ── State stats ───────────────────────────────────────────
   const [stats, setStats]         = useState(null);
   const [prodis, setProdis]       = useState([]);
@@ -348,7 +351,11 @@ export default function DashboardPage() {
             )}
           </div>
 
-          <button className={styles.linkBtn} style={{ marginTop: 10, width: "100%", justifyContent: "center" }}>
+          <button
+            className={styles.linkBtn}
+            style={{ marginTop: 10, width: "100%", justifyContent: "center" }}
+            onClick={() => router.push("/admin/notifications")}
+          >
             Semua Notifikasi <ChevronRight size={12} />
           </button>
         </div>

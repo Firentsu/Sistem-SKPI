@@ -103,12 +103,9 @@
 }
 .statCard:hover { box-shadow: 0 4px 18px rgba(118,84,57,0.12); }
 
-/* Left accent strip */
 .statAccent {
   position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
+  left: 0; top: 0; bottom: 0;
   width: 4px;
   border-radius: 12px 0 0 12px;
 }
@@ -160,8 +157,6 @@
   color: #3d2006;
   margin: 0 0 20px;
 }
-
-/* Steps row */
 .stepsRow {
   display: flex;
   align-items: center;
@@ -184,7 +179,6 @@
   transition: background 0.3s;
 }
 .stepLineDone { background: #047857; }
-
 .stepCircle {
   width: 36px;
   height: 36px;
@@ -196,16 +190,8 @@
   font-weight: 800;
   transition: all 0.2s;
 }
-.stepDone {
-  background: #047857;
-  color: #fff;
-  border: 2px solid #047857;
-}
-.stepPending {
-  background: #fff;
-  color: #9c7a5e;
-  border: 2px solid #ddd0c4;
-}
+.stepDone    { background: #047857; color: #fff; border: 2px solid #047857; }
+.stepPending { background: #fff; color: #9c7a5e; border: 2px solid #ddd0c4; }
 .stepLabel {
   font-size: 11px;
   font-weight: 600;
@@ -215,7 +201,6 @@
 }
 .stepLabelDone { color: #047857; }
 
-/* Step footer */
 .stepFooter {
   border-top: 1px solid #f0e0d0;
   padding-top: 18px;
@@ -276,7 +261,6 @@
   border-radius: 8px;
   padding: 10px 14px;
 }
-
 .ajukanBtn {
   display: inline-flex;
   align-items: center;
@@ -293,14 +277,8 @@
   align-self: flex-start;
   box-shadow: 0 2px 8px rgba(118,84,57,0.18);
 }
-.ajukanBtn:hover:not(:disabled) {
-  background: #5c3317;
-  transform: translateY(-1px);
-}
-.ajukanBtn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
+.ajukanBtn:hover:not(:disabled) { background: #5c3317; transform: translateY(-1px); }
+.ajukanBtn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 /* ── Progress Card ── */
 .progressCard {
@@ -436,13 +414,13 @@
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 18px;
-  margin-left: auto;
-  opacity: 0.55;
-  transition: opacity 0.15s;
+  font-size: 16px;
   line-height: 1;
-  padding: 0 2px;
+  opacity: 0.55;
+  margin-left: auto;
+  transition: opacity 0.15s;
   color: inherit;
+  padding: 0 2px;
 }
 .toastClose:hover { opacity: 1; }
 

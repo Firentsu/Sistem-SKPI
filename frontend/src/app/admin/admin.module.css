@@ -1700,18 +1700,32 @@
   background: #e0f2fe;
 }
 
-/* Ikon titik / indicator */
-.notifIcon {
+.notifTypeIcon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
-  padding-top: 2px;
-}
-
-.notifIcon svg {
   transition: transform 0.15s;
 }
+.notifItem:hover .notifTypeIcon { transform: scale(1.06); }
 
-.notifItem:hover .notifIcon svg {
-  transform: scale(1.1);
+.notifTypePublished  { background: #dcfce7; color: #047857; }
+.notifTypeRevision   { background: #fff7ed; color: #b45309; }
+.notifTypeSkpi       { background: #eff6ff; color: #3b82f6; }
+.notifTypeVerifikasi { background: #f3e8ff; color: #7c3aed; }
+
+.notifUnreadDot {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  width: 7px;
+  height: 7px;
+  background: #3b82f6;
+  border-radius: 50%;
+  border: 1.5px solid #fff;
 }
 
 /* Konten teks */
@@ -1744,11 +1758,6 @@
   display: flex;
   align-items: center;
   gap: 4px;
-}
-
-.notifTime::before {
-  content: "•";
-  font-size: 0.7rem;
 }
 
 /* Footer link */

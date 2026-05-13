@@ -749,13 +749,23 @@ export async function getDashboardStats(prodiId = null) {
 // Base endpoint: /api/admin/notifikasi
 // =============================================================================
 
-/** Inferensi tipe notifikasi dari judul untuk pewarnaan UI */
+/** Inferensi tipe notifikasi admin dari judul untuk pewarnaan UI */
 export function inferNotifType(judul = "") {
   const j = judul.toLowerCase();
   if (j.includes("skpi") && (j.includes("ajukan") || j.includes("pengajuan"))) return "skpi";
   if (j.includes("diterbitkan") || j.includes("disetujui") || j.includes("resmi")) return "published";
   if (j.includes("revisi") || j.includes("ditolak")) return "revisi";
   return "verifikasi";
+}
+
+/** Inferensi tipe notifikasi mahasiswa dari judul untuk pewarnaan UI */
+export function inferMahasiswaNotifType(judul = "") {
+  const j = judul.toLowerCase();
+  if (j.includes("diterbitkan") || j.includes("terbit")) return "published";
+  if (j.includes("disetujui") || j.includes("diterima") || j.includes("diverifikasi") || j.includes("berhasil")) return "approved";
+  if (j.includes("ditolak") || j.includes("gagal")) return "rejected";
+  if (j.includes("revisi") || j.includes("diperlukan")) return "revision";
+  return "info";
 }
 
 /** Mock notifikasi — dipakai saat backend tidak aktif */
@@ -852,9 +862,12 @@ export async function deleteAdminNotifikasi(id) {
 // =============================================================================
 
 let _mockMahasiswaNotifs = [
-  { id_notifikasi: 1, judul: "Kegiatan Diverifikasi", pesan: "Kegiatan 'Webinar AI' Anda telah diverifikasi admin", status_baca: false, created_at: new Date(Date.now() - 5 * 60000).toISOString() },
-  { id_notifikasi: 2, judul: "SKPI Diproses", pesan: "Pengajuan SKPI Anda sedang dalam proses review", status_baca: false, created_at: new Date(Date.now() - 60 * 60000).toISOString() },
-  { id_notifikasi: 3, judul: "Revisi Diperlukan", pesan: "Bukti kegiatan Seminar perlu direvisi oleh admin", status_baca: true, created_at: new Date(Date.now() - 180 * 60000).toISOString() },
+  { id_notifikasi: 1, judul: "SKPI Diterbitkan",              pesan: "Selamat! SKPI Anda telah resmi diterbitkan. Silakan unduh di halaman Riwayat.", status_baca: false, created_at: new Date(Date.now() - 3 * 60000).toISOString() },
+  { id_notifikasi: 2, judul: "Kegiatan Disetujui",            pesan: "Kegiatan \"Webinar AI 2024\" Anda telah disetujui oleh admin.", status_baca: false, created_at: new Date(Date.now() - 30 * 60000).toISOString() },
+  { id_notifikasi: 3, judul: "Revisi Diperlukan",             pesan: "Kegiatan \"Seminar Nasional\" perlu direvisi. Catatan: Bukti tidak terbaca, mohon upload ulang.", status_baca: false, created_at: new Date(Date.now() - 90 * 60000).toISOString() },
+  { id_notifikasi: 4, judul: "Kegiatan Berhasil Diajukan",    pesan: "Kegiatan \"Lomba Programming\" telah diajukan dan menunggu verifikasi admin.", status_baca: true, created_at: new Date(Date.now() - 3 * 3600000).toISOString() },
+  { id_notifikasi: 5, judul: "Pengajuan SKPI Dikirim",        pesan: "Pengajuan SKPI Anda telah dikirim dan sedang menunggu verifikasi admin.", status_baca: true, created_at: new Date(Date.now() - 24 * 3600000).toISOString() },
+  { id_notifikasi: 6, judul: "Foto Profil Diperbarui",        pesan: "Foto profil Anda berhasil diperbarui.", status_baca: true, created_at: new Date(Date.now() - 48 * 3600000).toISOString() },
 ];
 
 export async function getMahasiswaNotifikasi(limit = 20) {

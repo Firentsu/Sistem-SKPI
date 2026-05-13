@@ -8,7 +8,8 @@ import {
   LayoutDashboard, FileText, LogOut,
   ChevronRight, Bell,
   Camera, X, Check, Upload, WifiOff,
-  BookOpen, ClipboardList, History, Circle, BookMarked,
+  BookOpen, ClipboardList, History, BookMarked,
+  CheckCircle2, XCircle, AlertTriangle, Award, Info, Clock,
 } from "lucide-react";
 import styles from "./mahasiswa.module.css";
 import { useRouter, usePathname } from "next/navigation";
@@ -22,6 +23,7 @@ import {
   getMahasiswaNotifikasi,
   markMahasiswaNotifRead,
   markAllMahasiswaNotifRead,
+  inferMahasiswaNotifType,
 } from "@/lib/api";
 
 // ============================================================
@@ -137,6 +139,14 @@ function timeAgo(dateStr) {
   return new Date(dateStr).toLocaleDateString("id-ID", { day: "numeric", month: "short" });
 }
 
+const NOTIF_ICONS = {
+  approved:  { Icon: CheckCircle2,   cls: "notifTypeApproved"  },
+  rejected:  { Icon: XCircle,        cls: "notifTypeRejected"  },
+  revision:  { Icon: AlertTriangle,  cls: "notifTypeRevision"  },
+  published: { Icon: Award,          cls: "notifTypePublished" },
+  info:      { Icon: Info,           cls: "notifTypeInfo"      },
+};
+
 function NotificationDropdown({ isOpen, onClose, onUnreadChange }) {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -188,22 +198,30 @@ function NotificationDropdown({ isOpen, onClose, onUnreadChange }) {
         ) : notifications.length === 0 ? (
           <div className={styles.notifEmpty}>Tidak ada notifikasi</div>
         ) : (
-          notifications.map(notif => (
-            <div
-              key={notif.id_notifikasi}
-              className={`${styles.notifItem} ${!notif.status_baca ? styles.notifUnread : ""}`}
-              onClick={() => handleMarkAsRead(notif.id_notifikasi)}
-            >
-              <div className={styles.notifIcon}>
-                {!notif.status_baca && <Circle size={8} fill="#3b82f6" color="#3b82f6" />}
+          notifications.map(notif => {
+            const type = inferMahasiswaNotifType(notif.judul);
+            const { Icon, cls } = NOTIF_ICONS[type] ?? NOTIF_ICONS.info;
+            return (
+              <div
+                key={notif.id_notifikasi}
+                className={`${styles.notifItem} ${!notif.status_baca ? styles.notifUnread : ""}`}
+                onClick={() => handleMarkAsRead(notif.id_notifikasi)}
+              >
+                {!notif.status_baca && <span className={styles.notifUnreadDot} />}
+                <div className={`${styles.notifTypeIcon} ${styles[cls]}`}>
+                  <Icon size={15} />
+                </div>
+                <div className={styles.notifContent}>
+                  <div className={styles.notifTitle}>{notif.judul}</div>
+                  <div className={styles.notifMsg}>{notif.pesan}</div>
+                  <div className={styles.notifTime}>
+                    <Clock size={9} />
+                    {timeAgo(notif.created_at)}
+                  </div>
+                </div>
               </div>
-              <div className={styles.notifContent}>
-                <div className={styles.notifTitle}>{notif.judul}</div>
-                <div className={styles.notifMsg}>{notif.pesan}</div>
-                <div className={styles.notifTime}>{timeAgo(notif.created_at)}</div>
-              </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
       <div className={styles.notifFooter}>
@@ -282,6 +300,15 @@ function MahasiswaLayoutInner({ children }) {
     { href: "/mahasiswa/riwayat",   label: "Riwayat",     icon: History },
     { href: "/mahasiswa/panduan",   label: "Buku Panduan", icon: BookMarked },
   ];
+
+  // Auto-poll unread count setiap 60 detik
+  useEffect(() => {
+    const timer = setInterval(async () => {
+      const d = await getMahasiswaNotifikasi(1);
+      setNotifUnread(d.unread ?? 0);
+    }, 60000);
+    return () => clearInterval(timer);
+  }, []);
 
   // Escape key untuk close notifikasi
   useEffect(() => {

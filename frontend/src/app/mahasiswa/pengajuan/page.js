@@ -81,13 +81,13 @@ export default function PengajuanPage() {
   const totalRevisi   = kegiatan.filter(k => k.status_verifikasi === "revisi").length;
   const totalMenunggu = kegiatan.filter(k => k.status_verifikasi === "diproses").length;
 
-  // Step indicator state
   const step1Done = syaratTerpenuhi;
   const step2Done = pengajuan?.status_pengajuan === "menunggu" || pengajuan?.status_pengajuan === "disetujui";
   const step3Done = pengajuan?.status_pengajuan === "disetujui";
 
   return (
     <div className={styles.container}>
+
       {/* ── Header ── */}
       <div className={styles.header}>
         <div className={styles.headerLeft}>
@@ -111,37 +111,30 @@ export default function PengajuanPage() {
         </button>
       </div>
 
-      {/* ── 3 Stat mini-cards ── */}
+      {/* ── 3 Stat Cards ── */}
       <div className={styles.statsGrid}>
-        {/* Kegiatan Disetujui */}
         <div className={`${styles.statCard} ${styles.statCardGreen}`}>
           <div className={`${styles.statAccent} ${styles.accentGreen}`} />
           <div className={`${styles.statIconWrap} ${styles.iconGreen}`}>
             <Award size={18} />
           </div>
           <div className={styles.statBody}>
-            <span className={styles.statValue}>
-              {loading ? "—" : kegiatanDisetujui.length}
-            </span>
+            <span className={styles.statValue}>{loading ? "—" : kegiatanDisetujui.length}</span>
             <span className={styles.statLabel}>Kegiatan Disetujui</span>
           </div>
         </div>
 
-        {/* Menunggu Verifikasi */}
         <div className={`${styles.statCard} ${styles.statCardAmber}`}>
           <div className={`${styles.statAccent} ${styles.accentAmber}`} />
           <div className={`${styles.statIconWrap} ${styles.iconAmber}`}>
             <History size={18} />
           </div>
           <div className={styles.statBody}>
-            <span className={styles.statValue}>
-              {loading ? "—" : totalMenunggu}
-            </span>
+            <span className={styles.statValue}>{loading ? "—" : totalMenunggu}</span>
             <span className={styles.statLabel}>Menunggu Verifikasi</span>
           </div>
         </div>
 
-        {/* Syarat Pengajuan */}
         <div className={`${styles.statCard} ${syaratTerpenuhi ? styles.statCardGreen : styles.statCardRed}`}>
           <div className={`${styles.statAccent} ${syaratTerpenuhi ? styles.accentGreen : styles.accentRed}`} />
           <div className={`${styles.statIconWrap} ${syaratTerpenuhi ? styles.iconGreen : styles.iconRed}`}>
@@ -160,7 +153,6 @@ export default function PengajuanPage() {
       <div className={styles.stepCard}>
         <h3 className={styles.stepCardTitle}>Alur Pengajuan SKPI</h3>
         <div className={styles.stepsRow}>
-          {/* Step 1 */}
           <div className={styles.stepItem}>
             <div className={`${styles.stepCircle} ${step1Done ? styles.stepDone : styles.stepPending}`}>
               {step1Done ? <CheckCircle size={16} /> : <span>1</span>}
@@ -170,7 +162,6 @@ export default function PengajuanPage() {
             </span>
           </div>
           <div className={`${styles.stepLine} ${step2Done ? styles.stepLineDone : ""}`} />
-          {/* Step 2 */}
           <div className={styles.stepItem}>
             <div className={`${styles.stepCircle} ${step2Done ? styles.stepDone : styles.stepPending}`}>
               {step2Done ? <ClipboardCheck size={16} /> : <span>2</span>}
@@ -180,7 +171,6 @@ export default function PengajuanPage() {
             </span>
           </div>
           <div className={`${styles.stepLine} ${step3Done ? styles.stepLineDone : ""}`} />
-          {/* Step 3 */}
           <div className={styles.stepItem}>
             <div className={`${styles.stepCircle} ${step3Done ? styles.stepDone : styles.stepPending}`}>
               {step3Done ? <FileCheck size={16} /> : <span>3</span>}
@@ -191,7 +181,6 @@ export default function PengajuanPage() {
           </div>
         </div>
 
-        {/* Status + catatan + button */}
         <div className={styles.stepFooter}>
           <div className={styles.statusRow}>
             <span className={styles.statusLabel}>Status Pengajuan</span>
@@ -310,11 +299,10 @@ export default function PengajuanPage() {
             ? <CheckCircle size={16} />
             : <AlertCircle size={16} />}
           <span>{message.text}</span>
-          <button className={styles.toastClose} onClick={() => setMessage(null)}>
-            ×
-          </button>
+          <button className={styles.toastClose} onClick={() => setMessage(null)}>×</button>
         </div>
       )}
+
     </div>
   );
 }

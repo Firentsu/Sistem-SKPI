@@ -6,7 +6,8 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import {
   LayoutDashboard, Users, FileText, Settings, LogOut,
   ChevronRight, Bell, Shield, BookOpen, Award,
-  Camera, X, Check, Upload, WifiOff, Circle,
+  Camera, X, Check, Upload, WifiOff,
+  CheckCircle2, AlertTriangle, ClipboardCheck, Send, Clock,
 } from "lucide-react";
 import styles from "./admin.module.css";
 import { useRouter, usePathname } from "next/navigation";
@@ -14,13 +15,16 @@ import {
   getMe, logout as apiLogout, uploadAvatar, isMockMode, getAvatarUrl,
   getAdminNotifikasi, markNotifikasiRead, markAllNotifikasiRead, inferNotifType,
 } from "@/lib/api";
+import AvatarCropModal from "@/components/AvatarCropModal";
 
-// ======================== KOMPONEN EDITOR AVATAR (TIDAK BERUBAH) ========================
+// ======================== KOMPONEN EDITOR AVATAR ========================
 function AvatarEditorModal({ currentSrc, onClose, onSave }) {
-  const [preview, setPreview] = useState(null);
-  const [dragging, setDragging] = useState(false);
-  const [error, setError] = useState("");
-  const [saving, setSaving] = useState(false);
+  const [cropFile,    setCropFile]    = useState(null);  // file waiting to be cropped
+  const [croppedBlob, setCroppedBlob] = useState(null);  // result after crop
+  const [preview,     setPreview]     = useState(null);  // object URL of cropped preview
+  const [dragging,    setDragging]    = useState(false);
+  const [error,       setError]       = useState("");
+  const [saving,      setSaving]      = useState(false);
   const inputRef = useRef(null);
   const ACCEPTED = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 
@@ -28,16 +32,31 @@ function AvatarEditorModal({ currentSrc, onClose, onSave }) {
     setError("");
     if (!ACCEPTED.includes(file.type)) { setError("Format tidak didukung. Gunakan JPG, PNG, WebP, atau GIF."); return; }
     if (file.size > 2 * 1024 * 1024) { setError("Ukuran file maksimal 2 MB."); return; }
-    setPreview(URL.createObjectURL(file));
+    setCropFile(file);
+  }
+
+  function handleCropSave(blob) {
+    if (preview) URL.revokeObjectURL(preview);
+    setPreview(URL.createObjectURL(blob));
+    setCroppedBlob(blob);
+    setCropFile(null);
+  }
+
+  function handleClearCrop() {
+    if (preview) URL.revokeObjectURL(preview);
+    setPreview(null);
+    setCroppedBlob(null);
+    setCropFile(null);
+    setError("");
+    if (inputRef.current) inputRef.current.value = "";
   }
 
   async function handleSave() {
-    if (!preview) return;
+    if (!croppedBlob) return;
     setSaving(true);
     try {
-      const blob = await fetch(preview).then(r => r.blob());
       const form = new FormData();
-      form.append("avatar", blob, "avatar.jpg");
+      form.append("avatar", croppedBlob, "avatar.jpg");
       const result = await uploadAvatar(form);
       if (!result.ok) { setError(result.data?.error ?? "Gagal menyimpan foto."); return; }
       onSave(getAvatarUrl(result.data.avatar));
@@ -47,56 +66,76 @@ function AvatarEditorModal({ currentSrc, onClose, onSave }) {
 
   useEffect(() => () => { if (preview) URL.revokeObjectURL(preview); }, [preview]);
   useEffect(() => {
-    function onKey(e) { if (e.key === "Escape") onClose(); }
+    function onKey(e) { if (e.key === "Escape" && !cropFile) onClose(); }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
+  }, [onClose, cropFile]);
 
   return (
-    <div className={styles.modalOverlay} onClick={onClose}>
-      <div className={styles.modal} onClick={e => e.stopPropagation()}>
-        <div className={styles.modalHeader}>
-          <div className={styles.modalHeaderLeft}>
-            <div className={styles.modalHeaderIcon}><Camera size={15} /></div>
-            <span className={styles.modalTitle}>Edit Foto Profil</span>
+    <>
+      {cropFile && (
+        <AvatarCropModal
+          file={cropFile}
+          onClose={() => { setCropFile(null); if (inputRef.current) inputRef.current.value = ""; }}
+          onSave={handleCropSave}
+        />
+      )}
+      <div className={styles.modalOverlay} onClick={onClose}>
+        <div className={styles.modal} onClick={e => e.stopPropagation()}>
+          <div className={styles.modalHeader}>
+            <div className={styles.modalHeaderLeft}>
+              <div className={styles.modalHeaderIcon}><Camera size={15} /></div>
+              <span className={styles.modalTitle}>Edit Foto Profil</span>
+            </div>
+            <button className={styles.modalClose} onClick={onClose} aria-label="Tutup"><X size={15} /></button>
           </div>
-          <button className={styles.modalClose} onClick={onClose} aria-label="Tutup"><X size={15} /></button>
-        </div>
-        <div className={styles.modalPreviewRow}>
-          <div className={styles.modalPreviewWrap}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={preview || currentSrc} alt="Preview" className={styles.modalPreviewImg} />
-            {preview && <button className={styles.modalPreviewClear} onClick={() => { setPreview(null); setError(""); }}><X size={10} /></button>}
-            {preview && <div className={styles.modalPreviewBadge}><Check size={10} /> Baru</div>}
+          <div className={styles.modalPreviewRow}>
+            <div className={styles.modalPreviewWrap}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={preview || currentSrc} alt="Preview" className={styles.modalPreviewImg} />
+              {preview && <button className={styles.modalPreviewClear} onClick={handleClearCrop}><X size={10} /></button>}
+              {preview && <div className={styles.modalPreviewBadge}><Check size={10} /> Baru</div>}
+            </div>
+            <div className={styles.modalPreviewInfo}>
+              <p className={styles.modalPreviewLabel}>{preview ? "Foto sudah dipangkas" : "Foto saat ini"}</p>
+              <p className={styles.modalPreviewHint}>JPG, PNG, WebP, GIF · maks. 2 MB</p>
+              {preview && (
+                <button
+                  onClick={() => inputRef.current?.click()}
+                  style={{ marginTop: 6, background: "none", border: "none", cursor: "pointer", color: "#765439", fontSize: 12, fontWeight: 600, padding: 0, textDecoration: "underline" }}
+                >
+                  Ganti foto
+                </button>
+              )}
+            </div>
           </div>
-          <div className={styles.modalPreviewInfo}>
-            <p className={styles.modalPreviewLabel}>{preview ? "Foto baru dipilih" : "Foto saat ini"}</p>
-            <p className={styles.modalPreviewHint}>JPG, PNG, WebP, GIF · maks. 2 MB</p>
-          </div>
-        </div>
-        <div
-          className={`${styles.dropZone} ${dragging ? styles.dropZoneActive : ""}`}
-          onDragOver={e => { e.preventDefault(); setDragging(true); }}
-          onDragLeave={() => setDragging(false)}
-          onDrop={e => { e.preventDefault(); setDragging(false); const f = e.dataTransfer.files?.[0]; if (f) processFile(f); }}
-          onClick={() => inputRef.current?.click()}
-          role="button" tabIndex={0} onKeyDown={e => e.key === "Enter" && inputRef.current?.click()}
-        >
-          <div className={styles.dropIconWrap}><Upload size={20} className={styles.dropIcon} /></div>
-          <span className={styles.dropText}>{dragging ? "Lepaskan di sini…" : "Klik atau seret foto ke sini"}</span>
-          <span className={styles.dropSubText}>PNG, JPG, WebP hingga 2MB</span>
+          {!preview && (
+            <div
+              className={`${styles.dropZone} ${dragging ? styles.dropZoneActive : ""}`}
+              onDragOver={e => { e.preventDefault(); setDragging(true); }}
+              onDragLeave={() => setDragging(false)}
+              onDrop={e => { e.preventDefault(); setDragging(false); const f = e.dataTransfer.files?.[0]; if (f) processFile(f); }}
+              onClick={() => inputRef.current?.click()}
+              role="button" tabIndex={0} onKeyDown={e => e.key === "Enter" && inputRef.current?.click()}
+            >
+              <div className={styles.dropIconWrap}><Upload size={20} className={styles.dropIcon} /></div>
+              <span className={styles.dropText}>{dragging ? "Lepaskan di sini…" : "Klik atau seret foto ke sini"}</span>
+              <span className={styles.dropSubText}>PNG, JPG, WebP hingga 2MB · Hasil akan dipangkas otomatis</span>
+            </div>
+          )}
           <input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif"
-            className={styles.fileInput} onChange={e => { const f = e.target.files?.[0]; if (f) processFile(f); }} />
-        </div>
-        {error && <div className={styles.modalErrorBox}><X size={13} /><p className={styles.modalError}>{error}</p></div>}
-        <div className={styles.modalActions}>
-          <button className={styles.modalBtnCancel} onClick={onClose}>Batal</button>
-          <button className={styles.modalBtnSave} onClick={handleSave} disabled={!preview || saving}>
-            {saving ? <><span className={styles.savingSpinner} /> Menyimpan…</> : <><Check size={14} /> Simpan Foto</>}
-          </button>
+            className={styles.fileInput}
+            onChange={e => { const f = e.target.files?.[0]; if (f) { processFile(f); e.target.value = ""; } }} />
+          {error && <div className={styles.modalErrorBox}><X size={13} /><p className={styles.modalError}>{error}</p></div>}
+          <div className={styles.modalActions}>
+            <button className={styles.modalBtnCancel} onClick={onClose}>Batal</button>
+            <button className={styles.modalBtnSave} onClick={handleSave} disabled={!croppedBlob || saving}>
+              {saving ? <><span className={styles.savingSpinner} /> Menyimpan…</> : <><Check size={14} /> Simpan Foto</>}
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
 
@@ -109,6 +148,13 @@ function timeAgo(dateStr) {
   if (diff < 172800) return "Kemarin";
   return new Date(dateStr).toLocaleDateString("id-ID", { day: "numeric", month: "short" });
 }
+
+const ADMIN_NOTIF_ICONS = {
+  skpi:       { Icon: Send,           cls: "notifTypeSkpi"       },
+  published:  { Icon: CheckCircle2,   cls: "notifTypePublished"  },
+  revisi:     { Icon: AlertTriangle,  cls: "notifTypeRevision"   },
+  verifikasi: { Icon: ClipboardCheck, cls: "notifTypeVerifikasi" },
+};
 
 function NotificationDropdown({ isOpen, onClose, onUnreadChange }) {
   const [notifications, setNotifications] = useState([]);
@@ -161,22 +207,30 @@ function NotificationDropdown({ isOpen, onClose, onUnreadChange }) {
         ) : notifications.length === 0 ? (
           <div className={styles.notifEmpty}>Tidak ada notifikasi</div>
         ) : (
-          notifications.map(notif => (
-            <div
-              key={notif.id_notifikasi}
-              className={`${styles.notifItem} ${!notif.status_baca ? styles.notifUnread : ""}`}
-              onClick={() => handleMarkAsRead(notif.id_notifikasi)}
-            >
-              <div className={styles.notifIcon}>
-                {!notif.status_baca && <Circle size={8} fill="#3b82f6" color="#3b82f6" />}
+          notifications.map(notif => {
+            const type = inferNotifType(notif.judul);
+            const { Icon, cls } = ADMIN_NOTIF_ICONS[type] ?? ADMIN_NOTIF_ICONS.verifikasi;
+            return (
+              <div
+                key={notif.id_notifikasi}
+                className={`${styles.notifItem} ${!notif.status_baca ? styles.notifUnread : ""}`}
+                onClick={() => handleMarkAsRead(notif.id_notifikasi)}
+              >
+                {!notif.status_baca && <span className={styles.notifUnreadDot} />}
+                <div className={`${styles.notifTypeIcon} ${styles[cls]}`}>
+                  <Icon size={15} />
+                </div>
+                <div className={styles.notifContent}>
+                  <div className={styles.notifTitle}>{notif.judul}</div>
+                  <div className={styles.notifMsg}>{notif.pesan}</div>
+                  <div className={styles.notifTime}>
+                    <Clock size={9} />
+                    {timeAgo(notif.created_at)}
+                  </div>
+                </div>
               </div>
-              <div className={styles.notifContent}>
-                <div className={styles.notifTitle}>{notif.judul}</div>
-                <div className={styles.notifMsg}>{notif.pesan}</div>
-                <div className={styles.notifTime}>{timeAgo(notif.created_at)}</div>
-              </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
       <div className={styles.notifFooter}>
@@ -235,6 +289,15 @@ export default function AdminLayout({ children }) {
       window.removeEventListener("avatar:updated", onAvatarUpdated);
       window.removeEventListener("profile:updated", onProfileUpdated);
     };
+  }, []);
+
+  // Auto-poll unread count setiap 60 detik
+  useEffect(() => {
+    const timer = setInterval(async () => {
+      const d = await getAdminNotifikasi(1);
+      setNotifUnread(d.unread ?? 0);
+    }, 60000);
+    return () => clearInterval(timer);
   }, []);
 
   // Tutup notifikasi saat klik di luar
