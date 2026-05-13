@@ -1,44 +1,36 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { useMahasiswa } from "@/context/MahasiswaContext";
+import { getMahasiswaKegiatan } from "@/lib/api";
 import styles from "./dashboard.module.css";
 import {
   Activity, CheckCircle2, Clock, XCircle, Bell, Check, Trash2,
-  RefreshCw, ChevronRight, TrendingUp
+  RefreshCw, ChevronRight, TrendingUp, RotateCw
 } from "lucide-react";
 
-// Mock data kegiatan mahasiswa
-const mockKegiatan = [
-  { id: 1, nama: "Workshop React", status: "Disetujui", tanggal: "2026-03-20" },
-  { id: 2, nama: "Seminar AI", status: "Menunggu", tanggal: "2026-03-25" },
-  { id: 3, nama: "Magang Startup", status: "Ditolak", tanggal: "2026-03-10" },
-  { id: 4, nama: "Training Kepemimpinan", status: "Disetujui", tanggal: "2026-03-05" },
-  { id: 5, nama: "Webinar Digital Marketing", status: "Disetujui", tanggal: "2026-03-28" },
-  { id: 6, nama: "Lomba Coding", status: "Menunggu", tanggal: "2026-03-30" },
-];
+const STATUS_LABEL = {
+  diproses:  "Menunggu",
+  disetujui: "Disetujui",
+  ditolak:   "Ditolak",
+  revisi:    "Revisi",
+};
 
-// Mock notifikasi (sama persis dengan struktur admin)
+// Mock notifikasi — notifikasi belum tersedia via API
 const mockNotifikasi = [
   {
     id_notifikasi: 1,
-    judul: "Kegiatan Disetujui",
-    pesan: "Kegiatan 'Workshop React' telah disetujui",
-    created_at: new Date(Date.now() - 5 * 60000).toISOString(),
-    status_baca: false,
-  },
-  {
-    id_notifikasi: 2,
     judul: "Info SKPI",
     pesan: "SKPI Anda dapat diajukan setelah semua kegiatan terverifikasi",
     created_at: new Date(Date.now() - 3600000).toISOString(),
     status_baca: false,
   },
   {
-    id_notifikasi: 3,
-    judul: "Kegiatan Ditolak",
-    pesan: "Kegiatan 'Magang Startup' ditolak, silakan cek catatan",
-    created_at: new Date(Date.now() - 3 * 3600000).toISOString(),
+    id_notifikasi: 2,
+    judul: "Selamat Datang",
+    pesan: "Selamat datang di Sistem SKPI Institut Shanti Bhuana",
+    created_at: new Date(Date.now() - 86400000).toISOString(),
     status_baca: true,
   },
 ];
@@ -74,27 +66,43 @@ function inferNotifType(judul) {
 
 export default function MahasiswaDashboard() {
   const { user = {} } = useMahasiswa();
+  const router = useRouter();
 
-  const [kegiatan] = useState(mockKegiatan);
+  const [kegiatan, setKegiatan] = useState([]);
   const [notifs, setNotifs] = useState(mockNotifikasi);
   const [unread, setUnread] = useState(mockNotifikasi.filter(n => !n.status_baca).length);
-  const [loadingStats, setLoadingStats] = useState(false);
-  const [loadingNotif, setLoadingNotif] = useState(false);
+  const [loadingStats, setLoadingStats] = useState(true);
+  const [loadingNotif] = useState(false);
+
+  const loadKegiatan = useCallback(async () => {
+    setLoadingStats(true);
+    try {
+      const data = await getMahasiswaKegiatan();
+      setKegiatan(data?.rows ?? []);
+    } catch {
+      setKegiatan([]);
+    } finally {
+      setLoadingStats(false);
+    }
+  }, []);
 
   useEffect(() => {
     document.title = "Dashboard Mahasiswa | SKPI";
-  }, []);
+    loadKegiatan();
+  }, [loadKegiatan]);
 
   const totalKegiatan = kegiatan.length;
-  const disetujui = kegiatan.filter(k => k.status === "Disetujui").length;
-  const ditolak = kegiatan.filter(k => k.status === "Ditolak").length;
-  const menunggu = kegiatan.filter(k => k.status === "Menunggu").length;
+  const disetujui = kegiatan.filter(k => k.status_verifikasi === "disetujui").length;
+  const ditolak   = kegiatan.filter(k => k.status_verifikasi === "ditolak").length;
+  const menunggu  = kegiatan.filter(k => k.status_verifikasi === "diproses").length;
+  const revisi    = kegiatan.filter(k => k.status_verifikasi === "revisi").length;
 
   const cards = [
-    { label: "Total Kegiatan", value: totalKegiatan, icon: Activity, accent: "#765439" },
-    { label: "Disetujui", value: disetujui, icon: CheckCircle2, accent: "#047857" },
-    { label: "Menunggu", value: menunggu, icon: Clock, accent: "#b45309" },
-    { label: "Ditolak", value: ditolak, icon: XCircle, accent: "#b91c1c" },
+    { label: "Total Kegiatan", value: totalKegiatan, icon: Activity,      accent: "#765439" },
+    { label: "Disetujui",      value: disetujui,     icon: CheckCircle2,  accent: "#047857" },
+    { label: "Menunggu",       value: menunggu,      icon: Clock,         accent: "#b45309" },
+    { label: "Revisi",         value: revisi,        icon: RotateCw,      accent: "#d97706" },
+    { label: "Ditolak",        value: ditolak,       icon: XCircle,       accent: "#b91c1c" },
   ];
 
   const handleMarkRead = async (id) => {
@@ -129,9 +137,10 @@ export default function MahasiswaDashboard() {
         </div>
         <div className={styles.headerRight}>
           <button
-            className={styles.refreshBtn}
-            onClick={() => window.location.reload()}
+            className={`${styles.refreshBtn} ${loadingStats ? styles.spinning : ""}`}
+            onClick={loadKegiatan}
             title="Refresh"
+            disabled={loadingStats}
           >
             <RefreshCw size={14} />
           </button>
@@ -173,7 +182,7 @@ export default function MahasiswaDashboard() {
             <div className={styles.sectionTitle}>
               <Activity size={15} /> Kegiatan Terbaru
             </div>
-            <button className={styles.linkBtn}>Lihat Semua ➜</button>
+            <button className={styles.linkBtn} onClick={() => router.push("/mahasiswa/kegiatan")}>Lihat Semua ➜</button>
           </div>
           <div className={styles.tableWrap}>
             <table className={styles.table}>
@@ -185,21 +194,25 @@ export default function MahasiswaDashboard() {
                 </tr>
               </thead>
               <tbody>
-                {kegiatan.slice(0, 5).map(k => (
-                  <tr key={k.id}>
-                    <td>{k.nama}</td>
-                    <td>{k.tanggal}</td>
-                    <td>
-                      <span className={`${styles.statusBadge} ${styles[k.status.toLowerCase()]}`}>
-                        {k.status}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-                {kegiatan.length === 0 && (
-                  <tr>
-                    <td colSpan="3" className={styles.emptyRow}>Belum ada kegiatan</td>
-                  </tr>
+                {loadingStats ? (
+                  <tr><td colSpan="3" className={styles.emptyRow}>Memuat data…</td></tr>
+                ) : kegiatan.length === 0 ? (
+                  <tr><td colSpan="3" className={styles.emptyRow}>Belum ada kegiatan</td></tr>
+                ) : (
+                  kegiatan.slice(0, 5).map(k => {
+                    const statusKey = k.status_verifikasi || "diproses";
+                    return (
+                      <tr key={k.id_kegiatan}>
+                        <td>{k.nama_kegiatan}</td>
+                        <td>{k.tanggal_kegiatan ? k.tanggal_kegiatan.slice(0, 10) : "-"}</td>
+                        <td>
+                          <span className={`${styles.statusBadge} ${styles[statusKey]}`}>
+                            {STATUS_LABEL[statusKey] || statusKey}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })
                 )}
               </tbody>
             </table>
@@ -291,8 +304,9 @@ export default function MahasiswaDashboard() {
         <div className={styles.progressGrid}>
           {[
             { label: "Disetujui", value: disetujui, color: "#047857" },
-            { label: "Menunggu", value: menunggu, color: "#b45309" },
-            { label: "Ditolak", value: ditolak, color: "#b91c1c" },
+            { label: "Menunggu",  value: menunggu,  color: "#b45309" },
+            { label: "Revisi",    value: revisi,    color: "#d97706" },
+            { label: "Ditolak",   value: ditolak,   color: "#b91c1c" },
           ].map(p => {
             const pct = Math.round((p.value / totalKegiatan) * 100) || 0;
             return (

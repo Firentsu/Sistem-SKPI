@@ -13,7 +13,7 @@
     "@next/swc-win32-x64-msvc": "^16.2.4",
     "@react-pdf/renderer": "^4.5.1",
     "axios": "^1.13.6",
-    "docx-preview": "^0.3.7",
+    "docx-preview": "^0.3.4",
     "jspdf": "^4.2.1",
     "lucide-react": "^0.577.0",
     "mammoth": "^1.12.0",
@@ -24,7 +24,7 @@
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
-    "eslint": "^9",
-    "eslint-config-next": "16.2.1"
+    "eslint": "^9.39.4",
+    "eslint-config-next": "^16.2.1"
   }
 }

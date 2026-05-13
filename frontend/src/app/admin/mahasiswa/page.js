@@ -10,6 +10,7 @@ import {
   Eye, EyeOff, RefreshCw, CheckCircle2,
   TrendingUp, UserCheck, ChevronDown, Loader2,
 } from "lucide-react";
+import { PieChart, Pie, Cell, Tooltip } from "recharts";
 import styles from "./page.module.css";
 import {
   getMahasiswaList,
@@ -99,16 +100,16 @@ export const PRODI_CONFIG = {
     fakultas: "Pertanian",
   },
   "Sistem Informasi": {
-    primary: "#1a0909",
-    light: "#f0ecec",
-    dark: "#0d0404",
-    gradient: "linear-gradient(135deg, #1a0909, #4a2525)",
-    bg: "#f0ecec",
-    color: "#1a0909",
-    border: "#4a2525",
-    bgDark: "#0d0404",
-    bgLight: "#f0ecec",
-    dot: "#1a0909",
+    primary: "#2563eb",
+    light: "#eff6ff",
+    dark: "#1d4ed8",
+    gradient: "linear-gradient(135deg, #2563eb, #3b82f6)",
+    bg: "#eff6ff",
+    color: "#1d4ed8",
+    border: "#93c5fd",
+    bgDark: "#1e40af",
+    bgLight: "#eff6ff",
+    dot: "#2563eb",
     label: "SI",
     fakultas: "Teknologi",
   },
@@ -354,43 +355,104 @@ function StatCard({ icon: Icon, title, value, subtitle, color }) {
   );
 }
 
-/* ── PRODI DISTRIBUTION BAR ── */
+/* ── PRODI DISTRIBUTION CHART (Recharts Pie + Legend) ── */
 function ProdiDistBar({ data }) {
   const counts = {};
   data.forEach(row => {
     const k = row.nama_prodi || "-";
     counts[k] = (counts[k] || 0) + 1;
   });
-  const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
-  const total  = data.length || 1;
-  if (sorted.length === 0) return null;
+  const entries = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+  const total   = data.length || 1;
+  if (entries.length === 0) return null;
+
+  const chartData = entries.map(([nama, count]) => ({ name: nama, value: count }));
+
+  const CustomTooltip = ({ active, payload }) => {
+    if (!active || !payload?.length) return null;
+    const nama  = payload[0].name;
+    const count = payload[0].value;
+    const cfg   = getProdiConfig(nama);
+    const pct   = Math.round((count / total) * 100);
+    return (
+      <div style={{
+        background: "#fff", border: `1.5px solid ${cfg.border}`,
+        borderRadius: 10, padding: "9px 13px",
+        boxShadow: "0 6px 20px rgba(0,0,0,0.12)", fontSize: 12,
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 5 }}>
+          <span style={{ width: 10, height: 10, borderRadius: 3, background: cfg.gradient, flexShrink: 0 }} />
+          <strong style={{ color: cfg.color, fontSize: 12.5 }}>{nama}</strong>
+        </div>
+        <span style={{ color: "#765439" }}>{count} mahasiswa</span>
+        <span style={{ color: "#a07858", marginLeft: 5 }}>({pct}%)</span>
+      </div>
+    );
+  };
 
   return (
     <div className={styles.prodiDistCard}>
       <div className={styles.prodiDistHeader}>
-        <GraduationCap size={14} />
+        <div className={styles.prodiDistHeaderIcon}><GraduationCap size={15} /></div>
         <span>Distribusi per Program Studi</span>
+        <span className={styles.chartTotalBadge}>{total} mahasiswa</span>
       </div>
-      <div className={styles.prodiDistList}>
-        {sorted.map(([nama, count]) => {
-          const cfg = getProdiConfig(nama);
-          const pct = Math.round((count / total) * 100);
-          return (
-            <div key={nama} className={styles.prodiDistRow}>
-              <div className={styles.prodiDistLabel}>
-                <span className={styles.prodiDistDot} style={{ background: cfg.gradient }} />
-                <span style={{ color: cfg.color, fontWeight: 600, fontSize: "12px" }}>{nama}</span>
+
+      <div className={styles.chartLayout}>
+        {/* ── Pie Chart (Recharts) ── */}
+        <div className={styles.donutWrap}>
+          <PieChart width={200} height={200}>
+            <Pie
+              data={chartData}
+              cx={100} cy={100}
+              innerRadius={58} outerRadius={90}
+              paddingAngle={3}
+              dataKey="value"
+              nameKey="name"
+              startAngle={90}
+              endAngle={-270}
+              stroke="none"
+            >
+              {chartData.map((entry, idx) => {
+                const cfg = getProdiConfig(entry.name);
+                return <Cell key={idx} fill={cfg.color} />;
+              })}
+            </Pie>
+            <Tooltip content={<CustomTooltip />} />
+          </PieChart>
+          {/* Center label overlay */}
+          <div className={styles.donutCenter}>
+            <span className={styles.donutTotal}>{total}</span>
+            <span className={styles.donutLabel}>Mahasiswa</span>
+          </div>
+        </div>
+
+        {/* ── Legend ── */}
+        <div className={styles.chartLegend}>
+          {entries.map(([nama, count]) => {
+            const cfg = getProdiConfig(nama);
+            const pct = Math.round((count / total) * 100);
+            return (
+              <div key={nama} className={styles.legendRow}>
+                <div className={styles.legendLabel}>
+                  <span className={styles.legendDot} style={{ background: cfg.gradient }} />
+                  <span className={styles.legendName} style={{ color: cfg.color }}>{nama}</span>
+                </div>
+                <div className={styles.legendBarWrap}>
+                  <div className={styles.legendBarFill}
+                    style={{ width: `${pct}%`, background: cfg.gradient }} />
+                </div>
+                <div className={styles.legendStatWrap}>
+                  <span className={styles.legendCount}
+                    style={{ background: cfg.bg, color: cfg.color, border: `1px solid ${cfg.border}` }}>
+                    {count}
+                  </span>
+                  <span className={styles.legendPct}>{pct}%</span>
+                </div>
               </div>
-              <div className={styles.prodiDistBarWrap}>
-                <div className={styles.prodiDistBarFill}
-                  style={{ width: `${pct}%`, background: cfg.gradient }} />
-              </div>
-              <span className={styles.prodiDistCount} style={{ color: cfg.color }}>
-                {count}<small style={{ color: "#b09880", fontWeight: 400 }}> ({pct}%)</small>
-              </span>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
     </div>
   );
@@ -726,7 +788,7 @@ function ImportExcelModal({ onClose, onDone }) {
   );
 }
 
-/* ── ROW ACTIONS DROPDOWN ── */
+/* ── ROW ACTION DROPDOWN ── */
 function RowActions({ row, onEdit, onResetPw, onToggleActive }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
@@ -747,8 +809,7 @@ function RowActions({ row, onEdit, onResetPw, onToggleActive }) {
           <div className={styles.ddDivider} />
           <button
             className={row.aktif ? styles.ddDanger : styles.ddSuccess}
-            onClick={() => { onToggleActive(); setOpen(false); }}
-          >
+            onClick={() => { onToggleActive(); setOpen(false); }}>
             {row.aktif ? <EyeOff size={13} /> : <Eye size={13} />}
             {row.aktif ? "Nonaktifkan" : "Aktifkan"}
           </button>
@@ -927,15 +988,32 @@ export default function MahasiswaPage() {
     if (USE_MOCK) {
       toast(`Mock: Import selesai, ${list.length} data (simulasi)`);
       setModalImport(false);
-      loadData(search, filterProdi, 1);
+      setSearch(""); setFilterProdi("Semua"); setFilterAngkatan("Semua"); setFilterStatus("Semua");
+      setCurrentPage(1);
+      loadData("", "Semua", 1);
       return;
     }
     const res = await importMahasiswaBulk(list);
-    setModalImport(false);
     if (res.ok) {
-      toast(`Import selesai: ${res.data?.success ?? list.length} berhasil${res.data?.failed ? `, ${res.data.failed} gagal` : ""}`);
-      loadData(search, filterProdi, 1);
+      const successCount = res.data?.success ?? list.length;
+      const skippedCount = res.data?.skipped ?? 0;
+      const failedCount  = res.data?.failed  ?? 0;
+      const parts = [
+        successCount > 0 ? `${successCount} berhasil`             : null,
+        skippedCount > 0 ? `${skippedCount} dilewati (sudah ada)` : null,
+        failedCount  > 0 ? `${failedCount} gagal`                 : null,
+      ].filter(Boolean).join(", ");
+      // Reset filter & tunggu data dimuat, baru tutup modal
+      setSearch(""); setFilterProdi("Semua"); setFilterAngkatan("Semua"); setFilterStatus("Semua");
+      setCurrentPage(1);
+      await loadData("", "Semua", 1);
+      setModalImport(false);
+      toast(
+        `Import selesai: ${parts || "tidak ada data baru"}`,
+        failedCount > 0 && successCount === 0 ? "error" : "success",
+      );
     } else {
+      setModalImport(false);
       toast(res.data?.error || "Gagal import data", "error");
     }
   };

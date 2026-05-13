@@ -1,0 +1,309 @@
+/* =============================
+   PANDUAN PAGE — CSS MODULE
+   ============================= */
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.page {
+  padding: 28px 28px 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  font-family: 'Segoe UI', ui-sans-serif, sans-serif;
+  max-width: 880px;
+  animation: fadeUp 0.3s ease both;
+}
+
+/* ── Header ── */
+.header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.headerIcon {
+  width: 50px;
+  height: 50px;
+  background: #fdf4ec;
+  border: 1px solid #ede0d4;
+  color: #765439;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.title {
+  font-size: 22px;
+  font-weight: 800;
+  color: #2c1a0e;
+  margin: 0 0 4px;
+  letter-spacing: -0.3px;
+}
+.subtitle {
+  font-size: 13px;
+  color: #9c7a5e;
+  margin: 0;
+}
+
+/* ── Info Banner ── */
+.infoBanner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: #fffbeb;
+  border: 1px solid #fcd34d;
+  border-left: 4px solid #f59e0b;
+  border-radius: 10px;
+  padding: 12px 16px;
+  color: #92400e;
+  font-size: 13px;
+  line-height: 1.55;
+}
+.infoBanner svg { flex-shrink: 0; margin-top: 1px; color: #b45309; }
+.infoBanner p { margin: 0; }
+
+/* ── Section ── */
+.section {
+  background: #fff;
+  border: 1px solid #ede0d4;
+  border-radius: 14px;
+  padding: 22px 24px;
+  box-shadow: 0 2px 12px rgba(118,84,57,0.08);
+}
+.sectionHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+  color: #765439;
+}
+.sectionTitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: #3d2006;
+  margin: 0;
+}
+.sectionSubtitle {
+  font-size: 12.5px;
+  color: #9c7a5e;
+  margin: 0 0 16px;
+}
+
+/* ── Step Cards ── */
+.stepList2 {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.stepCard {
+  border: 1px solid #ede0d4;
+  border-radius: 10px;
+  overflow: hidden;
+  transition: box-shadow 0.15s, border-color 0.15s;
+  background: #fff;
+}
+.stepCard:hover { box-shadow: 0 2px 10px rgba(118,84,57,0.09); }
+.stepCardOpen {
+  border-color: #ddd0c4;
+  box-shadow: 0 3px 14px rgba(118,84,57,0.1);
+}
+
+.stepHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  gap: 12px;
+  transition: background 0.12s;
+  font-family: inherit;
+}
+.stepHeader:hover { background: #fdfaf7; }
+
+.stepLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+.stepNum {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1px solid rgba(0,0,0,0.06);
+}
+.stepIconWrap {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1px solid rgba(0,0,0,0.05);
+}
+.stepInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.stepTitle {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #2c1a0e;
+}
+.stepDesc {
+  font-size: 12px;
+  color: #9c7a5e;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.stepChevron {
+  flex-shrink: 0;
+  transition: transform 0.15s;
+}
+
+/* Step detail list */
+.stepList {
+  padding: 0 16px 16px 76px;
+  margin: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  border-top: 1px solid #f5ece4;
+  background: #fdfaf8;
+}
+.stepListItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 13px;
+  color: #3d2006;
+  line-height: 1.55;
+  padding-top: 9px;
+}
+.stepBullet {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 7px;
+  opacity: 0.8;
+}
+
+/* ── FAQ ── */
+.faqList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.faqCard {
+  border: 1px solid #ede0d4;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fff;
+  transition: box-shadow 0.15s, border-color 0.15s;
+}
+.faqCard:hover { box-shadow: 0 2px 8px rgba(118,84,57,0.07); }
+.faqCardOpen {
+  border-color: #ddd0c4;
+  box-shadow: 0 3px 12px rgba(118,84,57,0.09);
+}
+
+.faqQuestion {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 13px 16px;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #2c1a0e;
+  transition: background 0.12s;
+  font-family: inherit;
+}
+.faqQuestion:hover { background: #fdfaf7; }
+
+.faqChevron {
+  flex-shrink: 0;
+  color: #9c7a5e;
+  display: flex;
+  align-items: center;
+}
+
+.faqAnswer {
+  padding: 10px 16px 14px;
+  font-size: 13px;
+  color: #5c3317;
+  line-height: 1.65;
+  margin: 0;
+  border-top: 1px solid #f5ece4;
+  background: #fdfaf8;
+}
+
+/* ── Contact Box ── */
+.contactBox {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 14px;
+  padding: 20px 22px;
+  box-shadow: 0 2px 10px rgba(4,120,87,0.06);
+}
+.contactIcon {
+  width: 44px;
+  height: 44px;
+  background: #dcfce7;
+  color: #047857;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1px solid #bbf7d0;
+}
+.contactTitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: #065f46;
+  margin: 0 0 5px;
+}
+.contactText {
+  font-size: 13px;
+  color: #047857;
+  margin: 0;
+  line-height: 1.6;
+}
+
+/* ── Responsive ── */
+@media (max-width: 600px) {
+  .page { padding: 16px 16px 32px; gap: 16px; }
+  .title { font-size: 18px; }
+  .stepList { padding-left: 16px; }
+  .stepDesc { display: none; }
+  .section { padding: 16px; }
+}

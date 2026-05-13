@@ -7,7 +7,7 @@ import {
   Shield, Clock, Loader2, KeyRound, AtSign, Save,
   CheckCircle2, AlertCircle, ArrowLeft, ImageIcon,
 } from "lucide-react";
-import styles from "../admin.module.css";
+import styles from "./profile.module.css";
 import { getProfile, updateProfile, uploadAvatar, getAvatarUrl } from "@/lib/api";
 
 /* ─────────────────────────────────────────

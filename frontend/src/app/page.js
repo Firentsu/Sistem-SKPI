@@ -123,6 +123,7 @@ export default function Home() {
       content: (
         <>
           <form
+            suppressHydrationWarning
             className={`${styles.inputGroup} ${shake ? styles.shakeForm : ""}`}
             onSubmit={(e) => { e.preventDefault(); handleLogin(); }}
             onMouseDown={(e) => e.stopPropagation()}
@@ -132,6 +133,7 @@ export default function Home() {
               <User size={18} />
               <input
                 type="text"
+                suppressHydrationWarning
                 placeholder="Username / NIM"
                 value={username}
                 onChange={(e) => { setUsername(e.target.value); clearError(); }}
@@ -143,6 +145,7 @@ export default function Home() {
               <Lock size={18} />
               <input
                 type={showPassword ? "text" : "password"}
+                suppressHydrationWarning
                 placeholder="Password"
                 value={password}
                 onChange={(e) => { setPassword(e.target.value); clearError(); }}
@@ -151,6 +154,7 @@ export default function Home() {
               />
               <button
                 type="button"
+                suppressHydrationWarning
                 className={styles.eyeButton}
                 onClick={() => setShowPassword(v => !v)}
                 aria-label="Toggle password"
@@ -161,13 +165,14 @@ export default function Home() {
 
             <div className={styles.loginOptions}>
               <label className={styles.checkbox}>
-                <input type="checkbox" /><span>Ingat saya</span>
+                <input suppressHydrationWarning type="checkbox" /><span>Ingat saya</span>
               </label>
               <a href="#" className={styles.forgotPassword}>Lupa password?</a>
             </div>
 
             <button
               type="submit"
+              suppressHydrationWarning
               className={styles.button}
               disabled={loadingLogin}
             >
@@ -268,12 +273,12 @@ export default function Home() {
         <div className={styles.right}>
           <div className={styles.sliderContainer}>
             {currentIndex > 0 && (
-              <button className={`${styles.navArrow} ${styles.prevArrow}`} onClick={() => setCurrentIndex(currentIndex - 1)}>
+              <button suppressHydrationWarning className={`${styles.navArrow} ${styles.prevArrow}`} onClick={() => setCurrentIndex(currentIndex - 1)}>
                 <ArrowLeft size={20} />
               </button>
             )}
             {currentIndex < slides.length - 1 && (
-              <button className={`${styles.navArrow} ${styles.nextArrow}`} onClick={() => setCurrentIndex(currentIndex + 1)}>
+              <button suppressHydrationWarning className={`${styles.navArrow} ${styles.nextArrow}`} onClick={() => setCurrentIndex(currentIndex + 1)}>
                 <ArrowRight size={20} />
               </button>
             )}
@@ -308,6 +313,7 @@ export default function Home() {
               {slides.map((_, index) => (
                 <button
                   key={index}
+                  suppressHydrationWarning
                   className={`${styles.dot} ${currentIndex === index ? styles.activeDot : ""}`}
                   onClick={() => setCurrentIndex(index)}
                 />

@@ -4,13 +4,16 @@ import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect, useRef, useCallback } from "react";
 import {
-  LayoutDashboard, Users, FileText, Settings, LogOut, Menu,
-  ChevronLeft, ChevronRight, Bell, Shield, BookOpen, Award,
+  LayoutDashboard, Users, FileText, Settings, LogOut,
+  ChevronRight, Bell, Shield, BookOpen, Award,
   Camera, X, Check, Upload, WifiOff, Circle,
 } from "lucide-react";
 import styles from "./admin.module.css";
 import { useRouter, usePathname } from "next/navigation";
-import { getMe, logout as apiLogout, uploadAvatar, isMockMode, getAvatarUrl } from "@/lib/api";
+import {
+  getMe, logout as apiLogout, uploadAvatar, isMockMode, getAvatarUrl,
+  getAdminNotifikasi, markNotifikasiRead, markAllNotifikasiRead, inferNotifType,
+} from "@/lib/api";
 
 // ======================== KOMPONEN EDITOR AVATAR (TIDAK BERUBAH) ========================
 function AvatarEditorModal({ currentSrc, onClose, onSave }) {
@@ -98,25 +101,46 @@ function AvatarEditorModal({ currentSrc, onClose, onSave }) {
 }
 
 // ======================== KOMPONEN NOTIFIKASI DROPDOWN ========================
-function NotificationDropdown({ isOpen, onClose, onMarkAsRead }) {
-  const [notifications, setNotifications] = useState([
-    { id: 1, title: "SKPI baru diajukan", message: "Mahasiswa Ahmad Rizki mengajukan SKPI", time: "5 menit lalu", read: false },
-    { id: 2, title: "Aktivitas diverifikasi", message: "Kegiatan Webinar telah diverifikasi", time: "1 jam lalu", read: false },
-    { id: 3, title: "Template SKPI diperbarui", message: "Admin mengubah template SKPI 2025", time: "3 jam lalu", read: true },
-    { id: 4, title: "Pengumuman", message: "Maintenance server jam 02.00 WIB", time: "Kemarin", read: true },
-  ]);
+function timeAgo(dateStr) {
+  const diff = Math.floor((Date.now() - new Date(dateStr)) / 1000);
+  if (diff < 60) return "Baru saja";
+  if (diff < 3600) return `${Math.floor(diff / 60)} menit lalu`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)} jam lalu`;
+  if (diff < 172800) return "Kemarin";
+  return new Date(dateStr).toLocaleDateString("id-ID", { day: "numeric", month: "short" });
+}
 
-  const unreadCount = notifications.filter(n => !n.read).length;
+function NotificationDropdown({ isOpen, onClose, onUnreadChange }) {
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [loading, setLoading] = useState(false);
 
-  const handleMarkAsRead = (id) => {
-    setNotifications(prev =>
-      prev.map(n => n.id === id ? { ...n, read: true } : n)
-    );
-    if (onMarkAsRead) onMarkAsRead(id);
+  useEffect(() => {
+    if (!isOpen) return;
+    setLoading(true);
+    getAdminNotifikasi(20).then(data => {
+      setNotifications(data.rows ?? []);
+      setUnreadCount(data.unread ?? 0);
+      setLoading(false);
+    });
+  }, [isOpen]);
+
+  const handleMarkAsRead = async (id) => {
+    if (notifications.find(n => n.id_notifikasi === id)?.status_baca) return;
+    await markNotifikasiRead(id);
+    setNotifications(prev => prev.map(n => n.id_notifikasi === id ? { ...n, status_baca: true } : n));
+    setUnreadCount(prev => {
+      const next = Math.max(0, prev - 1);
+      if (onUnreadChange) onUnreadChange(next);
+      return next;
+    });
   };
 
-  const handleMarkAllRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+  const handleMarkAllRead = async () => {
+    await markAllNotifikasiRead();
+    setNotifications(prev => prev.map(n => ({ ...n, status_baca: true })));
+    setUnreadCount(0);
+    if (onUnreadChange) onUnreadChange(0);
   };
 
   if (!isOpen) return null;
@@ -127,27 +151,29 @@ function NotificationDropdown({ isOpen, onClose, onMarkAsRead }) {
         <span>Notifikasi</span>
         {unreadCount > 0 && (
           <button onClick={handleMarkAllRead} className={styles.notifMarkAllBtn}>
-            Tandai semua sudah dibaca
+            Tandai semua dibaca
           </button>
         )}
       </div>
       <div className={styles.notifList}>
-        {notifications.length === 0 ? (
+        {loading ? (
+          <div className={styles.notifEmpty}>Memuat…</div>
+        ) : notifications.length === 0 ? (
           <div className={styles.notifEmpty}>Tidak ada notifikasi</div>
         ) : (
           notifications.map(notif => (
             <div
-              key={notif.id}
-              className={`${styles.notifItem} ${!notif.read ? styles.notifUnread : ""}`}
-              onClick={() => handleMarkAsRead(notif.id)}
+              key={notif.id_notifikasi}
+              className={`${styles.notifItem} ${!notif.status_baca ? styles.notifUnread : ""}`}
+              onClick={() => handleMarkAsRead(notif.id_notifikasi)}
             >
               <div className={styles.notifIcon}>
-                {!notif.read && <Circle size={8} fill="#3b82f6" color="#3b82f6" />}
+                {!notif.status_baca && <Circle size={8} fill="#3b82f6" color="#3b82f6" />}
               </div>
               <div className={styles.notifContent}>
-                <div className={styles.notifTitle}>{notif.title}</div>
-                <div className={styles.notifMsg}>{notif.message}</div>
-                <div className={styles.notifTime}>{notif.time}</div>
+                <div className={styles.notifTitle}>{notif.judul}</div>
+                <div className={styles.notifMsg}>{notif.pesan}</div>
+                <div className={styles.notifTime}>{timeAgo(notif.created_at)}</div>
               </div>
             </div>
           ))
@@ -162,18 +188,17 @@ function NotificationDropdown({ isOpen, onClose, onMarkAsRead }) {
 
 // ======================== MAIN LAYOUT ========================
 export default function AdminLayout({ children }) {
-  const [collapsed, setCollapsed] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const [checking, setChecking] = useState(true);
   const [showEditor, setShowEditor] = useState(false);
   const [mockMode, setMockMode] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
+  const [notifUnread, setNotifUnread] = useState(0);
   const notifRef = useRef(null);
 
   const [avatarSrc, setAvatarSrc] = useState("/img/avatar.jpg");
   const [adminName, setAdminName] = useState("Admin");
-  const [adminRole, setAdminRole] = useState("Administrator");
+  const adminRole = "Administrator";
 
   const router = useRouter();
   const pathname = usePathname();
@@ -189,6 +214,7 @@ export default function AdminLayout({ children }) {
         setAvatarSrc(data.admin?.avatar ? getAvatarUrl(data.admin.avatar) : "/img/avatar.jpg");
         setMockMode(isMockMode());
         setChecking(false);
+        getAdminNotifikasi(20).then(d => setNotifUnread(d.unread ?? 0));
       } else {
         if (pathname !== "/") router.replace("/");
       }
@@ -211,11 +237,6 @@ export default function AdminLayout({ children }) {
     };
   }, []);
 
-  // Tutup sidebar saat navigasi (mobile)
-  useEffect(() => {
-    setSidebarOpen(false);
-  }, [pathname]);
-
   // Tutup notifikasi saat klik di luar
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -227,17 +248,12 @@ export default function AdminLayout({ children }) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Escape key untuk close sidebar & notifikasi
+  // Escape key untuk close notifikasi
   useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === "Escape") {
-        if (sidebarOpen) setSidebarOpen(false);
-        if (notifOpen) setNotifOpen(false);
-      }
-    };
+    const handleKeyDown = (e) => { if (e.key === "Escape") setNotifOpen(false); };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [sidebarOpen, notifOpen]);
+  }, []);
 
   const navItems = [
     { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -293,58 +309,35 @@ export default function AdminLayout({ children }) {
         <AvatarEditorModal currentSrc={avatarSrc} onClose={() => setShowEditor(false)} onSave={handleAvatarSave} />
       )}
 
-      {/* Mobile Overlay untuk close sidebar */}
-      {sidebarOpen && (
-        <div 
-          className={styles.sidebarOverlay}
-          onClick={() => setSidebarOpen(false)}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => e.key === "Escape" && setSidebarOpen(false)}
-          aria-label="Close menu"
-        />
-      )}
-
-      <aside className={`${styles.sidebar} ${collapsed ? styles.collapsed : ""} ${sidebarOpen ? styles.open : ""}`}
-        style={mockMode ? { marginTop: 29 } : {}}>
+      <aside className={styles.sidebar} style={mockMode ? { marginTop: 29 } : {}}>
         <div className={styles.brand}>
           <div className={styles.logo}>
             <Image src="/img/Logo_isb.png" alt="logo" width={80} height={35} priority style={{ height: "auto" }} />
           </div>
-          {!collapsed && <div className={styles.brandText}><strong>SKPI</strong><span>Admin Panel</span></div>}
-          <button aria-label="Toggle sidebar" className={styles.collapseBtn} onClick={() => {
-            setCollapsed(!collapsed);
-            setSidebarOpen(false);
-          }}>
-            {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
-          </button>
+          <div className={styles.brandText}><strong>SKPI</strong><span>Admin Panel</span></div>
         </div>
 
         <nav className={styles.nav}>
-          {!collapsed && <p className={styles.navSection}>MENU</p>}
+          <p className={styles.navSection}>MENU</p>
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname.startsWith(item.href);
             return (
               <Link key={item.href} href={item.href}
-                className={`${styles.navItem} ${isActive ? styles.navItemActive : ""}`}
-                title={collapsed ? item.label : undefined}>
+                className={`${styles.navItem} ${isActive ? styles.navItemActive : ""}`}>
                 {isActive && <span className={styles.activeAccent} />}
                 <span className={styles.iconWrap}><Icon size={17} /></span>
-                {!collapsed && <span className={styles.navLabel}>{item.label}</span>}
+                <span className={styles.navLabel}>{item.label}</span>
               </Link>
             );
           })}
         </nav>
-        {!collapsed && <div className={styles.sidebarFooter}><span>v1.0 · © Institut Shanti Bhuana</span></div>}
+        <div className={styles.sidebarFooter}><span>v1.0 · © Institut Shanti Bhuana</span></div>
       </aside>
 
       <div className={styles.main} style={mockMode ? { marginTop: 29 } : {}}>
         <header className={styles.topbar}>
           <div className={styles.topbarLeft}>
-            <button className={styles.menuBtn} onClick={() => setSidebarOpen(!sidebarOpen)} aria-label="Toggle menu">
-              <Menu size={19} />
-            </button>
             <nav className={styles.breadcrumb}>
               <span className={styles.breadcrumbRoot}>Admin</span>
               <ChevronRight size={12} className={styles.breadcrumbSep} />
@@ -361,12 +354,12 @@ export default function AdminLayout({ children }) {
                 onClick={() => setNotifOpen(!notifOpen)}
               >
                 <Bell size={17} />
-                {/* Badge dinamis berdasarkan notifikasi belum dibaca */}
-                <span className={styles.badge}>3</span>
+                {notifUnread > 0 && <span className={styles.badge}>{notifUnread > 99 ? "99+" : notifUnread}</span>}
               </button>
               <NotificationDropdown
                 isOpen={notifOpen}
                 onClose={() => setNotifOpen(false)}
+                onUnreadChange={setNotifUnread}
               />
             </div>
 

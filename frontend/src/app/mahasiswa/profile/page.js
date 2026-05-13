@@ -7,7 +7,7 @@ import {
   GraduationCap, Clock, Loader2, KeyRound, AtSign, Save,
   CheckCircle2, AlertCircle, ArrowLeft, ImageIcon, Hash, BookOpen,
 } from "lucide-react";
-import styles from "../mahasiswa.module.css";
+import styles from "./profile.module.css";
 import { useMahasiswa } from "@/context/MahasiswaContext";
 import {
   getMahasiswaProfile,
@@ -157,10 +157,11 @@ function AvatarViewModal({ src, name, prodi, onClose, onEdit }) {
 ───────────────────────────────────────── */
 export default function MahasiswaProfilePage() {
   const router = useRouter();
-  const { user, prodiConfig } = useMahasiswa();
+  const { user, updateUser } = useMahasiswa();
   const { toast, show: showToast, hide: hideToast } = useToast();
 
   const [loading, setLoading] = useState(true);
+  const [profileData, setProfileData] = useState(null);
 
   /* ── Avatar ── */
   const [avatarSrc,       setAvatarSrc]       = useState("/img/avatar.jpg");
@@ -191,16 +192,18 @@ export default function MahasiswaProfilePage() {
       try {
         const data = await getMahasiswaProfile();
         if (!data) { setLoading(false); return; }
+        setProfileData(data);
         setEmail(data.email ?? user?.email ?? "");
-        setAvatarSrc(data.avatar ? getAvatarUrl(data.avatar) : "/img/avatar.jpg");
+        const foto = data.avatar ?? data.foto_profil ?? data.foto;
+        if (foto) setAvatarSrc(getAvatarUrl(foto));
       } catch {
         setEmail(user?.email ?? "");
-        setAvatarSrc("/img/avatar.jpg");
       } finally {
         setLoading(false);
       }
     })();
-  }, [user]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   /* ── Avatar helpers ── */
   const ACCEPTED = ["image/jpeg", "image/png", "image/webp", "image/gif"];
@@ -229,15 +232,19 @@ export default function MahasiswaProfilePage() {
     setUploadingAvatar(true);
     try {
       const form = new FormData();
-      form.append("avatar", avatarFile);
+      form.append("avatar", avatarFile, avatarFile.name);
       const result = await uploadMahasiswaAvatar(form);
-      if (!result.ok) throw new Error(result.data?.error || "Upload gagal");
-      const newUrl = getAvatarUrl(result.data.avatar) || avatarPreview;
+      if (!result.ok) {
+        showToast(result.data?.error ?? "Gagal mengunggah foto.", "error");
+        return;
+      }
+      const newUrl = getAvatarUrl(result.data.avatar);
       setAvatarSrc(newUrl);
       cancelAvatarSelect();
       setShowUploader(false);
       showToast("Foto profil berhasil diperbarui.");
-      window.dispatchEvent(new CustomEvent("avatar:updated", { detail: { avatar: avatarPreview } }));
+      updateUser({ foto: newUrl });
+      window.dispatchEvent(new CustomEvent("avatar:updated", { detail: { avatar: newUrl } }));
     } catch {
       showToast("Gagal mengunggah foto. Coba lagi.", "error");
     } finally {
@@ -258,7 +265,7 @@ export default function MahasiswaProfilePage() {
     setEmailSaving(true);
     try {
       const { ok, data } = await updateMahasiswaProfile({ action: "email", email: trimmed });
-      if (!ok) throw new Error(data?.error || "Gagal update email");
+      if (!ok) { showToast(data?.error ?? "Gagal memperbarui email.", "error"); return; }
       showToast("Email berhasil diperbarui.");
     } catch {
       showToast("Gagal memperbarui email. Coba lagi.", "error");
@@ -280,7 +287,7 @@ export default function MahasiswaProfilePage() {
     setPwSaving(true);
     try {
       const { ok, data } = await updateMahasiswaPassword({ password_lama: pwCurrent, password_baru: pwNew });
-      if (!ok) throw new Error(data?.error || "Gagal update password");
+      if (!ok) { showToast(data?.error ?? "Gagal memperbarui password.", "error"); return; }
       setPwCurrent(""); setPwNew(""); setPwConfirm("");
       showToast("Password berhasil diperbarui.");
     } catch {
@@ -293,10 +300,10 @@ export default function MahasiswaProfilePage() {
   const pwMatch    = pwConfirm && pwNew === pwConfirm;
   const pwMismatch = pwConfirm && pwNew !== pwConfirm;
 
-  const displayName  = user?.nama  ?? "Mahasiswa";
-  const displayNim   = user?.nim   ?? "-";
-  const displayProdi = user?.prodi ?? "-";
-  const displayAngkatan = user?.angkatan ?? "-";
+  const displayName     = profileData?.nama      ?? user?.nama      ?? "Mahasiswa";
+  const displayNim      = profileData?.nim       ?? user?.nim       ?? "-";
+  const displayProdi    = profileData?.prodi     ?? user?.prodi     ?? "-";
+  const displayAngkatan = profileData?.angkatan  ?? user?.angkatan  ?? "-";
 
   if (loading) {
     return (
@@ -335,7 +342,7 @@ export default function MahasiswaProfilePage() {
                 flexShrink: 0, transition: "all 0.15s",
               }}
               onMouseEnter={e => { e.currentTarget.style.background = "#f5ece4"; e.currentTarget.style.color = "#765439"; }}
-              onMouseLeave={e => { e.currentTarget.style.background = "none";    e.currentTarget.style.color = "#9e7b5e"; }}
+              onMouseLeave={e => { e.currentTarget.style.background = "none"; e.currentTarget.style.color = "#9e7b5e"; }}
               aria-label="Kembali"
             ><ArrowLeft size={16} /></button>
             <div className={styles.pageTitleIcon}><User size={22} /></div>
@@ -348,7 +355,7 @@ export default function MahasiswaProfilePage() {
 
         <div className={styles.grid}>
 
-          {/* ── LEFT: Avatar Card ── */}
+          {/* LEFT — Avatar Card */}
           <div className={styles.avatarCard}>
             <div className={styles.avatarSection}>
               <div className={styles.avatarBgCircle1} />
@@ -368,9 +375,7 @@ export default function MahasiswaProfilePage() {
                 </button>
               </div>
               <p className={styles.avatarName}>{displayName}</p>
-              <div className={styles.avatarRole} style={{ color: prodiConfig.primary }}>
-                <GraduationCap size={11} /> {displayProdi}
-              </div>
+              <div className={styles.avatarRole}><GraduationCap size={11} /> {displayProdi}</div>
               <p className={styles.avatarUsername}>{displayNim}</p>
             </div>
 
@@ -398,8 +403,7 @@ export default function MahasiswaProfilePage() {
                       }}
                     >
                       <div style={{
-                        width: 38, height: 38,
-                        background: "linear-gradient(135deg,#fde8cc,#f5d0a0)",
+                        width: 38, height: 38, background: "linear-gradient(135deg,#fde8cc,#f5d0a0)",
                         borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center",
                       }}>
                         <Upload size={18} color="#765439" />
@@ -446,7 +450,7 @@ export default function MahasiswaProfilePage() {
               </div>
             )}
 
-            {/* Meta Info */}
+            {/* Meta */}
             <div className={styles.infoMeta}>
               <div className={styles.metaRow}>
                 <div className={styles.metaIconWrap}><Hash size={13} className={styles.metaIcon} /></div>
@@ -471,10 +475,10 @@ export default function MahasiswaProfilePage() {
             </div>
           </div>
 
-          {/* ── RIGHT: Forms ── */}
+          {/* RIGHT — Forms */}
           <div className={styles.formsCol}>
 
-            {/* Info Read-only Card */}
+            {/* Data Akademik (read-only) */}
             <div className={styles.formCard}>
               <div className={styles.formCardHeader}>
                 <div className={styles.formCardIcon}><GraduationCap size={20} /></div>
@@ -520,6 +524,21 @@ export default function MahasiswaProfilePage() {
                     </div>
                   </div>
                 </div>
+                <div style={{
+                  background: "#fdf8f4", border: "1px solid #f0e0cc", borderRadius: 10,
+                  padding: "10px 14px", display: "flex", alignItems: "center", gap: 8,
+                }}>
+                  <div style={{
+                    width: 28, height: 28, borderRadius: 8,
+                    background: "linear-gradient(135deg,#fde8cc,#f5d0a0)",
+                    display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+                  }}>
+                    <GraduationCap size={14} color="#765439" />
+                  </div>
+                  <p style={{ margin: 0, fontSize: 12, color: "#9e7b5e", lineHeight: 1.5 }}>
+                    Data akademik bersifat <strong style={{ color: "#765439" }}>read-only</strong>. Hubungi admin kampus jika ada perubahan.
+                  </p>
+                </div>
               </div>
             </div>
 
@@ -529,7 +548,7 @@ export default function MahasiswaProfilePage() {
                 <div className={styles.formCardIcon}><Mail size={20} /></div>
                 <div className={styles.formCardHeaderText}>
                   <h2 className={styles.formCardTitle}>Ubah Email</h2>
-                  <p className={styles.formCardSub}>Perbarui alamat email untuk notifikasi SKPI</p>
+                  <p className={styles.formCardSub}>Perbarui alamat email untuk login dan notifikasi SKPI</p>
                 </div>
               </div>
               <form className={styles.form} onSubmit={handleEmailSave}>
@@ -596,7 +615,7 @@ export default function MahasiswaProfilePage() {
                   <div className={styles.fieldGroup}>
                     <label className={styles.label} htmlFor="pw-confirm">Konfirmasi Password</label>
                     <div className={styles.inputWrap} style={
-                      pwMatch    ? { borderColor: "#22c55e", boxShadow: "0 0 0 3px rgba(34,197,94,0.12)" }  :
+                      pwMatch    ? { borderColor: "#22c55e", boxShadow: "0 0 0 3px rgba(34,197,94,0.12)" } :
                       pwMismatch ? { borderColor: "#ef4444", boxShadow: "0 0 0 3px rgba(239,68,68,0.12)" } : {}
                     }>
                       <Lock size={15} className={styles.inputIcon} />

@@ -5,10 +5,10 @@ import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect, useRef, useCallback } from "react";
 import {
-  LayoutDashboard, FileText, LogOut, Menu,
-  ChevronLeft, ChevronRight, Bell,
+  LayoutDashboard, FileText, LogOut,
+  ChevronRight, Bell,
   Camera, X, Check, Upload, WifiOff,
-  BookOpen, ClipboardList, History, Circle,
+  BookOpen, ClipboardList, History, Circle, BookMarked,
 } from "lucide-react";
 import styles from "./mahasiswa.module.css";
 import { useRouter, usePathname } from "next/navigation";
@@ -19,6 +19,9 @@ import {
   uploadMahasiswaAvatar,
   isMockMode,
   getAvatarUrl,
+  getMahasiswaNotifikasi,
+  markMahasiswaNotifRead,
+  markAllMahasiswaNotifRead,
 } from "@/lib/api";
 
 // ============================================================
@@ -123,27 +126,48 @@ function AvatarEditorModal({ currentSrc, onClose, onSave }) {
 }
 
 // ============================================================
-// KOMPONEN NOTIFIKASI DROPDOWN (sama seperti admin)
+// KOMPONEN NOTIFIKASI DROPDOWN (dinamis dari backend)
 // ============================================================
-function NotificationDropdown({ isOpen, onClose, onMarkAsRead }) {
-  const [notifications, setNotifications] = useState([
-    { id: 1, title: "SKPI diajukan", message: "SKPI Anda sedang dalam proses review", time: "5 menit lalu", read: false },
-    { id: 2, title: "Kegiatan diverifikasi", message: "Kegiatan Webinar telah diverifikasi", time: "1 jam lalu", read: false },
-    { id: 3, title: "Template SKPI diperbarui", message: "Template SKPI terbaru tersedia", time: "3 jam lalu", read: true },
-    { id: 4, title: "Poin bertambah", message: "Anda mendapatkan 10 poin baru", time: "Kemarin", read: true },
-  ]);
+function timeAgo(dateStr) {
+  const diff = Math.floor((Date.now() - new Date(dateStr)) / 1000);
+  if (diff < 60) return "Baru saja";
+  if (diff < 3600) return `${Math.floor(diff / 60)} menit lalu`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)} jam lalu`;
+  if (diff < 172800) return "Kemarin";
+  return new Date(dateStr).toLocaleDateString("id-ID", { day: "numeric", month: "short" });
+}
 
-  const unreadCount = notifications.filter(n => !n.read).length;
+function NotificationDropdown({ isOpen, onClose, onUnreadChange }) {
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [loading, setLoading] = useState(false);
 
-  const handleMarkAsRead = (id) => {
-    setNotifications(prev =>
-      prev.map(n => n.id === id ? { ...n, read: true } : n)
-    );
-    if (onMarkAsRead) onMarkAsRead(id);
+  useEffect(() => {
+    if (!isOpen) return;
+    setLoading(true);
+    getMahasiswaNotifikasi(20).then(data => {
+      setNotifications(data.rows ?? []);
+      setUnreadCount(data.unread ?? 0);
+      setLoading(false);
+    });
+  }, [isOpen]);
+
+  const handleMarkAsRead = async (id) => {
+    if (notifications.find(n => n.id_notifikasi === id)?.status_baca) return;
+    await markMahasiswaNotifRead(id);
+    setNotifications(prev => prev.map(n => n.id_notifikasi === id ? { ...n, status_baca: true } : n));
+    setUnreadCount(prev => {
+      const next = Math.max(0, prev - 1);
+      if (onUnreadChange) onUnreadChange(next);
+      return next;
+    });
   };
 
-  const handleMarkAllRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+  const handleMarkAllRead = async () => {
+    await markAllMahasiswaNotifRead();
+    setNotifications(prev => prev.map(n => ({ ...n, status_baca: true })));
+    setUnreadCount(0);
+    if (onUnreadChange) onUnreadChange(0);
   };
 
   if (!isOpen) return null;
@@ -154,27 +178,29 @@ function NotificationDropdown({ isOpen, onClose, onMarkAsRead }) {
         <span>Notifikasi</span>
         {unreadCount > 0 && (
           <button onClick={handleMarkAllRead} className={styles.notifMarkAllBtn}>
-            Tandai semua sudah dibaca
+            Tandai semua dibaca
           </button>
         )}
       </div>
       <div className={styles.notifList}>
-        {notifications.length === 0 ? (
+        {loading ? (
+          <div className={styles.notifEmpty}>Memuat…</div>
+        ) : notifications.length === 0 ? (
           <div className={styles.notifEmpty}>Tidak ada notifikasi</div>
         ) : (
           notifications.map(notif => (
             <div
-              key={notif.id}
-              className={`${styles.notifItem} ${!notif.read ? styles.notifUnread : ""}`}
-              onClick={() => handleMarkAsRead(notif.id)}
+              key={notif.id_notifikasi}
+              className={`${styles.notifItem} ${!notif.status_baca ? styles.notifUnread : ""}`}
+              onClick={() => handleMarkAsRead(notif.id_notifikasi)}
             >
               <div className={styles.notifIcon}>
-                {!notif.read && <Circle size={8} fill="#3b82f6" color="#3b82f6" />}
+                {!notif.status_baca && <Circle size={8} fill="#3b82f6" color="#3b82f6" />}
               </div>
               <div className={styles.notifContent}>
-                <div className={styles.notifTitle}>{notif.title}</div>
-                <div className={styles.notifMsg}>{notif.message}</div>
-                <div className={styles.notifTime}>{notif.time}</div>
+                <div className={styles.notifTitle}>{notif.judul}</div>
+                <div className={styles.notifMsg}>{notif.pesan}</div>
+                <div className={styles.notifTime}>{timeAgo(notif.created_at)}</div>
               </div>
             </div>
           ))
@@ -191,14 +217,13 @@ function NotificationDropdown({ isOpen, onClose, onMarkAsRead }) {
 // Layout Inner (menggunakan useMahasiswa)
 // ============================================================
 function MahasiswaLayoutInner({ children }) {
-  const [collapsed, setCollapsed] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const [checking, setChecking] = useState(true);
   const [showEditor, setShowEditor] = useState(false);
   const [mockMode, setMockMode] = useState(false);
   const [avatarSrc, setAvatarSrc] = useState("/img/avatar-default.jpg");
   const [notifOpen, setNotifOpen] = useState(false);
+  const [notifUnread, setNotifUnread] = useState(0);
   const notifRef = useRef(null);
 
   const router = useRouter();
@@ -216,6 +241,7 @@ function MahasiswaLayoutInner({ children }) {
         if (fotoApi) setAvatarSrc(getAvatarUrl(fotoApi));
         setMockMode(isMockMode());
         setChecking(false);
+        getMahasiswaNotifikasi(20).then(d => setNotifUnread(d.unread ?? 0));
       } else {
         router.replace("/");
       }
@@ -250,29 +276,19 @@ function MahasiswaLayoutInner({ children }) {
 
   // Menu mahasiswa
   const navItems = [
-    { href: "/mahasiswa/dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { href: "/mahasiswa/kegiatan",  label: "Kegiatan",  icon: BookOpen },
-    { href: "/mahasiswa/pengajuan", label: "Pengajuan", icon: ClipboardList },
-    { href: "/mahasiswa/riwayat",   label: "Riwayat",   icon: History },
+    { href: "/mahasiswa/dashboard", label: "Dashboard",   icon: LayoutDashboard },
+    { href: "/mahasiswa/kegiatan",  label: "Kegiatan",    icon: BookOpen },
+    { href: "/mahasiswa/pengajuan", label: "Pengajuan",   icon: ClipboardList },
+    { href: "/mahasiswa/riwayat",   label: "Riwayat",     icon: History },
+    { href: "/mahasiswa/panduan",   label: "Buku Panduan", icon: BookMarked },
   ];
 
-  // Close sidebar saat navigasi (mobile)
-  const closeSidebar = useCallback(() => setSidebarOpen(false), []);
+  // Escape key untuk close notifikasi
   useEffect(() => {
-    closeSidebar();
-  }, [pathname, closeSidebar]);
-
-  // Escape key untuk close sidebar & notifikasi
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === "Escape") {
-        if (sidebarOpen) setSidebarOpen(false);
-        if (notifOpen) setNotifOpen(false);
-      }
-    };
+    const handleKeyDown = (e) => { if (e.key === "Escape") setNotifOpen(false); };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [sidebarOpen, notifOpen]);
+  }, []);
 
   // Tutup notifikasi saat klik di luar
   useEffect(() => {
@@ -330,45 +346,34 @@ function MahasiswaLayoutInner({ children }) {
 
       {showEditor && <AvatarEditorModal currentSrc={avatarSrc} onClose={() => setShowEditor(false)} onSave={handleAvatarSave} />}
 
-      {/* Overlay untuk mobile */}
-      {sidebarOpen && (
-        <div className={styles.sidebarOverlay} onClick={() => setSidebarOpen(false)} role="button" tabIndex={0} onKeyDown={(e) => e.key === "Escape" && setSidebarOpen(false)} aria-label="Close menu" />
-      )}
-
-      <aside className={`${styles.sidebar} ${collapsed ? styles.collapsed : ""} ${sidebarOpen ? styles.open : ""}`} style={mockMode ? { marginTop: 29 } : {}}>
+      <aside className={styles.sidebar} style={mockMode ? { marginTop: 29 } : {}}>
         <div className={styles.brand}>
           <div className={styles.logo}>
             <Image src="/img/logo_isb.png" alt="logo" width={80} height={35} priority style={{ height: "auto" }} />
           </div>
-          {!collapsed && <div className={styles.brandText}><strong>SKPI</strong><span>Mahasiswa</span></div>}
-          <button className={styles.collapseBtn} onClick={() => { setCollapsed(!collapsed); setSidebarOpen(false); }}>
-            {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
-          </button>
+          <div className={styles.brandText}><strong>SKPI</strong><span>Mahasiswa</span></div>
         </div>
 
         <nav className={styles.nav}>
-          {!collapsed && <p className={styles.navSection}>MENU</p>}
+          <p className={styles.navSection}>MENU</p>
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname.startsWith(item.href);
             return (
-              <Link key={item.href} href={item.href} className={`${styles.navItem} ${isActive ? styles.navItemActive : ""}`} title={collapsed ? item.label : undefined}>
+              <Link key={item.href} href={item.href} className={`${styles.navItem} ${isActive ? styles.navItemActive : ""}`}>
                 {isActive && <span className={styles.activeAccent} style={{ background: prodiConfig.primary }} />}
                 <span className={styles.iconWrap}><Icon size={17} /></span>
-                {!collapsed && <span className={styles.navLabel}>{item.label}</span>}
+                <span className={styles.navLabel}>{item.label}</span>
               </Link>
             );
           })}
         </nav>
-        {!collapsed && <div className={styles.sidebarFooter}><span>v1.0 · © Institut Shanti Bhuana</span></div>}
+        <div className={styles.sidebarFooter}><span>v1.0 · © Institut Shanti Bhuana</span></div>
       </aside>
 
       <div className={styles.main} style={mockMode ? { marginTop: 29 } : {}}>
         <header className={styles.topbar}>
           <div className={styles.topbarLeft}>
-            <button className={styles.menuBtn} onClick={() => setSidebarOpen(!sidebarOpen)}>
-              <Menu size={19} />
-            </button>
             <nav className={styles.breadcrumb}>
               <span className={styles.breadcrumbRoot}>Mahasiswa</span>
               <ChevronRight size={12} className={styles.breadcrumbSep} />
@@ -381,17 +386,18 @@ function MahasiswaLayoutInner({ children }) {
             <div className={styles.notifWrapper} ref={notifRef}>
               <button className={styles.iconBtn} aria-label="Notifikasi" onClick={() => setNotifOpen(!notifOpen)}>
                 <Bell size={17} />
-                <span className={styles.badge}>3</span>
+                {notifUnread > 0 && <span className={styles.badge}>{notifUnread > 99 ? "99+" : notifUnread}</span>}
               </button>
               <NotificationDropdown
                 isOpen={notifOpen}
                 onClose={() => setNotifOpen(false)}
+                onUnreadChange={setNotifUnread}
               />
             </div>
 
             <span className={styles.divider} />
             <div className={styles.userBlock}>
-              <button className={styles.avatarBtn} onClick={() => setShowEditor(true)}>
+              <button className={styles.avatarBtn} onClick={() => router.push("/mahasiswa/profile")} aria-label="Lihat profil">
                 <img src={avatarSrc} alt="avatar" className={styles.avatar}
                   onError={e => { e.currentTarget.onerror = null; e.currentTarget.src = "/img/avatar.jpg"; }} />
                 <span className={styles.onlineDot} />

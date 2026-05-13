@@ -337,19 +337,18 @@
   background: #fff;
   border-radius: 18px;
   border: 1.5px solid #f0e0d0;
-  overflow-x: auto;
-  overflow-y: visible;
+  overflow: visible;
   box-shadow: 0 2px 16px rgba(118,84,57,0.07);
   scroll-margin: 0;
 }
 
+.table { position: relative; }
 .table tr { position: static; }
 .table td { position: static; overflow: visible; }
 
 .table {
   width: 100%;
   border-collapse: collapse;
-  position: static;
   min-width: 700px;
 }
 
@@ -379,11 +378,7 @@
 
 .table tbody tr:last-child td { border-bottom: none; }
 .table tbody tr:hover { background: #fdfaf7; transition: background 0.1s; }
-.rowInactive { background: #fefcfa; }
-.rowInactive .nameText  { color: #a07858; }
-.rowInactive .nimBadge  { opacity: 0.65; }
-.rowInactive .emailCell { opacity: 0.75; }
-.rowInactive .dateText  { opacity: 0.55; }
+.rowInactive { opacity: 0.55; }
 .rowInactive:hover { opacity: 0.7; }
 
 .thNo     { width: 48px; text-align: center; }
@@ -412,7 +407,6 @@
   letter-spacing: -0.5px;
 }
 
-/* Foto profil asli — muncul jika ada di database */
 .avatarImg {
   width: 34px;
   height: 34px;
@@ -440,17 +434,6 @@
   letter-spacing: 0.02em;
 }
 
-.prodiBadge {
-  font-size: 11.5px;
-  background: #f0f9ff;
-  color: #0369a1;
-  padding: 3px 10px;
-  border-radius: 20px;
-  border: 1px solid #bae6fd;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
 /* Status SKPI badges */
 .badge {
   display: inline-flex;
@@ -467,34 +450,6 @@
 .badgeRevisi  { background: #fef3c7; color: #92400e; }
 .badgeBelum   { background: #f3f4f6; color: #6b7280; }
 
-/* Role badges */
-.roleBadge {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 4px 10px;
-  border-radius: 20px;
-  font-size: 11.5px;
-  font-weight: 700;
-  white-space: nowrap;
-}
-.roleSuperAdmin { background: #ede9fe; color: #6d28d9; }
-.roleAdmin      { background: #dbeafe; color: #1d4ed8; }
-.roleOperator   { background: #d1fae5; color: #065f46; }
-
-.numChip {
-  display: inline-block;
-  min-width: 28px;
-  padding: 3px 8px;
-  background: #f5f0eb;
-  color: #765439;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 700;
-  text-align: center;
-}
-.icpChip { background: #fef3c7; color: #92400e; }
-
 .akunDot {
   display: inline-flex;
   align-items: center;
@@ -505,25 +460,20 @@
   font-weight: 700;
   white-space: nowrap;
 }
-.dotOn  {
-  background: #dcfce7;
-  color: #15803d;
-  border: 1px solid #86efac;
-}
-.dotOn::before  { content: ""; width: 6px; height: 6px; border-radius: 50%; background: #22c55e; flex-shrink: 0; }
-.dotOff {
-  background: #fee2e2;
-  color: #b91c1c;
-  border: 1px solid #fca5a5;
+.dotOn   { background: #dcfce7; color: #166534; }
+.dotOff  { background: #fee2e2; color: #991b1b; }
+.dotNone { background: #f3f4f6; color: #6b7280; }
+
+.angkatanBadge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 12px;
   font-weight: 700;
+  background: #fdf4ec;
+  color: #765439;
+  border: 1px solid #f0dcc8;
 }
-.dotOff::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: #ef4444; flex-shrink: 0; }
-.dotNone {
-  background: #f3f4f6;
-  color: #6b7280;
-  border: 1px solid #d1d5db;
-}
-.dotNone::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: #9ca3af; flex-shrink: 0; }
 
 .emptyTd { padding: 0 !important; }
 
@@ -584,7 +534,6 @@
 ───────────────────────────────────────── */
 .ddWrap { position: relative; display: inline-flex; }
 
-/* ── Trigger button ── */
 .ddTrigger {
   background: #fdf7f3;
   border: 1.5px solid #e8d5c4;
@@ -604,7 +553,6 @@
   box-shadow: 0 2px 8px rgba(118,84,57,0.15);
 }
 
-/* ── Dropdown panel ── */
 .ddMenu {
   position: absolute;
   right: 0;
@@ -621,7 +569,6 @@
   min-width: 190px;
   pointer-events: auto;
   animation: ddSlideIn 0.15s cubic-bezier(0.16,1,0.3,1);
-  /* Keluar dari semua overflow context tabel */
 }
 
 @keyframes ddSlideIn {
@@ -629,7 +576,6 @@
   to   { opacity: 1; transform: translateY(0)   scale(1); }
 }
 
-/* ── Menu items ── */
 .ddMenu button {
   display: flex;
   align-items: center;
@@ -647,43 +593,25 @@
   border-radius: 0;
 }
 .ddMenu button:hover { background: #fdf6f0; }
+.ddMenu button svg  { flex-shrink: 0; opacity: 0.75; }
 
-/* Icon wrapper — warna ikon per aksi */
-.ddMenu button svg {
-  flex-shrink: 0;
-  opacity: 0.75;
-}
-
-/* Label section di atas menu */
-.ddLabel {
-  padding: 8px 14px 4px;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: #b89880;
-  pointer-events: none;
-}
-
-/* Divider */
 .ddDivider {
   height: 1px;
   background: linear-gradient(to right, transparent, #f0e0d2, transparent);
   margin: 4px 10px;
 }
 
-/* Warna per tipe aksi */
-.ddDanger  { color: #dc2626 !important; }
+.ddDanger        { color: #dc2626 !important; }
 .ddDanger:hover  { background: #fff5f5 !important; }
-.ddDanger  svg   { color: #dc2626; opacity: 1; }
+.ddDanger svg    { color: #dc2626; opacity: 1; }
 
-.ddSuccess { color: #16a34a !important; }
+.ddSuccess       { color: #16a34a !important; }
 .ddSuccess:hover { background: #f0fdf4 !important; }
 .ddSuccess svg   { color: #16a34a; opacity: 1; }
 
-.ddWarn    { color: #b45309 !important; }
+.ddWarn          { color: #b45309 !important; }
 .ddWarn:hover    { background: #fffbeb !important; }
-.ddWarn    svg   { color: #b45309; opacity: 1; }
+.ddWarn svg      { color: #b45309; opacity: 1; }
 
 /* ─────────────────────────────────────────
    TOAST
@@ -860,8 +788,6 @@
 
 .req { color: #dc2626; margin-left: 2px; }
 
-.fieldHint { font-size: 11.5px; color: #a07858; margin: 2px 0 0; font-style: italic; }
-
 .input {
   width: 100%;
   padding: 9px 12px;
@@ -880,11 +806,7 @@
 
 .errMsg { font-size: 11.5px; color: #dc2626; margin: 1px 0 0; }
 
-/* Password wrapper */
-.pwWrap {
-  position: relative;
-  display: flex;
-}
+.pwWrap { position: relative; display: flex; }
 .pwWrap .input { padding-right: 38px; }
 
 .pwEye {
@@ -903,21 +825,10 @@
 }
 .pwEye:hover { color: #765439; }
 
-/* Input with icon */
-.inputIconWrap {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-.inputIcon {
-  position: absolute;
-  left: 11px;
-  color: #c8945a;
-  pointer-events: none;
-}
+.inputIconWrap { position: relative; display: flex; align-items: center; }
+.inputIcon { position: absolute; left: 11px; color: #c8945a; pointer-events: none; }
 .inputWithIcon { padding-left: 32px !important; }
 
-/* Toggle button */
 .toggleBtn {
   display: flex;
   align-items: center;
@@ -934,7 +845,6 @@
 .toggleOn  { background: #dcfce7; color: #166534; border-color: #86efac; }
 .toggleOff { background: #fee2e2; color: #991b1b; border-color: #fca5a5; }
 
-/* Confirm box */
 .confirmBox {
   background: #fdf7f2;
   border: 1.5px solid #f0e0d0;
@@ -946,7 +856,6 @@
 .confirmBoxDanger { background: #fff5f5 !important; border-color: #fca5a5 !important; }
 .confirmNote { font-size: 12.5px; color: #9e7b5e; }
 
-/* Import dropzone */
 .dropZone {
   border: 2px dashed #d5bfaf;
   border-radius: 14px;
@@ -981,17 +890,6 @@
   padding: 10px 14px;
 }
 
-.linkBtn {
-  background: none;
-  border: none;
-  color: #765439;
-  font-size: 12px;
-  font-weight: 700;
-  cursor: pointer;
-  text-decoration: underline;
-  padding: 0;
-}
-
 .modalFooter {
   display: flex;
   justify-content: flex-end;
@@ -1002,7 +900,6 @@
   flex-shrink: 0;
 }
 
-/* Spinner */
 .spin {
   width: 14px;
   height: 14px;
@@ -1016,115 +913,187 @@
 @keyframes spinAnim { to { transform: rotate(360deg); } }
 
 /* ─────────────────────────────────────────
-   PRODI DISTRIBUTION BAR
+   PRODI DISTRIBUTION CHART
 ───────────────────────────────────────── */
 .prodiDistCard {
   background: #fff;
   border: 1.5px solid #f0e0d0;
-  border-radius: 16px;
-  padding: 16px 20px;
+  border-radius: 18px;
+  padding: 18px 22px 22px;
   margin-bottom: 20px;
-  box-shadow: 0 1px 8px rgba(118,84,57,0.06);
+  box-shadow: 0 2px 16px rgba(118,84,57,0.07);
 }
 
 .prodiDistHeader {
   display: flex;
   align-items: center;
-  gap: 7px;
-  font-size: 11.5px;
+  gap: 8px;
+  font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: #a07858;
-  margin-bottom: 14px;
+  color: #9e7b5e;
+  margin-bottom: 16px;
 }
 
-.prodiDistList {
-  display: flex;
-  flex-direction: column;
-  gap: 9px;
-}
-
-.prodiDistRow {
-  display: grid;
-  grid-template-columns: 220px 1fr 80px;
-  align-items: center;
-  gap: 12px;
-}
-
-.prodiDistLabel {
+.prodiDistHeaderIcon {
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  background: #fdf4ec;
+  color: #765439;
   display: flex;
   align-items: center;
-  gap: 8px;
-  min-width: 0;
-}
-
-.prodiDistDot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
+  justify-content: center;
   flex-shrink: 0;
 }
 
-.prodiDistBarWrap {
-  background: #f5ece4;
-  border-radius: 20px;
-  height: 8px;
-  overflow: hidden;
-}
-
-.prodiDistBarFill {
-  height: 100%;
-  border-radius: 20px;
-  transition: width 0.6s cubic-bezier(.4,0,.2,1);
-  min-width: 6px;
-}
-
-.prodiDistCount {
-  font-size: 12px;
-  font-weight: 700;
-  text-align: right;
-  white-space: nowrap;
-}
-
-/* ─────────────────────────────────────────
-   ANGKATAN BADGE
-───────────────────────────────────────── */
-.angkatanBadge {
-  display: inline-block;
-  padding: 3px 10px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 700;
+.chartTotalBadge {
+  margin-left: auto;
   background: #fdf4ec;
   color: #765439;
   border: 1px solid #f0dcc8;
+  border-radius: 20px;
+  padding: 3px 11px;
+  font-size: 11.5px;
+  font-weight: 700;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.chartLayout {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+
+.donutWrap {
+  flex-shrink: 0;
+  position: relative;
+}
+
+.donutCenter {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+  gap: 1px;
+}
+
+.donutTotal {
+  font-size: 28px;
+  font-weight: 800;
+  color: #3d2006;
+  line-height: 1;
+  letter-spacing: -1px;
+}
+
+.donutLabel {
+  font-size: 11px;
+  color: #9e7b5e;
+  font-weight: 600;
+}
+
+.chartLegend {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  min-width: 0;
+}
+
+.legendRow {
+  display: grid;
+  grid-template-columns: minmax(130px, 200px) 1fr auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.legendLabel {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+
+.legendDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.legendName {
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.legendBarWrap {
+  background: #f5ece4;
+  border-radius: 20px;
+  height: 7px;
+  overflow: hidden;
+}
+
+.legendBarFill {
+  height: 100%;
+  border-radius: 20px;
+  transition: width 0.7s cubic-bezier(.4,0,.2,1);
+  min-width: 4px;
+}
+
+.legendStatWrap {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+}
+
+.legendCount {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  padding: 2px 7px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.legendPct {
+  font-size: 11px;
+  color: #a07858;
+  font-weight: 500;
+  min-width: 32px;
+  text-align: right;
 }
 
 /* ─────────────────────────────────────────
-   RESPONSIVE DIST BAR
+   RESPONSIVE
 ───────────────────────────────────────── */
-@media (max-width: 700px) {
-  .prodiDistRow {
-    grid-template-columns: 1fr 80px;
-  }
-  .prodiDistLabel {
-    grid-column: span 2;
-  } 
+@media (max-width: 760px) {
+  .chartLayout { flex-direction: column; align-items: center; gap: 16px; }
+  .chartLegend { width: 100%; }
+  .legendRow   { grid-template-columns: 1fr auto; }
+  .legendLabel { grid-column: span 2; margin-bottom: 2px; }
 }
 
-/* ─────────────────────────────────────────
-   RESPONSIVE UMUM
-───────────────────────────────────────── */
 @media (max-width: 960px) {
   .page      { padding: 20px 16px 36px; }
   .statsGrid { grid-template-columns: repeat(2, 1fr); }
 }
 
 @media (max-width: 640px) {
-  .statsGrid  { grid-template-columns: 1fr 1fr; }
-  .formGrid2  { grid-template-columns: 1fr; }
-  .fullSpan   { grid-column: span 1; }
-  .modalBox   { max-height: 95vh; }
-  .headerActions { flex-direction: column; align-items: flex-start; }
+  .statsGrid      { grid-template-columns: 1fr 1fr; }
+  .formGrid2      { grid-template-columns: 1fr; }
+  .fullSpan       { grid-column: span 1; }
+  .modalBox       { max-height: 95vh; }
+  .headerActions  { flex-direction: column; align-items: flex-start; }
 }

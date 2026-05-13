@@ -187,7 +187,8 @@
   box-shadow: 0 2px 16px rgba(118,84,57,0.08);
   overflow: hidden;
   position: sticky;
-  top: 80px;
+  top: 16px;
+  align-self: start;
 }
 
 .avatarSection {
@@ -784,54 +785,65 @@
 }
 
 @media (hover: none) and (pointer: coarse) {
-  .button, .btn, .btnPrimary { min-height: 44px; }
+  .btnPrimary { min-height: 44px; }
 }
 
-/* -----------------------------------------
-   RESPONSIVE DESIGN - Comprehensive
------------------------------------------ */
-
-@media (max-width: 1199px) {
-  .container, .page { max-width: 100%; padding: 0 20px; }
-  .grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+/* ===== MODAL ===== */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  backdrop-filter: blur(4px);
 }
 
-@media (max-width: 768px) {
-  .container, .page { max-width: 100%; padding: 0 16px; }
-  .grid { grid-template-columns: 1fr; gap: 12px; }
-  .title { font-size: 1.4rem; }
-  .subtitle { font-size: 0.9rem; }
-  .card { padding: 16px; border-radius: 14px; }
-  .statsGrid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
-  .table { font-size: 12px; }
-  .table th, .table td { padding: 10px 8px; }
-  .twoColumns { grid-template-columns: 1fr; gap: 16px; }
-  .button, .btn, .btnPrimary { padding: 8px 16px; }
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-@media (max-width: 480px) {
-  .container, .page { padding: 0 12px; }
-  .title { font-size: 1.2rem; }
-  .subtitle { font-size: 0.85rem; }
-  .card { padding: 14px; border-radius: 12px; }
-  .statsGrid { grid-template-columns: 1fr; gap: 10px; }
-  .grid { grid-template-columns: 1fr; gap: 10px; }
-  .table { font-size: 10px; }
-  .table th { padding: 8px 4px; font-size: 9px; }
-  .table td { padding: 6px 4px; font-size: 10px; }
-  .button, .btn, .btnPrimary { padding: 8px 14px; font-size: 12px; min-height: 40px; }
-  .twoColumns { gap: 12px; }
-  .formRow { grid-template-columns: 1fr; }
+.modalBtnCancel {
+  flex: 1;
+  padding: 10px 20px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 10px;
+  color: rgba(253,230,138,0.7);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: center;
 }
 
-@media (max-width: 359px) {
-  .container, .page { padding: 0 10px; }
-  .title { font-size: 1rem; }
-  .card { padding: 12px; }
-  .table { font-size: 9px; }
-  .table th, .table td { padding: 4px 2px; }
+.modalBtnCancel:hover { background: rgba(255,255,255,0.1); }
+
+.modalBtnSave {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #fbbf24, #d97706);
+  border: none;
+  border-radius: 10px;
+  color: #1a0e06;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(251,191,36,0.3);
 }
 
-@media (hover: none) and (pointer: coarse) {
-  .button, .btn, .btnPrimary { min-height: 44px; }
+.modalBtnSave:hover:not(:disabled) {
+  background: linear-gradient(135deg, #f59e0b, #b45309);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(251,191,36,0.4);
 }
+
+.modalBtnSave:disabled { opacity: 0.6; cursor: not-allowed; }

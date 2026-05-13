@@ -3,7 +3,8 @@
 ───────────────────────────────────────── */
 .wrapper {
   display: flex;
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
   background: #f5f0eb;
   font-family: 'Inter', 'Segoe UI', sans-serif;
 }
@@ -54,12 +55,9 @@
   top: 0;
   height: 100vh;
   flex-shrink: 0;
-  transition: width 0.22s cubic-bezier(.4,0,.2,1);
   overflow: hidden;
   box-shadow: 4px 0 24px rgba(60, 32, 10, 0.18);
 }
-
-.collapsed { width: 64px; }
 
 /* Mobile overlay untuk menutup sidebar */
 .sidebarOverlay {
@@ -226,7 +224,8 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
-  overflow-x: hidden;
+  min-height: 0;
+  overflow: hidden;
 }
 
 /* ─────────────────────────────────────────
@@ -459,7 +458,7 @@
 /* ─────────────────────────────────────────
    Content
 ───────────────────────────────────────── */
-.content { flex: 1; overflow: auto; }
+.content { flex: 1; overflow: auto; min-height: 0; }
 
 /* ─────────────────────────────────────────
    Avatar Editor Modal
@@ -769,38 +768,14 @@
    Responsive
 ───────────────────────────────────────── */
 @media (max-width: 768px) {
-  .sidebar {
-    position: fixed;
-    left: 0;
-    top: 0;
-    z-index: 40;
-    width: 240px;
-    height: 100vh;
-    transform: translateX(-100%);
-    transition: transform 0.3s cubic-bezier(.4,0,.2,1);
-  }
-
-  .sidebar.open {
-    transform: translateX(0);
-  }
-
-  .collapsed {
-    width: 240px;
-    transform: translateX(-100%);
-  }
-
-  .sidebarOverlay { display: block; }
-  .brandText { display: flex !important; } /* Always show on mobile */
-  .collapseBtn { display: none !important; } /* Hide on mobile */
-  .navSection { display: block !important; } /* Always show on mobile */
-
-  .menuBtn { display: flex !important; }
-
+  .sidebar { width: 64px; }
+  .brandText { display: none !important; }
+  .navSection { display: none !important; }
+  .navLabel { display: none !important; }
+  .sidebarFooter { display: none !important; }
   .topbar { padding: 0 16px; }
-
-  .userInfo { display: none !important; }
-
   .modal { max-width: 100%; }
+  .userInfoBtn .userRole { display: none; }
 }
 
 /* ─────────────────────────────────────────

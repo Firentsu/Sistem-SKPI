@@ -108,10 +108,11 @@
 /* ===== STAT CARDS ===== */
 .cards {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: 12px;
 }
-@media (max-width: 1200px) { .cards { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 1400px) { .cards { grid-template-columns: repeat(4, 1fr); } }
+@media (max-width: 1100px) { .cards { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 800px)  { .cards { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 500px)  { .cards { grid-template-columns: 1fr; } }
 
@@ -355,6 +356,29 @@
   font-size: 11px;
   color: #b09880;
   margin: 0;
+}
+
+/* ===== STATUS BADGE ===== */
+.statusBadge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 20px;
+  font-size: 11.5px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.disetujui { background: #f0fdf4; color: #047857; }
+.diproses  { background: #fffbeb; color: #b45309; }
+.menunggu  { background: #fffbeb; color: #b45309; }
+.revisi    { background: #fff7ed; color: #d97706; }
+.ditolak   { background: #fff5f5; color: #b91c1c; }
+
+/* ===== SPIN ANIMATION FOR REFRESH ===== */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+.spinning svg {
+  animation: spin 0.7s linear infinite;
 }
 
 /* ===== RESPONSIVE ===== */

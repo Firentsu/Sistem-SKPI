@@ -376,7 +376,7 @@ function ImportExcelModal({ onClose, onDone }) {
         password: row["Password"] || row["Username"],
       }));
 
-      onDone(admins);
+      await onDone(admins);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -587,15 +587,30 @@ export default function AdminManagementPage() {
   };
 
   const handleImportDone = async (admins) => {
-    setModalImport(false);
-    let success = 0, failed = 0;
+    let success = 0, skipped = 0, failed = 0;
     for (const a of admins) {
       const res = await createAdmin(a);
-      res.ok ? success++ : failed++;
+      if (res.ok) {
+        success++;
+      } else if (res.data?.error?.toLowerCase().includes("sudah")) {
+        skipped++;
+      } else {
+        failed++;
+      }
     }
-    toast(`Import selesai: ${success} berhasil${failed ? `, ${failed} gagal` : ""}`,
-      failed > 0 ? "error" : "success");
-    loadData(search, 1);
+    const parts = [
+      success > 0 ? `${success} berhasil`             : null,
+      skipped > 0 ? `${skipped} dilewati (sudah ada)` : null,
+      failed  > 0 ? `${failed} gagal`                  : null,
+    ].filter(Boolean).join(", ");
+    // Tunggu data dimuat, baru tutup modal
+    setCurrentPage(1);
+    await loadData("", 1);
+    setModalImport(false);
+    toast(
+      `Import selesai: ${parts || "tidak ada data baru"}`,
+      failed > 0 && success === 0 ? "error" : "success",
+    );
   };
 
   // ── Stats ────────────────────────────────────────────────

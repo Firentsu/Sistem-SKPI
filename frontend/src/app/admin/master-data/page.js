@@ -356,7 +356,7 @@ export default function MasterDataPage() {
                 </tr>
               )}
               {!loading && paged.length > 0 && paged.map((row, idx) => (
-                <tr key={row[activeType.idField]} className={row.status === false ? styles.rowInactive : ""}>
+                <tr key={row[activeType.idField] ?? idx} className={row.status === false ? styles.rowInactive : ""}>
                   <td className={styles.tdNo}>{(safePage - 1) * PER_PAGE + idx + 1}</td>
                   <td className={styles.tdName}>{getName(row)}</td>
                   {activeType.hasEng && <td className={styles.tdEng}>{row.nama_eng ?? "-"}</td>}
