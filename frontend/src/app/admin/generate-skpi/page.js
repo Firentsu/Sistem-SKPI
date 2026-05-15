@@ -12,47 +12,29 @@ import {
 } from "@/lib/api";
 
 /* ─────────────────────────────────────────
-   MOCK DATA (fallback jika backend tidak aktif)
+   MOCK DATA
 ───────────────────────────────────────── */
 const MOCK_MAHASISWA = [
   {
-    id_mahasiswa: 1,
-    nim: "20220001",
-    nama: "Andi Saputra",
-    prodi: "Teknologi Informasi",
-    angkatan: "2022",
-    status_skpi: "belum",
-    total_poin: 85,
-    detail_icp: [],
-    tempat_lahir: "Bengkayang", tgl_lahir: "2000-01-15",
-    tgl_masuk: "2022-08-01", tgl_lulus: null,
-    nomor_ijazah: "", gelar: "Sarjana Komputer", gelar_eng: "Bachelor of Computer Science",
+    id_mahasiswa: 1, nim: "20220001", nama: "Andi Saputra",
+    prodi: "Teknologi Informasi", angkatan: "2022", status_skpi: "belum",
+    total_poin: 85, detail_icp: [], tempat_lahir: "Bengkayang", tgl_lahir: "2000-01-15",
+    tgl_masuk: "2022-08-01", tgl_lulus: null, nomor_ijazah: "",
+    gelar: "Sarjana Komputer", gelar_eng: "Bachelor of Computer Science",
   },
   {
-    id_mahasiswa: 2,
-    nim: "20220002",
-    nama: "Budi Wijaya",
-    prodi: "Manajemen",
-    angkatan: "2022",
-    status_skpi: "diajukan",
-    total_poin: 145,
-    detail_icp: [],
-    tempat_lahir: "Pontianak", tgl_lahir: "2000-03-20",
-    tgl_masuk: "2022-08-01", tgl_lulus: null,
-    nomor_ijazah: "", gelar: "Sarjana Manajemen", gelar_eng: "Bachelor of Management",
+    id_mahasiswa: 2, nim: "20220002", nama: "Budi Wijaya",
+    prodi: "Manajemen", angkatan: "2022", status_skpi: "diajukan",
+    total_poin: 145, detail_icp: [], tempat_lahir: "Pontianak", tgl_lahir: "2000-03-20",
+    tgl_masuk: "2022-08-01", tgl_lulus: null, nomor_ijazah: "",
+    gelar: "Sarjana Manajemen", gelar_eng: "Bachelor of Management",
   },
   {
-    id_mahasiswa: 3,
-    nim: "20230001",
-    nama: "Cindy Lestari",
-    prodi: "Sistem Informasi",
-    angkatan: "2023",
-    status_skpi: "diterbitkan",
-    total_poin: 210,
-    detail_icp: [],
-    tempat_lahir: "Jakarta", tgl_lahir: "2001-07-12",
-    tgl_masuk: "2023-08-01", tgl_lulus: null,
-    nomor_ijazah: "", gelar: "Sarjana Komputer", gelar_eng: "Bachelor of Computer Science",
+    id_mahasiswa: 3, nim: "20230001", nama: "Cindy Lestari",
+    prodi: "Sistem Informasi", angkatan: "2023", status_skpi: "diterbitkan",
+    total_poin: 210, detail_icp: [], tempat_lahir: "Jakarta", tgl_lahir: "2001-07-12",
+    tgl_masuk: "2023-08-01", tgl_lulus: null, nomor_ijazah: "",
+    gelar: "Sarjana Komputer", gelar_eng: "Bachelor of Computer Science",
   },
 ];
 
@@ -70,9 +52,9 @@ const PER_PAGE = 10;
 
 /* ── ICP Tiers ── */
 const ICP_TIERS = [
-  { min: 200, label: "Gold Achievement",   color: "#ca8a04", bg: "#fef9c3", border: "#fde047", icon: Trophy   },
-  { min: 150, label: "Silver Achievement", color: "#2563eb", bg: "#dbeafe", border: "#93c5fd", icon: Medal    },
-  { min: 100, label: "Bronze Achievement", color: "#92400e", bg: "#fef3c7", border: "#fcd34d", icon: Award    },
+  { min: 200, label: "Gold Achievement",   color: "#ca8a04", bg: "#fef9c3", border: "#fde047", icon: Trophy },
+  { min: 150, label: "Silver Achievement", color: "#2563eb", bg: "#dbeafe", border: "#93c5fd", icon: Medal },
+  { min: 100, label: "Bronze Achievement", color: "#92400e", bg: "#fef3c7", border: "#fcd34d", icon: Award },
   { min: 0,   label: "Belum Memenuhi",     color: "#dc2626", bg: "#fee2e2", border: "#fca5a5", icon: AlertCircle },
 ];
 function getIcpTier(poin) {
@@ -87,10 +69,10 @@ const STATUS_SKPI_CFG = {
 };
 
 const PRODI_CFG = {
-  "Teknologi Informasi":           { color: "#5b21b6", bg: "#ede9fe", border: "#c4b5fd", gradient: "linear-gradient(135deg,#7c3aed,#5b21b6)", label: "TI"   },
-  "Sistem Informasi":              { color: "#1d4ed8", bg: "#dbeafe", border: "#93c5fd", gradient: "linear-gradient(135deg,#2563eb,#1d4ed8)", label: "SI"   },
-  "Manajemen":                     { color: "#0369a1", bg: "#e0f2fe", border: "#7dd3fc", gradient: "linear-gradient(135deg,#0284c7,#0369a1)", label: "MNJ"  },
-  "Kewirausahaan":                 { color: "#065f46", bg: "#d1fae5", border: "#6ee7b7", gradient: "linear-gradient(135deg,#059669,#065f46)", label: "KWU"  },
+  "Teknologi Informasi":           { color: "#5b21b6", bg: "#ede9fe", border: "#c4b5fd", gradient: "linear-gradient(135deg,#7c3aed,#5b21b6)", label: "TI" },
+  "Sistem Informasi":              { color: "#1d4ed8", bg: "#dbeafe", border: "#93c5fd", gradient: "linear-gradient(135deg,#2563eb,#1d4ed8)", label: "SI" },
+  "Manajemen":                     { color: "#0369a1", bg: "#e0f2fe", border: "#7dd3fc", gradient: "linear-gradient(135deg,#0284c7,#0369a1)", label: "MNJ" },
+  "Kewirausahaan":                 { color: "#065f46", bg: "#d1fae5", border: "#6ee7b7", gradient: "linear-gradient(135deg,#059669,#065f46)", label: "KWU" },
   "Pendidikan Guru Sekolah Dasar": { color: "#854d0e", bg: "#fef9c3", border: "#fde047", gradient: "linear-gradient(135deg,#ca8a04,#854d0e)", label: "PGSD" },
   "Agroekoteknologi":              { color: "#166534", bg: "#dcfce7", border: "#86efac", gradient: "linear-gradient(135deg,#16a34a,#166534)", label: "AGRO" },
 };
@@ -98,7 +80,6 @@ function getProdiCfg(nama) {
   return PRODI_CFG[nama] || { color: "#765439", bg: "#fdf4ec", border: "#e4d4c4", gradient: "linear-gradient(135deg,#765439,#4a2f1a)", label: "?" };
 }
 
-/* ── Angkatan helper: generate list tahun ── */
 function getAngkatanList() {
   const currentYear = new Date().getFullYear();
   const years = [];
@@ -142,42 +123,56 @@ function PreviewModal({ mhs, onClose, onGenerate, onPublish, generating, publish
   const [noTemplate,  setNoTemplate]  = useState(null);
   const [pdfUrl,      setPdfUrl]      = useState("");
   const [downloading, setDownloading] = useState(false);
- 
+
   const tier     = getIcpTier(mhs?.total_poin ?? 0);
   const TierIcon = tier.icon;
- 
+
   useEffect(() => {
     const fn = e => { if (e.key === "Escape") onClose(); };
     window.addEventListener("keydown", fn);
     return () => window.removeEventListener("keydown", fn);
   }, [onClose]);
- 
+
   useEffect(() => {
     if (!mhs?.id_mahasiswa) return;
-    setStatus("loading"); setErrMsg(""); setNoTemplate(null);
- 
-    fetch(`${API}/api/skpi/preview-pdf/${mhs.id_mahasiswa}`, { credentials: "include" })
-      .then(async res => {
-        if (!res.ok) {
-          const json = await res.json().catch(() => ({}));
-          if (json.code === "NO_TEMPLATE") {
-            setNoTemplate({ prodi: mhs.prodi, available: json.available || [] });
-            setStatus("error");
-          } else {
-            setErrMsg(json.error || `Error ${res.status}`);
-            setStatus("error");
+    let cancelled = false;
+
+    const fetchPdf = async () => {
+      setStatus("loading");
+      setErrMsg("");
+      setNoTemplate(null);
+      try {
+        const res = await fetch(`${API}/api/skpi/preview-pdf/${mhs.id_mahasiswa}`, { credentials: "include" });
+        if (!cancelled) {
+          if (!res.ok) {
+            const json = await res.json().catch(() => ({}));
+            if (json.code === "NO_TEMPLATE") {
+              setNoTemplate({ prodi: mhs.prodi, available: json.available || [] });
+              setStatus("error");
+            } else {
+              setErrMsg(json.error || `Error ${res.status}`);
+              setStatus("error");
+            }
+            return;
           }
-          return;
+          const blob = await res.blob();
+          setPdfUrl(URL.createObjectURL(blob));
+          setStatus("ok");
         }
-        const blob = await res.blob();
-        setPdfUrl(URL.createObjectURL(blob));
-        setStatus("ok");
-      })
-      .catch(e => { setErrMsg(e.message); setStatus("error"); });
+      } catch (e) {
+        if (!cancelled) {
+          setErrMsg(e.message);
+          setStatus("error");
+        }
+      }
+    };
+
+    fetchPdf();
+    return () => { cancelled = true; };
   }, [mhs?.id_mahasiswa]);
- 
+
   useEffect(() => () => { if (pdfUrl) URL.revokeObjectURL(pdfUrl); }, [pdfUrl]);
- 
+
   const handleDownload = async () => {
     setDownloading(true);
     try {
@@ -193,7 +188,7 @@ function PreviewModal({ mhs, onClose, onGenerate, onPublish, generating, publish
     } catch(e) { alert("Gagal download: " + e.message); }
     finally    { setDownloading(false); }
   };
- 
+
   const handleDownloadPdf = () => {
     if (!pdfUrl) return;
     const a = Object.assign(document.createElement("a"), {
@@ -202,9 +197,9 @@ function PreviewModal({ mhs, onClose, onGenerate, onPublish, generating, publish
     });
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
   };
- 
+
   if (!mhs) return null;
- 
+
   return (
     <div className={styles.previewOverlay}>
       <div className={styles.previewBar}>
@@ -255,7 +250,7 @@ function PreviewModal({ mhs, onClose, onGenerate, onPublish, generating, publish
           <button className={styles.previewClose} onClick={onClose}><X size={18}/></button>
         </div>
       </div>
- 
+
       <div className={styles.previewScroll} style={{ background: "#525252", padding: 0 }}>
         {status === "loading" && (
           <div className={styles.previewLoading}>
@@ -309,7 +304,7 @@ function PreviewModal({ mhs, onClose, onGenerate, onPublish, generating, publish
 }
 
 /* ══════════════════════════════════════════
-   HALAMAN UTAMA (dengan kolom NIM baru)
+   HALAMAN UTAMA
 ══════════════════════════════════════════ */
 export default function GenerateSkpiPage() {
   const [rows,        setRows]        = useState([]);
@@ -327,78 +322,90 @@ export default function GenerateSkpiPage() {
   const [preview,     setPreview]     = useState(null);
   const [generating,  setGenerating]  = useState(false);
   const [publishing,  setPublishing]  = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0); // pemicu refresh manual
   const { toasts, add: toast, remove } = useToast();
   const searchTimer = useRef(null);
 
   const angkatanList = getAngkatanList();
 
+  // Ambil daftar prodi saat mount
   useEffect(() => {
-    getProdiList().then(list => { if (list && list.length) setProdiList(list); else setProdiList(MOCK_PRODI_LIST); })
+    getProdiList()
+      .then(list => setProdiList(list?.length ? list : MOCK_PRODI_LIST))
       .catch(() => setProdiList(MOCK_PRODI_LIST));
     document.title = "Generate SKPI | Admin";
   }, []);
 
-  const loadData = useCallback(async (q = search, prodi = filterProdi, pg = page) => {
-    setLoading(true);
-    try {
-      const [mhsRes, icpRes] = await Promise.all([
-        getMahasiswaList({ q, prodi, page: pg }),
-        getIcpSummary({ page: pg }),
-      ]);
-      let mergedRows = [];
-      if (mhsRes && mhsRes.rows && mhsRes.rows.length) {
-        const icpById = {};
-        (icpRes?.rows || []).forEach(r => { icpById[r.id_mahasiswa] = r; });
-        mergedRows = mhsRes.rows.map(m => ({
-          id_mahasiswa: m.id_mahasiswa,
-          nim: m.nim,
-          nama: m.nama,
-          prodi: m.programstudi?.nama_prodi || "-",
-          angkatan: m.angkatan || "-",
-          status_skpi: m.status_skpi || "belum",
-          total_poin: icpById[m.id_mahasiswa]?.total_poin || 0,
-          detail_icp: icpById[m.id_mahasiswa]?.detail_icp || [],
-          tempat_lahir: m.tempat_lahir, tgl_lahir: m.tgl_lahir, tgl_masuk: m.tanggal_masuk,
-          tgl_lulus: m.tanggal_lulus, nomor_ijazah: m.nomor_ijazah,
-          gelar: m.gelar, gelar_eng: m.gelar_eng,
-        }));
-      } else {
-        // Fallback ke mock data
-        mergedRows = MOCK_MAHASISWA.map(m => ({ ...m }));
+  // Fetch data utama – TIDAK memanggil setState sinkron di luar async callback
+  useEffect(() => {
+    let cancelled = false;
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const [mhsRes, icpRes] = await Promise.all([
+          getMahasiswaList({ q: search, prodi: filterProdi, page }),
+          getIcpSummary({ page }),
+        ]);
+        if (cancelled) return;
+
+        let mergedRows = [];
+        if (mhsRes?.rows?.length) {
+          const icpById = {};
+          (icpRes?.rows || []).forEach(r => { icpById[r.id_mahasiswa] = r; });
+          mergedRows = mhsRes.rows.map(m => ({
+            id_mahasiswa: m.id_mahasiswa,
+            nim: m.nim,
+            nama: m.nama,
+            prodi: m.programstudi?.nama_prodi || "-",
+            angkatan: m.angkatan || "-",
+            status_skpi: m.status_skpi || "belum",
+            total_poin: icpById[m.id_mahasiswa]?.total_poin || 0,
+            detail_icp: icpById[m.id_mahasiswa]?.detail_icp || [],
+            tempat_lahir: m.tempat_lahir, tgl_lahir: m.tgl_lahir, tgl_masuk: m.tanggal_masuk,
+            tgl_lulus: m.tanggal_lulus, nomor_ijazah: m.nomor_ijazah,
+            gelar: m.gelar, gelar_eng: m.gelar_eng,
+          }));
+        } else {
+          mergedRows = MOCK_MAHASISWA.map(m => ({ ...m }));
+        }
+
+        // Filter lokal
+        let filtered = mergedRows
+          .filter(m => {
+            if (filterIcp === "Gold")   return m.total_poin >= 200;
+            if (filterIcp === "Silver") return m.total_poin >= 150 && m.total_poin < 200;
+            if (filterIcp === "Bronze") return m.total_poin >= 100 && m.total_poin < 150;
+            if (filterIcp === "Kurang") return m.total_poin < 100;
+            if (filterIcp === "Siap")   return m.total_poin >= 100;
+            return true;
+          })
+          .filter(m => filterStatus === "Semua" || m.status_skpi === filterStatus)
+          .filter(m => filterAngkatan === "Semua" || String(m.angkatan) === String(filterAngkatan))
+          .filter(m => {
+            if (!search) return true;
+            return m.nim.includes(search) || m.nama.toLowerCase().includes(search.toLowerCase());
+          });
+
+        setRows(filtered);
+        setTotal(filtered.length);
+        setTotalPages(Math.ceil(filtered.length / PER_PAGE) || 1);
+      } catch (err) {
+        if (!cancelled) {
+          console.error(err);
+          setRows(MOCK_MAHASISWA);
+          setTotal(MOCK_MAHASISWA.length);
+          setTotalPages(1);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
       }
+    };
 
-      // Filter lokal
-      let filtered = mergedRows
-        .filter(m => {
-          if (filterIcp === "Gold")   return m.total_poin >= 200;
-          if (filterIcp === "Silver") return m.total_poin >= 150 && m.total_poin < 200;
-          if (filterIcp === "Bronze") return m.total_poin >= 100 && m.total_poin < 150;
-          if (filterIcp === "Kurang") return m.total_poin < 100;
-          if (filterIcp === "Siap")   return m.total_poin >= 100;
-          return true;
-        })
-        .filter(m => filterStatus === "Semua" || m.status_skpi === filterStatus)
-        .filter(m => filterAngkatan === "Semua" || String(m.angkatan) === String(filterAngkatan))
-        .filter(m => {
-          if (!search) return true;
-          return m.nim.includes(search) || m.nama.toLowerCase().includes(search.toLowerCase());
-        });
+    fetchData();
+    return () => { cancelled = true; };
+  }, [search, filterProdi, page, filterIcp, filterStatus, filterAngkatan, refreshTrigger]);
 
-      setRows(filtered);
-      setTotal(filtered.length);
-      setTotalPages(Math.ceil(filtered.length / PER_PAGE) || 1);
-    } catch (err) {
-      console.error(err);
-      setRows(MOCK_MAHASISWA);
-      setTotal(MOCK_MAHASISWA.length);
-      setTotalPages(1);
-    } finally {
-      setLoading(false);
-    }
-  }, [search, filterProdi, page, filterIcp, filterStatus, filterAngkatan]);
-
-  useEffect(() => { loadData(); }, [loadData]);
-
+  // Ambil daftar SKPI yang sudah ada
   useEffect(() => {
     if (rows.length === 0) return;
     getSkpiList({ page: 1 }).then(res => {
@@ -410,9 +417,13 @@ export default function GenerateSkpiPage() {
   }, [rows]);
 
   const handleSearch = val => {
-    setSearch(val); setPage(1);
+    setSearch(val);
+    setPage(1);
     clearTimeout(searchTimer.current);
-    searchTimer.current = setTimeout(() => loadData(val, filterProdi, 1), 400);
+    searchTimer.current = setTimeout(() => {
+      // trigger fetch dengan refreshTrigger
+      setRefreshTrigger(t => t + 1);
+    }, 400);
   };
 
   const handleGenerate = async () => {
@@ -469,7 +480,7 @@ export default function GenerateSkpiPage() {
           <h1 className={styles.title}>Generate &amp; Penerbitan SKPI</h1>
           <p className={styles.subtitle}>Generate, preview, dan terbitkan SKPI mahasiswa</p>
         </div>
-        <button className={styles.btnRefresh} onClick={() => loadData()} disabled={loading}>
+        <button className={styles.btnRefresh} onClick={() => setRefreshTrigger(t => t + 1)} disabled={loading}>
           <RefreshCw size={14} className={loading ? styles.spin : ""}/>
         </button>
       </div>
@@ -514,7 +525,7 @@ export default function GenerateSkpiPage() {
         <div className={styles.filterGroup}>
           <Filter size={13}/>
           <select className={styles.filterSelect} value={filterProdi}
-            onChange={e => { setFilterProdi(e.target.value); setPage(1); loadData(search, e.target.value, 1); }}>
+            onChange={e => { setFilterProdi(e.target.value); setPage(1); }}>
             <option value="Semua">Semua Prodi</option>
             {prodiList.map(p => <option key={p.id_prodi} value={p.nama_prodi}>{p.nama_prodi}</option>)}
           </select>
@@ -542,7 +553,7 @@ export default function GenerateSkpiPage() {
         </div>
       </div>
 
-      {/* Tabel dengan kolom NIM setelah Mahasiswa */}
+      {/* Tabel */}
       <div className={styles.tableWrapper}>
         <table className={styles.table}>
           <thead>
@@ -582,8 +593,6 @@ export default function GenerateSkpiPage() {
               return (
                 <tr key={row.id_mahasiswa} className={row.total_poin < 100 ? styles.rowDim : ""}>
                   <td className={styles.tdNo}>{(safePage - 1) * PER_PAGE + idx + 1}</td>
-
-                  {/* Kolom Mahasiswa (nama) */}
                   <td>
                     <div className={styles.mhsCell}>
                       <div className={styles.avatar} style={{ background: prodiCfg.gradient }}>
@@ -594,11 +603,7 @@ export default function GenerateSkpiPage() {
                       </div>
                     </div>
                   </td>
-
-                  {/* Kolom NIM (baru) */}
                   <td><code className={styles.mhsNim}>{row.nim}</code></td>
-
-                  {/* Kolom Prodi */}
                   <td>
                     <span className={styles.prodiBadge}
                       style={{ background: prodiCfg.bg, color: prodiCfg.color, borderColor: prodiCfg.border }}>
@@ -609,13 +614,9 @@ export default function GenerateSkpiPage() {
                       {row.prodi}
                     </span>
                   </td>
-
-                  {/* Angkatan */}
                   <td style={{ textAlign: "center" }}>
                     <span className={styles.angkatanBadge}>{row.angkatan}</span>
                   </td>
-
-                  {/* ICP */}
                   <td style={{ textAlign: "center" }}>
                     <div className={styles.icpCell}>
                       <span className={styles.icpScore} style={{ color: tier.color }}>{row.total_poin}</span>
@@ -625,8 +626,6 @@ export default function GenerateSkpiPage() {
                       </span>
                     </div>
                   </td>
-
-                  {/* Status SKPI */}
                   <td style={{ textAlign: "center" }}>
                     <span className={styles.skpiStatus}
                       style={{ background: statusCfg.bg, color: statusCfg.color, borderColor: statusCfg.border }}>
@@ -634,8 +633,6 @@ export default function GenerateSkpiPage() {
                       {skpiData?.status === "resmi" && <CheckCircle2 size={10} style={{ marginLeft: 3 }}/>}
                     </span>
                   </td>
-
-                  {/* Aksi */}
                   <td style={{ textAlign: "center" }}>
                     <div className={styles.actionGroup}>
                       <button className={styles.btnPreview}
@@ -665,23 +662,22 @@ export default function GenerateSkpiPage() {
             {total === 0 ? 0 : (safePage - 1) * PER_PAGE + 1}–{Math.min(safePage * PER_PAGE, total)} dari {total}
           </span>
           <div className={styles.paginBtns}>
-            <button className={styles.pBtn} onClick={() => { setPage(1); loadData(search, filterProdi, 1); }} disabled={safePage === 1}>«</button>
-            <button className={styles.pBtn} onClick={() => { const p = Math.max(1, safePage - 1); setPage(p); loadData(search, filterProdi, p); }} disabled={safePage === 1}><ChevronLeft size={13}/></button>
+            <button className={styles.pBtn} onClick={() => { setPage(1); }} disabled={safePage === 1}>«</button>
+            <button className={styles.pBtn} onClick={() => { setPage(p => Math.max(1, p - 1)); }} disabled={safePage === 1}><ChevronLeft size={13}/></button>
             {Array.from({ length: totalPages }, (_, i) => i + 1)
               .filter(p => p === 1 || p === totalPages || Math.abs(p - safePage) <= 1)
               .reduce((acc, p, i, arr) => { if (i > 0 && arr[i - 1] !== p - 1) acc.push("…"); acc.push(p); return acc; }, [])
               .map((p, i) => p === "…"
                 ? <span key={`d${i}`} className={styles.pDots}>…</span>
                 : <button key={p} className={`${styles.pBtn} ${safePage === p ? styles.pBtnOn : ""}`}
-                    onClick={() => { setPage(p); loadData(search, filterProdi, p); }}>{p}</button>
+                    onClick={() => { setPage(p); }}>{p}</button>
               )}
-            <button className={styles.pBtn} onClick={() => { const p = Math.min(totalPages, safePage + 1); setPage(p); loadData(search, filterProdi, p); }} disabled={safePage === totalPages}><ChevronRight size={13}/></button>
-            <button className={styles.pBtn} onClick={() => { setPage(totalPages); loadData(search, filterProdi, totalPages); }} disabled={safePage === totalPages}>»</button>
+            <button className={styles.pBtn} onClick={() => { setPage(p => Math.min(totalPages, p + 1)); }} disabled={safePage === totalPages}><ChevronRight size={13}/></button>
+            <button className={styles.pBtn} onClick={() => { setPage(totalPages); }} disabled={safePage === totalPages}>»</button>
           </div>
         </div>
       )}
 
-      {/* Preview Modal */}
       {preview && (
         <PreviewModal
           mhs={preview}

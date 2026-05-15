@@ -32,6 +32,7 @@ export default function AdminNotificationsPage() {
   const [loading, setLoading]     = useState(true);
   const [filter, setFilter]       = useState("semua"); // semua | belum_dibaca | dibaca
 
+  // Ambil daftar notifikasi (maks 50)
   const load = useCallback(async () => {
     setLoading(true);
     const data = await getAdminNotifikasi(50);
@@ -40,11 +41,13 @@ export default function AdminNotificationsPage() {
     setLoading(false);
   }, []);
 
+  // Set judul halaman & load data saat pertama kali
   useEffect(() => {
     document.title = "Notifikasi | Admin SKPI";
     load();
   }, [load]);
 
+  // Tandai satu notifikasi sudah dibaca
   const handleRead = async (id) => {
     const notif = notifs.find(n => n.id_notifikasi === id);
     if (notif?.status_baca) return;
@@ -53,6 +56,7 @@ export default function AdminNotificationsPage() {
     setUnread(prev => Math.max(0, prev - 1));
   };
 
+  // Tandai semua notifikasi sudah dibaca
   const handleReadAll = async () => {
     await markAllNotifikasiRead();
     setNotifs(prev => prev.map(n => ({ ...n, status_baca: true })));

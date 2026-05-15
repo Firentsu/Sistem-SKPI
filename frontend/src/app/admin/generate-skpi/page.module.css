@@ -278,7 +278,7 @@
   overflow-x: auto;
   box-shadow: var(--shadow-sm);
   margin-bottom: 20px;
-  -webkit-overflow-scrolling: touch;
+  overflow-x: auto;
 }
 .table {
   width: 100%;
