@@ -338,7 +338,6 @@ export default function AdminLayout({ children }) {
     { href: "/admin/aktivitas", label: "Aktivitas", icon: BookOpen },
     { href: "/admin/template-skpi", label: "Template SKPI", icon: FileText },
     { href: "/admin/generate-skpi", label: "Generate SKPI", icon: Award },
-    { href: "/admin/riwayat-skpi", label: "Riwayat SKPI", icon: ClipboardCheck },
   ];
 
   async function handleLogout() {

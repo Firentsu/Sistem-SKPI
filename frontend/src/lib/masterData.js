@@ -48,6 +48,20 @@ const DEFAULT_MASTER_DATA = {
     "Finalis",
     "Partisipasi",
   ],
+  // ═══ TAMBAHAN: Periode Semester ═══
+  periode_semester: [
+    "Semester Ganjil 2018/2019", "Semester Genap 2018/2019",
+    "Semester Ganjil 2019/2020", "Semester Genap 2019/2020",
+    "Semester Ganjil 2020/2021", "Semester Genap 2020/2021",
+    "Semester Ganjil 2021/2022", "Semester Genap 2021/2022",
+    "Semester Ganjil 2022/2023", "Semester Genap 2022/2023",
+    "Semester Ganjil 2023/2024", "Semester Genap 2023/2024",
+    "Semester Ganjil 2024/2025", "Semester Genap 2024/2025",
+    "Semester Ganjil 2025/2026", "Semester Genap 2025/2026",
+    "Liburan Semester Genap 2023/2024",
+    "Liburan Semester Genap 2024/2025",
+    "Liburan Semester Genap 2025/2026",
+  ],
 };
 
 let masterDataCache = null;
@@ -66,6 +80,8 @@ async function fetchMasterData() {
         { path: "/api/master-data/kelompok-aktivitas", field: "kelompok_aktivitas", mapper: (data) => data.map(item => item.nama_indo || item.nama || item) },
         { path: "/api/master-data/level-kegiatan", field: "level_kegiatan", mapper: (data) => data.map(item => item.nama_level || item.nama || item) },
         { path: "/api/master-data/tingkat-prestasi", field: "tingkat_prestasi", mapper: (data) => data.map(item => item.nama_indo || item.nama || item) },
+        // ═══ TAMBAHAN ═══
+        { path: "/api/master-data/periode-semester", field: "periode_semester", mapper: (data) => data.map(item => item.nama_periode || item.nama || item) },
       ];
 
       const results = await Promise.all(
@@ -101,18 +117,18 @@ async function fetchMasterData() {
   return fetchPromise;
 }
 
-// Fungsi untuk inisialisasi (panggil di awal aplikasi)
+// Inisialisasi (panggil di awal aplikasi)
 export async function initMasterData() {
   await fetchMasterData();
 }
 
-// Fungsi untuk refresh cache (misal setelah admin update)
+// Refresh cache (panggil setelah admin update)
 export async function refreshMasterData() {
   masterDataCache = null;
   return fetchMasterData();
 }
 
-// Getter synchronous (mengembalikan cache jika sudah ada, atau default)
+// Getters – selalu mengembalikan data terbaru dari cache atau default
 export function getJenisAktivitas() {
   return masterDataCache?.jenis_aktivitas || DEFAULT_MASTER_DATA.jenis_aktivitas;
 }
@@ -128,9 +144,13 @@ export function getLevelKegiatan() {
 export function getTingkatPrestasi() {
   return masterDataCache?.tingkat_prestasi || DEFAULT_MASTER_DATA.tingkat_prestasi;
 }
+// ═══ TAMBAHAN ═══
+export function getPeriodeSemester() {
+  return masterDataCache?.periode_semester || DEFAULT_MASTER_DATA.periode_semester;
+}
 
-// Untuk keperluan admin yang mungkin perlu menyimpan data
-export const setJenisAktivitas = (data) => { /* tidak digunakan langsung, karena admin menggunakan API */ };
+// Placeholder setter (tidak digunakan langsung oleh frontend)
+export const setJenisAktivitas = (data) => {};
 export const setKategoriAktivitas = (data) => {};
 export const setKelompokAktivitas = (data) => {};
 export const setLevelKegiatan = (data) => {};

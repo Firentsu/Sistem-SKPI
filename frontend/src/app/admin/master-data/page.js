@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import styles from "./page.module.css";
 import { apiFetch } from "@/lib/api";
+import { refreshMasterData } from "@/lib/masterData"; // ← import
 
 // ── Konfigurasi setiap tipe master data ─────────────────────
 const MASTER_TYPES = [
@@ -47,6 +48,15 @@ const MASTER_TYPES = [
     hasEng:   false,
     desc:     "Posisi atau peran mahasiswa dalam kegiatan",
   },
+  // ═══ TAMBAHAN ═══
+  {
+    key:      "periode-semester",
+    label:    "Periode Semester",
+    idField:  "id_periode",
+    nameField:"nama_periode",
+    hasEng:   false,
+    desc:     "Periode semester untuk penjadwalan kegiatan mahasiswa",
+  },
 ];
 
 // ── Toast ────────────────────────────────────────────────────
@@ -72,7 +82,7 @@ function Toast({ toast, onClose }) {
 
 // ── Modal Tambah / Edit ──────────────────────────────────────
 function ItemModal({ type, item, onClose, onSaved }) {
-  const [namaIndo, setNamaIndo] = useState(item?.nama_indo ?? item?.nama_level ?? item?.nama_posisi ?? "");
+  const [namaIndo, setNamaIndo] = useState(item?.nama_indo ?? item?.nama_level ?? item?.nama_posisi ?? item?.nama_periode ?? "");
   const [namaEng,  setNamaEng]  = useState(item?.nama_eng ?? "");
   const [status,   setStatus]   = useState(item ? (item.status ?? true) : true);
   const [saving,   setSaving]   = useState(false);
@@ -180,7 +190,7 @@ function DeleteModal({ type, item, onClose, onDeleted }) {
   const [loading, setLoading] = useState(false);
   const [error,   setError]   = useState("");
 
-  const name = item?.nama_indo ?? item?.nama_level ?? item?.nama_posisi ?? "";
+  const name = item?.nama_indo ?? item?.nama_level ?? item?.nama_posisi ?? item?.nama_periode ?? "";
 
   async function handleDelete() {
     setLoading(true);
@@ -422,7 +432,11 @@ export default function MasterDataPage() {
           type={activeType}
           item={null}
           onClose={() => setModalAdd(false)}
-          onSaved={() => { loadData(); show(`${activeType.label} berhasil ditambahkan`); }}
+          onSaved={() => {
+            loadData();
+            refreshMasterData(); // ← panggil refresh
+            show(`${activeType.label} berhasil ditambahkan`);
+          }}
         />
       )}
       {modalEdit && (
@@ -430,7 +444,12 @@ export default function MasterDataPage() {
           type={activeType}
           item={modalEdit}
           onClose={() => setModalEdit(null)}
-          onSaved={() => { loadData(); show(`${activeType.label} berhasil diperbarui`); setModalEdit(null); }}
+          onSaved={() => {
+            loadData();
+            refreshMasterData(); // ← panggil refresh
+            show(`${activeType.label} berhasil diperbarui`);
+            setModalEdit(null);
+          }}
         />
       )}
       {modalDel && (
@@ -438,7 +457,12 @@ export default function MasterDataPage() {
           type={activeType}
           item={modalDel}
           onClose={() => setModalDel(null)}
-          onDeleted={() => { loadData(); show(`Data berhasil dihapus`, "error"); setModalDel(null); }}
+          onDeleted={() => {
+            loadData();
+            refreshMasterData(); // ← panggil refresh
+            show(`Data berhasil dihapus`, "error");
+            setModalDel(null);
+          }}
         />
       )}
     </div>

@@ -703,10 +703,10 @@ const MOCK_STATS = {
   skpiResmi: 215,
   kegiatanBulanan: [],
   prodiStats: [
-    { id_prodi: 1, prodi: "Teknik Informatika", mahasiswa: 140, kegiatan: 420, menunggu: 30, disetujui: 190, verifikasi: 15, ditolak: 8, skpi: 72 },
+    { id_prodi: 1, prodi: "Teknologi Informasi", mahasiswa: 140, kegiatan: 420, menunggu: 30, disetujui: 190, verifikasi: 15, ditolak: 8, skpi: 72 },
     { id_prodi: 2, prodi: "Manajemen", mahasiswa: 130, kegiatan: 370, menunggu: 22, disetujui: 170, verifikasi: 12, ditolak: 7, skpi: 60 },
-    { id_prodi: 3, prodi: "Akuntansi", mahasiswa: 110, kegiatan: 290, menunggu: 18, disetujui: 145, verifikasi: 9, ditolak: 6, skpi: 48 },
-    { id_prodi: 4, prodi: "Ilmu Komunikasi", mahasiswa: 100, kegiatan: 260, menunggu: 17, disetujui: 115, verifikasi: 7, ditolak: 7, skpi: 35 },
+    { id_prodi: 3, prodi: "Pendidikan Guru Sekolah Dasar", mahasiswa: 110, kegiatan: 290, menunggu: 18, disetujui: 145, verifikasi: 9, ditolak: 6, skpi: 48 },
+    { id_prodi: 4, prodi: "Kewirausahaan", mahasiswa: 100, kegiatan: 260, menunggu: 17, disetujui: 115, verifikasi: 7, ditolak: 7, skpi: 35 },
   ],
 };
 
