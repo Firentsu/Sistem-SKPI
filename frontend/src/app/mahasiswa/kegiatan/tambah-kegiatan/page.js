@@ -41,10 +41,8 @@ const SKPI_MAP = {
     kelompok: ["Akademik", "Profesional"],
     kategori: [
       "Workshop / Pelatihan",
-      "Seminar / Webinar",
-      "Sertifikasi Profesi",
+      "Sertifikasi Profesional",
       "Kursus",
-      "Kuliah Umum / Studium Generale",
     ],
     hasPrestasi: false,
   },
@@ -70,6 +68,8 @@ const SKPI_MAP = {
       "Publikasi Ilmiah",
       "Konferensi Ilmiah",
       "Pertukaran Pelajar / Exchange",
+      "Seminar / Webinar",
+      "Kuliah Umum / Studium Generale",
     ],
     hasPrestasi: false,
   },
@@ -79,7 +79,6 @@ const SKPI_MAP = {
     kelompok: ["Profesional"],
     kategori: [
       "Magang / PKL",
-      "Praktik Kerja Lapangan",
       "Kewirausahaan / Startup",
     ],
     hasPrestasi: false,
@@ -154,19 +153,24 @@ export default function TambahKegiatanPage() {
   const filteredKategori = activeMap ? KATEGORI_OPTIONS.filter(k => activeMap.kategori.includes(k)) : [];
   const showTingkatPrestasi = activeMap?.hasPrestasi ?? false;
 
-  // Saat kategori SKPI berubah, reset nilai dropdown terkait
-  useEffect(() => {
-    if (!activeMap) return;
+  // ── Handler pilih kategori SKPI ──────────────────────────
+  const handlePilihKategori = (id) => {
+    const map = SKPI_MAP[id];
+    if (!map) return;
+
+    // Hitung opsi yang sudah difilter
+    const jenisFiltered = JENIS_OPTIONS.filter(j => map.jenis.includes(j));
+    const kelompokFiltered = KELOMPOK_OPTIONS.filter(k => map.kelompok.includes(k));
 
     setForm(p => ({
       ...p,
-      // Jika hanya ada satu pilihan, langsung isi; jika tidak, kosongkan
-      jenis_aktivitas: filteredJenis.length === 1 ? filteredJenis[0] : "",
-      kelompok: filteredKelompok.length === 1 ? filteredKelompok[0] : "",
+      kategori_skpi: id,
+      jenis_aktivitas: jenisFiltered.length === 1 ? jenisFiltered[0] : "",
+      kelompok: kelompokFiltered.length === 1 ? kelompokFiltered[0] : "",
       kategori: "",
       tingkat_prestasi: "",
     }));
-  }, [form.kategori_skpi, filteredJenis.length, filteredKelompok.length]);
+  };
 
   const showToast = (message, type = "success") => {
     setToast({ message, type });
@@ -292,7 +296,7 @@ export default function TambahKegiatanPage() {
               return (
                 <button key={id} type="button"
                   className={`${styles.katBtn} ${isActive ? styles.katBtnActive : ""}`}
-                  onClick={() => set("kategori_skpi", id)}
+                  onClick={() => handlePilihKategori(id)}
                   style={isActive ? { borderColor: pc, background: `${pc}0d`, color: pc } : {}}
                 >
                   <span className={styles.katNo}
@@ -307,208 +311,211 @@ export default function TambahKegiatanPage() {
           </div>
         </div>
 
-        {/* STEP 3 — KLASIFIKASI (dengan filter otomatis dari master data) */}
+        {/* HANYA MUNCUL SETELAH KATEGORI SKPI DIPILIH */}
         {activeMap && (
-          <div className={styles.card}>
-            <p className={styles.cardTitle}>Klasifikasi Kegiatan</p>
-            <div className={styles.row2}>
+          <>
+            {/* STEP 3 — KLASIFIKASI */}
+            <div className={styles.card}>
+              <p className={styles.cardTitle}>Klasifikasi Kegiatan</p>
+              <div className={styles.row2}>
+                {/* Jenis Aktivitas */}
+                <div className={styles.fg}>
+                  <label className={styles.lbl}>Jenis Aktivitas <span className={styles.req}>*</span></label>
+                  {filteredJenis.length === 1 ? (
+                    <div className={styles.autoFill} style={{ borderColor: `${pc}40`, color: pc, background: `${pc}08` }}>
+                      <CheckCircle2 size={13} /> {filteredJenis[0]}
+                    </div>
+                  ) : (
+                    <select className={styles.input} value={form.jenis_aktivitas}
+                      onChange={e => set("jenis_aktivitas", e.target.value)}>
+                      <option value="">-- Pilih Jenis --</option>
+                      {filteredJenis.map(j => <option key={j}>{j}</option>)}
+                    </select>
+                  )}
+                </div>
 
-              {/* Jenis Aktivitas */}
-              <div className={styles.fg}>
-                <label className={styles.lbl}>Jenis Aktivitas <span className={styles.req}>*</span></label>
-                {filteredJenis.length === 1 ? (
-                  <div className={styles.autoFill} style={{ borderColor: `${pc}40`, color: pc, background: `${pc}08` }}>
-                    <CheckCircle2 size={13} /> {filteredJenis[0]}
-                  </div>
-                ) : (
-                  <select className={styles.input} value={form.jenis_aktivitas}
-                    onChange={e => set("jenis_aktivitas", e.target.value)}>
-                    <option value="">-- Pilih Jenis --</option>
-                    {filteredJenis.map(j => <option key={j}>{j}</option>)}
-                  </select>
-                )}
-              </div>
+                {/* Kelompok Aktivitas */}
+                <div className={styles.fg}>
+                  <label className={styles.lbl}>Kelompok Aktivitas <span className={styles.req}>*</span></label>
+                  {filteredKelompok.length === 1 ? (
+                    <div className={styles.autoFill} style={{ borderColor: `${pc}40`, color: pc, background: `${pc}08` }}>
+                      <CheckCircle2 size={13} /> {filteredKelompok[0]}
+                    </div>
+                  ) : (
+                    <select className={styles.input} value={form.kelompok}
+                      onChange={e => set("kelompok", e.target.value)}>
+                      <option value="">-- Pilih Kelompok --</option>
+                      {filteredKelompok.map(k => <option key={k}>{k}</option>)}
+                    </select>
+                  )}
+                </div>
 
-              {/* Kelompok Aktivitas */}
-              <div className={styles.fg}>
-                <label className={styles.lbl}>Kelompok Aktivitas <span className={styles.req}>*</span></label>
-                {filteredKelompok.length === 1 ? (
-                  <div className={styles.autoFill} style={{ borderColor: `${pc}40`, color: pc, background: `${pc}08` }}>
-                    <CheckCircle2 size={13} /> {filteredKelompok[0]}
-                  </div>
-                ) : (
-                  <select className={styles.input} value={form.kelompok}
-                    onChange={e => set("kelompok", e.target.value)}>
-                    <option value="">-- Pilih Kelompok --</option>
-                    {filteredKelompok.map(k => <option key={k}>{k}</option>)}
-                  </select>
-                )}
-              </div>
-
-              {/* Kategori Kegiatan */}
-              <div className={styles.fg}>
-                <label className={styles.lbl}>Kategori Kegiatan <span className={styles.req}>*</span></label>
-                <select className={styles.input} value={form.kategori}
-                  onChange={e => set("kategori", e.target.value)}>
-                  <option value="">-- Pilih Kategori --</option>
-                  {filteredKategori.map(k => <option key={k}>{k}</option>)}
-                </select>
-              </div>
-
-              {/* Level */}
-              <div className={styles.fg}>
-                <label className={styles.lbl}>Tingkat / Level <span className={styles.req}>*</span></label>
-                <select className={styles.input} value={form.level}
-                  onChange={e => set("level", e.target.value)}>
-                  <option value="">-- Pilih Level --</option>
-                  {LEVEL_OPTIONS.map(l => <option key={l}>{l}</option>)}
-                </select>
-              </div>
-
-              {/* Tingkat Prestasi (hanya jika relevan) */}
-              {showTingkatPrestasi && (
-                <div className={`${styles.fg} ${styles.fullSpan}`}>
-                  <label className={styles.lbl}>Prestasi yang Diraih <span className={styles.optBadge}>opsional</span></label>
-                  <select className={styles.input} value={form.tingkat_prestasi}
-                    onChange={e => set("tingkat_prestasi", e.target.value)}>
-                    <option value="">-- Pilih jika ada --</option>
-                    {TINGKAT_OPTIONS.map(t => <option key={t}>{t}</option>)}
+                {/* Kategori Kegiatan */}
+                <div className={styles.fg}>
+                  <label className={styles.lbl}>Kategori Kegiatan <span className={styles.req}>*</span></label>
+                  <select className={styles.input} value={form.kategori}
+                    onChange={e => set("kategori", e.target.value)}>
+                    <option value="">-- Pilih Kategori --</option>
+                    {filteredKategori.map(k => <option key={k}>{k}</option>)}
                   </select>
                 </div>
+
+                {/* Level */}
+                <div className={styles.fg}>
+                  <label className={styles.lbl}>Tingkat / Level <span className={styles.req}>*</span></label>
+                  <select className={styles.input} value={form.level}
+                    onChange={e => set("level", e.target.value)}>
+                    <option value="">-- Pilih Level --</option>
+                    {LEVEL_OPTIONS.map(l => <option key={l}>{l}</option>)}
+                  </select>
+                </div>
+
+                {/* Tingkat Prestasi (hanya jika relevan) */}
+                {showTingkatPrestasi && (
+                  <div className={`${styles.fg} ${styles.fullSpan}`}>
+                    <label className={styles.lbl}>Prestasi yang Diraih <span className={styles.optBadge}>opsional</span></label>
+                    <select className={styles.input} value={form.tingkat_prestasi}
+                      onChange={e => set("tingkat_prestasi", e.target.value)}>
+                      <option value="">-- Pilih jika ada --</option>
+                      {TINGKAT_OPTIONS.map(t => <option key={t}>{t}</option>)}
+                    </select>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* STEP 4 — WAKTU & TEMPAT */}
+            <div className={styles.card}>
+              <p className={styles.cardTitle}>Waktu & Tempat</p>
+              <div className={styles.row2}>
+                <div className={styles.fg}>
+                  <label className={styles.lbl}>Periode Semester <span className={styles.req}>*</span></label>
+                  <select className={styles.input} value={form.periode}
+                    onChange={e => set("periode", e.target.value)}>
+                    <option value="">-- Pilih Periode --</option>
+                    {PERIODE_OPTIONS.map(p => <option key={p}>{p}</option>)}
+                  </select>
+                </div>
+                <div className={styles.fg}>
+                  <label className={styles.lbl}>Tanggal Pelaksanaan <span className={styles.req}>*</span></label>
+                  <input type="date" className={styles.input} value={form.tanggal}
+                    onChange={e => set("tanggal", e.target.value)} />
+                </div>
+                <div className={styles.fg}>
+                  <label className={styles.lbl}>Lokasi / Kota <span className={styles.req}>*</span></label>
+                  <input className={styles.input} placeholder="Contoh: Bengkayang / Online"
+                    value={form.lokasi} onChange={e => set("lokasi", e.target.value)} />
+                </div>
+                <div className={styles.fg}>
+                  <label className={styles.lbl}>Penyelenggara <span className={styles.req}>*</span></label>
+                  <input className={styles.input}
+                    placeholder="Contoh: KOMINFO / Himpunan Mahasiswa TI"
+                    value={form.penyelenggara} onChange={e => set("penyelenggara", e.target.value)} />
+                </div>
+              </div>
+            </div>
+
+            {/* STEP 5 — BUKTI KEGIATAN */}
+            <div className={styles.card}>
+              <p className={styles.cardTitle}>Bukti Kegiatan <span className={styles.req}>*</span></p>
+              <p className={styles.cardHint}>
+                Upload sertifikat, SK, atau foto kegiatan.
+                <strong style={{ display: "block", marginTop: 6 }}>
+                  📌 Tidak punya sertifikat? Kamu dapat mengupload: SK, surat keterangan, foto dokumentasi, atau bukti kehadiran.
+                </strong>
+              </p>
+
+              <div
+                className={`${styles.dropZone} ${dragOver ? styles.dropActive : ""}`}
+                onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+                onDragLeave={() => setDragOver(false)}
+                onDrop={e => { e.preventDefault(); setDragOver(false); const f = e.dataTransfer.files?.[0]; if (f) processFile(f); }}
+                onClick={() => fileRef.current?.click()}
+                role="button" tabIndex={0}
+                onKeyDown={e => e.key === "Enter" && fileRef.current?.click()}
+                style={file ? { borderColor: pc, background: `${pc}06` } : dragOver ? { borderColor: pc } : {}}
+              >
+                <input type="file" ref={fileRef} hidden accept=".pdf,.jpg,.jpeg,.png,.webp"
+                  onChange={e => { const f = e.target.files?.[0]; if (f) processFile(f); }} />
+
+                {file ? (
+                  <div className={styles.fileRow}>
+                    {previewUrl
+                      ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={previewUrl} alt="preview" className={styles.previewImg} />
+                      )
+                      : <div className={styles.pdfIcon} style={{ background: `${pc}14` }}>
+                          <FileText size={24} color={pc} />
+                        </div>
+                    }
+                    <div className={styles.fileInfo}>
+                      <p className={styles.fileName}>{file.name}</p>
+                      <p className={styles.fileSize}>{(file.size / 1024).toFixed(0)} KB · {file.type.split("/")[1]?.toUpperCase()}</p>
+                      <p className={styles.fileOk} style={{ color: pc }}><CheckCircle2 size={12} /> Siap diupload</p>
+                    </div>
+                    <button type="button" className={styles.fileRemove}
+                      onClick={e => { e.stopPropagation(); setFile(null); setPreviewUrl(null); }}>
+                      <X size={13} />
+                    </button>
+                  </div>
+                ) : (
+                  <div className={styles.dropContent}>
+                    <div className={styles.dropIcon} style={{ background: `${pc}14` }}>
+                      <Upload size={22} color={pc} />
+                    </div>
+                    <p className={styles.dropText}>{dragOver ? "Lepaskan di sini…" : "Klik atau seret file ke sini"}</p>
+                    <p className={styles.dropHint}>PDF, JPG, PNG, WebP · maks. 2 MB</p>
+                  </div>
+                )}
+              </div>
+
+              {uploadError && (
+                <div className={styles.uploadErr}><AlertCircle size={13} /> {uploadError}</div>
               )}
 
+              <div className={styles.fg} style={{ marginTop: 16 }}>
+                <label className={styles.lbl}>
+                  Deskripsi Pendukung <span className={styles.optBadge}>opsional</span>
+                </label>
+                <textarea
+                  className={styles.textarea}
+                  rows={3}
+                  placeholder="Contoh: Foto ini diambil saat kegiatan mentoring, surat keterangan dari ketua panitia, dll."
+                  value={buktiDeskripsi}
+                  onChange={e => setBuktiDeskripsi(e.target.value)}
+                />
+                <small className={styles.fieldNote}>
+                  Informasi tambahan yang dapat membantu admin memahami konteks bukti (opsional).
+                </small>
+              </div>
             </div>
-          </div>
+
+            {/* INFORMASI VERIFIKASI ADMIN */}
+            <div className={styles.infoNote}>
+              <AlertCircle size={14} />
+              <span>
+                <strong>Perhatian:</strong> Setelah disimpan, kegiatan akan masuk ke antrian verifikasi admin.
+                Pastikan data dan bukti sudah benar. Status kegiatan dapat dilihat di halaman &quot;Kegiatan Saya&quot;.
+              </span>
+            </div>
+
+            {/* TOMBOL */}
+            <div className={styles.actions}>
+              <button type="button" className={styles.cancelBtn} onClick={() => router.back()}>
+                Batal
+              </button>
+              <button type="submit" className={styles.saveBtn} style={{ background: pc }}
+                disabled={loading || success}>
+                {loading
+                  ? <><span className={styles.spin} /> Menyimpan…</>
+                  : success
+                    ? <><CheckCircle2 size={14} /> Tersimpan!</>
+                    : <><Save size={14} /> Simpan Kegiatan</>}
+              </button>
+            </div>
+          </>
         )}
-
-        {/* STEP 4 — WAKTU & TEMPAT */}
-        <div className={styles.card}>
-          <p className={styles.cardTitle}>Waktu & Tempat</p>
-          <div className={styles.row2}>
-            <div className={styles.fg}>
-              <label className={styles.lbl}>Periode Semester <span className={styles.req}>*</span></label>
-              <select className={styles.input} value={form.periode}
-                onChange={e => set("periode", e.target.value)}>
-                <option value="">-- Pilih Periode --</option>
-                {PERIODE_OPTIONS.map(p => <option key={p}>{p}</option>)}
-              </select>
-            </div>
-            <div className={styles.fg}>
-              <label className={styles.lbl}>Tanggal Pelaksanaan <span className={styles.req}>*</span></label>
-              <input type="date" className={styles.input} value={form.tanggal}
-                onChange={e => set("tanggal", e.target.value)} />
-            </div>
-            <div className={styles.fg}>
-              <label className={styles.lbl}>Lokasi / Kota <span className={styles.req}>*</span></label>
-              <input className={styles.input} placeholder="Contoh: Bengkayang / Online"
-                value={form.lokasi} onChange={e => set("lokasi", e.target.value)} />
-            </div>
-            <div className={styles.fg}>
-              <label className={styles.lbl}>Penyelenggara <span className={styles.req}>*</span></label>
-              <input className={styles.input}
-                placeholder="Contoh: KOMINFO / Himpunan Mahasiswa TI"
-                value={form.penyelenggara} onChange={e => set("penyelenggara", e.target.value)} />
-            </div>
-          </div>
-        </div>
-
-        {/* STEP 5 — BUKTI KEGIATAN */}
-        <div className={styles.card}>
-          <p className={styles.cardTitle}>Bukti Kegiatan <span className={styles.req}>*</span></p>
-          <p className={styles.cardHint}>
-            Upload sertifikat, SK, atau foto kegiatan.
-            <strong style={{ display: "block", marginTop: 6 }}>
-              📌 Tidak punya sertifikat? Kamu dapat mengupload: SK, surat keterangan, foto dokumentasi, atau bukti kehadiran.
-            </strong>
-          </p>
-
-          <div
-            className={`${styles.dropZone} ${dragOver ? styles.dropActive : ""}`}
-            onDragOver={e => { e.preventDefault(); setDragOver(true); }}
-            onDragLeave={() => setDragOver(false)}
-            onDrop={e => { e.preventDefault(); setDragOver(false); const f = e.dataTransfer.files?.[0]; if (f) processFile(f); }}
-            onClick={() => fileRef.current?.click()}
-            role="button" tabIndex={0}
-            onKeyDown={e => e.key === "Enter" && fileRef.current?.click()}
-            style={file ? { borderColor: pc, background: `${pc}06` } : dragOver ? { borderColor: pc } : {}}
-          >
-            <input type="file" ref={fileRef} hidden accept=".pdf,.jpg,.jpeg,.png,.webp"
-              onChange={e => { const f = e.target.files?.[0]; if (f) processFile(f); }} />
-
-            {file ? (
-              <div className={styles.fileRow}>
-                {previewUrl
-                  ? <img src={previewUrl} alt="preview" className={styles.previewImg} />
-                  : <div className={styles.pdfIcon} style={{ background: `${pc}14` }}>
-                      <FileText size={24} color={pc} />
-                    </div>
-                }
-                <div className={styles.fileInfo}>
-                  <p className={styles.fileName}>{file.name}</p>
-                  <p className={styles.fileSize}>{(file.size / 1024).toFixed(0)} KB · {file.type.split("/")[1]?.toUpperCase()}</p>
-                  <p className={styles.fileOk} style={{ color: pc }}><CheckCircle2 size={12} /> Siap diupload</p>
-                </div>
-                <button type="button" className={styles.fileRemove}
-                  onClick={e => { e.stopPropagation(); setFile(null); setPreviewUrl(null); }}>
-                  <X size={13} />
-                </button>
-              </div>
-            ) : (
-              <div className={styles.dropContent}>
-                <div className={styles.dropIcon} style={{ background: `${pc}14` }}>
-                  <Upload size={22} color={pc} />
-                </div>
-                <p className={styles.dropText}>{dragOver ? "Lepaskan di sini…" : "Klik atau seret file ke sini"}</p>
-                <p className={styles.dropHint}>PDF, JPG, PNG, WebP · maks. 2 MB</p>
-              </div>
-            )}
-          </div>
-
-          {uploadError && (
-            <div className={styles.uploadErr}><AlertCircle size={13} /> {uploadError}</div>
-          )}
-
-          <div className={styles.fg} style={{ marginTop: 16 }}>
-            <label className={styles.lbl}>
-              Deskripsi Pendukung <span className={styles.optBadge}>opsional</span>
-            </label>
-            <textarea
-              className={styles.textarea}
-              rows={3}
-              placeholder="Contoh: Foto ini diambil saat kegiatan mentoring, surat keterangan dari ketua panitia, dll."
-              value={buktiDeskripsi}
-              onChange={e => setBuktiDeskripsi(e.target.value)}
-            />
-            <small className={styles.fieldNote}>
-              Informasi tambahan yang dapat membantu admin memahami konteks bukti (opsional).
-            </small>
-          </div>
-        </div>
-
-        {/* INFORMASI VERIFIKASI ADMIN */}
-        <div className={styles.infoNote}>
-          <AlertCircle size={14} />
-          <span>
-            <strong>Perhatian:</strong> Setelah disimpan, kegiatan akan masuk ke antrian verifikasi admin.
-            Pastikan data dan bukti sudah benar. Status kegiatan dapat dilihat di halaman "Kegiatan Saya".
-          </span>
-        </div>
-
-        {/* TOMBOL */}
-        <div className={styles.actions}>
-          <button type="button" className={styles.cancelBtn} onClick={() => router.back()}>
-            Batal
-          </button>
-          <button type="submit" className={styles.saveBtn} style={{ background: pc }}
-            disabled={loading || success}>
-            {loading
-              ? <><span className={styles.spin} /> Menyimpan…</>
-              : success
-                ? <><CheckCircle2 size={14} /> Tersimpan!</>
-                : <><Save size={14} /> Simpan Kegiatan</>}
-          </button>
-        </div>
-
       </form>
     </div>
   );
