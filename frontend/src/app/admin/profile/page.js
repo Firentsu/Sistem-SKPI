@@ -5,10 +5,10 @@ import { useRouter } from "next/navigation";
 import {
   User, Mail, Lock, Eye, EyeOff, Camera, Check, X, Upload,
   Shield, Clock, Loader2, KeyRound, AtSign, Save,
-  CheckCircle2, AlertCircle, ArrowLeft, ImageIcon,
+  CheckCircle2, AlertCircle, ArrowLeft, ImageIcon, Trash2,
 } from "lucide-react";
 import styles from "./profile.module.css";
-import { getProfile, updateProfile, uploadAvatar, getAvatarUrl } from "@/lib/api";
+import { getProfile, updateProfile, uploadAvatar, getAvatarUrl, deleteAdminAvatar } from "@/lib/api";
 
 /* ─────────────────────────────────────────
    Toast
@@ -182,6 +182,9 @@ export default function ProfilePage() {
   const [showPwCon, setShowPwCon] = useState(false);
   const [pwSaving, setPwSaving] = useState(false);
 
+  /* ── Hapus Foto ── */
+  const [deletingAvatar, setDeletingAvatar] = useState(false);
+
   /* ════════════════════════════════════════
      Load profil dari API
   ════════════════════════════════════════ */
@@ -324,6 +327,23 @@ export default function ProfilePage() {
     }
   }
 
+  /* ── Hapus Foto ── */
+  async function handleDeleteAvatar() {
+    if (deletingAvatar) return;
+    setDeletingAvatar(true);
+    try {
+      const { ok, data } = await deleteAdminAvatar();
+      if (!ok) { showToast(data?.error ?? "Gagal menghapus foto.", "error"); return; }
+      setAvatarSrc("/img/avatar.jpg");
+      window.dispatchEvent(new CustomEvent("avatar:updated", { detail: { avatar: "/img/avatar.jpg" } }));
+      showToast("Foto profil berhasil dihapus.");
+    } catch {
+      showToast("Gagal menghapus foto. Coba lagi.", "error");
+    } finally {
+      setDeletingAvatar(false);
+    }
+  }
+
   const pwMatch = pwConfirm && pwNew === pwConfirm;
   const pwMismatch = pwConfirm && pwNew !== pwConfirm;
 
@@ -441,11 +461,29 @@ export default function ProfilePage() {
                     <input ref={avatarInputRef} type="file"
                       accept="image/jpeg,image/png,image/webp,image/gif" style={{ display: "none" }}
                       onChange={(e) => { const f = e.target.files?.[0]; if (f) processAvatarFile(f); }} />
-                    <button
-                      style={{ background: "none", border: "none", cursor: "pointer", color: "#b09880", fontSize: 12, marginTop: 2 }}
-                      onClick={() => setShowUploader(false)}>
-                      Batal
-                    </button>
+                    <div style={{ display: "flex", gap: 8, width: "100%" }}>
+                      <button
+                        style={{ flex: 1, background: "none", border: "none", cursor: "pointer", color: "#b09880", fontSize: 12, marginTop: 2 }}
+                        onClick={() => setShowUploader(false)}>
+                        Batal
+                      </button>
+                      {avatarSrc !== "/img/avatar.jpg" && (
+                        <button
+                          disabled={deletingAvatar}
+                          onClick={handleDeleteAvatar}
+                          style={{
+                            flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
+                            background: "none", border: "1.5px solid #fecaca", borderRadius: 8,
+                            cursor: deletingAvatar ? "not-allowed" : "pointer",
+                            color: "#dc2626", fontSize: 12, fontWeight: 600, padding: "5px 10px",
+                            opacity: deletingAvatar ? 0.6 : 1, marginTop: 2,
+                          }}>
+                          {deletingAvatar
+                            ? <><Loader2 size={12} className={styles.spin} /> Menghapus…</>
+                            : <><Trash2 size={12} /> Hapus Foto</>}
+                        </button>
+                      )}
+                    </div>
                   </>
                 ) : (
                   <div className={styles.fileSelected}>

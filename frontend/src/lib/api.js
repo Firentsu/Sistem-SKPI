@@ -263,6 +263,23 @@ export async function updateMahasiswaProfile(payload) {
   }
 }
 
+export async function updateMahasiswaBiodata(payload) {
+  if (_mockMode || !API_URL) {
+    return { ok: true, data: { success: true, message: "Tersimpan (mode demo)" } };
+  }
+  try {
+    const res = await apiFetch("/api/mahasiswa/auth/biodata", {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    return { ok: res.ok, data };
+  } catch {
+    _mockMode = true;
+    return { ok: true, data: { success: true, message: "Tersimpan (mode demo)" } };
+  }
+}
+
 export async function uploadMahasiswaAvatar(formData) {
   if (_mockMode || !API_URL) {
     return { ok: true, data: { success: true, avatar: "/img/avatar.jpg" } };
@@ -280,6 +297,42 @@ export async function uploadMahasiswaAvatar(formData) {
 export async function logoutMahasiswa() {
   if (_mockMode || !API_URL) return;
   try { await apiFetch("/api/mahasiswa/auth/logout", { method: "POST" }); } catch { }
+}
+
+export function createAdminSSE() {
+  if (typeof window === "undefined" || !API_URL) return null;
+  return new EventSource(`${API_URL}/api/auth/sse`, { withCredentials: true });
+}
+
+export function createMahasiswaSSE() {
+  if (typeof window === "undefined" || !API_URL) return null;
+  return new EventSource(`${API_URL}/api/mahasiswa/auth/sse`, { withCredentials: true });
+}
+
+export async function deleteMahasiswaAvatar() {
+  if (_mockMode || !API_URL) {
+    return { ok: true, data: { success: true } };
+  }
+  try {
+    const res = await apiFetch("/api/mahasiswa/auth/avatar", { method: "DELETE" });
+    const data = await res.json();
+    return { ok: res.ok, data };
+  } catch {
+    return { ok: false, data: { error: "Server tidak aktif" } };
+  }
+}
+
+export async function deleteAdminAvatar() {
+  if (_mockMode || !API_URL) {
+    return { ok: true, data: { success: true } };
+  }
+  try {
+    const res = await apiFetch("/api/auth/avatar", { method: "DELETE" });
+    const data = await res.json();
+    return { ok: res.ok, data };
+  } catch {
+    return { ok: false, data: { error: "Server tidak aktif" } };
+  }
 }
 
 export async function updateMahasiswaPassword({ password_lama, password_baru }) {

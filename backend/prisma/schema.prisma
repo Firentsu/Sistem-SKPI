@@ -130,6 +130,13 @@ model mahasiswa {
   email             String?
   foto_profil       String?
   status_skpi       mahasiswa_status_skpi @default(belum)
+  tempat_lahir      String?
+  tgl_lahir         DateTime?
+  tanggal_masuk     DateTime?
+  tanggal_lulus     DateTime?
+  nomor_ijazah      String?
+  gelar             String?
+  gelar_eng         String?
   icpmahasiswa      icpmahasiswa[]
   kegiatanmahasiswa kegiatanmahasiswa[]
   programstudi      programstudi?         @relation(fields: [id_prodi], references: [id_prodi], map: "Mahasiswa_id_prodi_fkey")

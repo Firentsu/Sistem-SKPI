@@ -14,6 +14,7 @@ import { useRouter, usePathname } from "next/navigation";
 import {
   getMe, logout as apiLogout, uploadAvatar, isMockMode, getAvatarUrl,
   getAdminNotifikasi, markNotifikasiRead, markAllNotifikasiRead, inferNotifType,
+  createAdminSSE,
 } from "@/lib/api";
 import AvatarCropModal from "@/components/AvatarCropModal";
 
@@ -171,6 +172,18 @@ function NotificationDropdown({ isOpen, onClose, onUnreadChange }) {
     });
   }, [isOpen]);
 
+  // Terima notifikasi real-time saat dropdown sedang terbuka
+  useEffect(() => {
+    if (!isOpen) return;
+    const handler = (e) => {
+      const notif = e.detail;
+      setNotifications(prev => [notif, ...prev]);
+      setUnreadCount(prev => prev + 1);
+    };
+    window.addEventListener("notif:new", handler);
+    return () => window.removeEventListener("notif:new", handler);
+  }, [isOpen]);
+
   const handleMarkAsRead = async (id) => {
     if (notifications.find(n => n.id_notifikasi === id)?.status_baca) return;
     await markNotifikasiRead(id);
@@ -291,13 +304,21 @@ export default function AdminLayout({ children }) {
     };
   }, []);
 
-  // Auto-poll unread count setiap 60 detik
+  // Koneksi SSE untuk notifikasi real-time
   useEffect(() => {
-    const timer = setInterval(async () => {
-      const d = await getAdminNotifikasi(1);
-      setNotifUnread(d.unread ?? 0);
-    }, 60000);
-    return () => clearInterval(timer);
+    const es = createAdminSSE();
+    if (!es) return;
+    es.onmessage = (e) => {
+      try {
+        const data = JSON.parse(e.data);
+        if (data.type === "notif") {
+          setNotifUnread(prev => prev + 1);
+          window.dispatchEvent(new CustomEvent("notif:new", { detail: data }));
+        }
+      } catch { /* abaikan pesan malformed */ }
+    };
+    es.onerror = () => es.close();
+    return () => es.close();
   }, []);
 
   // Tutup notifikasi saat klik di luar
@@ -375,7 +396,7 @@ export default function AdminLayout({ children }) {
       <aside className={styles.sidebar} style={mockMode ? { marginTop: 29 } : {}}>
         <div className={styles.brand}>
           <div className={styles.logo}>
-            <Image src="/img/Logo_isb.png" alt="logo" width={80} height={35} priority style={{ height: "auto" }} />
+            <Image src="/img/Logo_isb.png" alt="logo" width={80} height={35} priority style={{ width: "auto", height: "auto" }} />
           </div>
           <div className={styles.brandText}><strong>SKPI</strong><span>Admin Panel</span></div>
         </div>

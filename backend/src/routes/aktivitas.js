@@ -1,6 +1,7 @@
 import express from "express";
 import prisma from "../lib/prisma.js";
 import { requireAuth } from "../middleware/auth.js";
+import { createNotif, getMahasiswaUserId } from "../utils/notifikasi.js";
 
 const router = express.Router();
 
@@ -96,7 +97,24 @@ router.patch("/:id/verifikasi", requireAuth, async (req, res) => {
         status_verifikasi: status,
         catatan_admin: catatan_admin || null,
       },
+      include: { mahasiswa: { select: { id_mahasiswa: true, nama: true } } },
     });
+
+    // Notifikasi ke mahasiswa berdasarkan status verifikasi
+    if (aktivitas.mahasiswa?.id_mahasiswa) {
+      const userId = await getMahasiswaUserId(aktivitas.mahasiswa.id_mahasiswa);
+      const nama = aktivitas.nama_kegiatan;
+      if (status === "disetujui") {
+        createNotif(userId, "Kegiatan Disetujui",
+          `Kegiatan "${nama}" Anda telah disetujui oleh admin.`);
+      } else if (status === "ditolak") {
+        createNotif(userId, "Kegiatan Ditolak",
+          `Kegiatan "${nama}" Anda ditolak.${catatan_admin ? ` Catatan: ${catatan_admin}` : " Periksa catatan admin."}`);
+      } else if (status === "revisi") {
+        createNotif(userId, "Revisi Diperlukan",
+          `Kegiatan "${nama}" perlu direvisi.${catatan_admin ? ` Catatan: ${catatan_admin}` : ""}`);
+      }
+    }
 
     return res.status(200).json({ success: true, data: aktivitas });
   } catch (err) {

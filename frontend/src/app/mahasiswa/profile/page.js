@@ -6,6 +6,7 @@ import {
   User, Mail, Lock, Eye, EyeOff, Camera, Check, X, Upload,
   GraduationCap, Clock, Loader2, KeyRound, AtSign, Save,
   CheckCircle2, AlertCircle, ArrowLeft, ImageIcon, Hash, BookOpen,
+  Trash2, FileText, MapPin, Calendar,
 } from "lucide-react";
 import styles from "./profile.module.css";
 import { useMahasiswa } from "@/context/MahasiswaContext";
@@ -15,6 +16,8 @@ import {
   uploadMahasiswaAvatar,
   updateMahasiswaPassword,
   getAvatarUrl,
+  deleteMahasiswaAvatar,
+  updateMahasiswaBiodata,
 } from "@/lib/api";
 import AvatarCropModal from "@/components/AvatarCropModal";
 
@@ -188,6 +191,16 @@ export default function MahasiswaProfilePage() {
   const [showPwCon, setShowPwCon] = useState(false);
   const [pwSaving,  setPwSaving]  = useState(false);
 
+  /* ── Hapus Foto ── */
+  const [deletingAvatar, setDeletingAvatar] = useState(false);
+
+  /* ── Biodata SKPI ── */
+  const [biodata, setBiodata] = useState({
+    tempat_lahir: "", tgl_lahir: "", tanggal_masuk: "",
+    tanggal_lulus: "", nomor_ijazah: "", gelar: "", gelar_eng: "",
+  });
+  const [biodataSaving, setBiodataSaving] = useState(false);
+
   /* ── Load data ── */
   useEffect(() => {
     (async () => {
@@ -198,6 +211,15 @@ export default function MahasiswaProfilePage() {
         setEmail(data.email ?? user?.email ?? "");
         const foto = data.avatar ?? data.foto_profil ?? data.foto;
         if (foto) setAvatarSrc(getAvatarUrl(foto));
+        setBiodata({
+          tempat_lahir:  data.tempat_lahir  ?? "",
+          tgl_lahir:     data.tgl_lahir     ? data.tgl_lahir.slice(0, 10)     : "",
+          tanggal_masuk: data.tanggal_masuk ? data.tanggal_masuk.slice(0, 10) : "",
+          tanggal_lulus: data.tanggal_lulus ? data.tanggal_lulus.slice(0, 10) : "",
+          nomor_ijazah:  data.nomor_ijazah  ?? "",
+          gelar:         data.gelar         ?? "",
+          gelar_eng:     data.gelar_eng     ?? "",
+        });
       } catch {
         setEmail(user?.email ?? "");
       } finally {
@@ -304,6 +326,48 @@ export default function MahasiswaProfilePage() {
       showToast("Gagal memperbarui password. Coba lagi.", "error");
     } finally {
       setPwSaving(false);
+    }
+  }
+
+  /* ── Biodata SKPI save ── */
+  async function handleBiodataSave(e) {
+    e.preventDefault();
+    if (biodataSaving) return;
+    setBiodataSaving(true);
+    try {
+      const payload = {};
+      if (biodata.tempat_lahir  !== undefined) payload.tempat_lahir  = biodata.tempat_lahir;
+      if (biodata.tgl_lahir     !== undefined) payload.tgl_lahir     = biodata.tgl_lahir     || null;
+      if (biodata.tanggal_masuk !== undefined) payload.tanggal_masuk = biodata.tanggal_masuk || null;
+      if (biodata.tanggal_lulus !== undefined) payload.tanggal_lulus = biodata.tanggal_lulus || null;
+      if (biodata.nomor_ijazah  !== undefined) payload.nomor_ijazah  = biodata.nomor_ijazah;
+      if (biodata.gelar         !== undefined) payload.gelar         = biodata.gelar;
+      if (biodata.gelar_eng     !== undefined) payload.gelar_eng     = biodata.gelar_eng;
+      const { ok, data } = await updateMahasiswaBiodata(payload);
+      if (!ok) { showToast(data?.error ?? "Gagal menyimpan biodata.", "error"); return; }
+      showToast("Biodata SKPI berhasil disimpan.");
+    } catch {
+      showToast("Gagal menyimpan biodata. Coba lagi.", "error");
+    } finally {
+      setBiodataSaving(false);
+    }
+  }
+
+  /* ── Hapus Foto ── */
+  async function handleDeleteAvatar() {
+    if (deletingAvatar) return;
+    setDeletingAvatar(true);
+    try {
+      const { ok, data } = await deleteMahasiswaAvatar();
+      if (!ok) { showToast(data?.error ?? "Gagal menghapus foto.", "error"); return; }
+      setAvatarSrc("/img/avatar.jpg");
+      updateUser({ foto: "/img/avatar.jpg" });
+      window.dispatchEvent(new CustomEvent("avatar:updated", { detail: { avatar: "/img/avatar.jpg" } }));
+      showToast("Foto profil berhasil dihapus.");
+    } catch {
+      showToast("Gagal menghapus foto. Coba lagi.", "error");
+    } finally {
+      setDeletingAvatar(false);
     }
   }
 
@@ -434,11 +498,29 @@ export default function MahasiswaProfilePage() {
                     <input ref={avatarInputRef} type="file"
                       accept="image/jpeg,image/png,image/webp,image/gif" style={{ display: "none" }}
                       onChange={(e) => { const f = e.target.files?.[0]; if (f) processAvatarFile(f); }} />
-                    <button
-                      style={{ background: "none", border: "none", cursor: "pointer", color: "#b09880", fontSize: 12, marginTop: 2 }}
-                      onClick={() => setShowUploader(false)}>
-                      Batal
-                    </button>
+                    <div style={{ display: "flex", gap: 8, width: "100%" }}>
+                      <button
+                        style={{ flex: 1, background: "none", border: "none", cursor: "pointer", color: "#b09880", fontSize: 12, marginTop: 2 }}
+                        onClick={() => setShowUploader(false)}>
+                        Batal
+                      </button>
+                      {avatarSrc !== "/img/avatar.jpg" && (
+                        <button
+                          disabled={deletingAvatar}
+                          onClick={handleDeleteAvatar}
+                          style={{
+                            flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
+                            background: "none", border: "1.5px solid #fecaca", borderRadius: 8,
+                            cursor: deletingAvatar ? "not-allowed" : "pointer",
+                            color: "#dc2626", fontSize: 12, fontWeight: 600, padding: "5px 10px",
+                            opacity: deletingAvatar ? 0.6 : 1, marginTop: 2,
+                          }}>
+                          {deletingAvatar
+                            ? <><Loader2 size={12} className={styles.spin} /> Menghapus…</>
+                            : <><Trash2 size={12} /> Hapus Foto</>}
+                        </button>
+                      )}
+                    </div>
                   </>
                 ) : (
                   <div className={styles.fileSelected}>
@@ -558,6 +640,118 @@ export default function MahasiswaProfilePage() {
                   </p>
                 </div>
               </div>
+            </div>
+
+            {/* Biodata SKPI Form */}
+            <div className={styles.formCard}>
+              <div className={styles.formCardHeader}>
+                <div className={styles.formCardIcon} style={{ background: "linear-gradient(135deg,#d1fae5,#a7f3d0)", color: "#065f46" }}>
+                  <FileText size={20} />
+                </div>
+                <div className={styles.formCardHeaderText}>
+                  <h2 className={styles.formCardTitle}>Biodata SKPI</h2>
+                  <p className={styles.formCardSub}>Data ini akan tercetak di dokumen SKPI Anda secara otomatis</p>
+                </div>
+              </div>
+              <form className={styles.form} onSubmit={handleBiodataSave}>
+                <div className={styles.formRow}>
+                  <div className={styles.fieldGroup}>
+                    <label className={styles.label} htmlFor="tempat_lahir">Tempat Lahir</label>
+                    <div className={styles.inputWrap}>
+                      <MapPin size={15} className={styles.inputIcon} />
+                      <input id="tempat_lahir" type="text" className={styles.input}
+                        value={biodata.tempat_lahir}
+                        onChange={e => setBiodata(p => ({ ...p, tempat_lahir: e.target.value }))}
+                        placeholder="Contoh: Bengkayang" />
+                    </div>
+                  </div>
+                  <div className={styles.fieldGroup}>
+                    <label className={styles.label} htmlFor="tgl_lahir">Tanggal Lahir</label>
+                    <div className={styles.inputWrap}>
+                      <Calendar size={15} className={styles.inputIcon} />
+                      <input id="tgl_lahir" type="date" className={styles.input}
+                        value={biodata.tgl_lahir}
+                        onChange={e => setBiodata(p => ({ ...p, tgl_lahir: e.target.value }))} />
+                    </div>
+                  </div>
+                </div>
+                <div className={styles.formRow}>
+                  <div className={styles.fieldGroup}>
+                    <label className={styles.label} htmlFor="tanggal_masuk">Tanggal Masuk Kuliah</label>
+                    <div className={styles.inputWrap}>
+                      <Calendar size={15} className={styles.inputIcon} />
+                      <input id="tanggal_masuk" type="date" className={styles.input}
+                        value={biodata.tanggal_masuk}
+                        onChange={e => setBiodata(p => ({ ...p, tanggal_masuk: e.target.value }))} />
+                    </div>
+                  </div>
+                  <div className={styles.fieldGroup}>
+                    <label className={styles.label} htmlFor="tanggal_lulus">Tanggal Lulus / Sidang</label>
+                    <div className={styles.inputWrap}>
+                      <Calendar size={15} className={styles.inputIcon} />
+                      <input id="tanggal_lulus" type="date" className={styles.input}
+                        value={biodata.tanggal_lulus}
+                        onChange={e => setBiodata(p => ({ ...p, tanggal_lulus: e.target.value }))} />
+                    </div>
+                  </div>
+                </div>
+                <div className={styles.fieldGroup}>
+                  <label className={styles.label} htmlFor="nomor_ijazah">Nomor Seri Ijazah</label>
+                  <div className={styles.inputWrap}>
+                    <Hash size={15} className={styles.inputIcon} />
+                    <input id="nomor_ijazah" type="text" className={styles.input}
+                      value={biodata.nomor_ijazah}
+                      onChange={e => setBiodata(p => ({ ...p, nomor_ijazah: e.target.value }))}
+                      placeholder="Contoh: DN-0123456" />
+                  </div>
+                </div>
+                <div className={styles.formRow}>
+                  <div className={styles.fieldGroup}>
+                    <label className={styles.label} htmlFor="gelar">Gelar (Indonesia)</label>
+                    <div className={styles.inputWrap}>
+                      <GraduationCap size={15} className={styles.inputIcon} />
+                      <input id="gelar" type="text" className={styles.input}
+                        value={biodata.gelar}
+                        onChange={e => setBiodata(p => ({ ...p, gelar: e.target.value }))}
+                        placeholder="Contoh: S.Kom." />
+                    </div>
+                  </div>
+                  <div className={styles.fieldGroup}>
+                    <label className={styles.label} htmlFor="gelar_eng">Gelar (English)</label>
+                    <div className={styles.inputWrap}>
+                      <GraduationCap size={15} className={styles.inputIcon} />
+                      <input id="gelar_eng" type="text" className={styles.input}
+                        value={biodata.gelar_eng}
+                        onChange={e => setBiodata(p => ({ ...p, gelar_eng: e.target.value }))}
+                        placeholder="Contoh: S.T." />
+                    </div>
+                  </div>
+                </div>
+                <div style={{
+                  background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: 10,
+                  padding: "10px 14px", display: "flex", alignItems: "center", gap: 8,
+                }}>
+                  <div style={{
+                    width: 28, height: 28, borderRadius: 8,
+                    background: "linear-gradient(135deg,#bbf7d0,#6ee7b7)",
+                    display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+                  }}>
+                    <FileText size={14} color="#065f46" />
+                  </div>
+                  <p style={{ margin: 0, fontSize: 12, color: "#065f46", lineHeight: 1.5 }}>
+                    Data ini akan otomatis <strong>tercetak di dokumen SKPI</strong> saat admin melakukan generate. Pastikan semua data benar sebelum mengajukan SKPI.
+                  </p>
+                </div>
+                <div className={styles.formFooter}>
+                  <button type="submit" className={styles.btnPrimary}
+                    style={{ background: "linear-gradient(135deg,#059669,#065f46)" }}
+                    disabled={biodataSaving}>
+                    {biodataSaving
+                      ? <><Loader2 size={15} className={styles.spin} /> Menyimpan…</>
+                      : <><Save size={15} /> Simpan Biodata</>}
+                  </button>
+                </div>
+              </form>
             </div>
 
             {/* Email Form */}

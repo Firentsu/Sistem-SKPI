@@ -24,6 +24,7 @@ import {
   markMahasiswaNotifRead,
   markAllMahasiswaNotifRead,
   inferMahasiswaNotifType,
+  createMahasiswaSSE,
 } from "@/lib/api";
 
 // ============================================================
@@ -160,6 +161,18 @@ function NotificationDropdown({ isOpen, onClose, onUnreadChange }) {
       setUnreadCount(data.unread ?? 0);
       setLoading(false);
     });
+  }, [isOpen]);
+
+  // Terima notifikasi real-time saat dropdown sedang terbuka
+  useEffect(() => {
+    if (!isOpen) return;
+    const handler = (e) => {
+      const notif = e.detail;
+      setNotifications(prev => [notif, ...prev]);
+      setUnreadCount(prev => prev + 1);
+    };
+    window.addEventListener("notif:new", handler);
+    return () => window.removeEventListener("notif:new", handler);
   }, [isOpen]);
 
   const handleMarkAsRead = async (id) => {
@@ -301,13 +314,21 @@ function MahasiswaLayoutInner({ children }) {
     { href: "/mahasiswa/panduan",   label: "Buku Panduan", icon: BookMarked },
   ];
 
-  // Auto-poll unread count setiap 60 detik
+  // Koneksi SSE untuk notifikasi real-time
   useEffect(() => {
-    const timer = setInterval(async () => {
-      const d = await getMahasiswaNotifikasi(1);
-      setNotifUnread(d.unread ?? 0);
-    }, 60000);
-    return () => clearInterval(timer);
+    const es = createMahasiswaSSE();
+    if (!es) return;
+    es.onmessage = (e) => {
+      try {
+        const data = JSON.parse(e.data);
+        if (data.type === "notif") {
+          setNotifUnread(prev => prev + 1);
+          window.dispatchEvent(new CustomEvent("notif:new", { detail: data }));
+        }
+      } catch { /* abaikan pesan malformed */ }
+    };
+    es.onerror = () => es.close();
+    return () => es.close();
   }, []);
 
   // Escape key untuk close notifikasi

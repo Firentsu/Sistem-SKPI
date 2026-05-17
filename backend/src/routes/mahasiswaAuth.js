@@ -7,6 +7,7 @@
  * GET    /me       → cek sesi aktif
  * GET    /profile  → ambil profil
  * PATCH  /profile  → update username / email
+ * DELETE /avatar   → hapus foto profil
  * POST   /avatar   → upload foto profil
  * PATCH  /password → ganti password
  */
@@ -20,6 +21,8 @@ import { existsSync } from "fs";
 
 import prisma from "../lib/prisma.js";
 import { requireMahasiswaAuth } from "../middleware/mahasiswaAuth.js";
+import { createNotif } from "../utils/notifikasi.js";
+import { subscribe, unsubscribe } from "../utils/sseManager.js";
 
 const router = Router();
 
@@ -137,17 +140,24 @@ router.get("/profile", requireMahasiswaAuth, async (req, res) => {
         const { mahasiswaUser: user, mahasiswa } = req;
 
         res.json({
-            id_mahasiswa: mahasiswa.id_mahasiswa,
-            nim: mahasiswa.nim,
-            nama: mahasiswa.nama,
-            email: mahasiswa.email ?? user.email,
-            username: user.username,
-            prodi: mahasiswa.programstudi?.nama_prodi ?? null,
-            angkatan: mahasiswa.angkatan,
-            avatar: mahasiswa.foto_profil,
-            foto_profil: mahasiswa.foto_profil,
-            status_skpi: mahasiswa.status_skpi,
-            created_at: user.created_at,
+            id_mahasiswa:  mahasiswa.id_mahasiswa,
+            nim:           mahasiswa.nim,
+            nama:          mahasiswa.nama,
+            email:         mahasiswa.email ?? user.email,
+            username:      user.username,
+            prodi:         mahasiswa.programstudi?.nama_prodi ?? null,
+            angkatan:      mahasiswa.angkatan,
+            avatar:        mahasiswa.foto_profil,
+            foto_profil:   mahasiswa.foto_profil,
+            status_skpi:   mahasiswa.status_skpi,
+            created_at:    user.created_at,
+            tempat_lahir:  mahasiswa.tempat_lahir  ?? null,
+            tgl_lahir:     mahasiswa.tgl_lahir     ?? null,
+            tanggal_masuk: mahasiswa.tanggal_masuk ?? null,
+            tanggal_lulus: mahasiswa.tanggal_lulus ?? null,
+            nomor_ijazah:  mahasiswa.nomor_ijazah  ?? null,
+            gelar:         mahasiswa.gelar         ?? null,
+            gelar_eng:     mahasiswa.gelar_eng     ?? null,
         });
     } catch (err) {
         console.error("GET /mahasiswa/auth/profile error:", err);
@@ -183,6 +193,8 @@ router.patch("/profile", requireMahasiswaAuth, async (req, res) => {
                 where: { user_id: user.user_id },
                 data: { username: trimmed, updated_at: new Date() },
             });
+            createNotif(user.user_id, "Profil Berhasil Diperbarui",
+                "Username Anda berhasil diperbarui.");
             return res.json({ success: true, message: "Username berhasil diperbarui" });
         }
 
@@ -202,12 +214,55 @@ router.patch("/profile", requireMahasiswaAuth, async (req, res) => {
                 where: { id_mahasiswa: mahasiswa.id_mahasiswa },
                 data: { email: trimmed },
             });
+            createNotif(user.user_id, "Profil Berhasil Diperbarui",
+                "Email Anda berhasil diperbarui.");
             return res.json({ success: true, message: "Email berhasil diperbarui" });
         }
 
         res.status(400).json({ error: "Action tidak dikenal" });
     } catch (err) {
         console.error("PATCH /mahasiswa/auth/profile error:", err);
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
+// ════════════════════════════════════════════════════════════
+//  PATCH /api/mahasiswa/auth/biodata
+//  Body: { tempat_lahir, tgl_lahir, tanggal_masuk, tanggal_lulus,
+//          nomor_ijazah, gelar, gelar_eng }
+// ════════════════════════════════════════════════════════════
+router.patch("/biodata", requireMahasiswaAuth, async (req, res) => {
+    try {
+        const { mahasiswa } = req;
+        const {
+            tempat_lahir, tgl_lahir, tanggal_masuk, tanggal_lulus,
+            nomor_ijazah, gelar, gelar_eng,
+        } = req.body;
+
+        const data = {};
+        if (tempat_lahir  !== undefined) data.tempat_lahir  = tempat_lahir?.trim()  || null;
+        if (tgl_lahir     !== undefined) data.tgl_lahir     = tgl_lahir     ? new Date(tgl_lahir)     : null;
+        if (tanggal_masuk !== undefined) data.tanggal_masuk = tanggal_masuk ? new Date(tanggal_masuk) : null;
+        if (tanggal_lulus !== undefined) data.tanggal_lulus = tanggal_lulus ? new Date(tanggal_lulus) : null;
+        if (nomor_ijazah  !== undefined) data.nomor_ijazah  = nomor_ijazah?.trim()  || null;
+        if (gelar         !== undefined) data.gelar         = gelar?.trim()         || null;
+        if (gelar_eng     !== undefined) data.gelar_eng     = gelar_eng?.trim()     || null;
+
+        if (Object.keys(data).length === 0) {
+            return res.status(400).json({ error: "Tidak ada data yang dikirim" });
+        }
+
+        await prisma.mahasiswa.update({
+            where: { id_mahasiswa: mahasiswa.id_mahasiswa },
+            data,
+        });
+
+        createNotif(req.mahasiswaUser.user_id, "Biodata SKPI Diperbarui",
+            "Data biodata SKPI Anda berhasil disimpan.");
+
+        return res.json({ success: true, message: "Biodata berhasil disimpan" });
+    } catch (err) {
+        console.error("PATCH /mahasiswa/auth/biodata error:", err);
         res.status(500).json({ error: "Server error" });
     }
 });
@@ -241,6 +296,8 @@ router.post("/avatar", requireMahasiswaAuth, upload.single("avatar"), async (req
             data: { foto_profil: publicUrl },
         });
 
+        createNotif(req.mahasiswaUser.user_id, "Foto Profil Diperbarui",
+            "Foto profil Anda berhasil diperbarui.");
         res.json({ success: true, avatar: publicUrl });
     } catch (err) {
         console.error("POST /mahasiswa/auth/avatar error:", err);
@@ -273,11 +330,69 @@ router.patch("/password", requireMahasiswaAuth, async (req, res) => {
             data: { password: hashed, updated_at: new Date() },
         });
 
+        createNotif(user.user_id, "Password Berhasil Diubah",
+            "Password akun Anda berhasil diperbarui. Jika bukan Anda yang mengubah, segera hubungi admin.");
         res.json({ success: true, message: "Password berhasil diperbarui" });
     } catch (err) {
         console.error("PATCH /mahasiswa/auth/password error:", err);
         res.status(500).json({ error: "Server error" });
     }
+});
+
+// ════════════════════════════════════════════════════════════
+//  DELETE /api/mahasiswa/auth/avatar  — hapus foto profil
+// ════════════════════════════════════════════════════════════
+router.delete("/avatar", requireMahasiswaAuth, async (req, res) => {
+    try {
+        const { mahasiswa } = req;
+
+        if (!mahasiswa.foto_profil) {
+            return res.status(400).json({ error: "Tidak ada foto profil yang perlu dihapus" });
+        }
+
+        // Hapus file fisik
+        const filePath = path.join(process.cwd(), "public", mahasiswa.foto_profil);
+        if (existsSync(filePath)) await unlink(filePath).catch(() => {});
+
+        // Kosongkan field di DB
+        await prisma.mahasiswa.update({
+            where: { id_mahasiswa: mahasiswa.id_mahasiswa },
+            data: { foto_profil: null },
+        });
+
+        createNotif(req.mahasiswaUser.user_id, "Foto Profil Dihapus",
+            "Foto profil Anda telah berhasil dihapus dari sistem.");
+
+        res.json({ success: true, message: "Foto profil berhasil dihapus" });
+    } catch (err) {
+        console.error("DELETE /mahasiswa/auth/avatar error:", err);
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
+// ════════════════════════════════════════════════════════════
+//  GET /api/mahasiswa/auth/sse  — Server-Sent Events mahasiswa
+// ════════════════════════════════════════════════════════════
+router.get("/sse", requireMahasiswaAuth, (req, res) => {
+    res.setHeader("Content-Type", "text/event-stream");
+    res.setHeader("Cache-Control", "no-cache, no-transform");
+    res.setHeader("Connection", "keep-alive");
+    res.setHeader("X-Accel-Buffering", "no");
+    res.flushHeaders();
+
+    const userId = req.mahasiswaUser.user_id;
+    subscribe(userId, res);
+
+    res.write(`data: ${JSON.stringify({ type: "connected" })}\n\n`);
+
+    const heartbeat = setInterval(() => {
+        try { res.write(": heartbeat\n\n"); } catch { clearInterval(heartbeat); }
+    }, 25000);
+
+    req.on("close", () => {
+        clearInterval(heartbeat);
+        unsubscribe(userId, res);
+    });
 });
 
 export default router;

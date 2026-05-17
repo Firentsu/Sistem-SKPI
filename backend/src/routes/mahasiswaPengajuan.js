@@ -9,6 +9,7 @@
 import { Router } from "express";
 import prisma from "../lib/prisma.js";
 import { requireMahasiswaAuth } from "../middleware/mahasiswaAuth.js";
+import { createNotif, notifAllAdmins } from "../utils/notifikasi.js";
 
 const router = Router();
 router.use(requireMahasiswaAuth);
@@ -97,6 +98,18 @@ router.post("/", async (req, res) => {
         });
 
         res.status(201).json({ success: true, data: pengajuan });
+
+        // Notifikasi mahasiswa: konfirmasi pengajuan SKPI
+        createNotif(
+            req.mahasiswaUser.user_id,
+            "Pengajuan SKPI Dikirim",
+            "Pengajuan SKPI Anda telah dikirim dan sedang menunggu verifikasi admin."
+        );
+        // Notifikasi semua admin: ada pengajuan SKPI baru
+        notifAllAdmins(
+            "Pengajuan SKPI Baru",
+            `${mahasiswa.nama} (${mahasiswa.nim}) mengajukan SKPI. Segera tinjau di halaman Generate SKPI.`
+        );
     } catch (err) {
         console.error("POST /mahasiswa/pengajuan error:", err);
         res.status(500).json({ error: "Server error" });

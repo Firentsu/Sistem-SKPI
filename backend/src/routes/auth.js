@@ -19,6 +19,8 @@ import { existsSync } from "fs";
 
 import prisma from "../lib/prisma.js";
 import { requireAuth } from "../middleware/auth.js";
+import { createNotif } from "../utils/notifikasi.js";
+import { subscribe, unsubscribe } from "../utils/sseManager.js";
 
 const router = Router();
 
@@ -255,6 +257,64 @@ router.post("/avatar", requireAuth, upload.single("avatar"), async (req, res) =>
     console.error("POST /auth/avatar error:", err);
     res.status(500).json({ error: "Server error" });
   }
+});
+
+// ════════════════════════════════════════════════════════════
+//  DELETE /api/auth/avatar  — hapus foto profil admin
+// ════════════════════════════════════════════════════════════
+router.delete("/avatar", requireAuth, async (req, res) => {
+  try {
+    const { user } = req;
+    const admin = user.admin ?? null;
+
+    if (!admin?.avatar) {
+      return res.status(400).json({ error: "Tidak ada foto profil yang perlu dihapus" });
+    }
+
+    // Hapus file fisik
+    const filePath = path.join(process.cwd(), "public", admin.avatar);
+    if (existsSync(filePath)) await unlink(filePath).catch(() => {});
+
+    // Kosongkan field di DB
+    await prisma.admin.update({
+      where: { id_admin: admin.id_admin },
+      data: { avatar: null },
+    });
+
+    createNotif(user.user_id, "Foto Profil Dihapus",
+      "Foto profil Anda telah berhasil dihapus dari sistem.");
+
+    res.json({ success: true, message: "Foto profil berhasil dihapus" });
+  } catch (err) {
+    console.error("DELETE /auth/avatar error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// ════════════════════════════════════════════════════════════
+//  GET /api/auth/sse  — Server-Sent Events untuk admin
+// ════════════════════════════════════════════════════════════
+router.get("/sse", requireAuth, (req, res) => {
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache, no-transform");
+  res.setHeader("Connection", "keep-alive");
+  res.setHeader("X-Accel-Buffering", "no"); // nonaktifkan buffering nginx
+  res.flushHeaders();
+
+  const userId = req.user.user_id;
+  subscribe(userId, res);
+
+  res.write(`data: ${JSON.stringify({ type: "connected" })}\n\n`);
+
+  // Heartbeat tiap 25 detik agar koneksi tidak ditutup proxy
+  const heartbeat = setInterval(() => {
+    try { res.write(": heartbeat\n\n"); } catch { clearInterval(heartbeat); }
+  }, 25000);
+
+  req.on("close", () => {
+    clearInterval(heartbeat);
+    unsubscribe(userId, res);
+  });
 });
 
 export default router;

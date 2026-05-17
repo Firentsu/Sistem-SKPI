@@ -41,7 +41,7 @@ router.get("/", async (req, res) => {
           users: { select: { status_akun: true } },
           _count: { select: { kegiatanmahasiswa: true } },
         },
-        orderBy: { nama: "asc" },
+        orderBy: { id_mahasiswa: "desc" },
       }),
     ]);
 
@@ -144,7 +144,19 @@ router.patch("/:id", async (req, res) => {
         ...(email       !== undefined && { email }),
         ...(id_prodi    !== undefined && { id_prodi: id_prodi ? parseInt(id_prodi) : null }),
         ...(angkatan    !== undefined && { angkatan: angkatan ? parseInt(angkatan) : null }),
-        ...(status_skpi !== undefined && { status_skpi }),
+        ...(status_skpi !== undefined && {
+          // Map label UI → enum Prisma
+          status_skpi: {
+            Selesai:    'diterbitkan',
+            Proses:     'diajukan',
+            Revisi:     'direvisi',
+            Belum:      'belum',
+            diterbitkan:'diterbitkan',
+            diajukan:   'diajukan',
+            direvisi:   'direvisi',
+            belum:      'belum',
+          }[status_skpi] ?? 'belum',
+        }),
       },
     });
 
@@ -165,6 +177,111 @@ router.patch("/:id", async (req, res) => {
     res.json({ success: true, message: "Data mahasiswa diperbarui", data: mhs });
   } catch (err) {
     console.error("PATCH /mahasiswa/:id error:", err);
+    res.status(500).json({ error: "Server error: " + err.message });
+  }
+});
+
+// ════════════════════════════════════════════════════════════
+//  POST /api/mahasiswa/bulk   → import massal dari Excel
+// ════════════════════════════════════════════════════════════
+router.post("/bulk", async (req, res) => {
+  try {
+    const { list } = req.body;
+    if (!Array.isArray(list) || list.length === 0) {
+      return res.status(400).json({ error: "List mahasiswa kosong" });
+    }
+
+    const bcrypt = await import("bcryptjs");
+
+    // Pre-load semua prodi untuk resolusi nama prodi → id_prodi
+    const allProdi = await prisma.programstudi.findMany();
+    const prodiNameMap = {};
+    allProdi.forEach(p => {
+      prodiNameMap[p.nama_prodi.trim().toLowerCase()] = p.id_prodi;
+    });
+
+    // Fungsi resolusi prodi: exact match dulu, lalu partial match
+    const resolveProdi = (val) => {
+      if (val === undefined || val === null || val === "") return null;
+      const asNum = parseInt(val);
+      if (!isNaN(asNum) && String(asNum) === String(val).trim()) return asNum;
+      const lower = String(val).trim().toLowerCase();
+      if (prodiNameMap[lower] !== undefined) return prodiNameMap[lower];
+      // Partial match: cari prodi yang namanya mengandung kata kunci
+      const partialKey = Object.keys(prodiNameMap).find(k => k.includes(lower) || lower.includes(k));
+      return partialKey ? prodiNameMap[partialKey] : null;
+    };
+
+    let success = 0, skipped = 0;
+    const errors = [];
+
+    for (const item of list) {
+      try {
+        const { nim, nama, id_prodi, angkatan, email, password } = item;
+        if (!nim || !nama) {
+          errors.push({ nim: nim || "?", error: "NIM dan nama wajib diisi" });
+          continue;
+        }
+
+        const resolvedProdi = resolveProdi(id_prodi);
+
+        // Jika mahasiswa sudah ada → skip
+        const existingMhs = await prisma.mahasiswa.findFirst({ where: { nim } });
+        if (existingMhs) { skipped++; continue; }
+
+        const plainPw = (password?.toString().trim()) || nim;
+        const hashed  = await bcrypt.default.hash(plainPw, 10);
+
+        // Cek apakah ada orphaned user (users ada, mahasiswa tidak)
+        const existingUser = await prisma.users.findFirst({ where: { username: nim } });
+
+        if (existingUser) {
+          // Perbaiki orphaned user: buat mahasiswa dan hubungkan ke user yang sudah ada
+          await prisma.mahasiswa.create({
+            data: {
+              nim,
+              nama,
+              id_prodi:  resolvedProdi,
+              angkatan:  angkatan ? parseInt(angkatan) : null,
+              email:     email ?? null,
+              id_user:   existingUser.user_id,
+            },
+          });
+        } else {
+          // Buat user + mahasiswa secara atomik dalam satu transaksi
+          await prisma.$transaction(async (tx) => {
+            const user = await tx.users.create({
+              data: {
+                username:    nim,
+                password:    hashed,
+                role:        "mahasiswa",
+                email:       email ?? null,
+                status_akun: "aktif",
+                updated_at:  new Date(),
+              },
+            });
+            await tx.mahasiswa.create({
+              data: {
+                nim,
+                nama,
+                id_prodi:  resolvedProdi,
+                angkatan:  angkatan ? parseInt(angkatan) : null,
+                email:     email ?? null,
+                id_user:   user.user_id,
+              },
+            });
+          });
+        }
+
+        success++;
+      } catch (err) {
+        errors.push({ nim: item.nim || "?", error: err.message });
+      }
+    }
+
+    res.json({ success, skipped, failed: errors.length, errors: errors.slice(0, 20) });
+  } catch (err) {
+    console.error("POST /mahasiswa/bulk error:", err);
     res.status(500).json({ error: "Server error: " + err.message });
   }
 });

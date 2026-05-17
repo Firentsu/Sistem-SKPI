@@ -11,14 +11,16 @@ import adminRoutes      from "./src/routes/admin.js";
 import aktivitasRoutes  from "./src/routes/aktivitas.js";
 import skpiRoutes       from "./src/routes/skpi.js";
 import masterDataRoutes from "./src/routes/masterData.js";
-import icpRoutes        from "./src/routes/icp.js";
+import icpRoutes           from "./src/routes/icp.js";
+import templateSkpiRoutes  from "./src/routes/templateSkpi.js";
 
 // ── Routes mahasiswa ────────────────────────────────────────
 import mahasiswaAuthRoutes       from "./src/routes/mahasiswaAuth.js";
 import mahasiswaRoutes           from "./src/routes/mahasiswa.js";
 import mahasiswaKegiatanRoutes   from "./src/routes/mahasiswaKegiatan.js";
 import mahasiswaPengajuanRoutes  from "./src/routes/mahasiswaPengajuan.js";
-import mahasiswaMasterDataRoutes from "./src/routes/mahasiswaMasterData.js";
+import mahasiswaMasterDataRoutes   from "./src/routes/mahasiswaMasterData.js";
+import mahasiswaNotifikasiRoutes   from "./src/routes/mahasiswaNotifikasi.js";
 
 const app  = express();
 const PORT = process.env.PORT || 5000;
@@ -82,11 +84,13 @@ app.use("/api/auth",        authRoutes);
 app.use("/api/admin",       adminRoutes);
 app.use("/api/aktivitas",   aktivitasRoutes);
 app.use("/api/skpi",        skpiRoutes);
-app.use("/api/master-data", masterDataRoutes);
+app.use("/api/master-data",    masterDataRoutes);
+app.use("/api/template-skpi", templateSkpiRoutes);
 app.use("/api/icp",         icpRoutes);
 
 // ── Routes mahasiswa (spesifik dulu, umum belakangan) ────────
 app.use("/api/mahasiswa/auth",        mahasiswaAuthRoutes);
+app.use("/api/mahasiswa/notifikasi",  mahasiswaNotifikasiRoutes);
 app.use("/api/mahasiswa/kegiatan",    mahasiswaKegiatanRoutes);
 app.use("/api/mahasiswa/pengajuan",   mahasiswaPengajuanRoutes);
 app.use("/api/mahasiswa/master-data", mahasiswaMasterDataRoutes);
@@ -109,7 +113,7 @@ app.use((err, _req, res, _next) => {
 });
 
 // ── Start server ──────────────────────────────────────────────
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`\n✅ SKPI Backend berjalan di http://localhost:${PORT}`);
   console.log(`   Auth     : Session-based (MySQL Store)`);
   console.log(`   Database : ${process.env.DB_NAME}@${process.env.DB_HOST}`);

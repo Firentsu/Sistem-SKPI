@@ -17,8 +17,23 @@ import { existsSync } from "fs";
 
 import prisma from "../lib/prisma.js";
 import { requireMahasiswaAuth } from "../middleware/mahasiswaAuth.js";
+import { createNotif, notifAllAdmins } from "../utils/notifikasi.js";
 
 const router = Router();
+
+// Resolve a text name OR integer-string to an integer FK id.
+// model      — prisma model name (e.g. "jenisaktivitas")
+// idField    — PK field name    (e.g. "id_jenis")
+// nameField  — text column name (e.g. "nama_indo")
+async function resolveId(model, idField, nameField, value) {
+    if (!value) return null;
+    const asNum = parseInt(value, 10);
+    if (!isNaN(asNum) && String(asNum) === String(value).trim()) return asNum;
+    const record = await prisma[model].findFirst({
+        where: { [nameField]: String(value) },
+    });
+    return record ? record[idField] : null;
+}
 
 // Semua route wajib terautentikasi sebagai mahasiswa
 router.use(requireMahasiswaAuth);
@@ -87,27 +102,37 @@ router.get("/", async (req, res) => {
 router.post("/", async (req, res) => {
     try {
         const { mahasiswa } = req;
-        const {
-            nama_kegiatan, nama_kegiatan_eng,
-            id_jenis, id_kategori, id_kelompok, id_level, id_posisi,
-            penyelenggara, lokasi, tanggal_kegiatan,
-            periode_kegiatan, tingkat_prestasi, peringkat,
-        } = req.body;
+        const body = req.body;
+
+        // Accept both backend field names and frontend field names
+        const nama_kegiatan     = body.nama_kegiatan || body.nama_id;
+        const nama_kegiatan_eng = body.nama_kegiatan_eng || body.nama_en;
+        const periode_kegiatan  = body.periode_kegiatan || body.periode;
+        const { penyelenggara, lokasi, tanggal_kegiatan, tingkat_prestasi, peringkat } = body;
 
         if (!nama_kegiatan) {
             return res.status(400).json({ error: "Nama kegiatan wajib diisi" });
         }
+
+        // Resolve FK IDs — accept integer IDs or text names from the frontend
+        const [id_jenis, id_kategori, id_kelompok, id_level] = await Promise.all([
+            resolveId("jenisaktivitas",    "id_jenis",    "nama_indo",   body.id_jenis    || body.jenis_aktivitas),
+            resolveId("kategoriaktivitas", "id_kategori", "nama_indo",   body.id_kategori || body.kategori),
+            resolveId("kelompokaktivitas", "id_kelompok", "nama_indo",   body.id_kelompok || body.kelompok),
+            resolveId("levelkegiatan",     "id_level",    "nama_level",  body.id_level    || body.level),
+        ]);
+        const id_posisi = body.id_posisi ? parseInt(body.id_posisi) : null;
 
         const kegiatan = await prisma.kegiatanmahasiswa.create({
             data: {
                 id_mahasiswa: mahasiswa.id_mahasiswa,
                 nama_kegiatan,
                 nama_kegiatan_eng: nama_kegiatan_eng || null,
-                id_jenis: id_jenis ? parseInt(id_jenis) : null,
-                id_kategori: id_kategori ? parseInt(id_kategori) : null,
-                id_kelompok: id_kelompok ? parseInt(id_kelompok) : null,
-                id_level: id_level ? parseInt(id_level) : null,
-                id_posisi: id_posisi ? parseInt(id_posisi) : null,
+                id_jenis,
+                id_kategori,
+                id_kelompok,
+                id_level,
+                id_posisi,
                 penyelenggara: penyelenggara || null,
                 lokasi: lokasi || null,
                 tanggal_kegiatan: tanggal_kegiatan ? new Date(tanggal_kegiatan) : null,
@@ -118,7 +143,19 @@ router.post("/", async (req, res) => {
             },
         });
 
-        res.status(201).json({ success: true, data: kegiatan });
+        res.status(201).json({ success: true, data: kegiatan, id_kegiatan: kegiatan.id_kegiatan });
+
+        // Notifikasi: mahasiswa → konfirmasi pengajuan
+        createNotif(
+            mahasiswa.id_user ?? req.mahasiswaUser.user_id,
+            "Kegiatan Berhasil Diajukan",
+            `Kegiatan "${nama_kegiatan}" telah diajukan dan menunggu verifikasi admin.`
+        );
+        // Notifikasi: semua admin → ada kegiatan baru
+        notifAllAdmins(
+            "Pengajuan Kegiatan Baru",
+            `${mahasiswa.nama} (${mahasiswa.nim}) mengajukan kegiatan baru: "${nama_kegiatan}".`
+        );
     } catch (err) {
         console.error("POST /mahasiswa/kegiatan error:", err);
         res.status(500).json({ error: "Server error" });
@@ -173,35 +210,58 @@ router.patch("/:id", async (req, res) => {
             return res.status(400).json({ error: "Kegiatan yang sudah disetujui/ditolak tidak dapat diubah" });
         }
 
-        const {
-            nama_kegiatan, nama_kegiatan_eng,
-            id_jenis, id_kategori, id_kelompok, id_level, id_posisi,
-            penyelenggara, lokasi, tanggal_kegiatan,
-            periode_kegiatan, tingkat_prestasi, peringkat,
-        } = req.body;
+        const body = req.body;
+
+        // Accept both backend field names and frontend field names
+        const nama_kegiatan     = body.nama_kegiatan || body.nama_id;
+        const nama_kegiatan_eng = body.nama_kegiatan_eng || body.nama_en;
+        const periode_kegiatan  = body.periode_kegiatan || body.periode;
+        const { penyelenggara, lokasi, tanggal_kegiatan, tingkat_prestasi, peringkat } = body;
+
+        // Resolve FK IDs — accept integer IDs or text names from the frontend
+        const [id_jenis, id_kategori, id_kelompok, id_level] = await Promise.all([
+            resolveId("jenisaktivitas",    "id_jenis",    "nama_indo",  body.id_jenis    || body.jenis_aktivitas),
+            resolveId("kategoriaktivitas", "id_kategori", "nama_indo",  body.id_kategori || body.kategori),
+            resolveId("kelompokaktivitas", "id_kelompok", "nama_indo",  body.id_kelompok || body.kelompok),
+            resolveId("levelkegiatan",     "id_level",    "nama_level", body.id_level    || body.level),
+        ]);
+        const id_posisi = body.id_posisi ? parseInt(body.id_posisi) : undefined;
 
         const updated = await prisma.kegiatanmahasiswa.update({
             where: { id_kegiatan: id },
             data: {
                 nama_kegiatan: nama_kegiatan || undefined,
-                nama_kegiatan_eng,
-                id_jenis: id_jenis ? parseInt(id_jenis) : undefined,
-                id_kategori: id_kategori ? parseInt(id_kategori) : undefined,
-                id_kelompok: id_kelompok ? parseInt(id_kelompok) : undefined,
-                id_level: id_level ? parseInt(id_level) : undefined,
-                id_posisi: id_posisi ? parseInt(id_posisi) : undefined,
-                penyelenggara,
-                lokasi,
+                nama_kegiatan_eng: nama_kegiatan_eng ?? undefined,
+                id_jenis:    id_jenis    ?? undefined,
+                id_kategori: id_kategori ?? undefined,
+                id_kelompok: id_kelompok ?? undefined,
+                id_level:    id_level    ?? undefined,
+                id_posisi,
+                penyelenggara:   penyelenggara   ?? undefined,
+                lokasi:          lokasi          ?? undefined,
                 tanggal_kegiatan: tanggal_kegiatan ? new Date(tanggal_kegiatan) : undefined,
-                periode_kegiatan,
-                tingkat_prestasi,
-                peringkat,
+                periode_kegiatan: periode_kegiatan ?? undefined,
+                tingkat_prestasi: tingkat_prestasi ?? undefined,
+                peringkat:        peringkat        ?? undefined,
                 // Jika revisi → kembalikan ke diproses setelah edit
                 status_verifikasi: existing.status_verifikasi === "revisi" ? "diproses" : undefined,
             },
         });
 
         res.json({ success: true, data: updated });
+
+        // Notifikasi mahasiswa: jika dari revisi → diajukan ulang
+        if (existing.status_verifikasi === "revisi") {
+            createNotif(
+                mahasiswa.id_user ?? req.mahasiswaUser.user_id,
+                "Kegiatan Diperbarui & Diajukan Ulang",
+                `Kegiatan "${existing.nama_kegiatan}" telah diperbarui dan kembali menunggu verifikasi admin.`
+            );
+            notifAllAdmins(
+                "Kegiatan Diperbarui",
+                `${mahasiswa.nama} (${mahasiswa.nim}) memperbarui kegiatan setelah revisi: "${existing.nama_kegiatan}".`
+            );
+        }
     } catch (err) {
         console.error("PATCH /mahasiswa/kegiatan/:id error:", err);
         res.status(500).json({ error: "Server error" });
@@ -240,7 +300,7 @@ router.delete("/:id", async (req, res) => {
 // ════════════════════════════════════════════════════════════
 //  POST /api/mahasiswa/kegiatan/:id/bukti  → upload bukti
 // ════════════════════════════════════════════════════════════
-router.post("/:id/bukti", upload.single("file"), async (req, res) => {
+router.post("/:id/bukti", upload.single("bukti"), async (req, res) => {
     try {
         const { mahasiswa } = req;
         const id = parseInt(req.params.id, 10);

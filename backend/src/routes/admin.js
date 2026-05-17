@@ -459,7 +459,7 @@ router.get("/admins", async (req, res) => {
         where,
         skip,
         take,
-        orderBy: { id_admin: "asc" },
+        orderBy: { id_admin: "desc" },
         include: {
           users: {
             select: { user_id: true, username: true, status_akun: true, created_at: true, updated_at: true },

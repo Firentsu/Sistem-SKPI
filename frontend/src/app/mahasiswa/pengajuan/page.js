@@ -192,7 +192,7 @@ export default function PengajuanPage() {
               {loading ? "Memuat…" : displayStatus}
             </span>
           </div>
-
+          
           {pengajuan?.catatan_admin && (
             <div className={styles.catatanBox}>
               <AlertCircle size={14} />
