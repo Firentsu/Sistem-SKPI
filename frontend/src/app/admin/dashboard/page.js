@@ -17,7 +17,9 @@ import {
   inferNotifType,
 } from "@/lib/api";
 
-// ── Warna per tipe notifikasi ─────────────────────────────
+// ══════════════════════════════════════════
+// KONFIGURASI WARNA UNTUK TIAP TIPE NOTIFIKASI
+// ══════════════════════════════════════════
 const NOTIF_COLORS = {
   skpi:       "#765439",
   verifikasi: "#b45309",
@@ -31,7 +33,7 @@ const NOTIF_BG = {
   revisi:     "#fff5f5",
 };
 
-// ── Format waktu relatif ──────────────────────────────────
+// ── Format tanggal relatif (cth: "3 menit lalu") ──────────
 function relativeTime(isoString) {
   const diff = Math.floor((Date.now() - new Date(isoString)) / 1000);
   if (diff < 60)   return `${diff} detik lalu`;
@@ -40,23 +42,23 @@ function relativeTime(isoString) {
   return `${Math.floor(diff / 86400)} hari lalu`;
 }
 
-// ── Counter animasi ───────────────────────────────────────
+// ── Counter dengan animasi naik ──────────────────────────
 function Counter({ value }) {
   const [n, setN] = useState(0);
   useEffect(() => {
     let cur = 0;
-    const step = Math.max(1, Math.ceil(value / 40));
+    const step = Math.max(1, Math.ceil(value / 40)); // makin besar value, makin cepat
     const t = setInterval(() => {
       cur = Math.min(cur + step, value);
       setN(cur);
       if (cur >= value) clearInterval(t);
-    }, 18);
+    }, 18); // ~55 fps
     return () => clearInterval(t);
   }, [value]);
   return <>{n.toLocaleString("id-ID")}</>;
 }
 
-// ── Skeleton loader ───────────────────────────────────────
+// ── Skeleton loader untuk placeholder saat loading ────────
 function Skeleton({ w = "100%", h = "20px", radius = "6px" }) {
   return (
     <div style={{
@@ -71,27 +73,27 @@ function Skeleton({ w = "100%", h = "20px", radius = "6px" }) {
 export default function DashboardPage() {
   const router = useRouter();
 
-  // ── State stats ───────────────────────────────────────────
+  // ── State untuk statistik ─────────────────────────────────
   const [stats, setStats]         = useState(null);
   const [prodis, setProdis]       = useState([]);
-  const [selectedProdi, setSelectedProdi] = useState(null); // null = Semua
+  const [selectedProdi, setSelectedProdi] = useState(null); // null artinya "Semua Prodi"
   const [prodiOpen, setProdiOpen] = useState(false);
   const [loadingStats, setLoadingStats] = useState(true);
 
-  // ── State notifikasi ──────────────────────────────────────
+  // ── State untuk notifikasi ────────────────────────────────
   const [notifs, setNotifs]       = useState([]);
   const [unread, setUnread]       = useState(0);
   const [loadingNotif, setLoadingNotif] = useState(true);
 
-  const dropdownRef = useRef(null);
+  const dropdownRef = useRef(null); // untuk mendeteksi klik luar
 
-  // ── Load stats ────────────────────────────────────────────
+  // ── Load statistik dashboard ─────────────────────────────
   const loadStats = useCallback(async (prodiId = null) => {
     setLoadingStats(true);
     const data = await getDashboardStats(prodiId);
     if (data) {
       setStats(data);
-      // Bangun daftar prodi dari prodiStats (hanya sekali)
+      // Isi daftar prodi (hanya sekali) dari data yang sama
       if (data.prodiStats?.length && prodis.length === 0) {
         setProdis(data.prodiStats);
       }
@@ -99,10 +101,10 @@ export default function DashboardPage() {
     setLoadingStats(false);
   }, [prodis.length]);
 
-  // ── Load notifikasi ───────────────────────────────────────
+  // ── Load notifikasi terbaru ──────────────────────────────
   const loadNotif = useCallback(async () => {
     setLoadingNotif(true);
-    const data = await getAdminNotifikasi(20);
+    const data = await getAdminNotifikasi(20); // maks 20 notif
     if (data) {
       setNotifs(data.rows ?? []);
       setUnread(data.unread ?? 0);
@@ -110,27 +112,33 @@ export default function DashboardPage() {
     setLoadingNotif(false);
   }, []);
 
+  // Jalankan sekali saat komponen mount
   useEffect(() => {
     document.title = "Dashboard Admin | SKPI";
-    loadStats(null);
+    loadStats(null); // muat semua prodi
     loadNotif();
   }, []);
 
   // Tutup dropdown prodi saat klik di luar
   useEffect(() => {
-    const fn = e => { if (dropdownRef.current && !dropdownRef.current.contains(e.target)) setProdiOpen(false); };
+    const fn = e => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setProdiOpen(false);
+      }
+    };
     document.addEventListener("mousedown", fn);
     return () => document.removeEventListener("mousedown", fn);
   }, []);
 
-  // ── Filter prodi ──────────────────────────────────────────
+  // ── Filter prodi ─────────────────────────────────────────
   const handleSelectProdi = (prodi) => {
     setSelectedProdi(prodi);
     setProdiOpen(false);
-    loadStats(prodi?.id_prodi ?? null);
+    loadStats(prodi?.id_prodi ?? null); // null = semua
   };
 
-  // ── Notifikasi handlers ───────────────────────────────────
+  // ── Notifikasi handlers ──────────────────────────────────
+
   const handleMarkRead = async (id) => {
     await markNotifikasiRead(id);
     setNotifs(prev => prev.map(n => n.id_notifikasi === id ? { ...n, status_baca: true } : n));
@@ -143,14 +151,19 @@ export default function DashboardPage() {
     setUnread(0);
   };
 
+  /**
+   * Hapus notifikasi dengan KONFIRMASI ringan (mencegah tak sengaja).
+   * Keamanan: tidak ada data sensitif yang terhapus, hanya notifikasi.
+   */
   const handleDelete = async (id) => {
+    if (!window.confirm("Hapus notifikasi ini?")) return; // konfirmasi sederhana
     const target = notifs.find(n => n.id_notifikasi === id);
     await deleteAdminNotifikasi(id);
     setNotifs(prev => prev.filter(n => n.id_notifikasi !== id));
     if (target && !target.status_baca) setUnread(prev => Math.max(0, prev - 1));
   };
 
-  // ── Stat cards ────────────────────────────────────────────
+  // ── Data stat cards ──────────────────────────────────────
   const cards = stats ? [
     { label: "Total Mahasiswa",      value: stats.totalMahasiswa,    icon: Users,       accent: "#765439" },
     { label: "Total Kegiatan",       value: stats.totalKegiatan,     icon: FileText,    accent: "#765439" },
@@ -161,17 +174,17 @@ export default function DashboardPage() {
     { label: "SKPI Diterbitkan",     value: stats.skpiResmi,         icon: Award,       accent: "#0f766e" },
   ] : [];
 
-  // Data tabel per prodi — jika filter aktif, tampilkan baris tunggal
+  // Data tabel per prodi (jika filter aktif, tampilkan hanya yang sesuai)
   const prodiRows = selectedProdi
     ? (stats?.prodiStats?.filter(r => r.id_prodi === selectedProdi.id_prodi) ?? [])
     : (stats?.prodiStats ?? []);
 
-  const totalKeg = stats?.totalKegiatan || 1;
+  const totalKeg = stats?.totalKegiatan || 1; // hindari pembagian nol
 
   return (
     <div className={styles.page}>
 
-      {/* ── Header ─────────────────────────────────────────── */}
+      {/* ═══════════ HEADER ═══════════ */}
       <div className={styles.header}>
         <div>
           <h1 className={styles.title}>Dashboard</h1>
@@ -183,7 +196,10 @@ export default function DashboardPage() {
             <button className={styles.filterBtn} onClick={() => setProdiOpen(o => !o)}>
               <Filter size={13} />
               <span>{selectedProdi?.prodi ?? "Semua Prodi"}</span>
-              <ChevronRight size={13} style={{ transform: prodiOpen ? "rotate(90deg)" : "none", transition: ".15s" }} />
+              <ChevronRight size={13} style={{
+                transform: prodiOpen ? "rotate(90deg)" : "none",
+                transition: ".15s"
+              }} />
             </button>
             {prodiOpen && (
               <div className={styles.dropdown}>
@@ -205,17 +221,21 @@ export default function DashboardPage() {
               </div>
             )}
           </div>
+          {/* Tombol refresh */}
           <button
             className={styles.refreshBtn}
             title="Refresh"
-            onClick={() => { loadStats(selectedProdi?.id_prodi ?? null); loadNotif(); }}
+            onClick={() => {
+              loadStats(selectedProdi?.id_prodi ?? null);
+              loadNotif();
+            }}
           >
             <RefreshCw size={14} />
           </button>
         </div>
       </div>
 
-      {/* ── Stat Cards ─────────────────────────────────────── */}
+      {/* ═══════════ STAT CARDS ═══════════ */}
       <div className={styles.cards}>
         {loadingStats
           ? Array.from({ length: 7 }).map((_, i) => (
@@ -230,8 +250,18 @@ export default function DashboardPage() {
           : cards.map((c, i) => {
               const Icon = c.icon;
               return (
-                <div key={c.label} className={styles.card} style={{ "--accent": c.accent, animationDelay: `${i * 50}ms` }}>
-                  <div className={styles.cardIcon} style={{ background: `${c.accent}14`, color: c.accent }}>
+                <div
+                  key={c.label}
+                  className={styles.card}
+                  style={{
+                    "--accent": c.accent,
+                    animationDelay: `${i * 50}ms` // muncul bergantian
+                  }}
+                >
+                  <div
+                    className={styles.cardIcon}
+                    style={{ background: `${c.accent}14`, color: c.accent }}
+                  >
                     <Icon size={18} />
                   </div>
                   <div className={styles.cardBody}>
@@ -246,13 +276,15 @@ export default function DashboardPage() {
         }
       </div>
 
-      {/* ── Bottom grid ────────────────────────────────────── */}
+      {/* ═══════════ BOTTOM GRID: TABEL & NOTIFIKASI ═══════════ */}
       <div className={styles.bottom}>
 
-        {/* Tabel per prodi */}
+        {/* Tabel per Prodi */}
         <div className={styles.section}>
           <div className={styles.sectionHead}>
-            <div className={styles.sectionTitle}><BookOpen size={15} />Kegiatan per Program Studi</div>
+            <div className={styles.sectionTitle}>
+              <BookOpen size={15} />Kegiatan per Program Studi
+            </div>
           </div>
           <div className={styles.tableWrap}>
             {loadingStats ? (
@@ -270,29 +302,41 @@ export default function DashboardPage() {
                 </thead>
                 <tbody>
                   {prodiRows.length === 0 ? (
-                    <tr><td colSpan={8} style={{ textAlign: "center", padding: "20px", color: "#999" }}>Tidak ada data</td></tr>
-                  ) : prodiRows.map(r => (
-                    <tr key={r.id_prodi ?? r.prodi}>
-                      <td className={styles.tdProdi}>{r.prodi}</td>
-                      <td><span className={`${styles.tag} ${styles.tagBrown}`}>{r.mahasiswa}</span></td>
-                      <td className={styles.tdNum}>{r.kegiatan}</td>
-                      <td><span className={`${styles.tag} ${styles.tagOrange}`}>{r.menunggu}</span></td>
-                      <td><span className={`${styles.tag} ${styles.tagGreen}`}>{r.disetujui}</span></td>
-                      <td><span className={`${styles.tag} ${styles.tagAmber}`}>{r.verifikasi}</span></td>
-                      <td><span className={`${styles.tag} ${styles.tagRed}`}>{r.ditolak}</span></td>
-                      <td><span className={`${styles.tag} ${styles.tagTeal}`}>{r.skpi}</span></td>
+                    <tr>
+                      <td colSpan={8} style={{ textAlign: "center", padding: "20px", color: "#999" }}>
+                        Tidak ada data
+                      </td>
                     </tr>
-                  ))}
+                  ) : (
+                    prodiRows.map(r => (
+                      <tr key={r.id_prodi ?? r.prodi}>
+                        <td className={styles.tdProdi}>{r.prodi}</td>
+                        <td>
+                          <span className={`${styles.tag} ${styles.tagBrown}`}>
+                            {r.mahasiswa}
+                          </span>
+                        </td>
+                        <td className={styles.tdNum}>{r.kegiatan}</td>
+                        <td><span className={`${styles.tag} ${styles.tagOrange}`}>{r.menunggu}</span></td>
+                        <td><span className={`${styles.tag} ${styles.tagGreen}`}>{r.disetujui}</span></td>
+                        <td><span className={`${styles.tag} ${styles.tagAmber}`}>{r.verifikasi}</span></td>
+                        <td><span className={`${styles.tag} ${styles.tagRed}`}>{r.ditolak}</span></td>
+                        <td><span className={`${styles.tag} ${styles.tagTeal}`}>{r.skpi}</span></td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             )}
           </div>
         </div>
 
-        {/* Notifikasi */}
+        {/* Panel Notifikasi */}
         <div className={styles.section}>
           <div className={styles.sectionHead}>
-            <div className={styles.sectionTitle}><Bell size={15} />Notifikasi Terbaru</div>
+            <div className={styles.sectionTitle}>
+              <Bell size={15} />Notifikasi Terbaru
+            </div>
             <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
               {unread > 0 && (
                 <button
@@ -303,7 +347,9 @@ export default function DashboardPage() {
                   <Check size={12} /> Tandai semua
                 </button>
               )}
-              {unread > 0 && <span className={styles.badge}>{unread}</span>}
+              {unread > 0 && (
+                <span className={styles.badge}>{unread}</span>
+              )}
             </div>
           </div>
 
@@ -324,6 +370,7 @@ export default function DashboardPage() {
                     onClick={() => !n.status_baca && handleMarkRead(n.id_notifikasi)}
                     style={{ cursor: n.status_baca ? "default" : "pointer" }}
                   >
+                    {/* Ikon notifikasi */}
                     <div
                       className={styles.notifDot}
                       style={{
@@ -334,13 +381,18 @@ export default function DashboardPage() {
                     >
                       <Bell size={12} />
                     </div>
+                    {/* Isi notifikasi */}
                     <div className={styles.notifText}>
                       <p>{n.pesan}</p>
                       <span>{relativeTime(n.created_at)}</span>
                     </div>
+                    {/* Tombol hapus */}
                     <button
                       className={styles.notifMore}
-                      onClick={e => { e.stopPropagation(); handleDelete(n.id_notifikasi); }}
+                      onClick={e => {
+                        e.stopPropagation(); // jangan panggil markRead
+                        handleDelete(n.id_notifikasi);
+                      }}
                       title="Hapus notifikasi"
                     >
                       <Trash2 size={13} />
@@ -361,11 +413,13 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* ── Progress summary ────────────────────────────────── */}
+      {/* ═══════════ PROGRESS RINGKASAN STATUS KEGIATAN ═══════════ */}
       {stats && (
         <div className={styles.section} style={{ marginTop: 0 }}>
           <div className={styles.sectionHead}>
-            <div className={styles.sectionTitle}><TrendingUp size={15} />Ringkasan Status Kegiatan</div>
+            <div className={styles.sectionTitle}>
+              <TrendingUp size={15} />Ringkasan Status Kegiatan
+            </div>
           </div>
           <div className={styles.progressGrid}>
             {[
@@ -382,16 +436,20 @@ export default function DashboardPage() {
                     <strong style={{ color: p.color }}>{pct}%</strong>
                   </div>
                   <div className={styles.track}>
-                    <div className={styles.fill} style={{ width: `${pct}%`, background: p.color }} />
+                    <div
+                      className={styles.fill}
+                      style={{ width: `${pct}%`, background: p.color }}
+                    />
                   </div>
-                  <p className={styles.progressSub}>{p.value.toLocaleString("id-ID")} kegiatan</p>
+                  <p className={styles.progressSub}>
+                    {p.value.toLocaleString("id-ID")} kegiatan
+                  </p>
                 </div>
               );
             })}
           </div>
         </div>
       )}
-
     </div>
   );
 }

@@ -10,6 +10,7 @@ import {
   Camera, X, Check, Upload, WifiOff,
   BookOpen, ClipboardList, History, BookMarked,
   CheckCircle2, XCircle, AlertTriangle, Award, Info, Clock,
+  Menu, // ← tombol hamburger mobile
 } from "lucide-react";
 import styles from "./mahasiswa.module.css";
 import { useRouter, usePathname } from "next/navigation";
@@ -27,9 +28,9 @@ import {
   createMahasiswaSSE,
 } from "@/lib/api";
 
-// ============================================================
-// Avatar Editor Modal (sama persis dengan admin)
-// ============================================================
+/* ══════════════════════════════════════════════════════════════
+   Avatar Editor Modal (sama dengan admin)
+══════════════════════════════════════════════════════════════ */
 function AvatarEditorModal({ currentSrc, onClose, onSave }) {
   const [preview, setPreview] = useState(null);
   const [dragging, setDragging] = useState(false);
@@ -71,7 +72,10 @@ function AvatarEditorModal({ currentSrc, onClose, onSave }) {
     }
   }
 
+  // Bersihkan URL objek saat komponen unmount
   useEffect(() => () => { if (preview) URL.revokeObjectURL(preview); }, [preview]);
+
+  // Escape untuk menutup modal
   useEffect(() => {
     const onKey = (e) => { if (e.key === "Escape") onClose(); };
     window.addEventListener("keydown", onKey);
@@ -88,6 +92,7 @@ function AvatarEditorModal({ currentSrc, onClose, onSave }) {
           </div>
           <button className={styles.modalClose} onClick={onClose}><X size={15} /></button>
         </div>
+
         <div className={styles.modalPreviewRow}>
           <div className={styles.modalPreviewWrap}>
             <img src={preview || currentSrc} alt="Preview" className={styles.modalPreviewImg} />
@@ -103,6 +108,7 @@ function AvatarEditorModal({ currentSrc, onClose, onSave }) {
             <p className={styles.modalPreviewHint}>JPG, PNG, WebP, GIF · maks. 2 MB</p>
           </div>
         </div>
+
         <div
           className={`${styles.dropZone} ${dragging ? styles.dropZoneActive : ""}`}
           onDragOver={e => { e.preventDefault(); setDragging(true); }}
@@ -114,8 +120,10 @@ function AvatarEditorModal({ currentSrc, onClose, onSave }) {
           <div className={styles.dropIconWrap}><Upload size={20} className={styles.dropIcon} /></div>
           <span className={styles.dropText}>{dragging ? "Lepaskan di sini…" : "Klik atau seret foto ke sini"}</span>
           <span className={styles.dropSubText}>PNG, JPG, WebP hingga 2MB</span>
-          <input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" className={styles.fileInput} onChange={e => { const f = e.target.files?.[0]; if (f) processFile(f); }} />
+          <input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif"
+            className={styles.fileInput} onChange={e => { const f = e.target.files?.[0]; if (f) processFile(f); }} />
         </div>
+
         {error && <div className={styles.modalErrorBox}><X size={13} /><p className={styles.modalError}>{error}</p></div>}
         <div className={styles.modalActions}>
           <button className={styles.modalBtnCancel} onClick={onClose}>Batal</button>
@@ -128,9 +136,9 @@ function AvatarEditorModal({ currentSrc, onClose, onSave }) {
   );
 }
 
-// ============================================================
-// KOMPONEN NOTIFIKASI DROPDOWN (dinamis dari backend)
-// ============================================================
+/* ══════════════════════════════════════════════════════════════
+   Notifikasi Dropdown
+══════════════════════════════════════════════════════════════ */
 function timeAgo(dateStr) {
   const diff = Math.floor((Date.now() - new Date(dateStr)) / 1000);
   if (diff < 60) return "Baru saja";
@@ -244,9 +252,9 @@ function NotificationDropdown({ isOpen, onClose, onUnreadChange }) {
   );
 }
 
-// ============================================================
-// Layout Inner (menggunakan useMahasiswa)
-// ============================================================
+/* ══════════════════════════════════════════════════════════════
+   Layout Inner
+══════════════════════════════════════════════════════════════ */
 function MahasiswaLayoutInner({ children }) {
   const [loggingOut, setLoggingOut] = useState(false);
   const [checking, setChecking] = useState(true);
@@ -255,6 +263,7 @@ function MahasiswaLayoutInner({ children }) {
   const [avatarSrc, setAvatarSrc] = useState("/img/avatar-default.jpg");
   const [notifOpen, setNotifOpen] = useState(false);
   const [notifUnread, setNotifUnread] = useState(0);
+  const [sidebarOpen, setSidebarOpen] = useState(false); // ← untuk mobile
   const notifRef = useRef(null);
 
   const router = useRouter();
@@ -280,7 +289,7 @@ function MahasiswaLayoutInner({ children }) {
     return () => { mounted = false; };
   }, [router]);
 
-  // Sinkron foto dari user context
+  // Sinkron foto dari context
   useEffect(() => {
     if (user?.foto) setAvatarSrc(getAvatarUrl(user.foto));
   }, [user?.foto]);
@@ -314,7 +323,7 @@ function MahasiswaLayoutInner({ children }) {
     { href: "/mahasiswa/panduan",   label: "Buku Panduan", icon: BookMarked },
   ];
 
-  // Koneksi SSE untuk notifikasi real-time
+  // Auto-poll unread count setiap 60 detik
   useEffect(() => {
     const es = createMahasiswaSSE();
     if (!es) return;
@@ -331,9 +340,14 @@ function MahasiswaLayoutInner({ children }) {
     return () => es.close();
   }, []);
 
-  // Escape key untuk close notifikasi
+  // Escape key → tutup notifikasi & sidebar
   useEffect(() => {
-    const handleKeyDown = (e) => { if (e.key === "Escape") setNotifOpen(false); };
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") {
+        setNotifOpen(false);
+        setSidebarOpen(false);
+      }
+    };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
@@ -348,6 +362,11 @@ function MahasiswaLayoutInner({ children }) {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  // Tutup sidebar saat rute berubah
+  useEffect(() => {
+    setSidebarOpen(false);
+  }, [pathname]);
 
   // Logout
   const handleLogout = async () => {
@@ -392,9 +411,20 @@ function MahasiswaLayoutInner({ children }) {
         </div>
       )}
 
-      {showEditor && <AvatarEditorModal currentSrc={avatarSrc} onClose={() => setShowEditor(false)} onSave={handleAvatarSave} />}
+      {showEditor && (
+        <AvatarEditorModal currentSrc={avatarSrc} onClose={() => setShowEditor(false)} onSave={handleAvatarSave} />
+      )}
 
-      <aside className={styles.sidebar} style={mockMode ? { marginTop: 29 } : {}}>
+      {/* Overlay sidebar untuk mobile */}
+      {sidebarOpen && (
+        <div className={styles.sidebarOverlay} onClick={() => setSidebarOpen(false)} />
+      )}
+
+      {/* Sidebar */}
+      <aside
+        className={`${styles.sidebar} ${sidebarOpen ? styles.open : ""}`}
+        style={mockMode ? { marginTop: 29 } : {}}
+      >
         <div className={styles.brand}>
           <div className={styles.logo}>
             <Image src="/img/logo_isb.png" alt="logo" width={80} height={35} priority style={{ height: "auto" }} />
@@ -408,7 +438,12 @@ function MahasiswaLayoutInner({ children }) {
             const Icon = item.icon;
             const isActive = pathname.startsWith(item.href);
             return (
-              <Link key={item.href} href={item.href} className={`${styles.navItem} ${isActive ? styles.navItemActive : ""}`}>
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`${styles.navItem} ${isActive ? styles.navItemActive : ""}`}
+                onClick={() => setSidebarOpen(false)} // tutup sidebar setelah klik link
+              >
                 {isActive && <span className={styles.activeAccent} style={{ background: prodiConfig.primary }} />}
                 <span className={styles.iconWrap}><Icon size={17} /></span>
                 <span className={styles.navLabel}>{item.label}</span>
@@ -422,6 +457,15 @@ function MahasiswaLayoutInner({ children }) {
       <div className={styles.main} style={mockMode ? { marginTop: 29 } : {}}>
         <header className={styles.topbar}>
           <div className={styles.topbarLeft}>
+            {/* Tombol menu untuk mobile */}
+            <button
+              className={styles.menuBtn}
+              onClick={() => setSidebarOpen(true)}
+              aria-label="Buka menu"
+            >
+              <Menu size={20} />
+            </button>
+
             <nav className={styles.breadcrumb}>
               <span className={styles.breadcrumbRoot}>Mahasiswa</span>
               <ChevronRight size={12} className={styles.breadcrumbSep} />
@@ -430,9 +474,13 @@ function MahasiswaLayoutInner({ children }) {
           </div>
 
           <div className={styles.topbarRight}>
-            {/* NOTIFICATION DROPDOWN */}
+            {/* Notifikasi */}
             <div className={styles.notifWrapper} ref={notifRef}>
-              <button className={styles.iconBtn} aria-label="Notifikasi" onClick={() => setNotifOpen(!notifOpen)}>
+              <button
+                className={styles.iconBtn}
+                aria-label="Notifikasi"
+                onClick={() => setNotifOpen(!notifOpen)}
+              >
                 <Bell size={17} />
                 {notifUnread > 0 && <span className={styles.badge}>{notifUnread > 99 ? "99+" : notifUnread}</span>}
               </button>
@@ -444,6 +492,8 @@ function MahasiswaLayoutInner({ children }) {
             </div>
 
             <span className={styles.divider} />
+
+            {/* User info */}
             <div className={styles.userBlock}>
               <button className={styles.avatarBtn} onClick={() => router.push("/mahasiswa/profile")} aria-label="Lihat profil">
                 <img src={avatarSrc} alt="avatar" className={styles.avatar}
@@ -468,9 +518,9 @@ function MahasiswaLayoutInner({ children }) {
   );
 }
 
-// ============================================================
-// Ekspor default dengan Provider
-// ============================================================
+/* ══════════════════════════════════════════════════════════════
+   Ekspor default dengan Provider
+══════════════════════════════════════════════════════════════ */
 export default function MahasiswaLayout({ children }) {
   return (
     <MahasiswaProvider>

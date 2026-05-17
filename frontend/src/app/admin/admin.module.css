@@ -1802,11 +1802,219 @@
   opacity: 0.5;
 }
 
-/* Responsif untuk mobile */
+/* ============================================
+   RESPONSIVE MEDIA QUERIES
+   ============================================ */
+
+/* Tablet (max-width: 960px) */
+@media (max-width: 960px) {
+  .page { padding: 20px 16px 90px; }
+  .prodiDetailGrid { grid-template-columns: repeat(2, 1fr); }
+  .prodiInfoItemContent { grid-template-columns: 1fr; gap: 8px; }
+  .cplToolbar { flex-direction: column; align-items: stretch; }
+  .cplToolbarRight { justify-content: flex-start; }
+  .searchInp { width: 100%; }
+  .infoBar { flex-direction: column; }
+  .infoActions { border-left: none; border-top: 1px solid #ecddd0; justify-content: flex-start; }
+  .header { flex-direction: column; }
+  .headerActions { justify-content: flex-start; }
+}
+
+/* Mobile (max-width: 640px) */
+@media (max-width: 640px) {
+  .title { font-size: 20px; }
+  .tabs { flex-direction: column; background: transparent; border: none; padding: 0; gap: 6px; }
+  .tab {
+    background: #fff;
+    border: 1px solid #e8ddd4;
+    border-radius: 40px;
+    justify-content: center;
+    padding: 8px 12px;
+  }
+  .tabName { display: inline-block; }
+  .tabDot { width: 24px; height: 24px; font-size: 8px; }
+  .tabBadges { margin-left: 6px; }
+  .infoLeft { padding: 12px; }
+  .infoActions { flex-wrap: wrap; }
+  .prodiInfoItem { flex-direction: column; align-items: stretch; }
+  .prodiInfoItemDrag { align-self: center; }
+  .prodiInfoItemContent { grid-template-columns: 1fr; }
+  .prodiInfoActions { justify-content: flex-end; margin-top: 6px; }
+  .cplItem { flex-wrap: wrap; }
+  .cplActions { width: 100%; justify-content: flex-end; margin-top: 8px; opacity: 1; }
+  .accordionEN { display: none; }
+  .accordionBtn { padding: 12px; }
+  .stickyBar {
+    width: calc(100% - 32px);
+    flex-wrap: wrap;
+    white-space: normal;
+    justify-content: center;
+    padding: 10px 16px;
+  }
+  .stickyRight { width: 100%; justify-content: center; }
+  .modalBox { max-width: 96%; }
+  .toast { top: auto; bottom: 16px; left: 16px; right: 16px; max-width: none; }
+  .previewBar { flex-wrap: wrap; height: auto; padding: 12px; gap: 8px; }
+  .previewBarLeft, .previewBarRight { width: 100%; justify-content: space-between; }
+}
+
+/* Mobile kecil (max-width: 480px) */
+@media (max-width: 480px) {
+  .prodiDetailGrid { grid-template-columns: 1fr; }
+  .prodiDetailItem { border-right: none; }
+  .tabCount { display: none; }
+  .btnOutlineSmall, .btnMini { padding: 4px 10px; font-size: 11px; }
+  .dropZone { margin: 12px; padding: 24px 12px; }
+}
+
+/* ============================================
+   RESPONSIVE SIDEBAR (MOBILE & TABLET)
+   ============================================ */
+
+/* Tombol menu (hamburger) – secara default disembunyikan, muncul di layar ≤960px */
+.menuBtn {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #765439;
+  padding: 6px;
+  border-radius: 7px;
+  transition: background 0.15s;
+  align-items: center;
+  justify-content: center;
+}
+
+.menuBtn:hover {
+  background: #f5ece4;
+}
+
+/* Overlay gelap saat sidebar terbuka di mobile */
+.sidebarOverlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(3px);
+  z-index: 35;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+/* Mobile & tablet: lebar layar ≤960px */
+@media (max-width: 960px) {
+  /* Tampilkan tombol menu */
+  .menuBtn {
+    display: flex;
+  }
+
+  /* Sidebar awalnya tersembunyi di kiri */
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: -280px;
+    width: 260px;
+    height: 100%;
+    transition: left 0.3s ease;
+    z-index: 40;
+    box-shadow: none;
+    background: linear-gradient(175deg, #765439 0%, #5c3317 68%, #3d200a 100%);
+  }
+
+  /* Saat sidebar terbuka (kelas .open ditambahkan) */
+  .sidebar.open {
+    left: 0;
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.25);
+  }
+
+  /* Tampilkan overlay */
+  .sidebarOverlay.show {
+    display: block;
+  }
+
+  /* Penyesuaian topbar agar tidak terlalu padat */
+  .topbar {
+    padding-left: 12px;
+    gap: 8px;
+  }
+
+  .breadcrumbRoot {
+    font-size: 12px;
+  }
+
+  /* Sembunyikan role di user info (hemat tempat) */
+  .userRole {
+    display: none;
+  }
+
+  /* Ukuran avatar sedikit lebih kecil */
+  .avatar {
+    width: 30px;
+    height: 30px;
+  }
+
+  .avatarOverlay {
+    display: none;
+  }
+
+  .onlineDot {
+    width: 7px;
+    height: 7px;
+  }
+
+  /* Notifikasi dropdown agar tidak terpotong */
+  .notifDropdown {
+    position: fixed;
+    top: 56px;
+    right: 12px;
+    left: auto;
+    width: 360px;
+    max-width: calc(100% - 24px);
+  }
+}
+
+/* Layar sangat kecil (≤640px) */
 @media (max-width: 640px) {
   .notifDropdown {
-    width: calc(100vw - 2rem);
-    right: -0.5rem;
-    left: auto;
+    top: 52px;
+    right: 8px;
+    left: 8px;
+    width: auto;
+  }
+
+  .userInfoBtn .userName {
+    max-width: 100px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .logoutBtn {
+    width: 28px;
+    height: 28px;
+  }
+
+  .iconBtn {
+    width: 32px;
+    height: 32px;
+  }
+
+  .breadcrumbRoot {
+    display: none;
+  }
+  .breadcrumbSep {
+    display: none;
+  }
+}
+
+/* Pastikan sidebar konten tetap nyaman dibaca saat terbuka */
+@media (max-width: 960px) {
+  .sidebar .brandText {
+    display: flex !important;
+  }
+  .sidebar .navSection,
+  .sidebar .navLabel,
+  .sidebar .sidebarFooter {
+    display: block !important;
   }
 }

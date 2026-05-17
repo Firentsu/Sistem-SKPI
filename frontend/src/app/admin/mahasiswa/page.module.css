@@ -1,31 +1,34 @@
-/* ─────────────────────────────────────────
-   PAGE BASE
-───────────────────────────────────────── */
+/* ═══════════════════════════════════════════════
+   page.module.css
+   Halaman Manajemen Mahasiswa (Admin)
+   - Setiap properti diberi komentar
+   - Responsif (breakpoint 960px, 760px, 640px)
+   - Keamanan: tidak ada CSS dinamis berbahaya
+═══════════════════════════════════════════════ */
+
 .page {
-  padding: 28px 32px 48px;
-  min-height: 100%;
-  background: #faf7f4;
-  font-family: 'Inter', 'Segoe UI', sans-serif;
+  padding: 28px 32px 48px;           /* Ruang di sekeliling konten */
+  min-height: 100%;                  /* Penuhi tinggi area */
+  background: #faf7f4;               /* Warna latar krem hangat */
+  font-family: 'Inter', 'Segoe UI', sans-serif; /* Font modern */
 }
 
-/* ─────────────────────────────────────────
-   PAGE HEADER
-───────────────────────────────────────── */
+/* ── Header ── */
 .pageHeader {
   display: flex;
-  align-items: flex-start;
+  align-items: flex-start;           /* Judul di kiri, tombol di kanan */
   justify-content: space-between;
   gap: 16px;
   margin-bottom: 26px;
-  flex-wrap: wrap;
+  flex-wrap: wrap;                   /* Bungkus jika layar sempit */
 }
 
 .pageTitle {
   font-size: 24px;
   font-weight: 800;
   color: #3d2006;
-  margin: 0 0 4px;
-  letter-spacing: -0.4px;
+  margin: 0 0 4px;                  /* Jarak ke subjudul */
+  letter-spacing: -0.4px;           /* Sedikit rapatkan */
 }
 
 .pageSub {
@@ -39,12 +42,10 @@
   gap: 10px;
   align-items: center;
   flex-wrap: wrap;
-  flex-shrink: 0;
+  flex-shrink: 0;                   /* Jangan mengecil */
 }
 
-/* ─────────────────────────────────────────
-   BUTTONS
-───────────────────────────────────────── */
+/* ── Tombol Umum ── */
 .btnPrimary {
   display: flex;
   align-items: center;
@@ -61,8 +62,16 @@
   box-shadow: 0 2px 10px rgba(118,84,57,0.3);
   white-space: nowrap;
 }
-.btnPrimary:hover { opacity: 0.88; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(118,84,57,0.35); }
-.btnPrimary:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+.btnPrimary:hover {
+  opacity: 0.88;
+  transform: translateY(-1px);      /* Efek mengambang */
+  box-shadow: 0 4px 16px rgba(118,84,57,0.35);
+}
+.btnPrimary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
 
 .btnOutline {
   display: flex;
@@ -79,7 +88,10 @@
   transition: background 0.15s, border-color 0.15s;
   white-space: nowrap;
 }
-.btnOutline:hover { background: #fdf3ec; border-color: #c8945a; }
+.btnOutline:hover {
+  background: #fdf3ec;
+  border-color: #c8945a;
+}
 
 .btnGhost {
   padding: 9px 18px;
@@ -92,7 +104,10 @@
   cursor: pointer;
   transition: background 0.15s, border-color 0.15s;
 }
-.btnGhost:hover { background: #f5ece4; border-color: #b09880; }
+.btnGhost:hover {
+  background: #f5ece4;
+  border-color: #b09880;
+}
 
 .btnSave {
   display: flex;
@@ -109,8 +124,15 @@
   transition: opacity 0.15s, transform 0.15s;
   box-shadow: 0 2px 8px rgba(118,84,57,0.25);
 }
-.btnSave:hover:not(:disabled) { opacity: 0.88; transform: translateY(-1px); }
-.btnSave:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+.btnSave:hover:not(:disabled) {
+  opacity: 0.88;
+  transform: translateY(-1px);
+}
+.btnSave:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
 
 .btnWarn {
   background: linear-gradient(135deg, #d97706, #b45309) !important;
@@ -122,12 +144,10 @@
   box-shadow: 0 2px 8px rgba(220,38,38,0.25) !important;
 }
 
-/* ─────────────────────────────────────────
-   STATS GRID
-───────────────────────────────────────── */
+/* ── Stat Cards ── */
 .statsGrid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, 1fr); /* 4 kolom di desktop */
   gap: 14px;
   margin-bottom: 22px;
 }
@@ -143,7 +163,10 @@
   box-shadow: 0 1px 8px rgba(118,84,57,0.06);
   transition: box-shadow 0.15s, transform 0.15s;
 }
-.statCard:hover { box-shadow: 0 4px 18px rgba(118,84,57,0.1); transform: translateY(-1px); }
+.statCard:hover {
+  box-shadow: 0 4px 18px rgba(118,84,57,0.1);
+  transform: translateY(-1px);
+}
 
 .statIconWrap {
   width: 44px;
@@ -155,6 +178,7 @@
   flex-shrink: 0;
 }
 
+/* Warna background ikon per kategori */
 .stat_blue   .statIconWrap { background: #dbeafe; color: #1d4ed8; }
 .stat_green  .statIconWrap { background: #dcfce7; color: #16a34a; }
 .stat_purple .statIconWrap { background: #ede9fe; color: #7c3aed; }
@@ -172,9 +196,7 @@
 .statTitle { font-size: 13px; font-weight: 600; color: #765439; margin-top: 4px; }
 .statSub   { font-size: 11px; color: #a07858; margin-top: 2px; }
 
-/* ─────────────────────────────────────────
-   TOOLBAR
-───────────────────────────────────────── */
+/* ── Toolbar ── */
 .toolbar {
   display: flex;
   gap: 12px;
@@ -200,7 +222,7 @@
 
 .searchInput {
   width: 100%;
-  padding: 9px 36px 9px 36px;
+  padding: 9px 36px 9px 36px;        /* Ruang untuk ikon kiri & tombol clear */
   border: 1.5px solid #e8d5c4;
   border-radius: 10px;
   background: #fff;
@@ -210,7 +232,10 @@
   transition: border-color 0.15s, box-shadow 0.15s;
   box-sizing: border-box;
 }
-.searchInput:focus { border-color: #765439; box-shadow: 0 0 0 3px rgba(118,84,57,0.1); }
+.searchInput:focus {
+  border-color: #765439;
+  box-shadow: 0 0 0 3px rgba(118,84,57,0.1); /* Ring ungu tipis */
+}
 
 .searchClear {
   position: absolute;
@@ -266,13 +291,19 @@
   justify-content: center;
 }
 
-.chevUp { transform: rotate(180deg); transition: transform 0.2s; }
+.chevUp {
+  transform: rotate(180deg);
+  transition: transform 0.2s;
+}
 
-.resultCount { font-size: 12.5px; color: #a07858; font-weight: 500; white-space: nowrap; }
+.resultCount {
+  font-size: 12.5px;
+  color: #a07858;
+  font-weight: 500;
+  white-space: nowrap;
+}
 
-/* ─────────────────────────────────────────
-   FILTER PANEL
-───────────────────────────────────────── */
+/* ── Filter Panel ── */
 .filterPanel {
   background: #fff;
   border: 1.5px solid #f0e0d0;
@@ -283,10 +314,13 @@
   flex-direction: column;
   gap: 14px;
   box-shadow: 0 2px 12px rgba(118,84,57,0.06);
-  animation: fadeIn 0.15s ease;
+  animation: fadeIn 0.15s ease;       /* Muncul halus */
 }
 
-@keyframes fadeIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: none; }
+}
 
 .filterGroup { display: flex; flex-direction: column; gap: 8px; }
 
@@ -312,7 +346,12 @@
   transition: all 0.15s;
 }
 .chip:hover   { background: #fdf3ec; border-color: #c8945a; }
-.chipActive   { background: #765439; color: #fde68a; border-color: #765439; font-weight: 700; }
+.chipActive   {
+  background: #765439;
+  color: #fde68a;
+  border-color: #765439;
+  font-weight: 700;
+}
 
 .btnResetFilter {
   display: flex;
@@ -320,7 +359,7 @@
   gap: 6px;
   background: none;
   border: none;
-  color: #c0392b;
+  color: #c0392b;                    /* Merah soft */
   font-size: 12.5px;
   font-weight: 600;
   cursor: pointer;
@@ -330,16 +369,14 @@
 }
 .btnResetFilter:hover { opacity: 0.75; }
 
-/* ─────────────────────────────────────────
-   TABLE
-───────────────────────────────────────── */
+/* ── Tabel ── */
 .tableCard {
   background: #fff;
   border-radius: 18px;
   border: 1.5px solid #f0e0d0;
-  overflow: visible;
+  overflow: visible;                 /* Agar dropdown tidak terpotong */
   box-shadow: 0 2px 16px rgba(118,84,57,0.07);
-  scroll-margin: 0;
+  scroll-margin: 0;                  /* Perbaikan scroll-to-view */
 }
 
 .table { position: relative; }
@@ -349,7 +386,7 @@
 .table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 700px;
+  min-width: 700px;                  /* Lebar minimum sebelum scroll horizontal */
 }
 
 .table thead tr {
@@ -378,7 +415,8 @@
 
 .table tbody tr:last-child td { border-bottom: none; }
 .table tbody tr:hover { background: #fdfaf7; transition: background 0.1s; }
-.rowInactive { opacity: 0.55; }
+
+.rowInactive { opacity: 0.55; }      /* Redup jika akun nonaktif */
 .rowInactive:hover { opacity: 0.7; }
 
 .thNo     { width: 48px; text-align: center; }
@@ -386,6 +424,7 @@
 .tdNo     { text-align: center; color: #b09880; font-size: 12px; }
 .tdCenter { text-align: auto; }
 
+/* Cell mahasiswa */
 .nameCell {
   display: flex;
   align-items: center;
@@ -450,6 +489,7 @@
 .badgeRevisi  { background: #fef3c7; color: #92400e; }
 .badgeBelum   { background: #f3f4f6; color: #6b7280; }
 
+/* Status akun */
 .akunDot {
   display: inline-flex;
   align-items: center;
@@ -475,6 +515,7 @@
   border: 1px solid #f0dcc8;
 }
 
+/* Empty state */
 .emptyTd { padding: 0 !important; }
 
 .emptyState {
@@ -488,9 +529,7 @@
 .emptyState p    { font-size: 15px; font-weight: 700; color: #a07858; margin: 0; }
 .emptyState span { font-size: 12.5px; color: #b09880; }
 
-/* ─────────────────────────────────────────
-   PAGINATION
-───────────────────────────────────────── */
+/* ── Pagination ── */
 .pagination {
   display: flex;
   align-items: center;
@@ -526,12 +565,14 @@
 }
 .pBtn:hover:not(:disabled) { background: #fdf3ec; border-color: #c8945a; }
 .pBtn:disabled             { opacity: 0.35; cursor: default; }
-.pBtnActive                { background: #765439 !important; color: #fde68a !important; border-color: #765439 !important; }
-.pDots                     { padding: 0 4px; color: #b09880; font-size: 13px; }
+.pBtnActive                {
+  background: #765439 !important;
+  color: #fde68a !important;
+  border-color: #765439 !important;
+}
+.pDots { padding: 0 4px; color: #b09880; font-size: 13px; }
 
-/* ─────────────────────────────────────────
-   ROW ACTION DROPDOWN
-───────────────────────────────────────── */
+/* ── Dropdown Aksi Baris ── */
 .ddWrap { position: relative; display: inline-flex; }
 
 .ddTrigger {
@@ -601,6 +642,7 @@
   margin: 4px 10px;
 }
 
+/* Warna aksi khusus */
 .ddDanger        { color: #dc2626 !important; }
 .ddDanger:hover  { background: #fff5f5 !important; }
 .ddDanger svg    { color: #dc2626; opacity: 1; }
@@ -613,9 +655,7 @@
 .ddWarn:hover    { background: #fffbeb !important; }
 .ddWarn svg      { color: #b45309; opacity: 1; }
 
-/* ─────────────────────────────────────────
-   TOAST
-───────────────────────────────────────── */
+/* ── Toast ── */
 .toastStack {
   position: fixed;
   top: 22px;
@@ -662,14 +702,12 @@
 }
 .toastClose:hover { opacity: 1; }
 
-/* ─────────────────────────────────────────
-   MODAL
-───────────────────────────────────────── */
+/* ── Modal ── */
 .modalOverlay {
   position: fixed;
   inset: 0;
   background: rgba(15, 7, 2, 0.6);
-  backdrop-filter: blur(5px);
+  backdrop-filter: blur(5px);        /* Efek blur latar */
   z-index: 1000;
   display: flex;
   align-items: center;
@@ -683,15 +721,15 @@
   border-radius: 20px;
   width: 100%;
   max-width: 600px;
-  max-height: 90vh;
+  max-height: 90vh;                 /* Batasi tinggi modal */
   display: flex;
   flex-direction: column;
   box-shadow: 0 28px 72px rgba(40,20,5,0.3), 0 0 0 1px rgba(118,84,57,0.08);
   animation: slideUp 0.22s cubic-bezier(.4,0,.2,1);
-  overflow: hidden;
+  overflow: hidden;                  /* Klip konten */
 }
 
-.modalSm { max-width: 420px; }
+.modalSm { max-width: 420px; }       /* Modal kecil */
 
 @keyframes slideUp {
   from { transform: translateY(20px); opacity: 0; }
@@ -705,7 +743,7 @@
   padding: 18px 22px 16px;
   background: #fdfaf8;
   border-bottom: 1.5px solid #f0e6dc;
-  flex-shrink: 0;
+  flex-shrink: 0;                    /* Tidak ikut scroll */
 }
 
 .modalHeaderLeft {
@@ -749,7 +787,7 @@
 
 .modalBody {
   flex: 1;
-  overflow-y: auto;
+  overflow-y: auto;                  /* Scroll jika konten panjang */
   padding: 20px 22px;
   display: flex;
   flex-direction: column;
@@ -758,6 +796,7 @@
 .modalBody::-webkit-scrollbar { width: 4px; }
 .modalBody::-webkit-scrollbar-thumb { background: #e8d5c4; border-radius: 4px; }
 
+/* Section dalam form */
 .formSection {
   font-size: 10.5px;
   font-weight: 800;
@@ -771,12 +810,12 @@
 
 .formGrid2 {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 1fr;    /* 2 kolom */
   gap: 12px;
 }
 
 .fg { display: flex; flex-direction: column; gap: 5px; }
-.fullSpan { grid-column: span 2; }
+.fullSpan { grid-column: span 2; }   /* Penuhi baris penuh */
 
 .fl {
   font-size: 11.5px;
@@ -786,7 +825,7 @@
   text-transform: uppercase;
 }
 
-.req { color: #dc2626; margin-left: 2px; }
+.req { color: #dc2626; margin-left: 2px; } /* Tanda bintang merah */
 
 .input {
   width: 100%;
@@ -806,6 +845,7 @@
 
 .errMsg { font-size: 11.5px; color: #dc2626; margin: 1px 0 0; }
 
+/* Password input dengan toggle */
 .pwWrap { position: relative; display: flex; }
 .pwWrap .input { padding-right: 38px; }
 
@@ -829,6 +869,7 @@
 .inputIcon { position: absolute; left: 11px; color: #c8945a; pointer-events: none; }
 .inputWithIcon { padding-left: 32px !important; }
 
+/* Toggle button */
 .toggleBtn {
   display: flex;
   align-items: center;
@@ -856,6 +897,7 @@
 .confirmBoxDanger { background: #fff5f5 !important; border-color: #fca5a5 !important; }
 .confirmNote { font-size: 12.5px; color: #9e7b5e; }
 
+/* Dropzone upload */
 .dropZone {
   border: 2px dashed #d5bfaf;
   border-radius: 14px;
@@ -900,6 +942,7 @@
   flex-shrink: 0;
 }
 
+/* Spinner */
 .spin {
   width: 14px;
   height: 14px;
@@ -912,9 +955,7 @@
 }
 @keyframes spinAnim { to { transform: rotate(360deg); } }
 
-/* ─────────────────────────────────────────
-   PRODI DISTRIBUTION CHART
-───────────────────────────────────────── */
+/* ── PRODI DISTRIBUTION CHART ── */
 .prodiDistCard {
   background: #fff;
   border: 1.5px solid #f0e0d0;
@@ -980,7 +1021,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  pointer-events: none;
+  pointer-events: none;              /* Agar klik menembus ke chart */
   gap: 1px;
 }
 
@@ -1075,9 +1116,7 @@
   text-align: right;
 }
 
-/* ─────────────────────────────────────────
-   RESPONSIVE
-───────────────────────────────────────── */
+/* ── RESPONSIVE ── */
 @media (max-width: 760px) {
   .chartLayout { flex-direction: column; align-items: center; gap: 16px; }
   .chartLegend { width: 100%; }
@@ -1087,12 +1126,12 @@
 
 @media (max-width: 960px) {
   .page      { padding: 20px 16px 36px; }
-  .statsGrid { grid-template-columns: repeat(2, 1fr); }
+  .statsGrid { grid-template-columns: repeat(2, 1fr); }   /* 2 kolom di tablet */
 }
 
 @media (max-width: 640px) {
-  .statsGrid      { grid-template-columns: 1fr 1fr; }
-  .formGrid2      { grid-template-columns: 1fr; }
+  .statsGrid      { grid-template-columns: 1fr 1fr; }     /* Tetap 2 kolom */
+  .formGrid2      { grid-template-columns: 1fr; }          /* 1 kolom di HP */
   .fullSpan       { grid-column: span 1; }
   .modalBox       { max-height: 95vh; }
   .headerActions  { flex-direction: column; align-items: flex-start; }

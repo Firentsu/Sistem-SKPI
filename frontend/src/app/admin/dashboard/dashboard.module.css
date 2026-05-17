@@ -1,30 +1,34 @@
 /* =============================================
    DASHBOARD — Clean Warm Brown (ISB SKPI)
+   Setiap properti diberi komentar
+   Responsif: breakpoint 1200px, 1000px, 800px, 600px, 500px, 480px
+   Keamanan: tidak ada CSS dinamis berbahaya
    ============================================= */
 
+/* ── Halaman utama ── */
 .page {
-  padding: 28px 28px 32px;
+  padding: 28px 28px 32px;              /* Ruang di sekeliling konten */
   display: flex;
-  flex-direction: column;
-  gap: 20px;
-  min-height: 100vh;
-  font-family: 'Segoe UI', ui-sans-serif, sans-serif;
+  flex-direction: column;               /* Susun vertikal: header → cards → bottom → progress */
+  gap: 20px;                            /* Jarak antar section */
+  min-height: 100vh;                    /* Pastikan memenuhi layar */
+  font-family: 'Segoe UI', ui-sans-serif, sans-serif; /* Font modern */
 }
 
-/* ===== HEADER ===== */
+/* ── HEADER ── */
 .header {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
+  align-items: flex-start;              /* Sejajarkan di atas */
+  justify-content: space-between;       /* Judul kiri, tools kanan */
   gap: 16px;
-  flex-wrap: wrap;
+  flex-wrap: wrap;                      /* Bungkus ke baris baru jika sempit */
 }
 
 .title {
   font-size: 22px;
   font-weight: 800;
   color: #2c1a0e;
-  margin: 0 0 3px;
+  margin: 0 0 3px;                     /* Jarak kecil ke subtitle */
   letter-spacing: -0.3px;
 }
 
@@ -38,11 +42,11 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  flex-shrink: 0;
+  flex-shrink: 0;                      /* Jangan mengecil saat header sempit */
 }
 
-/* Filter */
-.filterBox { position: relative; }
+/* ── Filter Prodi ── */
+.filterBox { position: relative; }     /* Untuk dropdown absolute */
 
 .filterBtn {
   display: flex;
@@ -56,23 +60,27 @@
   font-weight: 600;
   color: #765439;
   cursor: pointer;
-  transition: border-color 0.15s, background 0.15s;
+  transition: border-color 0.15s, background 0.15s; /* Animasi halus */
 }
 
-.filterBtn:hover { background: #fdf4ec; border-color: #c8945a; }
+.filterBtn:hover {
+  background: #fdf4ec;
+  border-color: #c8945a;
+}
 
+/* Dropdown filter */
 .dropdown {
   position: absolute;
-  top: calc(100% + 4px);
+  top: calc(100% + 4px);                /* Tepat di bawah tombol */
   right: 0;
   background: #fff;
   border: 1px solid #ddd0c4;
   border-radius: 10px;
-  box-shadow: 0 6px 20px rgba(118,84,57,0.12);
-  z-index: 50;
+  box-shadow: 0 6px 20px rgba(118,84,57,0.12); /* Bayangan lembut */
+  z-index: 50;                          /* Di atas elemen lain */
   min-width: 180px;
-  overflow: hidden;
-  animation: fadeDown 0.12s ease;
+  overflow: hidden;                     /* Klip sudut */
+  animation: fadeDown 0.12s ease;       /* Animasi muncul */
 }
 
 @keyframes fadeDown {
@@ -96,6 +104,7 @@
 .dropItem:hover { background: #fdf4ec; }
 .dropActive { color: #765439; font-weight: 700; background: #fdf4ec; }
 
+/* Tombol refresh */
 .refreshBtn {
   width: 34px;
   height: 34px;
@@ -110,18 +119,21 @@
   transition: all 0.15s;
 }
 
-.refreshBtn:hover { background: #fdf4ec; transform: rotate(90deg); }
+.refreshBtn:hover {
+  background: #fdf4ec;
+  transform: rotate(90deg);             /* Putar ikon saat hover */
+}
 
-/* ===== STAT CARDS ===== */
+/* ── STAT CARDS ── */
 .cards {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, 1fr); /* 4 kolom di desktop */
   gap: 12px;
 }
 
-@media (max-width: 1200px) { .cards { grid-template-columns: repeat(3, 1fr); } }
-@media (max-width: 800px)  { .cards { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 500px)  { .cards { grid-template-columns: 1fr; } }
+@media (max-width: 1200px) { .cards { grid-template-columns: repeat(3, 1fr); } } /* 3 kolom */
+@media (max-width: 800px)  { .cards { grid-template-columns: repeat(2, 1fr); } } /* 2 kolom */
+@media (max-width: 500px)  { .cards { grid-template-columns: 1fr; } }            /* 1 kolom */
 
 .card {
   background: #fff;
@@ -131,13 +143,13 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  animation: fadeUp 0.35s ease both;
+  animation: fadeUp 0.35s ease both;    /* Animasi muncul dengan delay */
   transition: box-shadow 0.2s, transform 0.2s;
 }
 
 .card:hover {
   box-shadow: 0 4px 16px rgba(118,84,57,0.1);
-  transform: translateY(-1px);
+  transform: translateY(-1px);          /* Angkat sedikit */
 }
 
 @keyframes fadeUp {
@@ -152,10 +164,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
+  flex-shrink: 0;                      /* Ikon tidak mengecil */
 }
 
-.cardBody { flex: 1; min-width: 0; }
+.cardBody { flex: 1; min-width: 0; }   /* Ambil sisa ruang */
 
 .cardValue {
   font-size: 24px;
@@ -171,16 +183,16 @@
   line-height: 1.3;
 }
 
-/* ===== BOTTOM GRID ===== */
+/* ── BOTTOM GRID (tabel + notifikasi) ── */
 .bottom {
   display: grid;
-  grid-template-columns: 1fr 300px;
+  grid-template-columns: 1fr 300px;     /* Tabel fleksibel, notifikasi 300px */
   gap: 16px;
 }
 
-@media (max-width: 1000px) { .bottom { grid-template-columns: 1fr; } }
+@media (max-width: 1000px) { .bottom { grid-template-columns: 1fr; } } /* Tumpuk */
 
-/* ===== SECTION ===== */
+/* ── SECTION (card putih) ── */
 .section {
   background: #fff;
   border: 1px solid #ede0d4;
@@ -204,7 +216,7 @@
   color: #3d2006;
 }
 
-.sectionTitle svg { color: #765439; }
+.sectionTitle svg { color: #765439; }  /* Ikon section */
 
 .linkBtn {
   display: flex;
@@ -223,8 +235,8 @@
 
 .linkBtn:hover { background: #fdf4ec; border-color: #c8945a; }
 
-/* ===== TABLE ===== */
-.tableWrap { overflow-x: auto; }
+/* ── TABLE ── */
+.tableWrap { overflow-x: auto; }       /* Scroll horizontal jika sempit */
 
 .table {
   width: 100%;
@@ -265,7 +277,7 @@
 .tdProdi { font-weight: 600; color: #5c3317; }
 .tdNum   { color: #6b4f38; }
 
-/* Tags */
+/* Tag badge */
 .tag {
   display: inline-block;
   padding: 2px 9px;
@@ -281,7 +293,7 @@
 .tagRed    { background: #fff5f5; color: #b91c1c; }
 .tagTeal   { background: #f0fdfa; color: #0f766e; }
 
-/* ===== NOTIFICATIONS ===== */
+/* ── NOTIFICATIONS ── */
 .badge {
   background: #765439;
   color: #fff;
@@ -350,15 +362,15 @@
 
 .notifMore:hover { background: #f5ece4; color: #765439; }
 
-/* ===== PROGRESS ===== */
+/* ── PROGRESS ── */
 .progressGrid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, 1fr); /* 4 kolom */
   gap: 20px;
 }
 
-@media (max-width: 800px) { .progressGrid { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 480px) { .progressGrid { grid-template-columns: 1fr; } }
+@media (max-width: 800px)  { .progressGrid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 480px)  { .progressGrid { grid-template-columns: 1fr; } }
 
 .progressItem {
   display: flex;
@@ -389,7 +401,7 @@
 .fill {
   height: 100%;
   border-radius: 99px;
-  transition: width 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: width 0.9s cubic-bezier(0.22, 1, 0.36, 1); /* Animasi progress */
 }
 
 .progressSub {
@@ -398,7 +410,7 @@
   margin: 0;
 }
 
-/* ===== RESPONSIVE PAGE ===== */
+/* ── RESPONSIVE PAGE ── */
 @media (max-width: 600px) {
   .page { padding: 16px; }
   .title { font-size: 18px; }

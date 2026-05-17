@@ -8,6 +8,7 @@ import {
   ChevronRight, Bell, Shield, BookOpen, Award,
   Camera, X, Check, Upload, WifiOff,
   CheckCircle2, AlertTriangle, ClipboardCheck, Send, Clock,
+  Menu, // ← tombol menu untuk mobile
 } from "lucide-react";
 import styles from "./admin.module.css";
 import { useRouter, usePathname } from "next/navigation";
@@ -20,9 +21,9 @@ import AvatarCropModal from "@/components/AvatarCropModal";
 
 // ======================== KOMPONEN EDITOR AVATAR ========================
 function AvatarEditorModal({ currentSrc, onClose, onSave }) {
-  const [cropFile,    setCropFile]    = useState(null);  // file waiting to be cropped
-  const [croppedBlob, setCroppedBlob] = useState(null);  // result after crop
-  const [preview,     setPreview]     = useState(null);  // object URL of cropped preview
+  const [cropFile,    setCropFile]    = useState(null);
+  const [croppedBlob, setCroppedBlob] = useState(null);
+  const [preview,     setPreview]     = useState(null);
   const [dragging,    setDragging]    = useState(false);
   const [error,       setError]       = useState("");
   const [saving,      setSaving]      = useState(false);
@@ -261,6 +262,7 @@ export default function AdminLayout({ children }) {
   const [mockMode, setMockMode] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [notifUnread, setNotifUnread] = useState(0);
+  const [sidebarOpen, setSidebarOpen] = useState(false); // ← state untuk sidebar di mobile
   const notifRef = useRef(null);
 
   const [avatarSrc, setAvatarSrc] = useState("/img/avatar.jpg");
@@ -332,12 +334,22 @@ export default function AdminLayout({ children }) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Escape key untuk close notifikasi
+  // Escape key untuk close notifikasi & sidebar
   useEffect(() => {
-    const handleKeyDown = (e) => { if (e.key === "Escape") setNotifOpen(false); };
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") {
+        setNotifOpen(false);
+        setSidebarOpen(false);
+      }
+    };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
+
+  // Tutup sidebar saat route berubah (misal klik link)
+  useEffect(() => {
+    setSidebarOpen(false);
+  }, [pathname]);
 
   const navItems = [
     { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -393,7 +405,13 @@ export default function AdminLayout({ children }) {
         <AvatarEditorModal currentSrc={avatarSrc} onClose={() => setShowEditor(false)} onSave={handleAvatarSave} />
       )}
 
-      <aside className={styles.sidebar} style={mockMode ? { marginTop: 29 } : {}}>
+      {/* Overlay untuk mobile (sidebar terbuka) */}
+      {sidebarOpen && (
+        <div className={styles.sidebarOverlay} onClick={() => setSidebarOpen(false)} />
+      )}
+
+      {/* Sidebar dengan class open untuk mobile */}
+      <aside className={`${styles.sidebar} ${sidebarOpen ? styles.open : ""}`} style={mockMode ? { marginTop: 29 } : {}}>
         <div className={styles.brand}>
           <div className={styles.logo}>
             <Image src="/img/Logo_isb.png" alt="logo" width={80} height={35} priority style={{ width: "auto", height: "auto" }} />
@@ -408,7 +426,9 @@ export default function AdminLayout({ children }) {
             const isActive = pathname.startsWith(item.href);
             return (
               <Link key={item.href} href={item.href}
-                className={`${styles.navItem} ${isActive ? styles.navItemActive : ""}`}>
+                className={`${styles.navItem} ${isActive ? styles.navItemActive : ""}`}
+                onClick={() => setSidebarOpen(false)} // tutup sidebar setelah klik link di mobile
+              >
                 {isActive && <span className={styles.activeAccent} />}
                 <span className={styles.iconWrap}><Icon size={17} /></span>
                 <span className={styles.navLabel}>{item.label}</span>
@@ -422,6 +442,14 @@ export default function AdminLayout({ children }) {
       <div className={styles.main} style={mockMode ? { marginTop: 29 } : {}}>
         <header className={styles.topbar}>
           <div className={styles.topbarLeft}>
+            {/* Tombol menu untuk mobile */}
+            <button
+              className={styles.menuBtn}
+              onClick={() => setSidebarOpen(true)}
+              aria-label="Buka menu"
+            >
+              <Menu size={20} />
+            </button>
             <nav className={styles.breadcrumb}>
               <span className={styles.breadcrumbRoot}>Admin</span>
               <ChevronRight size={12} className={styles.breadcrumbSep} />
