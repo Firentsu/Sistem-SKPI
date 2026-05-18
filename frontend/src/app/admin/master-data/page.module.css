@@ -31,8 +31,13 @@
   background: #f0e8e0;
   padding: 4px;
   border-radius: 12px;
-  width: fit-content;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;          /* jangan wrap, lebih rapi discroll */
+  overflow-x: auto;           /* scroll horizontal di layar kecil */
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;      /* sembunyikan scrollbar di Firefox */
+}
+.tabs::-webkit-scrollbar {
+  display: none;              /* sembunyikan scrollbar di Chrome/Safari */
 }
 
 .tab {
@@ -49,6 +54,7 @@
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
   white-space: nowrap;
+  flex-shrink: 0;             /* jangan mengecil */
 }
 .tab:hover { background: #e8dcd2; color: #5c3317; }
 
@@ -88,11 +94,13 @@
   align-items: center;
   gap: 12px;
   padding: 18px 20px 0;
+  flex-wrap: wrap;             /* wrap di layar kecil */
 }
 
 .searchWrap {
   position: relative;
   flex: 1;
+  min-width: 200px;
   max-width: 380px;
 }
 .searchIcon {
@@ -137,6 +145,14 @@
   gap: 12px;
   margin-left: auto;
 }
+
+/* Di layar kecil, toolbar right ikut wrap */
+@media (max-width: 600px) {
+  .toolbarRight {
+    margin-left: 210px; /* sesuaikan dengan min-width searchWrap */
+  }
+}
+
 .countLabel {
   font-size: 12px;
   color: #9c7a5e;
@@ -171,16 +187,26 @@
   border-left: 3px solid #e8c8a8;
 }
 
-/* ── Table ────────────────────────────── */
-.tableWrap {
+/* ── Table wrapper + indikator scroll ──── */
+.tableScroll {
   overflow-x: auto;
-  overflow-y: visible;
+  -webkit-overflow-scrolling: touch;
+  /* Indikator bayangan agar pengguna tahu bisa discroll */
+  background:
+    linear-gradient(to right, white 30%, rgba(255,255,255,0)),
+    linear-gradient(to right, rgba(255,255,255,0), white 70%) 100% 0,
+    linear-gradient(to right, rgba(0,0,0,0.08), rgba(0,0,0,0)),
+    linear-gradient(to right, rgba(0,0,0,0), rgba(0,0,0,0.08)) 100% 0;
+  background-repeat: no-repeat;
+  background-size: 40px 100%, 40px 100%, 14px 100%, 14px 100%;
+  background-attachment: local, local, scroll, scroll;
 }
 
+/* ── Table ────────────────────────────── */
 .table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 480px;
+  min-width: 480px;            /* lebar minimum agar kolom tidak tercekik */
 }
 
 .table thead tr {
@@ -294,16 +320,19 @@
 }
 .actDel:hover { background: #fee2e2; }
 
-/* ── Loading / empty ──────────────────── */
+/* ── Loading / empty state ────────────── */
 .loadingTd {
-  padding: 48px 24px !important;
-  text-align: center !important;
-  color: #b09070 !important;
+  padding: 0 !important;      /* hilangkan padding td agar div bisa mengisi penuh */
+}
+.loadingState {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 10px;
+  padding: 48px 24px;
+  color: #b09070;
 }
+
 .emptyTd {
   padding: 48px 24px !important;
   text-align: center !important;
@@ -318,6 +347,8 @@
   justify-content: space-between;
   padding: 14px 20px;
   border-top: 1px solid #f0e8e0;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 .paginInfo {
   font-size: 12px;
@@ -575,3 +606,58 @@
 /* Spin animation */
 .spin { animation: rotate 0.8s linear infinite; }
 @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+/* ── RESPONSIVE ───────────────────────── */
+@media (max-width: 600px) {
+  .page {
+    padding: 16px 14px 40px;
+  }
+  .toolbar {
+    padding: 14px 14px 0;
+  }
+  .searchWrap {
+    max-width: 100%;
+  }
+  .typeDesc {
+    margin: 10px 14px 14px;
+  }
+  .pagination {
+    padding: 12px 14px;
+  }
+  .modal {
+    max-width: 100%;
+    margin: 8px;
+  }
+  .modalHeader,
+  .modalBody,
+  .modalFooter {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .pageTitle {
+    font-size: 20px;
+  }
+  .tabs {
+    padding: 3px;
+    gap: 2px;
+  }
+  .tab {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+  .table th,
+  .table td {
+    padding: 8px 10px;
+  }
+  .actEdit {
+    padding: 5px 8px;
+    font-size: 11px;
+  }
+  .actDel {
+    width: 28px;
+    height: 28px;
+  }
+}

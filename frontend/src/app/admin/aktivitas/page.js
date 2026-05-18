@@ -391,70 +391,72 @@ export default function AktivitasPage() {
 
       {/* Tabel */}
       <div className={styles.tableCard}>
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th className={styles.thNo}>No.</th>
-              <th>Nama Kegiatan</th>
-              <th>Mahasiswa</th>
-              <th>Jenis</th>
-              <th>Kategori</th>
-              <th className={styles.thCenter}>Tanggal</th>
-              <th className={styles.thCenter}>Status</th>
-              <th className={styles.thCenter}>Bukti</th>
-              <th className={styles.thCenter}>Aksi</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr><td colSpan={9} className={styles.emptyTd}>
-                <div className={styles.emptyState}><Loader2 size={30} className={styles.spin}/><p>Memuat data...</p></div>
-              </td></tr>
-            ) : rows.length === 0 ? (
-              <tr><td colSpan={9} className={styles.emptyTd}>
-                <div className={styles.emptyState}>
-                  <Activity size={42}/>
-                  <p>Tidak ada kegiatan yang ditemukan</p>
-                  <span>Coba ubah filter atau kata pencarian</span>
-                </div>
-              </td></tr>
-            ) : rows.map((row, idx) => (
-              <tr key={row.id_kegiatan}>
-                <td className={styles.tdNo}>{(safePage - 1) * PER_PAGE + idx + 1}</td>
-                <td>
-                  <div className={styles.kegiatanName}>{row.nama_kegiatan}</div>
-                  {row.penyelenggara && (
-                    <div className={styles.kegiatanSub}><Building2 size={10}/>{row.penyelenggara}</div>
-                  )}
-                </td>
-                <td>
-                  <div className={styles.mhsName}>{row.mahasiswa?.nama || "-"}</div>
-                  <code className={styles.mhsNim}>{row.mahasiswa?.nim || "-"}</code>
-                </td>
-                <td><JenisBadge nama={row.jenisaktivitas?.nama_indo}/></td>
-                <td className={styles.tdKat}>{row.kategoriaktivitas?.nama_indo || "-"}</td>
-                <td className={styles.tdCenter}>
-                  <div className={styles.tglBadge}>
-                    {row.tanggal_kegiatan
-                      ? new Date(row.tanggal_kegiatan).toLocaleDateString("id-ID",{day:"2-digit",month:"short",year:"numeric"})
-                      : "-"}
-                  </div>
-                </td>
-                <td className={styles.tdCenter}><StatusBadge status={row.status_verifikasi} size="sm"/></td>
-                <td className={styles.tdCenter}>
-                  <span className={`${styles.buktiCount} ${row.buktikegiatan?.length > 0 ? styles.buktiHas : styles.buktiNone}`}>
-                    <Paperclip size={11}/>{row.buktikegiatan?.length || 0}
-                  </span>
-                </td>
-                <td className={styles.tdCenter}>
-                  <button className={styles.btnVerif} onClick={() => setDetail(row)} title="Lihat Detail & Verifikasi">
-                    <Eye size={14}/> Verifikasi
-                  </button>
-                </td>
+        <div className={styles.tableScroll}>   {/* ✅ BARU: wrapper scroll horizontal */}
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th className={styles.thNo}>No.</th>
+                <th>Nama Kegiatan</th>
+                <th>Mahasiswa</th>
+                <th>Jenis</th>
+                <th>Kategori</th>
+                <th className={styles.thCenter}>Tanggal</th>
+                <th className={styles.thCenter}>Status</th>
+                <th className={styles.thCenter}>Bukti</th>
+                <th className={styles.thCenter}>Aksi</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr><td colSpan={9} className={styles.emptyTd}>
+                  <div className={styles.emptyState}><Loader2 size={30} className={styles.spin}/><p>Memuat data...</p></div>
+                </td></tr>
+              ) : rows.length === 0 ? (
+                <tr><td colSpan={9} className={styles.emptyTd}>
+                  <div className={styles.emptyState}>
+                    <Activity size={42}/>
+                    <p>Tidak ada kegiatan yang ditemukan</p>
+                    <span>Coba ubah filter atau kata pencarian</span>
+                  </div>
+                </td></tr>
+              ) : rows.map((row, idx) => (
+                <tr key={row.id_kegiatan}>
+                  <td className={styles.tdNo}>{(safePage - 1) * PER_PAGE + idx + 1}</td>
+                  <td>
+                    <div className={styles.kegiatanName}>{row.nama_kegiatan}</div>
+                    {row.penyelenggara && (
+                      <div className={styles.kegiatanSub}><Building2 size={10}/>{row.penyelenggara}</div>
+                    )}
+                  </td>
+                  <td>
+                    <div className={styles.mhsName}>{row.mahasiswa?.nama || "-"}</div>
+                    <code className={styles.mhsNim}>{row.mahasiswa?.nim || "-"}</code>
+                  </td>
+                  <td><JenisBadge nama={row.jenisaktivitas?.nama_indo}/></td>
+                  <td className={styles.tdKat}>{row.kategoriaktivitas?.nama_indo || "-"}</td>
+                  <td className={styles.tdCenter}>
+                    <div className={styles.tglBadge}>
+                      {row.tanggal_kegiatan
+                        ? new Date(row.tanggal_kegiatan).toLocaleDateString("id-ID",{day:"2-digit",month:"short",year:"numeric"})
+                        : "-"}
+                    </div>
+                  </td>
+                  <td className={styles.tdCenter}><StatusBadge status={row.status_verifikasi} size="sm"/></td>
+                  <td className={styles.tdCenter}>
+                    <span className={`${styles.buktiCount} ${row.buktikegiatan?.length > 0 ? styles.buktiHas : styles.buktiNone}`}>
+                      <Paperclip size={11}/>{row.buktikegiatan?.length || 0}
+                    </span>
+                  </td>
+                  <td className={styles.tdCenter}>
+                    <button className={styles.btnVerif} onClick={() => setDetail(row)} title="Lihat Detail & Verifikasi">
+                      <Eye size={14}/> Verifikasi
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>  {/* ✅ tutup wrapper */}
       </div>
 
       {/* Pagination */}

@@ -1150,71 +1150,73 @@ export default function MahasiswaPage() {
 
       {/* Tabel */}
       <div className={styles.tableCard}>
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th className={styles.thNo}>No.</th>
-              <th>Nama Mahasiswa</th>
-              <th>NIM</th>
-              <th>Program Studi</th>
-              <th className={styles.thCenter}>Angkatan</th>
-              <th className={styles.thCenter}>Status SKPI</th>
-              <th className={styles.thCenter}>Akun</th>
-              <th className={styles.thCenter}>Aksi</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
+        <div className={styles.tableScroll}>   {/* ✅ BARU: wrapper scroll horizontal */}
+          <table className={styles.table}>
+            <thead>
               <tr>
-                <td colSpan={8} className={styles.emptyTd}>
-                  <div className={styles.emptyState}>
-                    <Loader2 size={32} className={styles.spin} /><p>Memuat data...</p>
-                  </div>
-                </td>
+                <th className={styles.thNo}>No.</th>
+                <th>Nama Mahasiswa</th>
+                <th>NIM</th>
+                <th>Program Studi</th>
+                <th className={styles.thCenter}>Angkatan</th>
+                <th className={styles.thCenter}>Status SKPI</th>
+                <th className={styles.thCenter}>Akun</th>
+                <th className={styles.thCenter}>Aksi</th>
               </tr>
-            ) : filtered.length === 0 ? (
-              <tr>
-                <td colSpan={8} className={styles.emptyTd}>
-                  <div className={styles.emptyState}>
-                    <GraduationCap size={44} />
-                    <p>Tidak ada data mahasiswa</p>
-                    <span>Coba ubah filter atau tambah data baru</span>
-                  </div>
-                </td>
-              </tr>
-            ) : filtered.map((row, idx) => (
-              <tr key={row.id} className={!row.aktif ? styles.rowInactive : ""}>
-                <td className={styles.tdNo}>{start + idx + 1}</td>
-                <td>
-                  <div className={styles.nameCell}>
-                    <MhsAvatar row={row} />
-                    <div>
-                      <div className={styles.nameText}>{row.nama}</div>
-                      <div className={styles.emailText}>{row.email}</div>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr>
+                  <td colSpan={8} className={styles.emptyTd}>
+                    <div className={styles.emptyState}>
+                      <Loader2 size={32} className={styles.spin} /><p>Memuat data...</p>
                     </div>
-                  </div>
-                </td>
-                <td><span className={styles.nimBadge}>{row.nim}</span></td>
-                <td><ProdiChip nama={row.nama_prodi} /></td>
-                <td className={styles.tdCenter}>
-                  <span className={styles.angkatanBadge}>{row.angkatan}</span>
-                </td>
-                <td className={styles.tdCenter}><StatusBadge status={row.status_skpi} /></td>
-                <td className={styles.tdCenter}>
-                  <span className={`${styles.akunDot} ${row.aktif ? styles.dotOn : (row.has_akun ? styles.dotOff : styles.dotNone)}`}>
-                    {row.aktif ? "Aktif" : row.has_akun ? "Nonaktif" : "Belum ada"}
-                  </span>
-                </td>
-                <td className={styles.tdCenter}>
-                  <RowActions row={row}
-                    onEdit={() => setModalEdit(row)}
-                    onResetPw={() => setModalReset(row)}
-                    onToggleActive={() => handleToggle(row)} />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                  </td>
+                </tr>
+              ) : filtered.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className={styles.emptyTd}>
+                    <div className={styles.emptyState}>
+                      <GraduationCap size={44} />
+                      <p>Tidak ada data mahasiswa</p>
+                      <span>Coba ubah filter atau tambah data baru</span>
+                    </div>
+                  </td>
+                </tr>
+              ) : filtered.map((row, idx) => (
+                <tr key={row.id} className={!row.aktif ? styles.rowInactive : ""}>
+                  <td className={styles.tdNo}>{start + idx + 1}</td>
+                  <td>
+                    <div className={styles.nameCell}>
+                      <MhsAvatar row={row} />
+                      <div>
+                        <div className={styles.nameText}>{row.nama}</div>
+                        <div className={styles.emailText}>{row.email}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td><span className={styles.nimBadge}>{row.nim}</span></td>
+                  <td><ProdiChip nama={row.nama_prodi} /></td>
+                  <td className={styles.tdCenter}>
+                    <span className={styles.angkatanBadge}>{row.angkatan}</span>
+                  </td>
+                  <td className={styles.tdCenter}><StatusBadge status={row.status_skpi} /></td>
+                  <td className={styles.tdCenter}>
+                    <span className={`${styles.akunDot} ${row.aktif ? styles.dotOn : (row.has_akun ? styles.dotOff : styles.dotNone)}`}>
+                      {row.aktif ? "Aktif" : row.has_akun ? "Nonaktif" : "Belum ada"}
+                    </span>
+                  </td>
+                  <td className={styles.tdCenter}>
+                    <RowActions row={row}
+                      onEdit={() => setModalEdit(row)}
+                      onResetPw={() => setModalReset(row)}
+                      onToggleActive={() => handleToggle(row)} />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Pagination */}
