@@ -33,6 +33,15 @@
 
 .subtitle { font-size: 13px; color: #9c7a5e; margin: 0; }
 
+/* Add button */
+
+@media (max-width: 480px) {
+  .addBtn {
+    margin-top: 10px;
+    margin-left: auto;
+  }
+}
+
 .addBtn {
   display: inline-flex;
   align-items: center;
