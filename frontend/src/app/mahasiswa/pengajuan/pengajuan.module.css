@@ -431,7 +431,7 @@
   .statsGrid > :last-child { grid-column: 1 / -1; }
 }
 @media (max-width: 600px) {
-  .statsGrid { grid-template-columns: 1fr; }
+  .statsGrid { grid-template-columns: repeat(2, 1frs); }
   .statsGrid > :last-child { grid-column: unset; }
   .stepsRow { gap: 0; }
   .stepLabel { font-size: 10px; }

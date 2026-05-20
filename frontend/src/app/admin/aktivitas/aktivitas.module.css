@@ -151,11 +151,30 @@
   gap: 10px;
 }
 
-/* ── Filter Dropdown ── */
+/* ── Filter Select (dropdown biasa) ── */
 .filterWrap {
   position: relative;
 }
 
+.filterSelect {
+  padding: 8px 12px;
+  border: 1.5px solid #e4d4c4;
+  border-radius: 10px;
+  background: #fff;
+  font-size: 13px;
+  color: #2c1a0e;
+  outline: none;
+  cursor: pointer;
+  min-width: 150px;
+  transition: border-color 0.15s;
+  appearance: auto;            /* tampilan panah bawaan browser */
+  -webkit-appearance: auto;
+}
+.filterSelect:focus {
+  border-color: #765439;
+}
+
+/* ── Tombol filter lama tetap ada jika diperlukan ── */
 .filterBtn {
   display: inline-flex;
   align-items: center;
@@ -170,17 +189,14 @@
   cursor: pointer;
   transition: all 0.15s;
 }
-
 .filterBtn:hover,
 .filterBtnOn {
   border-color: #765439;
   background: #fdf4ec;
 }
-
 .chevUp {
   transform: rotate(180deg);
 }
-
 .filterDrop {
   position: absolute;
   top: calc(100% + 6px);
@@ -196,7 +212,6 @@
   flex-direction: column;
   gap: 2px;
 }
-
 .filterOpt {
   display: flex;
   align-items: center;
@@ -211,11 +226,9 @@
   transition: background 0.12s;
   text-align: left;
 }
-
 .filterOpt:hover {
   background: #f5ece4;
 }
-
 .filterOptActive {
   font-weight: 700;
 }
@@ -232,14 +245,13 @@
   background: #fff;
   border-radius: 14px;
   border: 1px solid #ede0d4;
-  overflow: visible;                 /* agar dropdown filter tidak terpotong */
+  overflow: visible;
 }
 
 .tableScroll {
   overflow-x: auto;
-  -webkit-overflow-scrolling: touch; /* smooth scrolling di iOS */
+  -webkit-overflow-scrolling: touch;
   border-radius: inherit;
-  /* Indikator bayangan agar pengguna tahu bisa discroll */
   background:
     linear-gradient(to right, white 30%, rgba(255,255,255,0)),
     linear-gradient(to right, rgba(255,255,255,0), white 70%) 100% 0,
@@ -252,7 +264,7 @@
 
 .table {
   width: 100%;
-  min-width: 700px;                 /* jaga lebar minimum agar kolom terbaca */
+  min-width: 700px;
   border-collapse: collapse;
 }
 
@@ -354,11 +366,6 @@
 .toastErr { background: #fee2e2; color: #991b1b; border: 1.5px solid #fca5a5; }
 @keyframes fadeUp { from { transform: translateY(16px); opacity: 0; } to { transform: none; opacity: 1; } }
 
-/* ═══════════════════════════════
-   MODAL – tidak diubah
-═══════════════════════════════ */
-/* ... (kode modal tetap persis seperti sebelumnya) ... */
-
 /* ── Responsive ── */
 @media (max-width: 800px) {
   .statsGrid {
@@ -370,6 +377,22 @@
   .modal {
     max-height: 95vh;
   }
+  /* Toolbar di tablet: search & filter menumpuk rapi */
+  .toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .searchWrap {
+    min-width: 100%;
+  }
+  .toolRight {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .filterSelect {
+    min-width: 0;               /* biarkan menyesuaikan lebar */
+    flex: 1 1 auto;
+  }
 }
 
 @media (max-width: 500px) {
@@ -378,5 +401,12 @@
   }
   .page {
     padding: 14px;
+  }
+  .toolRight {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .filterSelect {
+    width: 100%;
   }
 }

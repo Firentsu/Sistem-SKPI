@@ -7,70 +7,117 @@ import {
   ArrowLeft, Save, Upload, FileText, X,
   AlertCircle, CheckCircle2,
 } from "lucide-react";
-import styles from "../.././tambah-kegiatan/tambah.module.css"; // reuse CSS dari tambah-kegiatan
+import styles from "../../tambah-kegiatan/tambah.module.css";
 import { getDetailKegiatan, updateKegiatan } from "@/lib/api";
-import { getLevelKegiatan, getTingkatPrestasi } from "@/lib/masterData";
+import {
+  getJenisAktivitas,
+  getKategoriAktivitas,
+  getKelompokAktivitas,
+  getLevelKegiatan,
+  getTingkatPrestasi,
+  getPeriodeSemester,
+} from "@/lib/masterData";
 
-// Sama dengan SKPI_MAP di tambah-kegiatan
+// ═══ SKPI_MAP (9 kategori) ═══
 const SKPI_MAP = {
   prestasi: {
     label: "1. Prestasi dan Penghargaan",
-    color: "#7c3aed",
     jenis: ["Prestasi dan Kegiatan"],
     kelompok: ["Akademik", "Non-Akademik"],
-    kategori: ["Lomba / Kompetisi", "Olimpiade", "Penghargaan / Award"],
+    kategori: ["Lomba/Kompetisi", "Olimpiade", "Penghargaan / Award"],
     hasPrestasi: true,
+    requiredFields: ["nama_id", "nama_en", "kategori_skpi", "jenis_aktivitas", "kelompok", "kategori", "level", "periode", "lokasi", "penyelenggara", "tanggal"],
+    multiNama: false,
+    buktiWajib: true,
   },
   keterampilan: {
     label: "2. Peningkatan Keterampilan Profesional",
-    color: "#0369a1",
     jenis: ["Peningkatan Keterampilan Profesional"],
     kelompok: ["Akademik", "Profesional"],
-    kategori: ["Workshop / Pelatihan", "Seminar / Webinar", "Sertifikasi Profesi", "Kursus", "Kuliah Umum / Studium Generale"],
+    kategori: ["Workshop / Pelatihan", "Sertifikasi Profesional", "Kursus"],
     hasPrestasi: false,
+    requiredFields: ["nama_id", "nama_en", "kategori_skpi", "jenis_aktivitas", "kelompok", "kategori", "level", "periode", "lokasi", "penyelenggara", "tanggal"],
+    multiNama: false,
+    buktiWajib: true,
   },
   organisasi: {
     label: "3. Pengalaman Berorganisasi & Kepemimpinan",
-    color: "#065f46",
     jenis: ["Pengalaman Berorganisasi dan Kepemimpinan"],
     kelompok: ["Organisasi", "Kepemimpinan"],
     kategori: ["Pengurus Organisasi", "Kepanitiaan Kegiatan", "Komunitas / UKM", "Relawan / Sukarelawan", "Mentoring / Pembimbing"],
     hasPrestasi: false,
+    requiredFields: ["nama_id", "nama_en", "kategori_skpi", "jenis_aktivitas", "kelompok", "kategori", "level", "periode", "lokasi", "penyelenggara", "tanggal"],
+    multiNama: false,
+    buktiWajib: true,
   },
   intelektual: {
     label: "4. Pengembangan Intelektual",
-    color: "#92400e",
     jenis: ["Pengembangan Intelektual"],
     kelompok: ["Akademik", "Penelitian"],
-    kategori: ["Asisten Penelitian / Riset", "Publikasi Ilmiah", "Konferensi Ilmiah", "Pertukaran Pelajar / Exchange"],
+    kategori: ["Asisten Penelitian / Riset", "Publikasi Ilmiah", "Konferensi Ilmiah", "Pertukaran Pelajar / Exchange", "Seminar / Webinar", "Kuliah Umum / Studium Generale"],
     hasPrestasi: false,
+    requiredFields: ["nama_id", "nama_en", "kategori_skpi", "jenis_aktivitas", "kelompok", "kategori", "level", "periode", "lokasi", "penyelenggara", "tanggal"],
+    multiNama: false,
+    buktiWajib: true,
   },
   praktik: {
     label: "5. Praktik Kerja",
-    color: "#b91c1c",
     jenis: ["Praktik Kerja"],
     kelompok: ["Profesional"],
-    kategori: ["Magang / PKL", "Praktik Kerja Lapangan", "Kewirausahaan / Startup"],
+    kategori: ["Magang / PKL", "Kewirausahaan / Startup"],
     hasPrestasi: false,
+    requiredFields: ["nama_id", "nama_en", "kategori_skpi", "jenis_aktivitas", "kelompok", "kategori", "level", "periode", "lokasi", "penyelenggara", "tanggal"],
+    multiNama: false,
+    buktiWajib: true,
+  },
+  pembinaan: {
+    label: "6. Pembinaan Spiritual",
+    jenis: ["Pembinaan Spiritual"],
+    kelompok: ["Spiritual"],
+    kategori: ["Ret-ret / Pembinaan"],
+    hasPrestasi: false,
+    requiredFields: ["nama_id", "nama_en", "kategori_skpi", "jenis_aktivitas", "kelompok", "kategori", "level", "periode", "lokasi", "penyelenggara", "tanggal"],
+    multiNama: true,
+    buktiWajib: true,
+  },
+  karakter: {
+    label: "7. Pembangunan Karakter dan Kepribadian",
+    jenis: ["Pembangunan Karakter dan Kepribadian"],
+    kelompok: ["Karakter"],
+    kategori: ["Matkul Penciri", "Pembangunan Karakter"],
+    hasPrestasi: false,
+    requiredFields: ["nama_id", "nama_en", "kategori_skpi", "jenis_aktivitas", "kelompok", "kategori", "level"],
+    multiNama: true,
+    buktiWajib: false,
+  },
+  kursus: {
+    label: "8. Kursus-kursus",
+    jenis: ["Kursus-kursus"],
+    kelompok: ["Profesional", "Akademik"],
+    kategori: ["Kursus Online", "Kursus Tatap Muka"],
+    hasPrestasi: false,
+    requiredFields: ["nama_id", "nama_en", "kategori_skpi", "jenis_aktivitas", "kelompok", "kategori"],
+    multiNama: false,
+    buktiWajib: true,
+  },
+  skripsi: {
+    label: "9. Skripsi",
+    jenis: ["Skripsi"],
+    kelompok: ["Akademik"],
+    kategori: ["Skripsi / Tugas Akhir"],
+    hasPrestasi: false,
+    requiredFields: ["nama_id", "nama_en", "kategori_skpi", "jenis_aktivitas", "kelompok", "kategori"],
+    multiNama: false,
+    buktiWajib: true,
   },
 };
 
+const JENIS_OPTIONS = getJenisAktivitas();
+const KATEGORI_OPTIONS = getKategoriAktivitas();
+const KELOMPOK_OPTIONS = getKelompokAktivitas();
 const LEVEL_OPTIONS = getLevelKegiatan();
 const TINGKAT_PRESTASI = getTingkatPrestasi();
-
-const PERIODE_OPTIONS = [
-  "Semester Ganjil 2018/2019", "Semester Genap 2018/2019",
-  "Semester Ganjil 2019/2020", "Semester Genap 2019/2020",
-  "Semester Ganjil 2020/2021", "Semester Genap 2020/2021",
-  "Semester Ganjil 2021/2022", "Semester Genap 2021/2022",
-  "Semester Ganjil 2022/2023", "Semester Genap 2022/2023",
-  "Semester Ganjil 2023/2024", "Semester Genap 2023/2024",
-  "Semester Ganjil 2024/2025", "Semester Genap 2024/2025",
-  "Semester Ganjil 2025/2026", "Semester Genap 2025/2026",
-  "Liburan Semester Genap 2023/2024",
-  "Liburan Semester Genap 2024/2025",
-  "Liburan Semester Genap 2025/2026",
-];
+const PERIODE_OPTIONS = getPeriodeSemester();
 
 function Toast({ message, type, onClose }) {
   useEffect(() => {
@@ -112,7 +159,12 @@ export default function EditKegiatanPage() {
   const fileRef = useRef();
 
   const activeMap = form.kategori_skpi ? SKPI_MAP[form.kategori_skpi] : null;
+  const requiredFields = activeMap?.requiredFields ?? [];
+  const isBuktiWajib = activeMap?.buktiWajib ?? true;
   const isMentor = form.kategori_skpi === "organisasi" && form.kategori === "Mentoring / Pembimbing";
+
+  const isRequired = (fieldName) => requiredFields.includes(fieldName);
+  const labelRequired = (fieldName) => isRequired(fieldName) ? <span className={styles.req}>*</span> : <span className={styles.optBadge}>opsional</span>;
 
   // Load data
   useEffect(() => {
@@ -184,18 +236,20 @@ export default function EditKegiatanPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    const required = [
-      "nama_id", "nama_en", "kategori_skpi", "jenis_aktivitas",
-      "kelompok", "kategori", "level", "periode", "lokasi", "penyelenggara", "tanggal",
-    ];
-    if (required.some(k => !form[k])) {
-      setError("Lengkapi semua field yang wajib diisi."); return;
+
+    // Validasi field wajib sesuai kategori
+    const missing = requiredFields.filter(k => !form[k]);
+    if (missing.length) {
+      setError("Lengkapi semua field yang wajib diisi.");
+      return;
     }
-    if (!file && !existingBukti) {
-      setError("Upload bukti kegiatan wajib dilampirkan."); return;
+    if (isBuktiWajib && !file && !existingBukti) {
+      setError("Upload bukti kegiatan wajib dilampirkan.");
+      return;
     }
     if (isMentor && !form.periode_mentor) {
-      setError("Periode pendampingan wajib diisi untuk kegiatan mentor."); return;
+      setError("Periode pendampingan wajib diisi untuk kegiatan mentor.");
+      return;
     }
 
     setSaving(true);
@@ -206,6 +260,13 @@ export default function EditKegiatanPage() {
         bukti_deskripsi: buktiDeskripsi.trim() || null,
         periode_mentor: form.periode_mentor || null,
       };
+      // Hapus field opsional yang kosong
+      Object.keys(payload).forEach(k => {
+        if (!isRequired(k) && payload[k] === "") {
+          payload[k] = null;
+        }
+      });
+
       const res = await updateKegiatan(id, payload, file);
       if (!res.ok) {
         setError(res.data?.error || "Gagal menyimpan perubahan.");
@@ -225,8 +286,8 @@ export default function EditKegiatanPage() {
 
   if (loading) {
     return (
-      <div className={styles.page} style={{ justifyContent: "center", alignItems: "center" }}>
-        <div className={styles.spin} /> Memuat data...
+      <div className={styles.page} style={{ justifyContent: "center", alignItems: "center", display: "flex", minHeight: "60vh" }}>
+        <div className={styles.spin} style={{ marginRight: 10 }} /> Memuat data...
       </div>
     );
   }
@@ -241,7 +302,7 @@ export default function EditKegiatanPage() {
         </button>
         <div>
           <h1 className={styles.title}>Edit Kegiatan</h1>
-          <p className={styles.sub}>Perbarui data kegiatan yang masih berstatus "Menunggu"</p>
+          <p className={styles.sub}>Perbarui data kegiatan yang masih berstatus &quot;Menunggu&quot;</p>
         </div>
       </div>
 
@@ -258,197 +319,204 @@ export default function EditKegiatanPage() {
           <p className={styles.cardTitle}>Nama Kegiatan</p>
           <div className={styles.row2}>
             <div className={styles.fg}>
-              <label className={styles.lbl}>Nama (Indonesia) <span className={styles.req}>*</span></label>
+              <label className={styles.lbl}>Nama (Indonesia) {labelRequired("nama_id")}</label>
               <input className={styles.input} value={form.nama_id}
                 onChange={e => setField("nama_id", e.target.value)} />
             </div>
             <div className={styles.fg}>
-              <label className={styles.lbl}>Nama (English) <span className={styles.req}>*</span></label>
+              <label className={styles.lbl}>Nama (English) {labelRequired("nama_en")}</label>
               <input className={styles.input} value={form.nama_en}
                 onChange={e => setField("nama_en", e.target.value)} />
             </div>
           </div>
         </div>
 
-        {/* KATEGORI SKPI (tombol) */}
+        {/* KATEGORI SKPI */}
         <div className={styles.card}>
-          <p className={styles.cardTitle}>Kategori Kegiatan <span className={styles.req}>*</span></p>
+          <p className={styles.cardTitle}>Kategori SKPI <span className={styles.req}>*</span></p>
           <div className={styles.katGrid}>
-            {Object.entries(SKPI_MAP).map(([id, m], i) => {
+            {Object.entries(SKPI_MAP).map(([id, m]) => {
               const isActive = form.kategori_skpi === id;
               return (
                 <button key={id} type="button"
                   className={`${styles.katBtn} ${isActive ? styles.katBtnActive : ""}`}
                   onClick={() => handleKategoriSKPI(id)}
-                  style={isActive ? { borderColor: m.color, background: `${m.color}0d`, color: m.color } : {}}>
+                  style={isActive ? { borderColor: pc, background: `${pc}0d`, color: pc } : {}}
+                >
                   <span className={styles.katNo}
-                    style={{ background: isActive ? m.color : "#f5ece4", color: isActive ? "#fff" : "#9e7b5e" }}>
-                    {i+1}
+                    style={{ background: isActive ? pc : "#f5ece4", color: isActive ? "#fff" : "#9e7b5e" }}>
+                    {id === "pembinaan" ? "6" : id === "karakter" ? "7" : id === "kursus" ? "8" : id === "skripsi" ? "9" : id.charAt(0).toUpperCase()}
                   </span>
                   <span className={styles.katLabel}>{m.label}</span>
-                  {isActive && <CheckCircle2 size={15} className={styles.katCheck} style={{ color: m.color }} />}
+                  {isActive && <CheckCircle2 size={15} className={styles.katCheck} style={{ color: pc }} />}
                 </button>
               );
             })}
           </div>
         </div>
 
-        {/* KLASIFIKASI */}
         {activeMap && (
-          <div className={styles.card}>
-            <p className={styles.cardTitle}>Klasifikasi Kegiatan</p>
-            <div className={styles.row2}>
-              <div className={styles.fg}>
-                <label className={styles.lbl}>Jenis Aktivitas</label>
-                <div className={styles.autoFill} style={{ borderColor: `${pc}40`, color: pc }}>
-                  <CheckCircle2 size={13} /> {activeMap.jenis[0]}
+          <>
+            {/* KLASIFIKASI */}
+            <div className={styles.card}>
+              <p className={styles.cardTitle}>Klasifikasi Kegiatan</p>
+              <div className={styles.row2}>
+                <div className={styles.fg}>
+                  <label className={styles.lbl}>Jenis Aktivitas {labelRequired("jenis_aktivitas")}</label>
+                  {activeMap.jenis.length === 1 ? (
+                    <div className={styles.autoFill} style={{ borderColor: `${pc}40`, color: pc, background: `${pc}08` }}>
+                      <CheckCircle2 size={13} /> {activeMap.jenis[0]}
+                    </div>
+                  ) : (
+                    <select className={styles.input} value={form.jenis_aktivitas}
+                      onChange={e => setField("jenis_aktivitas", e.target.value)}>
+                      <option value="">-- Pilih Jenis --</option>
+                      {activeMap.jenis.map(j => <option key={j}>{j}</option>)}
+                    </select>
+                  )}
                 </div>
-              </div>
-              <div className={styles.fg}>
-                <label className={styles.lbl}>Kelompok Aktivitas <span className={styles.req}>*</span></label>
-                {activeMap.kelompok.length === 1 ? (
-                  <div className={styles.autoFill} style={{ borderColor: `${pc}40`, color: pc }}>
-                    <CheckCircle2 size={13} /> {activeMap.kelompok[0]}
-                  </div>
-                ) : (
-                  <select className={styles.input} value={form.kelompok}
-                    onChange={e => setField("kelompok", e.target.value)}>
-                    <option value="">-- Pilih Kelompok --</option>
-                    {activeMap.kelompok.map(g => <option key={g}>{g}</option>)}
+                <div className={styles.fg}>
+                  <label className={styles.lbl}>Kelompok Aktivitas {labelRequired("kelompok")}</label>
+                  {activeMap.kelompok.length === 1 ? (
+                    <div className={styles.autoFill} style={{ borderColor: `${pc}40`, color: pc, background: `${pc}08` }}>
+                      <CheckCircle2 size={13} /> {activeMap.kelompok[0]}
+                    </div>
+                  ) : (
+                    <select className={styles.input} value={form.kelompok}
+                      onChange={e => setField("kelompok", e.target.value)}>
+                      <option value="">-- Pilih Kelompok --</option>
+                      {activeMap.kelompok.map(g => <option key={g}>{g}</option>)}
+                    </select>
+                  )}
+                </div>
+                <div className={styles.fg}>
+                  <label className={styles.lbl}>Kategori Kegiatan {labelRequired("kategori")}</label>
+                  <select className={styles.input} value={form.kategori}
+                    onChange={e => setField("kategori", e.target.value)}>
+                    <option value="">-- Pilih Kategori --</option>
+                    {activeMap.kategori.map(k => <option key={k}>{k}</option>)}
                   </select>
+                </div>
+                <div className={styles.fg}>
+                  <label className={styles.lbl}>Tingkat / Level {labelRequired("level")}</label>
+                  <select className={styles.input} value={form.level}
+                    onChange={e => setField("level", e.target.value)}>
+                    <option value="">-- Pilih Level --</option>
+                    {LEVEL_OPTIONS.map(l => <option key={l}>{l}</option>)}
+                  </select>
+                </div>
+                {activeMap.hasPrestasi && (
+                  <div className={`${styles.fg} ${styles.fullSpan}`}>
+                    <label className={styles.lbl}>Prestasi yang Diraih {labelRequired("tingkat_prestasi")}</label>
+                    <select className={styles.input} value={form.tingkat_prestasi}
+                      onChange={e => setField("tingkat_prestasi", e.target.value)}>
+                      <option value="">-- Pilih jika ada --</option>
+                      {TINGKAT_PRESTASI.map(t => <option key={t}>{t}</option>)}
+                    </select>
+                  </div>
+                )}
+                {isMentor && (
+                  <div className={`${styles.fg} ${styles.fullSpan}`}>
+                    <label className={styles.lbl}>Periode Pendampingan <span className={styles.req}>*</span></label>
+                    <input className={styles.input} placeholder="Contoh: Semester Ganjil 2025/2026"
+                      value={form.periode_mentor}
+                      onChange={e => setField("periode_mentor", e.target.value)} />
+                    <small className={styles.fieldNote}>Periode saat kamu menjadi mentor</small>
+                  </div>
                 )}
               </div>
-              <div className={styles.fg}>
-                <label className={styles.lbl}>Kategori Kegiatan <span className={styles.req}>*</span></label>
-                <select className={styles.input} value={form.kategori}
-                  onChange={e => setField("kategori", e.target.value)}>
-                  <option value="">-- Pilih Kategori --</option>
-                  {activeMap.kategori.map(k => <option key={k}>{k}</option>)}
-                </select>
-              </div>
-              <div className={styles.fg}>
-                <label className={styles.lbl}>Tingkat / Level <span className={styles.req}>*</span></label>
-                <select className={styles.input} value={form.level}
-                  onChange={e => setField("level", e.target.value)}>
-                  <option value="">-- Pilih Level --</option>
-                  {LEVEL_OPTIONS.map(l => <option key={l}>{l}</option>)}
-                </select>
-              </div>
-              {activeMap.hasPrestasi && (
-                <div className={`${styles.fg} ${styles.fullSpan}`}>
-                  <label className={styles.lbl}>Prestasi yang Diraih <span className={styles.optBadge}>opsional</span></label>
-                  <select className={styles.input} value={form.tingkat_prestasi}
-                    onChange={e => setField("tingkat_prestasi", e.target.value)}>
-                    <option value="">-- Pilih jika ada --</option>
-                    {TINGKAT_PRESTASI.map(t => <option key={t}>{t}</option>)}
+            </div>
+
+            {/* WAKTU & TEMPAT */}
+            <div className={styles.card}>
+              <p className={styles.cardTitle}>Waktu & Tempat</p>
+              <div className={styles.row2}>
+                <div className={styles.fg}>
+                  <label className={styles.lbl}>Periode Semester {labelRequired("periode")}</label>
+                  <select className={styles.input} value={form.periode}
+                    onChange={e => setField("periode", e.target.value)}>
+                    <option value="">-- Pilih Periode --</option>
+                    {PERIODE_OPTIONS.map(p => <option key={p}>{p}</option>)}
                   </select>
                 </div>
-              )}
-              {isMentor && (
-                <div className={`${styles.fg} ${styles.fullSpan}`}>
-                  <label className={styles.lbl}>Periode Pendampingan <span className={styles.req}>*</span></label>
-                  <input className={styles.input} placeholder="Contoh: Semester Ganjil 2025/2026"
-                    value={form.periode_mentor}
-                    onChange={e => setField("periode_mentor", e.target.value)} />
-                  <small className={styles.fieldNote}>Periode saat kamu menjadi mentor</small>
+                <div className={styles.fg}>
+                  <label className={styles.lbl}>Tanggal Pelaksanaan {labelRequired("tanggal")}</label>
+                  <input type="date" className={styles.input} value={form.tanggal}
+                    onChange={e => setField("tanggal", e.target.value)} />
                 </div>
-              )}
+                <div className={styles.fg}>
+                  <label className={styles.lbl}>Lokasi / Kota {labelRequired("lokasi")}</label>
+                  <input className={styles.input} placeholder="Contoh: Bengkayang"
+                    value={form.lokasi} onChange={e => setField("lokasi", e.target.value)} />
+                </div>
+                <div className={styles.fg}>
+                  <label className={styles.lbl}>Penyelenggara {labelRequired("penyelenggara")}</label>
+                  <input className={styles.input} placeholder="Contoh: KOMINFO / Himpunan Mahasiswa TI"
+                    value={form.penyelenggara} onChange={e => setField("penyelenggara", e.target.value)} />
+                </div>
+              </div>
             </div>
-          </div>
-        )}
 
-        {/* WAKTU & TEMPAT */}
-        {activeMap && (
-          <div className={styles.card}>
-            <p className={styles.cardTitle}>Waktu & Tempat</p>
-            <div className={styles.row2}>
-              <div className={styles.fg}>
-                <label className={styles.lbl}>Periode Semester <span className={styles.req}>*</span></label>
-                <select className={styles.input} value={form.periode}
-                  onChange={e => setField("periode", e.target.value)}>
-                  <option value="">-- Pilih Periode --</option>
-                  {PERIODE_OPTIONS.map(p => <option key={p}>{p}</option>)}
-                </select>
-              </div>
-              <div className={styles.fg}>
-                <label className={styles.lbl}>Tanggal Pelaksanaan <span className={styles.req}>*</span></label>
-                <input type="date" className={styles.input} value={form.tanggal}
-                  onChange={e => setField("tanggal", e.target.value)} />
-              </div>
-              <div className={styles.fg}>
-                <label className={styles.lbl}>Lokasi / Kota <span className={styles.req}>*</span></label>
-                <input className={styles.input} placeholder="Contoh: Bengkayang / Online"
-                  value={form.lokasi} onChange={e => setField("lokasi", e.target.value)} />
-              </div>
-              <div className={styles.fg}>
-                <label className={styles.lbl}>Penyelenggara <span className={styles.req}>*</span></label>
-                <input className={styles.input} placeholder="Contoh: KOMINFO / Himpunan Mahasiswa TI"
-                  value={form.penyelenggara} onChange={e => setField("penyelenggara", e.target.value)} />
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* BUKTI + DESKRIPSI */}
-        {activeMap && (
-          <div className={styles.card}>
-            <p className={styles.cardTitle}>Bukti Kegiatan <span className={styles.req}>*</span></p>
-            <div
-              className={`${styles.dropZone} ${dragOver ? styles.dropActive : ""}`}
-              onDragOver={e => { e.preventDefault(); setDragOver(true); }}
-              onDragLeave={() => setDragOver(false)}
-              onDrop={e => { e.preventDefault(); const f = e.dataTransfer.files?.[0]; if (f) processFile(f); }}
-              onClick={() => fileRef.current?.click()}
-              role="button" tabIndex={0}
-              style={file || existingBukti ? { borderColor: pc, background: `${pc}06` } : dragOver ? { borderColor: pc } : {}}
-            >
-              <input type="file" ref={fileRef} hidden accept=".pdf,.jpg,.jpeg,.png,.webp"
-                onChange={e => { const f = e.target.files?.[0]; if (f) processFile(f); }} />
-              {file ? (
-                <div className={styles.fileRow}>
-                  {previewUrl
-                    ? <img src={previewUrl} alt="preview" className={styles.previewImg} />
-                    : <div className={styles.pdfIcon} style={{ background: `${pc}14` }}><FileText size={24} color={pc} /></div>
-                  }
-                  <div className={styles.fileInfo}>
-                    <p className={styles.fileName}>{file.name}</p>
-                    <p className={styles.fileSize}>{(file.size/1024).toFixed(0)} KB</p>
-                    <p className={styles.fileOk} style={{ color: pc }}><CheckCircle2 size={12} /> Siap diupload</p>
+            {/* BUKTI */}
+            <div className={styles.card}>
+              <p className={styles.cardTitle}>Bukti Kegiatan {isBuktiWajib ? <span className={styles.req}>*</span> : <span className={styles.optBadge}>opsional</span>}</p>
+              <div
+                className={`${styles.dropZone} ${dragOver ? styles.dropActive : ""}`}
+                onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+                onDragLeave={() => setDragOver(false)}
+                onDrop={e => { e.preventDefault(); const f = e.dataTransfer.files?.[0]; if (f) processFile(f); }}
+                onClick={() => fileRef.current?.click()}
+                role="button" tabIndex={0}
+                style={file || existingBukti ? { borderColor: pc, background: `${pc}06` } : dragOver ? { borderColor: pc } : {}}
+              >
+                <input type="file" ref={fileRef} hidden accept=".pdf,.jpg,.jpeg,.png,.webp"
+                  onChange={e => { const f = e.target.files?.[0]; if (f) processFile(f); }} />
+                {file ? (
+                  <div className={styles.fileRow}>
+                    {previewUrl
+                      ? <img src={previewUrl} alt="preview" className={styles.previewImg} />
+                      : <div className={styles.pdfIcon} style={{ background: `${pc}14` }}><FileText size={24} color={pc} /></div>
+                    }
+                    <div className={styles.fileInfo}>
+                      <p className={styles.fileName}>{file.name}</p>
+                      <p className={styles.fileSize}>{(file.size/1024).toFixed(0)} KB</p>
+                      <p className={styles.fileOk} style={{ color: pc }}><CheckCircle2 size={12} /> Siap diupload</p>
+                    </div>
+                    <button type="button" className={styles.fileRemove}
+                      onClick={e => { e.stopPropagation(); setFile(null); setPreviewUrl(null); }}>
+                      <X size={13} />
+                    </button>
                   </div>
-                  <button type="button" className={styles.fileRemove}
-                    onClick={e => { e.stopPropagation(); setFile(null); setPreviewUrl(null); }}>
-                    <X size={13} />
-                  </button>
-                </div>
-              ) : existingBukti ? (
-                <div className={styles.fileRow}>
-                  <div className={styles.pdfIcon} style={{ background: `${pc}14` }}><FileText size={24} color={pc} /></div>
-                  <div className={styles.fileInfo}>
-                    <p className={styles.fileName}>Bukti terpasang: {existingBukti}</p>
-                    <p className={styles.fileOk} style={{ color: pc }}>Kosongkan jika tidak ingin mengganti</p>
+                ) : existingBukti ? (
+                  <div className={styles.fileRow}>
+                    <div className={styles.pdfIcon} style={{ background: `${pc}14` }}><FileText size={24} color={pc} /></div>
+                    <div className={styles.fileInfo}>
+                      <p className={styles.fileName}>Bukti terpasang: {existingBukti}</p>
+                      <p className={styles.fileOk} style={{ color: pc }}>Kosongkan jika tidak ingin mengganti</p>
+                    </div>
+                    <button type="button" className={styles.fileRemove}
+                      onClick={e => { e.stopPropagation(); setExistingBukti(null); setFile(null); }}>
+                      <X size={13} />
+                    </button>
                   </div>
-                  <button type="button" className={styles.fileRemove}
-                    onClick={e => { e.stopPropagation(); setExistingBukti(null); setFile(null); }}>
-                    <X size={13} />
-                  </button>
-                </div>
-              ) : (
-                <div className={styles.dropContent}>
-                  <div className={styles.dropIcon} style={{ background: `${pc}14` }}><Upload size={22} color={pc} /></div>
-                  <p className={styles.dropText}>{dragOver ? "Lepaskan di sini…" : "Klik atau seret file bukti"}</p>
-                  <p className={styles.dropHint}>PDF, JPG, PNG, WebP · maks. 2 MB</p>
-                </div>
-              )}
+                ) : (
+                  <div className={styles.dropContent}>
+                    <div className={styles.dropIcon} style={{ background: `${pc}14` }}><Upload size={22} color={pc} /></div>
+                    <p className={styles.dropText}>{dragOver ? "Lepaskan di sini…" : "Klik atau seret file bukti"}</p>
+                    <p className={styles.dropHint}>PDF, JPG, PNG, WebP · maks. 2 MB</p>
+                  </div>
+                )}
+              </div>
+              {uploadError && <div className={styles.uploadErr}><AlertCircle size={13} /> {uploadError}</div>}
+              <div className={styles.fg} style={{ marginTop: 16 }}>
+                <label className={styles.lbl}>Deskripsi Pendukung <span className={styles.optBadge}>opsional</span></label>
+                <textarea className={styles.textarea} rows={2}
+                  placeholder="Keterangan tambahan untuk bukti"
+                  value={buktiDeskripsi}
+                  onChange={e => setBuktiDeskripsi(e.target.value)} />
+              </div>
             </div>
-            {uploadError && <div className={styles.uploadErr}><AlertCircle size={13} /> {uploadError}</div>}
-            <div className={styles.fg} style={{ marginTop: 16 }}>
-              <label className={styles.lbl}>Deskripsi Pendukung <span className={styles.optBadge}>opsional</span></label>
-              <textarea className={styles.textarea} rows={2}
-                placeholder="Keterangan tambahan untuk bukti"
-                value={buktiDeskripsi}
-                onChange={e => setBuktiDeskripsi(e.target.value)} />
-            </div>
-          </div>
+          </>
         )}
 
         <div className={styles.actions}>

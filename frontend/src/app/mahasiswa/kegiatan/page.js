@@ -23,7 +23,7 @@ import {
   getTingkatPrestasi,
 } from "@/lib/masterData";
 
-// MASTER DATA (sama seperti sebelumnya)
+// MASTER DATA
 const JENIS_AKTIVITAS = getJenisAktivitas();
 const KATEGORI_OPTIONS = getKategoriAktivitas();
 const KELOMPOK_OPTIONS = getKelompokAktivitas();
@@ -37,12 +37,17 @@ const STATUS_LABEL = {
   revisi: "Revisi",
 };
 
+// ═══ KATEGORI SKPI (9 kategori) ═══
 const KATEGORI_SKPI_MAHASISWA = [
   { no: "1", id: "prestasi", label: "Prestasi dan Penghargaan", en: "Achievement and Rewards" },
   { no: "2", id: "keterampilan", label: "Peningkatan Keterampilan Profesional", en: "Professional Skills Improvement" },
   { no: "3", id: "organisasi", label: "Pengalaman Berorganisasi dan Kepemimpinan", en: "Organization and Leadership" },
   { no: "4", id: "intelektual", label: "Pengembangan Intelektual", en: "Intellectual Development" },
   { no: "5", id: "praktik", label: "Praktik Kerja", en: "Professional Work Training" },
+  { no: "6", id: "pembinaan", label: "Pembinaan Spiritual", en: "Spiritual Development" },
+  { no: "7", id: "karakter", label: "Pembangunan Karakter dan Kepribadian", en: "Character and Personality Development" },
+  { no: "8", id: "kursus", label: "Kursus-kursus", en: "Courses" },
+  { no: "9", id: "skripsi", label: "Skripsi", en: "Thesis / Final Project" },
 ];
 
 // Mock data (jika mode mock aktif)
@@ -200,7 +205,6 @@ export default function KegiatanPage() {
 
   useEffect(() => { loadKegiatan(); }, [loadKegiatan]);
 
-  // Auto refresh saat halaman mendapat fokus (pengguna kembali dari halaman edit/tambah)
   useEffect(() => {
     const handleFocus = () => loadKegiatan();
     window.addEventListener("focus", handleFocus);
@@ -213,7 +217,6 @@ export default function KegiatanPage() {
     const item = kegiatan.find(k => k.id === idOrTmp || k.tmpId === idOrTmp);
     if (!item) return showToast("Kegiatan tidak ditemukan", "error");
 
-    // If it's a frontend-only pending item (tmpId), remove locally
     if (item.tmpId && !item.id) {
       if (confirm(`Batalkan kegiatan "${item.nama_id}"?`)) {
         try { removePendingKegiatan(item.tmpId); } catch {}
@@ -223,7 +226,6 @@ export default function KegiatanPage() {
       return;
     }
 
-    // For server-backed (or persisted mock) items
     if (item.status === "Disetujui") {
       showToast("Kegiatan yang sudah disetujui tidak dapat dihapus", "error");
       return;
@@ -247,14 +249,12 @@ export default function KegiatanPage() {
       return;
     }
     if (!k.id) {
-      // pending frontend-only item: editing inline not implemented yet
       showToast("Kegiatan sementara belum bisa diedit — hapus dan tambahkan ulang atau tunggu sinkronisasi.", "error");
       return;
     }
     router.push(`/mahasiswa/kegiatan/edit-kegiatan/${k.id}`);
   };
 
-  // Filter data
   const filtered = kegiatan.filter(k => {
     const q = search.toLowerCase();
     const matchSearch = k.nama_id.toLowerCase().includes(q) || k.nama_en.toLowerCase().includes(q);
@@ -266,6 +266,11 @@ export default function KegiatanPage() {
   const activeFilters = (filterStatus !== "Semua" ? 1 : 0) + (filterKategori !== "Semua" ? 1 : 0) + (search ? 1 : 0);
   const totalDisetujui = kegiatan.filter(k => k.status === "Disetujui").length;
   const totalMenunggu = kegiatan.filter(k => k.status === "Menunggu").length;
+
+  // Hitung kategori yang sudah terisi (disetujui)
+  const kategoriTerisi = KATEGORI_SKPI_MAHASISWA.filter(k =>
+    kegiatan.some(g => g.kategori_skpi === k.id && g.status === "Disetujui")
+  ).length;
 
   return (
     <div className={styles.container}>
@@ -300,7 +305,7 @@ export default function KegiatanPage() {
         </div>
         <div className={styles.statCard}>
           <span className={styles.statValue} style={{ color: "#765439" }}>
-            {KATEGORI_SKPI_MAHASISWA.filter(k => kegiatan.some(g => g.kategori_skpi === k.id && g.status === "Disetujui")).length}
+            {kategoriTerisi}
             <span style={{ fontSize: 14, fontWeight: 500 }}>/{KATEGORI_SKPI_MAHASISWA.length}</span>
           </span>
           <span className={styles.statLabel}>Kategori SKPI Terisi</span>
@@ -391,9 +396,8 @@ export default function KegiatanPage() {
             <tbody>
               {filtered.map(k => {
                 const skpiKat = KATEGORI_SKPI_MAHASISWA.find(c => c.id === k.kategori_skpi);
-                // Normalize status and allow actions for pending (tmpId) items
                 const normalizedStatus = (k.status || "").toString().toLowerCase();
-                const isMenunggu = normalizedStatus === "menunggu" || normalizedStatus === "diproses" || normalizedStatus === "diproses";
+                const isMenunggu = normalizedStatus === "menunggu" || normalizedStatus === "diproses";
                 const canEdit = isMenunggu && (!!k.id || !!k.tmpId);
                 const canDelete = !!k.tmpId || isMenunggu;
                 return (

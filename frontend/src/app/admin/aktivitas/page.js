@@ -4,7 +4,7 @@ import {
   Activity, Search, Filter, Eye, Loader2, ChevronLeft, ChevronRight,
   AlertCircle, CheckCircle2, X, Clock, FileCheck, XCircle, RefreshCw,
   RotateCcw, Paperclip, User, Calendar, MapPin, Tag, Building2,
-  ChevronDown, Download, Image as ImageIcon, FileText,
+  ChevronDown, Download, Image as ImageIcon, FileText, SlidersHorizontal,
 } from "lucide-react";
 import { getAktivitasList, verifikasiAktivitas } from "@/lib/api";
 import styles from "./aktivitas.module.css";
@@ -17,15 +17,18 @@ const STATUS_CFG = {
   revisi:    { label: "Revisi",    color: "#7c3aed", bg: "#ede9fe", icon: RotateCcw,   border: "#c4b5fd" },
 };
 
-const JENIS_COLOR = {
-  Workshop:    "#7c3aed", Seminar:     "#06b6d4", Kompetisi:   "#ec4899",
-  Training:    "#f59e0b", Webinar:     "#6366f1", Magang:      "#10b981",
-  Organisasi:  "#8b5cf6", Kursus:      "#0ea5e9", Lomba:       "#f43f5e",
+// Label Kategori SKPI (9 kategori)
+const SKPI_LABELS = {
+  prestasi: "1. Prestasi dan Penghargaan",
+  keterampilan: "2. Peningkatan Keterampilan Profesional",
+  organisasi: "3. Pengalaman Berorganisasi & Kepemimpinan",
+  intelektual: "4. Pengembangan Intelektual",
+  praktik: "5. Praktik Kerja",
+  pembinaan: "6. Pembinaan Spiritual",
+  karakter: "7. Pembangunan Karakter dan Kepribadian",
+  kursus: "8. Kursus-kursus",
+  skripsi: "9. Skripsi",
 };
-
-function getJenisColor(nama) {
-  return JENIS_COLOR[nama] || "#765439";
-}
 
 /* ── TOAST ── */
 function useToast() {
@@ -66,18 +69,6 @@ function StatusBadge({ status, size = "md" }) {
   );
 }
 
-/* ── JENIS BADGE ── */
-function JenisBadge({ nama }) {
-  const c = getJenisColor(nama);
-  return (
-    <span style={{
-      background: `${c}18`, color: c, border: `1px solid ${c}40`,
-      borderRadius: "20px", padding: "2px 9px",
-      fontSize: "11.5px", fontWeight: 700, whiteSpace: "nowrap",
-    }}>{nama || "-"}</span>
-  );
-}
-
 /* ── BUKTI FILE VIEWER ── */
 function BuktiItem({ bukti }) {
   const isImg = ["jpg","jpeg","png","gif","webp"].some(ext =>
@@ -96,7 +87,7 @@ function BuktiItem({ bukti }) {
   );
 }
 
-/* ── MODAL DETAIL & VERIFIKASI ── */
+/* ── MODAL DETAIL & VERIFIKASI (tetap sama) ── */
 function DetailModal({ data, onClose, onSaved }) {
   const [status, setStatus]   = useState(data?.status_verifikasi || "diproses");
   const [catatan, setCatatan] = useState(data?.catatan_admin || "");
@@ -133,7 +124,6 @@ function DetailModal({ data, onClose, onSaved }) {
   return (
     <div className={styles.overlay} onClick={onClose}>
       <div className={styles.modal} onClick={e => e.stopPropagation()}>
-        {/* Header */}
         <div className={styles.modalHead}>
           <div className={styles.modalHeadLeft}>
             <div className={styles.modalIcon}><Eye size={16}/></div>
@@ -152,7 +142,7 @@ function DetailModal({ data, onClose, onSaved }) {
             <div className={styles.infoGrid}>
               <InfoRow label="Nama Aktivitas" value={<strong>{data.nama_kegiatan}</strong>} full />
               {data.nama_kegiatan_eng && <InfoRow label="Nama (English)" value={<em>{data.nama_kegiatan_eng}</em>} full />}
-              <InfoRow label="Jenis" value={<JenisBadge nama={data.jenisaktivitas?.nama_indo}/>} />
+              <InfoRow label="Kategori SKPI" value={SKPI_LABELS[data.kategori_skpi] || data.kategori_skpi || "-"} />
               <InfoRow label="Kategori" value={data.kategoriaktivitas?.nama_indo || "-"} />
               {data.kelompokaktivitas && <InfoRow label="Kelompok" value={data.kelompokaktivitas?.nama_indo} />}
               {data.levelkegiatan    && <InfoRow label="Level" value={data.levelkegiatan?.nama_level} />}
@@ -160,8 +150,10 @@ function DetailModal({ data, onClose, onSaved }) {
               <InfoRow label="Penyelenggara" value={<span className={styles.flexRow}><Building2 size={12}/>{data.penyelenggara || "-"}</span>} />
               <InfoRow label="Tanggal" value={<span className={styles.flexRow}><Calendar size={12}/>{tgl}</span>} />
               {data.lokasi && <InfoRow label="Lokasi" value={<span className={styles.flexRow}><MapPin size={12}/>{data.lokasi}</span>} />}
-              {data.periode_kegiatan && <InfoRow label="Periode" value={data.periode_kegiatan} />}
-              {data.tingkat_prestasi && <InfoRow label="Tingkat" value={data.tingkat_prestasi} />}
+              {data.periode_kegiatan && <InfoRow label="Periode Semester" value={data.periode_kegiatan} />}
+              {data.periode_mentor && <InfoRow label="Periode Pendampingan" value={data.periode_mentor} />}
+              {data.bukti_deskripsi && <InfoRow label="Deskripsi Bukti" value={data.bukti_deskripsi} full />}
+              {data.tingkat_prestasi && <InfoRow label="Tingkat Prestasi" value={data.tingkat_prestasi} />}
               {data.peringkat        && <InfoRow label="Peringkat" value={data.peringkat} />}
             </div>
           </div>
@@ -259,6 +251,7 @@ export default function AktivitasPage() {
   const [page, setPage]           = useState(1);
   const [search, setSearch]       = useState("");
   const [filterStatus, setFilterStatus] = useState("Semua");
+  const [filterKategori, setFilterKategori] = useState("Semua");
   const [filterOpen, setFilterOpen]     = useState(false);
   const [detail, setDetail]       = useState(null);
   const { toasts, add: toast, remove } = useToast();
@@ -289,6 +282,11 @@ export default function AktivitasPage() {
     loadData(search, status, 1);
   };
 
+  const handleKategoriFilter = kat => {
+    setFilterKategori(kat);
+    // filter lokal, tidak perlu reload
+  };
+
   const handleSaved = (id, newStatus, catatan) => {
     setRows(prev => prev.map(r =>
       r.id_kegiatan === id
@@ -298,7 +296,12 @@ export default function AktivitasPage() {
     toast(`Status diubah menjadi "${STATUS_CFG[newStatus]?.label}"`);
   };
 
-  /* ── Statistik dari semua data (server-side count jika available) ── */
+  // Filter lokal berdasarkan kategori SKPI
+  const filteredRows = filterKategori === "Semua"
+    ? rows
+    : rows.filter(r => r.kategori_skpi === filterKategori);
+
+  /* ── Statistik dari semua data ── */
   const stats = {
     total,
     diproses:  rows.filter(r => r.status_verifikasi === "diproses").length,
@@ -348,57 +351,66 @@ export default function AktivitasPage() {
         })}
       </div>
 
-      {/* Toolbar */}
+      {/* Toolbar: search + filter */}
       <div className={styles.toolbar}>
         <div className={styles.searchWrap}>
           <Search size={14} className={styles.searchIco}/>
-          <input className={styles.searchInp}
+          <input
+            className={styles.searchInp}
             placeholder="Cari nama kegiatan, mahasiswa, atau NIM..."
-            value={search} onChange={e => handleSearch(e.target.value)}/>
-          {search && <button className={styles.searchClr} onClick={() => handleSearch("")}><X size={13}/></button>}
-        </div>
-        <div className={styles.toolRight}>
-          {/* Filter Status Dropdown */}
-          <div className={styles.filterWrap}>
-            <button className={`${styles.filterBtn} ${filterStatus !== "Semua" ? styles.filterBtnOn : ""}`}
-              onClick={() => setFilterOpen(o => !o)}>
-              <Filter size={13}/> {filterStatus === "Semua" ? "Semua Status" : STATUS_CFG[filterStatus]?.label}
-              <ChevronDown size={12} className={filterOpen ? styles.chevUp : ""}/>
+            value={search}
+            onChange={e => handleSearch(e.target.value)}
+          />
+          {search && (
+            <button className={styles.searchClr} onClick={() => handleSearch("")}>
+              <X size={13}/>
             </button>
-            {filterOpen && (
-              <div className={styles.filterDrop}>
-                {["Semua", "diproses", "disetujui", "revisi", "ditolak"].map(s => {
-                  const cfg = STATUS_CFG[s];
-                  const Icon = cfg?.icon;
-                  return (
-                    <button key={s}
-                      className={`${styles.filterOpt} ${filterStatus === s ? styles.filterOptActive : ""}`}
-                      onClick={() => { handleStatusFilter(s); setFilterOpen(false); }}
-                      style={filterStatus === s && cfg ? { background: cfg.bg, color: cfg.color } : {}}
-                    >
-                      {Icon && <Icon size={12}/>}
-                      {cfg ? cfg.label : "Semua Status"}
-                      {filterStatus === s && <CheckCircle2 size={11} style={{ marginLeft: "auto" }}/>}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
+          )}
+        </div>
+
+        <div className={styles.toolRight}>
+          {/* Filter Kategori SKPI */}
+          <div className={styles.filterWrap}>
+            <select
+              className={styles.filterSelect}
+              value={filterKategori}
+              onChange={e => handleKategoriFilter(e.target.value)}
+            >
+              <option value="Semua">Semua Kategori</option>
+              {Object.entries(SKPI_LABELS).map(([key, label]) => (
+                <option key={key} value={key}>{label}</option>
+              ))}
+            </select>
           </div>
-          <span className={styles.countLabel}>{total} kegiatan</span>
+
+          {/* Filter Status */}
+          <div className={styles.filterWrap}>
+            <select
+              className={styles.filterSelect}
+              value={filterStatus}
+              onChange={e => handleStatusFilter(e.target.value)}
+            >
+              <option value="Semua">Semua Status</option>
+              <option value="diproses">Diproses</option>
+              <option value="disetujui">Disetujui</option>
+              <option value="revisi">Revisi</option>
+              <option value="ditolak">Ditolak</option>
+            </select>
+          </div>
+
+          <span className={styles.countLabel}>{filteredRows.length} kegiatan</span>
         </div>
       </div>
 
       {/* Tabel */}
       <div className={styles.tableCard}>
-        <div className={styles.tableScroll}>   {/* ✅ BARU: wrapper scroll horizontal */}
+        <div className={styles.tableScroll}>
           <table className={styles.table}>
             <thead>
               <tr>
                 <th className={styles.thNo}>No.</th>
                 <th>Nama Kegiatan</th>
                 <th>Mahasiswa</th>
-                <th>Jenis</th>
                 <th>Kategori</th>
                 <th className={styles.thCenter}>Tanggal</th>
                 <th className={styles.thCenter}>Status</th>
@@ -408,18 +420,25 @@ export default function AktivitasPage() {
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={9} className={styles.emptyTd}>
-                  <div className={styles.emptyState}><Loader2 size={30} className={styles.spin}/><p>Memuat data...</p></div>
-                </td></tr>
-              ) : rows.length === 0 ? (
-                <tr><td colSpan={9} className={styles.emptyTd}>
-                  <div className={styles.emptyState}>
-                    <Activity size={42}/>
-                    <p>Tidak ada kegiatan yang ditemukan</p>
-                    <span>Coba ubah filter atau kata pencarian</span>
-                  </div>
-                </td></tr>
-              ) : rows.map((row, idx) => (
+                <tr>
+                  <td colSpan={8} className={styles.emptyTd}>
+                    <div className={styles.emptyState}>
+                      <Loader2 size={30} className={styles.spin}/>
+                      <p>Memuat data...</p>
+                    </div>
+                  </td>
+                </tr>
+              ) : filteredRows.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className={styles.emptyTd}>
+                    <div className={styles.emptyState}>
+                      <Activity size={42}/>
+                      <p>Tidak ada kegiatan yang ditemukan</p>
+                      <span>Coba ubah filter atau kata pencarian</span>
+                    </div>
+                  </td>
+                </tr>
+              ) : filteredRows.map((row, idx) => (
                 <tr key={row.id_kegiatan}>
                   <td className={styles.tdNo}>{(safePage - 1) * PER_PAGE + idx + 1}</td>
                   <td>
@@ -432,8 +451,9 @@ export default function AktivitasPage() {
                     <div className={styles.mhsName}>{row.mahasiswa?.nama || "-"}</div>
                     <code className={styles.mhsNim}>{row.mahasiswa?.nim || "-"}</code>
                   </td>
-                  <td><JenisBadge nama={row.jenisaktivitas?.nama_indo}/></td>
-                  <td className={styles.tdKat}>{row.kategoriaktivitas?.nama_indo || "-"}</td>
+                  <td className={styles.tdKat}>
+                    {SKPI_LABELS[row.kategori_skpi] || row.kategoriaktivitas?.nama_indo || "-"}
+                  </td>
                   <td className={styles.tdCenter}>
                     <div className={styles.tglBadge}>
                       {row.tanggal_kegiatan
@@ -456,13 +476,15 @@ export default function AktivitasPage() {
               ))}
             </tbody>
           </table>
-        </div>  {/* ✅ tutup wrapper */}
+        </div>
       </div>
 
       {/* Pagination */}
       {totalPages > 1 && (
         <div className={styles.pagination}>
-          <span className={styles.paginInfo}>{total === 0 ? 0 : (safePage-1)*PER_PAGE+1}–{Math.min(safePage*PER_PAGE, total)} dari {total}</span>
+          <span className={styles.paginInfo}>
+            {total === 0 ? 0 : (safePage-1)*PER_PAGE+1}–{Math.min(safePage*PER_PAGE, total)} dari {total}
+          </span>
           <div className={styles.paginBtns}>
             <button className={styles.pBtn} onClick={() => { setPage(1); loadData(search, filterStatus, 1); }} disabled={safePage===1}>«</button>
             <button className={styles.pBtn} onClick={() => { const p=Math.max(1,safePage-1); setPage(p); loadData(search,filterStatus,p); }} disabled={safePage===1}><ChevronLeft size={13}/></button>
