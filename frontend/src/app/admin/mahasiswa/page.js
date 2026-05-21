@@ -9,8 +9,9 @@ import {
   GraduationCap, Filter, MoreVertical,
   Eye, EyeOff, RefreshCw, CheckCircle2,
   TrendingUp, UserCheck, ChevronDown, Loader2,
+  FileText, PieChart as PieChartIcon
 } from "lucide-react";
-import { PieChart, Pie, Cell, Tooltip } from "recharts";
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import styles from "./page.module.css";
 import {
   getMahasiswaList,
@@ -23,95 +24,51 @@ import {
   getAvatarUrl,
 } from "@/lib/api";
 
-// ========== MOCK DATA (aktif jika USE_MOCK = true) ==========
-const USE_MOCK = false;  // ubah ke false untuk menggunakan API sungguhan
+// ========== MOCK DATA ==========
+const USE_MOCK = false;
 
-// Data prodi beserta warna tema baru (disesuaikan dengan struktur komponen)
 export const PRODI_CONFIG = {
   "Teknologi Informasi": {
-    primary: "#ff7f00",
-    light: "#fff3e6",
-    dark: "#cc6600",
+    primary: "#ff7f00", light: "#fff3e6", dark: "#cc6600",
     gradient: "linear-gradient(135deg, #ff7f00, #ffaa33)",
-    // mapping ke properti yang dipakai komponen
-    bg: "#fff3e6",
-    color: "#ff7f00",
-    border: "#ffaa33",
-    bgDark: "#cc6600",
-    bgLight: "#fff3e6",
-    dot: "#ff7f00",
-    label: "TI",
-    fakultas: "Teknologi",
+    bg: "#fff3e6", color: "#ff7f00", border: "#ffaa33",
+    bgDark: "#cc6600", bgLight: "#fff3e6", dot: "#ff7f00",
+    label: "TI", fakultas: "Teknologi",
   },
   "Manajemen": {
-    primary: "#0099cc",
-    light: "#e6f5fa",
-    dark: "#0077aa",
+    primary: "#0099cc", light: "#e6f5fa", dark: "#0077aa",
     gradient: "linear-gradient(135deg, #0099cc, #33ccff)",
-    bg: "#e6f5fa",
-    color: "#0099cc",
-    border: "#33ccff",
-    bgDark: "#0077aa",
-    bgLight: "#e6f5fa",
-    dot: "#0099cc",
-    label: "MJ",
-    fakultas: "Bisnis",
+    bg: "#e6f5fa", color: "#0099cc", border: "#33ccff",
+    bgDark: "#0077aa", bgLight: "#e6f5fa", dot: "#0099cc",
+    label: "MJ", fakultas: "Bisnis",
   },
   "Kewirausahaan": {
-    primary: "#ff3300",
-    light: "#ffe6e0",
-    dark: "#cc2900",
+    primary: "#ff3300", light: "#ffe6e0", dark: "#cc2900",
     gradient: "linear-gradient(135deg, #ff3300, #ff7755)",
-    bg: "#ffe6e0",
-    color: "#ff3300",
-    border: "#ff7755",
-    bgDark: "#cc2900",
-    bgLight: "#ffe6e0",
-    dot: "#ff3300",
-    label: "KW",
-    fakultas: "Bisnis",
+    bg: "#ffe6e0", color: "#ff3300", border: "#ff7755",
+    bgDark: "#cc2900", bgLight: "#ffe6e0", dot: "#ff3300",
+    label: "KW", fakultas: "Bisnis",
   },
   "Pendidikan Guru Sekolah Dasar": {
-    primary: "#800080",
-    light: "#f3e6f3",
-    dark: "#660066",
+    primary: "#800080", light: "#f3e6f3", dark: "#660066",
     gradient: "linear-gradient(135deg, #800080, #b300b3)",
-    bg: "#f3e6f3",
-    color: "#800080",
-    border: "#b300b3",
-    bgDark: "#660066",
-    bgLight: "#f3e6f3",
-    dot: "#800080",
-    label: "PGSD",
-    fakultas: "Pendidikan",
+    bg: "#f3e6f3", color: "#800080", border: "#b300b3",
+    bgDark: "#660066", bgLight: "#f3e6f3", dot: "#800080",
+    label: "PGSD", fakultas: "Pendidikan",
   },
   "Agroekoteknologi": {
-    primary: "#00bfb3",
-    light: "#e6faf8",
-    dark: "#009988",
+    primary: "#00bfb3", light: "#e6faf8", dark: "#009988",
     gradient: "linear-gradient(135deg, #00bfb3, #33ffdd)",
-    bg: "#e6faf8",
-    color: "#00bfb3",
-    border: "#33ffdd",
-    bgDark: "#009988",
-    bgLight: "#e6faf8",
-    dot: "#00bfb3",
-    label: "AGR",
-    fakultas: "Pertanian",
+    bg: "#e6faf8", color: "#00bfb3", border: "#33ffdd",
+    bgDark: "#009988", bgLight: "#e6faf8", dot: "#00bfb3",
+    label: "AGR", fakultas: "Pertanian",
   },
   "Sistem Informasi": {
-    primary: "#2563eb",
-    light: "#eff6ff",
-    dark: "#1d4ed8",
+    primary: "#2563eb", light: "#eff6ff", dark: "#1d4ed8",
     gradient: "linear-gradient(135deg, #2563eb, #3b82f6)",
-    bg: "#eff6ff",
-    color: "#1d4ed8",
-    border: "#93c5fd",
-    bgDark: "#1e40af",
-    bgLight: "#eff6ff",
-    dot: "#2563eb",
-    label: "SI",
-    fakultas: "Teknologi",
+    bg: "#eff6ff", color: "#1d4ed8", border: "#93c5fd",
+    bgDark: "#1e40af", bgLight: "#eff6ff", dot: "#2563eb",
+    label: "SI", fakultas: "Teknologi",
   },
 };
 
@@ -128,7 +85,6 @@ function getProdiConfig(nama) {
   return PRODI_FALLBACK[hash % PRODI_FALLBACK.length];
 }
 
-// Mock data untuk prodi jika API gagal/kosong
 const MOCK_PRODI_LIST = [
   { id_prodi: "1", nama_prodi: "Teknologi Informasi" },
   { id_prodi: "2", nama_prodi: "Sistem Informasi" },
@@ -138,97 +94,48 @@ const MOCK_PRODI_LIST = [
   { id_prodi: "6", nama_prodi: "Agroekoteknologi" },
 ];
 
-// Mock data mahasiswa
 const MOCK_MAHASISWA = [
   {
-    id_mahasiswa: "M001",
-    nama: "Andi Saputra",
-    nim: "202200001001",
-    id_prodi: "1",
-    programstudi: { nama_prodi: "Teknologi Informasi" },
-    angkatan: "2024",
-    email: "andi@student.isb.ac.id",
-    status_skpi: "belum",
-    _count: { kegiatanmahasiswa: 3 },
-    total_icp: 45,
-    foto_profil: null,
-    id_user: "U001",
-    users: { status_akun: "aktif" },
+    id_mahasiswa: "M001", nama: "Andi Saputra", nim: "202200001001", id_prodi: "1",
+    programstudi: { nama_prodi: "Teknologi Informasi" }, angkatan: "2024",
+    email: "andi@student.isb.ac.id", status_skpi: "belum",
+    _count: { kegiatanmahasiswa: 3 }, total_icp: 45, foto_profil: null,
+    id_user: "U001", users: { status_akun: "aktif" },
   },
   {
-    id_mahasiswa: "M002",
-    nama: "Budi Wibowo",
-    nim: "202200001002",
-    id_prodi: "3",
-    programstudi: { nama_prodi: "Manajemen" },
-    angkatan: "2023",
-    email: "budi@student.isb.ac.id",
-    status_skpi: "diajukan",
-    _count: { kegiatanmahasiswa: 5 },
-    total_icp: 78,
-    foto_profil: null,
-    id_user: "U002",
-    users: { status_akun: "aktif" },
+    id_mahasiswa: "M002", nama: "Budi Wibowo", nim: "202200001002", id_prodi: "3",
+    programstudi: { nama_prodi: "Manajemen" }, angkatan: "2023",
+    email: "budi@student.isb.ac.id", status_skpi: "diajukan",
+    _count: { kegiatanmahasiswa: 5 }, total_icp: 78, foto_profil: null,
+    id_user: "U002", users: { status_akun: "aktif" },
   },
   {
-    id_mahasiswa: "M003",
-    nama: "Citra Dewi",
-    nim: "202200001003",
-    id_prodi: "4",
-    programstudi: { nama_prodi: "Kewirausahaan" },
-    angkatan: "2022",
-    email: "citra@student.isb.ac.id",
-    status_skpi: "diterbitkan",
-    _count: { kegiatanmahasiswa: 8 },
-    total_icp: 120,
-    foto_profil: null,
-    id_user: "U003",
-    users: { status_akun: "aktif" },
+    id_mahasiswa: "M003", nama: "Citra Dewi", nim: "202200001003", id_prodi: "4",
+    programstudi: { nama_prodi: "Kewirausahaan" }, angkatan: "2022",
+    email: "citra@student.isb.ac.id", status_skpi: "diterbitkan",
+    _count: { kegiatanmahasiswa: 8 }, total_icp: 120, foto_profil: null,
+    id_user: "U003", users: { status_akun: "aktif" },
   },
   {
-    id_mahasiswa: "M004",
-    nama: "Dian Permata",
-    nim: "202200001004",
-    id_prodi: "5",
-    programstudi: { nama_prodi: "Pendidikan Guru Sekolah Dasar" },
-    angkatan: "2024",
-    email: "dian@student.isb.ac.id",
-    status_skpi: "direvisi",
-    _count: { kegiatanmahasiswa: 2 },
-    total_icp: 30,
-    foto_profil: null,
-    id_user: "U004",
-    users: { status_akun: "nonaktif" },
+    id_mahasiswa: "M004", nama: "Dian Permata", nim: "202200001004", id_prodi: "5",
+    programstudi: { nama_prodi: "Pendidikan Guru Sekolah Dasar" }, angkatan: "2024",
+    email: "dian@student.isb.ac.id", status_skpi: "direvisi",
+    _count: { kegiatanmahasiswa: 2 }, total_icp: 30, foto_profil: null,
+    id_user: "U004", users: { status_akun: "nonaktif" },
   },
   {
-    id_mahasiswa: "M005",
-    nama: "Eka Pratama",
-    nim: "202200001005",
-    id_prodi: "2",
-    programstudi: { nama_prodi: "Sistem Informasi" },
-    angkatan: "2021",
-    email: "eka@student.isb.ac.id",
-    status_skpi: "belum",
-    _count: { kegiatanmahasiswa: 1 },
-    total_icp: 10,
-    foto_profil: null,
-    id_user: "U005",
-    users: { status_akun: "aktif" },
+    id_mahasiswa: "M005", nama: "Eka Pratama", nim: "202200001005", id_prodi: "2",
+    programstudi: { nama_prodi: "Sistem Informasi" }, angkatan: "2021",
+    email: "eka@student.isb.ac.id", status_skpi: "belum",
+    _count: { kegiatanmahasiswa: 1 }, total_icp: 10, foto_profil: null,
+    id_user: "U005", users: { status_akun: "aktif" },
   },
   {
-    id_mahasiswa: "M006",
-    nama: "Fajar Nugroho",
-    nim: "202200001006",
-    id_prodi: "6",
-    programstudi: { nama_prodi: "Agroekoteknologi" },
-    angkatan: "2023",
-    email: "fajar@student.isb.ac.id",
-    status_skpi: "diajukan",
-    _count: { kegiatanmahasiswa: 4 },
-    total_icp: 62,
-    foto_profil: null,
-    id_user: "U006",
-    users: { status_akun: "aktif" },
+    id_mahasiswa: "M006", nama: "Fajar Nugroho", nim: "202200001006", id_prodi: "6",
+    programstudi: { nama_prodi: "Agroekoteknologi" }, angkatan: "2023",
+    email: "fajar@student.isb.ac.id", status_skpi: "diajukan",
+    _count: { kegiatanmahasiswa: 4 }, total_icp: 62, foto_profil: null,
+    id_user: "U006", users: { status_akun: "aktif" },
   },
 ];
 
@@ -309,12 +216,11 @@ function ProdiFilterChip({ nama, active, onClick }) {
   );
 }
 
-/* ── AVATAR dengan warna prodi ── */
+/* ── AVATAR ── */
 function MhsAvatar({ row }) {
   const cfg = getProdiConfig(row.nama_prodi);
   if (row.foto_profil) {
     return (
-      // eslint-disable-next-line @next/next/no-img-element
       <img
         src={getAvatarUrl(row.foto_profil)} alt={row.nama}
         className={styles.avatarImg}
@@ -355,25 +261,39 @@ function StatCard({ icon: Icon, title, value, subtitle, color }) {
   );
 }
 
-/* ── PRODI DISTRIBUTION CHART (Recharts Pie + Legend) ── */
+/* ── PRODI DISTRIBUTION CHART ── */
 function ProdiDistBar({ data }) {
+  // Placeholder jika data kosong
+  if (!data || data.length === 0) {
+    return (
+      <div className={styles.prodiDistCard}>
+        <div className={styles.prodiDistHeader}>
+          <div className={styles.prodiDistHeaderIcon}><GraduationCap size={15} /></div>
+          <span>Distribusi per Program Studi</span>
+        </div>
+        <div className={styles.chartPlaceholder}>
+          <PieChartIcon size={32} style={{ color: '#d4b8a0' }} />
+          <p>Data distribusi belum tersedia</p>
+        </div>
+      </div>
+    );
+  }
+
   const counts = {};
   data.forEach(row => {
     const k = row.nama_prodi || "-";
     counts[k] = (counts[k] || 0) + 1;
   });
   const entries = Object.entries(counts).sort((a, b) => b[1] - a[1]);
-  const total   = data.length || 1;
-  if (entries.length === 0) return null;
-
+  const total = data.length || 1;
   const chartData = entries.map(([nama, count]) => ({ name: nama, value: count }));
 
   const CustomTooltip = ({ active, payload }) => {
     if (!active || !payload?.length) return null;
-    const nama  = payload[0].name;
+    const nama = payload[0].name;
     const count = payload[0].value;
-    const cfg   = getProdiConfig(nama);
-    const pct   = Math.round((count / total) * 100);
+    const cfg = getProdiConfig(nama);
+    const pct = Math.round((count / total) * 100);
     return (
       <div style={{
         background: "#fff", border: `1.5px solid ${cfg.border}`,
@@ -399,35 +319,34 @@ function ProdiDistBar({ data }) {
       </div>
 
       <div className={styles.chartLayout}>
-        {/* ── Pie Chart (Recharts) ── */}
         <div className={styles.donutWrap}>
-          <PieChart width={200} height={200}>
-            <Pie
-              data={chartData}
-              cx={100} cy={100}
-              innerRadius={58} outerRadius={90}
-              paddingAngle={3}
-              dataKey="value"
-              nameKey="name"
-              startAngle={90}
-              endAngle={-270}
-              stroke="none"
-            >
-              {chartData.map((entry, idx) => {
-                const cfg = getProdiConfig(entry.name);
-                return <Cell key={idx} fill={cfg.color} />;
-              })}
-            </Pie>
-            <Tooltip content={<CustomTooltip />} />
-          </PieChart>
-          {/* Center label overlay */}
+          <ResponsiveContainer width={200} height={200}>
+            <PieChart>
+              <Pie
+                data={chartData}
+                cx="50%" cy="50%"
+                innerRadius={58} outerRadius={90}
+                paddingAngle={3}
+                dataKey="value"
+                nameKey="name"
+                startAngle={90}
+                endAngle={-270}
+                stroke="none"
+              >
+                {chartData.map((entry, idx) => {
+                  const cfg = getProdiConfig(entry.name);
+                  return <Cell key={idx} fill={cfg.color} />;
+                })}
+              </Pie>
+              <Tooltip content={<CustomTooltip />} />
+            </PieChart>
+          </ResponsiveContainer>
           <div className={styles.donutCenter}>
             <span className={styles.donutTotal}>{total}</span>
             <span className={styles.donutLabel}>Mahasiswa</span>
           </div>
         </div>
 
-        {/* ── Legend ── */}
         <div className={styles.chartLegend}>
           {entries.map(([nama, count]) => {
             const cfg = getProdiConfig(nama);
@@ -481,7 +400,7 @@ function MahasiswaFormModal({ mode, data, onClose, onSave, prodiList }) {
     email: "", password: "", password_confirm: "",
     status_skpi: "Belum", aktif: true,
   };
-  const [form, setForm]     = useState(initial);
+  const [form, setForm] = useState(initial);
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
 
@@ -495,12 +414,12 @@ function MahasiswaFormModal({ mode, data, onClose, onSave, prodiList }) {
 
   const validate = () => {
     const err = {};
-    if (!form.nama.trim())  err.nama  = "Nama wajib diisi.";
-    if (!form.nim.trim())   err.nim   = "NIM wajib diisi.";
+    if (!form.nama.trim()) err.nama = "Nama wajib diisi.";
+    if (!form.nim.trim()) err.nim = "NIM wajib diisi.";
     if (!form.email.trim()) err.email = "Email wajib diisi.";
     else if (!/\S+@\S+\.\S+/.test(form.email)) err.email = "Format email tidak valid.";
     if (mode === "add") {
-      if (!form.password)            err.password = "Password wajib diisi.";
+      if (!form.password) err.password = "Password wajib diisi.";
       else if (form.password.length < 8) err.password = "Minimal 8 karakter.";
       if (form.password !== form.password_confirm) err.password_confirm = "Konfirmasi tidak cocok.";
     }
@@ -694,10 +613,10 @@ function ResetPasswordModal({ mahasiswa, onClose, onDone }) {
 
 /* ── MODAL IMPORT EXCEL ── */
 function ImportExcelModal({ onClose, onDone }) {
-  const [file, setFile]         = useState(null);
+  const [file, setFile] = useState(null);
   const [dragging, setDragging] = useState(false);
-  const [loading, setLoading]   = useState(false);
-  const [error, setError]       = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const inputRef = useRef(null);
 
   const handleFile = f => {
@@ -712,12 +631,12 @@ function ImportExcelModal({ onClose, onDone }) {
     if (!file) return;
     setLoading(true); setError("");
     try {
-      const data     = await file.arrayBuffer();
+      const data = await file.arrayBuffer();
       const workbook = XLSX.read(data);
-      const rows     = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+      const rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
       if (rows.length === 0) throw new Error("File kosong");
       const required = ["Nama", "NIM", "Program Studi", "Angkatan", "Email"];
-      const missing  = required.filter(col => !(col in rows[0]));
+      const missing = required.filter(col => !(col in rows[0]));
       if (missing.length) throw new Error(`Kolom tidak lengkap: ${missing.join(", ")}`);
       const list = rows.map(row => ({
         nama: row["Nama"], nim: row["NIM"].toString(),
@@ -820,33 +739,30 @@ function RowActions({ row, onEdit, onResetPw, onToggleActive }) {
 }
 
 /* ========== KOMPONEN UTAMA ========== */
-const PER_PAGE      = 10;
+const PER_PAGE = 10;
 const ANGKATAN_LIST = ["Semua", "2025", "2024", "2023", "2022", "2021", "2020"];
-const STATUS_SKPI   = ["Semua", "Belum", "Proses", "Selesai"];
+const STATUS_SKPI = ["Semua", "Belum", "Proses", "Selesai"];
 
 export default function MahasiswaPage() {
-  const [data, setData]             = useState([]);
-  const [total, setTotal]           = useState(0);
+  const [data, setData] = useState([]);
+  const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
-  const [loading, setLoading]       = useState(true);
-  const [prodiList, setProdiList]   = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [prodiList, setProdiList] = useState([]);
 
-  const [search, setSearch]                 = useState("");
-  const [filterProdi, setFilterProdi]       = useState("Semua");
+  const [search, setSearch] = useState("");
+  const [filterProdi, setFilterProdi] = useState("Semua");
   const [filterAngkatan, setFilterAngkatan] = useState("Semua");
-  const [filterStatus, setFilterStatus]     = useState("Semua");
-  const [currentPage, setCurrentPage]       = useState(1);
-  const [filterOpen, setFilterOpen]         = useState(false);
-  const [modalAdd, setModalAdd]             = useState(false);
-  const [modalEdit, setModalEdit]           = useState(null);
-  const [modalReset, setModalReset]         = useState(null);
-  const [modalImport, setModalImport]       = useState(false);
-  const { toasts, add: toast, remove }      = useToast();
+  const [filterStatus, setFilterStatus] = useState("Semua");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [modalAdd, setModalAdd] = useState(false);
+  const [modalEdit, setModalEdit] = useState(null);
+  const [modalReset, setModalReset] = useState(null);
+  const [modalImport, setModalImport] = useState(false);
+  const { toasts, add: toast, remove } = useToast();
 
-  // Fungsi pembantu untuk mock data
-  const fetchMockProdi = async () => {
-    return MOCK_PRODI_LIST;
-  };
+  const fetchMockProdi = async () => MOCK_PRODI_LIST;
 
   const fetchMockMahasiswa = async ({ q, prodi, page }) => {
     let filtered = [...MOCK_MAHASISWA];
@@ -873,11 +789,7 @@ export default function MahasiswaPage() {
     document.title = "Manajemen Mahasiswa | Admin SKPI";
   }, []);
 
-  const loadData = useCallback(async (
-    q     = search,
-    prodi = filterProdi,
-    page  = currentPage,
-  ) => {
+  const loadData = useCallback(async (q = search, prodi = filterProdi, page = currentPage) => {
     setLoading(true);
     let result;
     if (USE_MOCK) {
@@ -887,24 +799,24 @@ export default function MahasiswaPage() {
     }
     if (result) {
       const rows = (result.rows ?? []).map(m => ({
-        id:              m.id_mahasiswa,
-        nama:            m.nama,
-        nim:             m.nim,
-        id_prodi:        m.id_prodi,
-        nama_prodi:      m.programstudi?.nama_prodi ?? "-",
-        angkatan:        m.angkatan ?? "-",
-        email:           m.email ?? "-",
+        id: m.id_mahasiswa,
+        nama: m.nama,
+        nim: m.nim,
+        id_prodi: m.id_prodi,
+        nama_prodi: m.programstudi?.nama_prodi ?? "-",
+        angkatan: m.angkatan ?? "-",
+        email: m.email ?? "-",
         status_skpi: ({
           diterbitkan: "Selesai",
-          diajukan:    "Proses",
-          direvisi:    "Revisi",
-          belum:       "Belum",
+          diajukan: "Proses",
+          direvisi: "Revisi",
+          belum: "Belum",
         })[m.status_skpi] ?? "Belum",
         jumlah_kegiatan: m._count?.kegiatanmahasiswa ?? m.jumlah_kegiatan ?? 0,
-        total_icp:       m.total_icp ?? 0,
-        foto_profil:     m.foto_profil ?? null,
-        aktif:           m.users ? m.users.status_akun === "aktif" : false,
-        has_akun:        !!m.id_user,
+        total_icp: m.total_icp ?? 0,
+        foto_profil: m.foto_profil ?? null,
+        aktif: m.users ? m.users.status_akun === "aktif" : false,
+        has_akun: !!m.id_user,
       }));
       setData(rows);
       setTotal(result.total ?? rows.length);
@@ -997,13 +909,12 @@ export default function MahasiswaPage() {
     if (res.ok) {
       const successCount = res.data?.success ?? list.length;
       const skippedCount = res.data?.skipped ?? 0;
-      const failedCount  = res.data?.failed  ?? 0;
+      const failedCount = res.data?.failed ?? 0;
       const parts = [
-        successCount > 0 ? `${successCount} berhasil`             : null,
+        successCount > 0 ? `${successCount} berhasil` : null,
         skippedCount > 0 ? `${skippedCount} dilewati (sudah ada)` : null,
-        failedCount  > 0 ? `${failedCount} gagal`                 : null,
+        failedCount > 0 ? `${failedCount} gagal` : null,
       ].filter(Boolean).join(", ");
-      // Reset filter & tunggu data dimuat, baru tutup modal
       setSearch(""); setFilterProdi("Semua"); setFilterAngkatan("Semua"); setFilterStatus("Semua");
       setCurrentPage(1);
       await loadData("", "Semua", 1);
@@ -1024,22 +935,22 @@ export default function MahasiswaPage() {
   };
 
   const activeFilters =
-    (filterProdi    !== "Semua" ? 1 : 0) +
+    (filterProdi !== "Semua" ? 1 : 0) +
     (filterAngkatan !== "Semua" ? 1 : 0) +
-    (filterStatus   !== "Semua" ? 1 : 0) +
+    (filterStatus !== "Semua" ? 1 : 0) +
     (search ? 1 : 0);
 
   const filtered = data.filter(row =>
     (filterAngkatan === "Semua" || String(row.angkatan) === filterAngkatan) &&
-    (filterStatus   === "Semua" || row.status_skpi === filterStatus)
+    (filterStatus === "Semua" || row.status_skpi === filterStatus)
   );
 
-  const aktifC   = data.filter(r => r.aktif).length;
+  const aktifC = data.filter(r => r.aktif).length;
   const selesaiC = data.filter(r => r.status_skpi === "Selesai").length;
-  const avgICP   = data.length
+  const avgICP = data.length
     ? Math.round(data.reduce((s, r) => s + (r.total_icp || 0), 0) / data.length) : 0;
   const safePage = currentPage;
-  const start    = (safePage - 1) * PER_PAGE;
+  const start = (safePage - 1) * PER_PAGE;
 
   const activeProdiCfg = filterProdi !== "Semua" ? getProdiConfig(filterProdi) : null;
 
@@ -1068,14 +979,14 @@ export default function MahasiswaPage() {
 
       {/* Stat Cards */}
       <div className={styles.statsGrid}>
-        <StatCard icon={Users}         title="Total Mahasiswa" value={total}    subtitle={`${aktifC} akun aktif`}     color="blue"   />
-        <StatCard icon={UserCheck}     title="Akun Aktif"      value={aktifC}   subtitle="dapat login sistem"          color="green"  />
-        <StatCard icon={GraduationCap} title="SKPI Selesai"    value={selesaiC} subtitle="SKPI sudah diterbitkan"      color="teal"   />
-        <StatCard icon={TrendingUp}    title="Rata-rata ICP"   value={avgICP}   subtitle="poin kegiatan mahasiswa"     color="orange" />
+        <StatCard icon={Users} title="Total Mahasiswa" value={total} subtitle={`${aktifC} akun aktif`} color="blue" />
+        <StatCard icon={UserCheck} title="Akun Aktif" value={aktifC} subtitle="dapat login sistem" color="green" />
+        <StatCard icon={GraduationCap} title="SKPI Selesai" value={selesaiC} subtitle="SKPI sudah diterbitkan" color="teal" />
+        <StatCard icon={TrendingUp} title="Rata-rata ICP" value={avgICP} subtitle="poin kegiatan mahasiswa" color="orange" />
       </div>
 
       {/* Prodi Distribution */}
-      {data.length > 0 && <ProdiDistBar data={data} />}
+      <ProdiDistBar data={data} />
 
       {/* Toolbar */}
       <div className={styles.toolbar}>
@@ -1113,31 +1024,33 @@ export default function MahasiswaPage() {
       {/* Filter Panel */}
       {filterOpen && (
         <div className={styles.filterPanel}>
-          <div className={styles.filterGroup}>
-            <p className={styles.filterLabel}>Program Studi</p>
-            <div className={styles.chipRow}>
-              {["Semua", ...prodiList.map(p => p.nama_prodi)].map(p => (
-                <ProdiFilterChip key={p} nama={p} active={filterProdi === p}
-                  onClick={() => { setFilterProdi(p); setCurrentPage(1); loadData(search, p, 1); }} />
-              ))}
+          <div className={styles.filterGrid}>
+            <div className={styles.filterGroup}>
+              <p className={styles.filterLabel}>Program Studi</p>
+              <div className={styles.chipRow}>
+                {["Semua", ...prodiList.map(p => p.nama_prodi)].map(p => (
+                  <ProdiFilterChip key={p} nama={p} active={filterProdi === p}
+                    onClick={() => { setFilterProdi(p); setCurrentPage(1); loadData(search, p, 1); }} />
+                ))}
+              </div>
             </div>
-          </div>
-          <div className={styles.filterGroup}>
-            <p className={styles.filterLabel}>Angkatan</p>
-            <div className={styles.chipRow}>
-              {ANGKATAN_LIST.map(a => (
-                <button key={a} className={`${styles.chip} ${filterAngkatan === a ? styles.chipActive : ""}`}
-                  onClick={() => { setFilterAngkatan(a); setCurrentPage(1); }}>{a}</button>
-              ))}
+            <div className={styles.filterGroup}>
+              <p className={styles.filterLabel}>Angkatan</p>
+              <div className={styles.chipRow}>
+                {ANGKATAN_LIST.map(a => (
+                  <button key={a} className={`${styles.chip} ${filterAngkatan === a ? styles.chipActive : ""}`}
+                    onClick={() => { setFilterAngkatan(a); setCurrentPage(1); }}>{a}</button>
+                ))}
+              </div>
             </div>
-          </div>
-          <div className={styles.filterGroup}>
-            <p className={styles.filterLabel}>Status SKPI</p>
-            <div className={styles.chipRow}>
-              {STATUS_SKPI.map(s => (
-                <button key={s} className={`${styles.chip} ${filterStatus === s ? styles.chipActive : ""}`}
-                  onClick={() => { setFilterStatus(s); setCurrentPage(1); }}>{s}</button>
-              ))}
+            <div className={styles.filterGroup}>
+              <p className={styles.filterLabel}>Status SKPI</p>
+              <div className={styles.chipRow}>
+                {STATUS_SKPI.map(s => (
+                  <button key={s} className={`${styles.chip} ${filterStatus === s ? styles.chipActive : ""}`}
+                    onClick={() => { setFilterStatus(s); setCurrentPage(1); }}>{s}</button>
+                ))}
+              </div>
             </div>
           </div>
           {activeFilters > 0 && (
@@ -1150,71 +1063,73 @@ export default function MahasiswaPage() {
 
       {/* Tabel */}
       <div className={styles.tableCard}>
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th className={styles.thNo}>No.</th>
-              <th>Nama Mahasiswa</th>
-              <th>NIM</th>
-              <th>Program Studi</th>
-              <th className={styles.thCenter}>Angkatan</th>
-              <th className={styles.thCenter}>Status SKPI</th>
-              <th className={styles.thCenter}>Akun</th>
-              <th className={styles.thCenter}>Aksi</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
+        <div className={styles.tableScroll}>
+          <table className={styles.table}>
+            <thead>
               <tr>
-                <td colSpan={8} className={styles.emptyTd}>
-                  <div className={styles.emptyState}>
-                    <Loader2 size={32} className={styles.spin} /><p>Memuat data...</p>
-                  </div>
-                </td>
+                <th className={styles.thNo}>No.</th>
+                <th>Nama Mahasiswa</th>
+                <th>NIM</th>
+                <th>Program Studi</th>
+                <th className={styles.thCenter}>Angkatan</th>
+                <th className={styles.thCenter}>Status SKPI</th>
+                <th className={styles.thCenter}>Akun</th>
+                <th className={styles.thCenter}>Aksi</th>
               </tr>
-            ) : filtered.length === 0 ? (
-              <tr>
-                <td colSpan={8} className={styles.emptyTd}>
-                  <div className={styles.emptyState}>
-                    <GraduationCap size={44} />
-                    <p>Tidak ada data mahasiswa</p>
-                    <span>Coba ubah filter atau tambah data baru</span>
-                  </div>
-                </td>
-              </tr>
-            ) : filtered.map((row, idx) => (
-              <tr key={row.id} className={!row.aktif ? styles.rowInactive : ""}>
-                <td className={styles.tdNo}>{start + idx + 1}</td>
-                <td>
-                  <div className={styles.nameCell}>
-                    <MhsAvatar row={row} />
-                    <div>
-                      <div className={styles.nameText}>{row.nama}</div>
-                      <div className={styles.emailText}>{row.email}</div>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr>
+                  <td colSpan={8} className={styles.emptyTd}>
+                    <div className={styles.emptyState}>
+                      <Loader2 size={32} className={styles.spin} /><p>Memuat data...</p>
                     </div>
-                  </div>
-                </td>
-                <td><span className={styles.nimBadge}>{row.nim}</span></td>
-                <td><ProdiChip nama={row.nama_prodi} /></td>
-                <td className={styles.tdCenter}>
-                  <span className={styles.angkatanBadge}>{row.angkatan}</span>
-                </td>
-                <td className={styles.tdCenter}><StatusBadge status={row.status_skpi} /></td>
-                <td className={styles.tdCenter}>
-                  <span className={`${styles.akunDot} ${row.aktif ? styles.dotOn : (row.has_akun ? styles.dotOff : styles.dotNone)}`}>
-                    {row.aktif ? "Aktif" : row.has_akun ? "Nonaktif" : "Belum ada"}
-                  </span>
-                </td>
-                <td className={styles.tdCenter}>
-                  <RowActions row={row}
-                    onEdit={() => setModalEdit(row)}
-                    onResetPw={() => setModalReset(row)}
-                    onToggleActive={() => handleToggle(row)} />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                  </td>
+                </tr>
+              ) : filtered.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className={styles.emptyTd}>
+                    <div className={styles.emptyState}>
+                      <GraduationCap size={44} />
+                      <p>Tidak ada data mahasiswa</p>
+                      <span>Coba ubah filter atau tambah data baru</span>
+                    </div>
+                  </td>
+                </tr>
+              ) : filtered.map((row, idx) => (
+                <tr key={row.id} className={!row.aktif ? styles.rowInactive : ""}>
+                  <td className={styles.tdNo}>{start + idx + 1}</td>
+                  <td>
+                    <div className={styles.nameCell}>
+                      <MhsAvatar row={row} />
+                      <div>
+                        <div className={styles.nameText}>{row.nama}</div>
+                        <div className={styles.emailText}>{row.email}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td><span className={styles.nimBadge}>{row.nim}</span></td>
+                  <td><ProdiChip nama={row.nama_prodi} /></td>
+                  <td className={styles.tdCenter}>
+                    <span className={styles.angkatanBadge}>{row.angkatan}</span>
+                  </td>
+                  <td className={styles.tdCenter}><StatusBadge status={row.status_skpi} /></td>
+                  <td className={styles.tdCenter}>
+                    <span className={`${styles.akunDot} ${row.aktif ? styles.dotOn : (row.has_akun ? styles.dotOff : styles.dotNone)}`}>
+                      {row.aktif ? "Aktif" : row.has_akun ? "Nonaktif" : "Belum ada"}
+                    </span>
+                  </td>
+                  <td className={styles.tdCenter}>
+                    <RowActions row={row}
+                      onEdit={() => setModalEdit(row)}
+                      onResetPw={() => setModalReset(row)}
+                      onToggleActive={() => handleToggle(row)} />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Pagination */}

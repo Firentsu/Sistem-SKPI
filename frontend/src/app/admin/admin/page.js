@@ -693,81 +693,83 @@ export default function AdminManagementPage() {
       )}
 
       <div className={styles.tableCard}>
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th className={styles.thNo}>No.</th>
-              <th>Nama Administrator</th>
-              <th>Username</th>
-              <th className={styles.thCenter}>Akun</th>
-              <th className={styles.thCenter}>Dibuat</th>
-              <th className={styles.thCenter}>Login Terakhir</th>
-              <th className={styles.thCenter}>Aksi</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
+        <div className={styles.tableScroll}>   {/* ✅ BARU: wrapper scroll */}
+          <table className={styles.table}>
+            <thead>
               <tr>
-                <td colSpan={7} className={styles.emptyTd}>
-                  <div className={styles.emptyState}>
-                    <Loader2 size={32} className={styles.spin} />
-                    <p>Memuat data...</p>
-                  </div>
-                </td>
+                <th className={styles.thNo}>No.</th>
+                <th>Nama Administrator</th>
+                <th>Username</th>
+                <th className={styles.thCenter}>Akun</th>
+                <th className={styles.thCenter}>Dibuat</th>
+                <th className={styles.thCenter}>Login Terakhir</th>
+                <th className={styles.thCenter}>Aksi</th>
               </tr>
-            ) : data.length === 0 ? (
-              <tr>
-                <td colSpan={7} className={styles.emptyTd}>
-                  <div className={styles.emptyState}>
-                    <UserCog size={44} />
-                    <p>Tidak ada data administrator</p>
-                    <span>Tambah admin baru dengan klik tombol di atas</span>
-                  </div>
-                </td>
-              </tr>
-            ) : data.map((row, idx) => (
-              <tr key={row.id} className={!row.aktif ? styles.rowInactive : ""}>
-                <td className={styles.tdNo}>{start + idx + 1}</td>
-                <td>
-                  <div className={styles.nameCell}>
-                    {row.avatar ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={getAvatarUrl(row.avatar)}
-                        alt={row.nama}
-                        className={styles.avatarImg}
-                        onError={e => { e.currentTarget.onerror = null; e.currentTarget.src = "/img/avatar.jpg"; }}
-                      />
-                    ) : (
-                      <div className={styles.avatar}>{row.nama.charAt(0)}</div>
-                    )}
-                    <div>
-                      <div className={styles.nameText}>{row.nama}</div>
-                      <div className={styles.emailText}>{row.email}</div>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr>
+                  <td colSpan={7} className={styles.emptyTd}>
+                    <div className={styles.emptyState}>
+                      <Loader2 size={32} className={styles.spin} />
+                      <p>Memuat data...</p>
                     </div>
-                  </div>
-                </td>
-                <td><span className={styles.nimBadge}>@{row.username}</span></td>
-                <td className={styles.tdCenter}>
-                  <span className={`${styles.akunDot} ${row.aktif ? styles.dotOn : styles.dotOff}`}>
-                    {row.aktif ? "Aktif" : "Nonaktif"}
-                  </span>
-                </td>
-                <td className={styles.tdCenter}><span className={styles.dateText}>{row.created_at}</span></td>
-                <td className={styles.tdCenter}><span className={styles.dateText}>{row.last_login}</span></td>
-                <td className={styles.tdCenter}>
-                  <RowActions
-                    row={row}
-                    onEdit={() => setModalEdit(row)}
-                    onResetPw={() => setModalReset(row)}
-                    onToggleActive={() => handleToggleActive(row)}
-                    onDelete={() => setModalDelete(row)}
-                  />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                  </td>
+                </tr>
+              ) : data.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className={styles.emptyTd}>
+                    <div className={styles.emptyState}>
+                      <UserCog size={44} />
+                      <p>Tidak ada data administrator</p>
+                      <span>Tambah admin baru dengan klik tombol di atas</span>
+                    </div>
+                  </td>
+                </tr>
+              ) : data.map((row, idx) => (
+                <tr key={row.id} className={!row.aktif ? styles.rowInactive : ""}>
+                  <td className={styles.tdNo}>{start + idx + 1}</td>
+                  <td>
+                    <div className={styles.nameCell}>
+                      {row.avatar ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={getAvatarUrl(row.avatar)}
+                          alt={row.nama}
+                          className={styles.avatarImg}
+                          onError={e => { e.currentTarget.onerror = null; e.currentTarget.src = "/img/avatar.jpg"; }}
+                        />
+                      ) : (
+                        <div className={styles.avatar}>{row.nama.charAt(0)}</div>
+                      )}
+                      <div>
+                        <div className={styles.nameText}>{row.nama}</div>
+                        <div className={styles.emailText}>{row.email}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td><span className={styles.nimBadge}>@{row.username}</span></td>
+                  <td className={styles.tdCenter}>
+                    <span className={`${styles.akunDot} ${row.aktif ? styles.dotOn : styles.dotOff}`}>
+                      {row.aktif ? "Aktif" : "Nonaktif"}
+                    </span>
+                  </td>
+                  <td className={styles.tdCenter}><span className={styles.dateText}>{row.created_at}</span></td>
+                  <td className={styles.tdCenter}><span className={styles.dateText}>{row.last_login}</span></td>
+                  <td className={styles.tdCenter}>
+                    <RowActions
+                      row={row}
+                      onEdit={() => setModalEdit(row)}
+                      onResetPw={() => setModalReset(row)}
+                      onToggleActive={() => handleToggleActive(row)}
+                      onDelete={() => setModalDelete(row)}
+                    />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+         </div>  {/* ✅ tutup wrapper */}
       </div>
 
       {totalPages > 1 && (

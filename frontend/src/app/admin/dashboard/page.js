@@ -195,7 +195,9 @@ export default function DashboardPage() {
           <div className={styles.filterBox} ref={dropdownRef}>
             <button className={styles.filterBtn} onClick={() => setProdiOpen(o => !o)}>
               <Filter size={13} />
-              <span>{selectedProdi?.prodi ?? "Semua Prodi"}</span>
+              <span className={styles.filterLabel}>
+                {selectedProdi?.prodi ?? "Semua Prodi"}
+              </span>
               <ChevronRight size={13} style={{
                 transform: prodiOpen ? "rotate(90deg)" : "none",
                 transition: ".15s"

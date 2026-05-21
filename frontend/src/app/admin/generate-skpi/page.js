@@ -314,13 +314,12 @@ export default function GenerateSkpiPage() {
   const [preview,     setPreview]     = useState(null);
   const [generating,  setGenerating]  = useState(false);
   const [publishing,  setPublishing]  = useState(false);
-  const [refreshTrigger, setRefreshTrigger] = useState(0); // pemicu refresh manual
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
   const { toasts, add: toast, remove } = useToast();
   const searchTimer = useRef(null);
 
   const angkatanList = getAngkatanList();
 
-  // Ambil daftar prodi saat mount
   useEffect(() => {
     getProdiList()
       .then(list => setProdiList(list?.length ? list : MOCK_PRODI_LIST))
@@ -328,7 +327,6 @@ export default function GenerateSkpiPage() {
     document.title = "Generate SKPI | Admin";
   }, []);
 
-  // Fetch data utama – TIDAK memanggil setState sinkron di luar async callback
   useEffect(() => {
     let cancelled = false;
     const fetchData = async () => {
@@ -361,7 +359,6 @@ export default function GenerateSkpiPage() {
           mergedRows = MOCK_MAHASISWA.map(m => ({ ...m }));
         }
 
-        // Filter lokal
         let filtered = mergedRows
           .filter(m => {
             if (filterIcp === "Gold")   return m.total_poin >= 200;
@@ -397,7 +394,6 @@ export default function GenerateSkpiPage() {
     return () => { cancelled = true; };
   }, [search, filterProdi, page, filterIcp, filterStatus, filterAngkatan, refreshTrigger]);
 
-  // Ambil daftar SKPI yang sudah ada
   useEffect(() => {
     if (rows.length === 0) return;
     getSkpiList({ page: 1 }).then(res => {
@@ -413,7 +409,6 @@ export default function GenerateSkpiPage() {
     setPage(1);
     clearTimeout(searchTimer.current);
     searchTimer.current = setTimeout(() => {
-      // trigger fetch dengan refreshTrigger
       setRefreshTrigger(t => t + 1);
     }, 400);
   };
@@ -547,104 +542,106 @@ export default function GenerateSkpiPage() {
 
       {/* Tabel */}
       <div className={styles.tableWrapper}>
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th style={{ width: 52 }}>No.</th>
-              <th>Mahasiswa</th>
-              <th>NIM</th>
-              <th>Program Studi</th>
-              <th style={{ textAlign: "center", width: 90 }}>Angkatan</th>
-              <th style={{ textAlign: "center", width: 130 }}>ICP</th>
-              <th style={{ textAlign: "center", width: 120 }}>Status SKPI</th>
-              <th style={{ textAlign: "center", width: 110 }}>Aksi</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr><td colSpan={8} className={styles.emptyTd}>
-                <div className={styles.emptyState}>
-                  <Loader2 size={30} className={styles.spin}/><p>Memuat data...</p>
-                </div>
-              </td></tr>
-            ) : rows.length === 0 ? (
-              <tr><td colSpan={8} className={styles.emptyTd}>
-                <div className={styles.emptyState}>
-                  <FileText size={42}/><p>Tidak ada data mahasiswa</p>
-                  <span>Coba ubah filter pencarian</span>
-                </div>
-              </td></tr>
-            ) : rows.map((row, idx) => {
-              const tier      = getIcpTier(row.total_poin);
-              const TierIcon  = tier.icon;
-              const prodiCfg  = getProdiCfg(row.prodi);
-              const skpiData  = skpiMap[row.id_mahasiswa];
-              const statusCfg = STATUS_SKPI_CFG[row.status_skpi] || STATUS_SKPI_CFG.belum;
-              const canGenerate = row.total_poin >= 100 && !skpiData;
+        <div className={styles.tableScroll}>
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th className={styles.colNo}>No.</th>
+                <th>Mahasiswa</th>
+                <th>NIM</th>
+                <th>Program Studi</th>
+                <th className={styles.colAngkatan}>Angkatan</th>
+                <th className={styles.colIcp}>ICP</th>
+                <th className={styles.colStatus}>Status SKPI</th>
+                <th className={styles.colAksi}>Aksi</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr><td colSpan={8} className={styles.emptyTd}>
+                  <div className={styles.emptyState}>
+                    <Loader2 size={30} className={styles.spin}/><p>Memuat data...</p>
+                  </div>
+                </td></tr>
+              ) : rows.length === 0 ? (
+                <tr><td colSpan={8} className={styles.emptyTd}>
+                  <div className={styles.emptyState}>
+                    <FileText size={42}/><p>Tidak ada data mahasiswa</p>
+                    <span>Coba ubah filter pencarian</span>
+                  </div>
+                </td></tr>
+              ) : rows.map((row, idx) => {
+                const tier      = getIcpTier(row.total_poin);
+                const TierIcon  = tier.icon;
+                const prodiCfg  = getProdiCfg(row.prodi);
+                const skpiData  = skpiMap[row.id_mahasiswa];
+                const statusCfg = STATUS_SKPI_CFG[row.status_skpi] || STATUS_SKPI_CFG.belum;
+                const canGenerate = row.total_poin >= 100 && !skpiData;
 
-              return (
-                <tr key={row.id_mahasiswa} className={row.total_poin < 100 ? styles.rowDim : ""}>
-                  <td className={styles.tdNo}>{(safePage - 1) * PER_PAGE + idx + 1}</td>
-                  <td>
-                    <div className={styles.mhsCell}>
-                      <div className={styles.avatar} style={{ background: prodiCfg.gradient }}>
-                        {row.nama.charAt(0)}
+                return (
+                  <tr key={row.id_mahasiswa} className={row.total_poin < 100 ? styles.rowDim : ""}>
+                    <td className={styles.tdNo}>{(safePage - 1) * PER_PAGE + idx + 1}</td>
+                    <td>
+                      <div className={styles.mhsCell}>
+                        <div className={styles.avatar} style={{ background: prodiCfg.gradient }}>
+                          {row.nama.charAt(0)}
+                        </div>
+                        <div>
+                          <div className={styles.mhsName}>{row.nama}</div>
+                        </div>
                       </div>
-                      <div>
-                        <div className={styles.mhsName}>{row.nama}</div>
+                    </td>
+                    <td><code className={styles.mhsNim}>{row.nim}</code></td>
+                    <td>
+                      <span className={styles.prodiBadge}
+                        style={{ background: prodiCfg.bg, color: prodiCfg.color, borderColor: prodiCfg.border }}>
+                        <span className={styles.prodiDot}
+                          style={{ background: prodiCfg.gradient, fontSize: prodiCfg.label.length > 3 ? 7 : 8 }}>
+                          {prodiCfg.label}
+                        </span>
+                        {row.prodi}
+                      </span>
+                    </td>
+                    <td className={styles.colAngkatan}>
+                      <span className={styles.angkatanBadge}>{row.angkatan}</span>
+                    </td>
+                    <td className={styles.colIcp}>
+                      <div className={styles.icpCell}>
+                        <span className={styles.icpScore} style={{ color: tier.color }}>{row.total_poin}</span>
+                        <span className={styles.icpTier}
+                          style={{ background: tier.bg, color: tier.color, borderColor: tier.border }}>
+                          <TierIcon size={10}/> {tier.label.split(" ")[0]}
+                        </span>
                       </div>
-                    </div>
-                  </td>
-                  <td><code className={styles.mhsNim}>{row.nim}</code></td>
-                  <td>
-                    <span className={styles.prodiBadge}
-                      style={{ background: prodiCfg.bg, color: prodiCfg.color, borderColor: prodiCfg.border }}>
-                      <span className={styles.prodiDot}
-                        style={{ background: prodiCfg.gradient, fontSize: prodiCfg.label.length > 3 ? 7 : 8 }}>
-                        {prodiCfg.label}
+                    </td>
+                    <td className={styles.colStatus}>
+                      <span className={styles.skpiStatus}
+                        style={{ background: statusCfg.bg, color: statusCfg.color, borderColor: statusCfg.border }}>
+                        {statusCfg.label}
+                        {skpiData?.status === "resmi" && <CheckCircle2 size={10} style={{ marginLeft: 3 }}/>}
                       </span>
-                      {row.prodi}
-                    </span>
-                  </td>
-                  <td style={{ textAlign: "center" }}>
-                    <span className={styles.angkatanBadge}>{row.angkatan}</span>
-                  </td>
-                  <td style={{ textAlign: "center" }}>
-                    <div className={styles.icpCell}>
-                      <span className={styles.icpScore} style={{ color: tier.color }}>{row.total_poin}</span>
-                      <span className={styles.icpTier}
-                        style={{ background: tier.bg, color: tier.color, borderColor: tier.border }}>
-                        <TierIcon size={10}/> {tier.label.split(" ")[0]}
-                      </span>
-                    </div>
-                  </td>
-                  <td style={{ textAlign: "center" }}>
-                    <span className={styles.skpiStatus}
-                      style={{ background: statusCfg.bg, color: statusCfg.color, borderColor: statusCfg.border }}>
-                      {statusCfg.label}
-                      {skpiData?.status === "resmi" && <CheckCircle2 size={10} style={{ marginLeft: 3 }}/>}
-                    </span>
-                  </td>
-                  <td style={{ textAlign: "center" }}>
-                    <div className={styles.actionGroup}>
-                      <button className={styles.btnPreview}
-                        onClick={() => setPreview(row)}>
-                        <Eye size={13}/> Preview
-                      </button>
-                      {canGenerate && (
-                        <button className={styles.btnGen}
-                          onClick={() => setPreview(row)}
-                          title="Generate SKPI">
-                          <Zap size={13}/>
+                    </td>
+                    <td className={styles.colAksi}>
+                      <div className={styles.actionGroup}>
+                        <button className={styles.btnPreview}
+                          onClick={() => setPreview(row)}>
+                          <Eye size={13}/> Preview
                         </button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+                        {canGenerate && (
+                          <button className={styles.btnGen}
+                            onClick={() => setPreview(row)}
+                            title="Generate SKPI">
+                            <Zap size={13}/>
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Pagination */}

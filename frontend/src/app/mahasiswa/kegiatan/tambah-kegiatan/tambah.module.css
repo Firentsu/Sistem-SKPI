@@ -463,3 +463,91 @@
     }
   }
 }
+
+/* Grid mata kuliah penciri */
+.matkulGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px;
+  margin-top: 8px;
+}
+.matkulItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #3d2006;
+  cursor: pointer;
+  padding: 6px 10px;
+  border: 1px solid #e8d5c4;
+  border-radius: 8px;
+  background: #fdfaf8;
+  transition: background 0.15s, border-color 0.15s;
+}
+.matkulItem:hover {
+  background: #f5ece4;
+  border-color: #c8945a;
+}
+.matkulItem input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+}
+
+/* ── Multi Nama Kegiatan ── */
+.namaList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.namaRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.namaFields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  flex: 1;
+}
+
+.removeNamaBtn {
+  background: #fee2e2;
+  border: none;
+  color: #dc2626;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 24px;
+  transition: background 0.15s;
+}
+.removeNamaBtn:hover {
+  background: #fca5a5;
+}
+
+.addNamaBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: 1.5px dashed #c4a68c;
+  border-radius: 10px;
+  background: transparent;
+  color: #765439;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  align-self: flex-start;
+}
+.addNamaBtn:hover {
+  border-color: #765439;
+  background: #fdf4ec;
+}

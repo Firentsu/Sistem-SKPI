@@ -11,6 +11,11 @@ const DEFAULT_MASTER_DATA = {
     "Pengalaman Berorganisasi dan Kepemimpinan",
     "Pengembangan Intelektual",
     "Praktik Kerja",
+    // tambahan
+    "Pembinaan Spiritual",
+    "Pembangunan Karakter dan Kepribadian",
+    "Kursus-kursus",
+    "Skripsi",
   ],
   kategori_aktivitas: [
     "Lomba/Kompetisi",
@@ -32,6 +37,12 @@ const DEFAULT_MASTER_DATA = {
     "Kuliah Umum / Studium Generale",
     "Magang / PKL",
     "Kewirausahaan / Startup",
+    // tambahan
+    "Ret-ret / Pembinaan",
+    "Matkul Penciri",
+    "Kursus Online",
+    "Kursus Tatap Muka",
+    "Skripsi / Tugas Akhir",
   ],
   kelompok_aktivitas: [
     "Akademik",
@@ -40,6 +51,9 @@ const DEFAULT_MASTER_DATA = {
     "Kepemimpinan",
     "Penelitian",
     "Profesional",
+    // tambahan
+    "Spiritual",
+    "Karakter",
   ],
   level_kegiatan: ["Internal", "Nasional", "Internasional"],
   tingkat_prestasi: [
@@ -66,6 +80,18 @@ const DEFAULT_MASTER_DATA = {
   "Semester Ganjil 2028/2029", "Semester Genap 2028/2029", "Liburan Semester Genap 2028/2029",
   "Semester Ganjil 2029/2030", "Semester Genap 2029/2030", "Liburan Semester Genap 2029/2030",
   ],
+
+  /* Matkul Penciri */
+  mata_kuliah_penciri: [
+    "Pendidikan Agama Katolik",
+    "Pendidikan Kewarganegaraan",
+    "Bahasa Indonesia",
+    "Pancasila",
+    "Etika Profesi",
+    "Kepemimpinan",
+    "Kewirausahaan",
+  ],
+
 };
 
 let masterDataCache = null;
@@ -152,6 +178,11 @@ export function getTingkatPrestasi() {
 export function getPeriodeSemester() {
   return masterDataCache?.periode_semester || DEFAULT_MASTER_DATA.periode_semester;
 }
+// Getters untuk Matkul Penciri
+export function getMataKuliahPenciri() {
+  return masterDataCache?.mata_kuliah_penciri || DEFAULT_MASTER_DATA.mata_kuliah_penciri;
+}
+
 
 // Placeholder setter (tidak digunakan langsung oleh frontend)
 export const setJenisAktivitas = (data) => {};
@@ -159,3 +190,4 @@ export const setKategoriAktivitas = (data) => {};
 export const setKelompokAktivitas = (data) => {};
 export const setLevelKegiatan = (data) => {};
 export const setTingkatPrestasi = (data) => {};
+export const setMataKuliahPenciri = (data) => {}; // placeholder

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useMahasiswa } from "@/context/MahasiswaContext";
 import {
   ArrowLeft, Save, Upload, FileText, X,
-  AlertCircle, CheckCircle2,
+  AlertCircle, CheckCircle2, Plus, Trash2,
 } from "lucide-react";
 import styles from "./tambah.module.css";
 import { submitKegiatan, uploadBuktiKegiatan } from "@/lib/api";
@@ -19,75 +19,102 @@ import {
 } from "@/lib/masterData";
 
 /* ─────────────────────────────────────────
-   KATEGORI SKPI → Mapping terhadap master data
-   Nama‑nama di sini HARUS cocok dengan yang
-   ada di master data (default atau dari admin)
+   KATEGORI SKPI → Mapping master data
 ───────────────────────────────────────── */
 const SKPI_MAP = {
   prestasi: {
     label: "1. Prestasi dan Penghargaan",
     jenis: ["Prestasi dan Kegiatan"],
     kelompok: ["Akademik", "Non-Akademik"],
-    kategori: [
-      "Lomba/Kompetisi",
-      "Olimpiade",
-      "Penghargaan / Award",
-    ],
+    kategori: ["Lomba/Kompetisi", "Olimpiade", "Penghargaan / Award"],
     hasPrestasi: true,
+    requiredFields: ["nama_id", "nama_en", "kategori_skpi", "jenis_aktivitas", "kelompok", "kategori", "level", "periode", "lokasi", "penyelenggara", "tanggal"],
+    multiNama: false,
+    buktiWajib: true,
   },
   keterampilan: {
     label: "2. Peningkatan Keterampilan Profesional",
     jenis: ["Peningkatan Keterampilan Profesional"],
     kelompok: ["Akademik", "Profesional"],
-    kategori: [
-      "Workshop / Pelatihan",
-      "Sertifikasi Profesional",
-      "Kursus",
-    ],
+    kategori: ["Workshop / Pelatihan", "Sertifikasi Profesional", "Kursus"],
     hasPrestasi: false,
+    requiredFields: ["nama_id", "nama_en", "kategori_skpi", "jenis_aktivitas", "kelompok", "kategori", "level", "periode", "lokasi", "penyelenggara", "tanggal"],
+    multiNama: false,
+    buktiWajib: true,
   },
   organisasi: {
     label: "3. Pengalaman Berorganisasi & Kepemimpinan",
     jenis: ["Pengalaman Berorganisasi dan Kepemimpinan"],
     kelompok: ["Organisasi", "Kepemimpinan"],
-    kategori: [
-      "Pengurus Organisasi",
-      "Kepanitiaan Kegiatan",
-      "Komunitas / UKM",
-      "Relawan / Sukarelawan",
-      "Mentoring / Pembimbing",
-    ],
+    kategori: ["Pengurus Organisasi", "Kepanitiaan Kegiatan", "Komunitas / UKM", "Relawan / Sukarelawan", "Mentoring / Pembimbing"],
     hasPrestasi: false,
+    requiredFields: ["nama_id", "nama_en", "kategori_skpi", "jenis_aktivitas", "kelompok", "kategori", "level", "periode", "lokasi", "penyelenggara", "tanggal"],
+    multiNama: false,
+    buktiWajib: true,
   },
   intelektual: {
     label: "4. Pengembangan Intelektual",
     jenis: ["Pengembangan Intelektual"],
     kelompok: ["Akademik", "Penelitian"],
-    kategori: [
-      "Asisten Penelitian / Riset",
-      "Publikasi Ilmiah",
-      "Konferensi Ilmiah",
-      "Pertukaran Pelajar / Exchange",
-      "Seminar / Webinar",
-      "Kuliah Umum / Studium Generale",
-    ],
+    kategori: ["Asisten Penelitian / Riset", "Publikasi Ilmiah", "Konferensi Ilmiah", "Pertukaran Pelajar / Exchange", "Seminar / Webinar", "Kuliah Umum / Studium Generale"],
     hasPrestasi: false,
+    requiredFields: ["nama_id", "nama_en", "kategori_skpi", "jenis_aktivitas", "kelompok", "kategori", "level", "periode", "lokasi", "penyelenggara", "tanggal"],
+    multiNama: false,
+    buktiWajib: true,
   },
   praktik: {
     label: "5. Praktik Kerja",
     jenis: ["Praktik Kerja"],
     kelompok: ["Profesional"],
-    kategori: [
-      "Magang / PKL",
-      "Kewirausahaan / Startup",
-    ],
+    kategori: ["Magang / PKL", "Kewirausahaan / Startup"],
     hasPrestasi: false,
+    requiredFields: ["nama_id", "nama_en", "kategori_skpi", "jenis_aktivitas", "kelompok", "kategori", "level", "periode", "lokasi", "penyelenggara", "tanggal"],
+    multiNama: false,
+    buktiWajib: true,
+  },
+  pembinaan: {
+    label: "6. Pembinaan Spiritual",
+    jenis: ["Pembinaan Spiritual"],
+    kelompok: ["Spiritual"],
+    kategori: ["Ret-ret / Pembinaan"],
+    hasPrestasi: false,
+    requiredFields: ["nama_id", "nama_en", "kategori_skpi", "jenis_aktivitas", "kelompok", "kategori", "level", "periode", "lokasi", "penyelenggara", "tanggal"],
+    multiNama: true,
+    buktiWajib: true,
+  },
+  karakter: {
+    label: "7. Pembangunan Karakter dan Kepribadian",
+    jenis: ["Pembangunan Karakter dan Kepribadian"],
+    kelompok: ["Karakter"],
+    kategori: ["Matkul Penciri", "Pembangunan Karakter"],
+    hasPrestasi: false,
+    requiredFields: ["nama_id", "nama_en", "kategori_skpi", "jenis_aktivitas", "kelompok", "kategori", "level"],
+    multiNama: true,
+    buktiWajib: false,
+  },
+  kursus: {
+    label: "8. Kursus-kursus",
+    jenis: ["Kursus-kursus"],
+    kelompok: ["Profesional", "Akademik"],
+    kategori: ["Kursus Online", "Kursus Tatap Muka"],
+    hasPrestasi: false,
+    requiredFields: ["nama_id", "nama_en", "kategori_skpi", "jenis_aktivitas", "kelompok", "kategori"],
+    multiNama: false,
+    buktiWajib: true,
+  },
+  skripsi: {
+    label: "9. Skripsi",
+    jenis: ["Skripsi"],
+    kelompok: ["Akademik"],
+    kategori: ["Skripsi / Tugas Akhir"],
+    hasPrestasi: false,
+    requiredFields: ["nama_id", "nama_en", "kategori_skpi", "jenis_aktivitas", "kelompok", "kategori"],
+    multiNama: false,
+    buktiWajib: true,
   },
 };
 
 const EMPTY_FORM = {
-  nama_id: "",
-  nama_en: "",
   kategori_skpi: "",
   jenis_aktivitas: "",
   kelompok: "",
@@ -100,13 +127,12 @@ const EMPTY_FORM = {
   tanggal: "",
 };
 
-// ── Toast ───────────────────────────────────────────────────
+// ── Toast ──
 function Toast({ message, type, onClose }) {
   useEffect(() => {
     const timer = setTimeout(onClose, 4000);
     return () => clearTimeout(timer);
   }, [onClose]);
-
   return (
     <div className={`${styles.toast} ${styles[`toast${type}`]}`}>
       {type === "success" ? <CheckCircle2 size={18} /> : <AlertCircle size={18} />}
@@ -120,9 +146,6 @@ export default function TambahKegiatanPage() {
   const router = useRouter();
   const { prodiConfig } = useMahasiswa();
 
-  // ═══════════════════════════════════════════════
-  // AMBIL DATA MASTER TERBARU DARI CACHE
-  // ═══════════════════════════════════════════════
   const JENIS_OPTIONS      = getJenisAktivitas();
   const KATEGORI_OPTIONS   = getKategoriAktivitas();
   const KELOMPOK_OPTIONS   = getKelompokAktivitas();
@@ -131,6 +154,7 @@ export default function TambahKegiatanPage() {
   const PERIODE_OPTIONS    = getPeriodeSemester();
 
   const [form, setForm] = useState(EMPTY_FORM);
+  const [namaList, setNamaList] = useState([{ id: 1, nama_id: "", nama_en: "" }]);
   const [file, setFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [dragOver, setDragOver] = useState(false);
@@ -144,32 +168,45 @@ export default function TambahKegiatanPage() {
 
   const set = (k, v) => setForm(p => ({ ...p, [k]: v }));
 
-  // Mapping aktif berdasarkan kategori SKPI yang dipilih
   const activeMap = SKPI_MAP[form.kategori_skpi] || null;
-
-  // Filter opsi dropdown berdasarkan mapping
   const filteredJenis    = activeMap ? JENIS_OPTIONS.filter(j => activeMap.jenis.includes(j)) : [];
   const filteredKelompok = activeMap ? KELOMPOK_OPTIONS.filter(k => activeMap.kelompok.includes(k)) : [];
   const filteredKategori = activeMap ? KATEGORI_OPTIONS.filter(k => activeMap.kategori.includes(k)) : [];
   const showTingkatPrestasi = activeMap?.hasPrestasi ?? false;
 
-  // ── Handler pilih kategori SKPI ──────────────────────────
+  const requiredFields = activeMap?.requiredFields ?? [];
+  const isMultiNama = activeMap?.multiNama ?? false;
+  const isBuktiWajib = activeMap?.buktiWajib ?? true;
+
+  const isRequired = (fieldName) => requiredFields.includes(fieldName);
+  const labelRequired = (fieldName) => isRequired(fieldName) ? <span className={styles.req}>*</span> : <span className={styles.optBadge}>opsional</span>;
+
   const handlePilihKategori = (id) => {
     const map = SKPI_MAP[id];
     if (!map) return;
-
-    // Hitung opsi yang sudah difilter
     const jenisFiltered = JENIS_OPTIONS.filter(j => map.jenis.includes(j));
     const kelompokFiltered = KELOMPOK_OPTIONS.filter(k => map.kelompok.includes(k));
-
-    setForm(p => ({
-      ...p,
+    setForm({
+      ...EMPTY_FORM,
       kategori_skpi: id,
       jenis_aktivitas: jenisFiltered.length === 1 ? jenisFiltered[0] : "",
       kelompok: kelompokFiltered.length === 1 ? kelompokFiltered[0] : "",
-      kategori: "",
-      tingkat_prestasi: "",
-    }));
+    });
+    setNamaList([{ id: Date.now(), nama_id: "", nama_en: "" }]);
+    setFile(null);
+    setPreviewUrl(null);
+  };
+
+  const addNama = () => {
+    setNamaList(prev => [...prev, { id: Date.now(), nama_id: "", nama_en: "" }]);
+  };
+
+  const removeNama = (id) => {
+    setNamaList(prev => prev.filter(item => item.id !== id));
+  };
+
+  const updateNama = (id, field, value) => {
+    setNamaList(prev => prev.map(item => item.id === id ? { ...item, [field]: value } : item));
   };
 
   const showToast = (message, type = "success") => {
@@ -196,38 +233,94 @@ export default function TambahKegiatanPage() {
     e.preventDefault();
     setError("");
 
-    const required = [
-      "nama_id", "nama_en", "kategori_skpi", "jenis_aktivitas",
-      "kelompok", "kategori", "level", "periode", "lokasi", "penyelenggara", "tanggal",
-    ];
-    if (required.some(k => !form[k])) {
-      setError("Lengkapi semua field yang wajib diisi."); return;
+    // validasi field wajib (global, tanpa nama kegiatan)
+    const missing = requiredFields.filter(k => !form[k]);
+    if (missing.length) {
+      setError("Lengkapi semua field yang wajib diisi.");
+      return;
     }
-    if (!file) { setError("Upload bukti kegiatan wajib dilampirkan."); return; }
 
-    setLoading(true);
-    try {
-      const payload = {
-        ...form,
-        tanggal_kegiatan: form.tanggal,
-        bukti_deskripsi: buktiDeskripsi.trim() || null,
-      };
-      const res = await submitKegiatan(payload);
-      if (!res.ok) {
-        setError(res.data?.error || "Gagal menyimpan kegiatan.");
-        setLoading(false);
+    // validasi nama kegiatan
+    if (isMultiNama) {
+      const validNama = namaList.every(n => n.nama_id.trim() !== "");
+      if (!validNama || namaList.length === 0) {
+        setError("Minimal satu nama kegiatan wajib diisi.");
         return;
       }
+    } else {
+      if (!form.nama_id || !form.nama_en) {
+        setError("Nama kegiatan wajib diisi.");
+        return;
+      }
+    }
 
-      const kegId = res.data?.id_kegiatan || res.data?.id;
-      if (kegId && file) {
-        const fd = new FormData();
-        fd.append("bukti", file, file.name);
-        await uploadBuktiKegiatan(kegId, fd);
+    if (isBuktiWajib && !file) {
+      setError("Upload bukti kegiatan wajib dilampirkan.");
+      return;
+    }
+
+    setLoading(true);
+
+    const commonPayload = {
+      ...form,
+      tanggal_kegiatan: form.tanggal || null,
+      bukti_deskripsi: buktiDeskripsi.trim() || null,
+    };
+    Object.keys(commonPayload).forEach(k => {
+      if (!isRequired(k) && commonPayload[k] === "") {
+        commonPayload[k] = null;
+      }
+    });
+
+    let kegIds = [];
+
+    try {
+      if (isMultiNama) {
+        for (const namaItem of namaList) {
+          const payload = {
+            ...commonPayload,
+            nama_id: namaItem.nama_id.trim(),
+            nama_en: namaItem.nama_en.trim(),
+          };
+          const res = await submitKegiatan(payload);
+          if (!res.ok) {
+            setError(res.data?.error || "Gagal menyimpan kegiatan.");
+            setLoading(false);
+            return;
+          }
+          const kegId = res.data?.id_kegiatan || res.data?.id;
+          kegIds.push(kegId);
+        }
+      } else {
+        const payload = {
+          ...commonPayload,
+          nama_id: form.nama_id,
+          nama_en: form.nama_en,
+        };
+        const res = await submitKegiatan(payload);
+        if (!res.ok) {
+          setError(res.data?.error || "Gagal menyimpan kegiatan.");
+          setLoading(false);
+          return;
+        }
+        const kegId = res.data?.id_kegiatan || res.data?.id;
+        kegIds.push(kegId);
+      }
+
+      // upload bukti untuk setiap kegiatan yang berhasil dibuat
+      if (file && kegIds.length > 0) {
+        for (const kegId of kegIds) {
+          const fd = new FormData();
+          fd.append("bukti", file, file.name);
+          await uploadBuktiKegiatan(kegId, fd);
+        }
       }
 
       setSuccess(true);
-      showToast("✓ Kegiatan berhasil disimpan! Menunggu verifikasi admin.", "success");
+      const msg = isMultiNama
+        ? `${kegIds.length} kegiatan berhasil disimpan!`
+        : "Kegiatan berhasil disimpan!";
+      showToast(`✓ ${msg} Menunggu verifikasi admin.`, "success");
       setTimeout(() => router.push("/mahasiswa/kegiatan"), 2500);
     } catch (err) {
       setError("Terjadi kesalahan. Coba lagi.");
@@ -270,26 +363,59 @@ export default function TambahKegiatanPage() {
         {/* STEP 1 — NAMA KEGIATAN */}
         <div className={styles.card}>
           <p className={styles.cardTitle}>Nama Kegiatan</p>
-          <div className={styles.row2}>
-            <div className={styles.fg}>
-              <label className={styles.lbl}>Nama (Bahasa Indonesia) <span className={styles.req}>*</span></label>
-              <input className={styles.input} value={form.nama_id}
-                onChange={e => set("nama_id", e.target.value)}
-                placeholder="Contoh: Workshop React.js Tingkat Nasional" />
+
+          {isMultiNama ? (
+            <div className={styles.namaList}>
+              {namaList.map((item, idx) => (
+                <div key={item.id} className={styles.namaRow}>
+                  <div className={styles.namaFields}>
+                    <div className={styles.fg}>
+                      <label className={styles.lbl}>Nama (ID) {labelRequired("nama_id")}</label>
+                      <input className={styles.input}
+                        value={item.nama_id}
+                        onChange={e => updateNama(item.id, "nama_id", e.target.value)}
+                        placeholder="Nama kegiatan" />
+                    </div>
+                    <div className={styles.fg}>
+                      <label className={styles.lbl}>Nama (EN) {labelRequired("nama_en")}</label>
+                      <input className={styles.input}
+                        value={item.nama_en}
+                        onChange={e => updateNama(item.id, "nama_en", e.target.value)}
+                        placeholder="English name" />
+                    </div>
+                  </div>
+                  {namaList.length > 1 && (
+                    <button type="button" className={styles.removeNamaBtn} onClick={() => removeNama(item.id)}>
+                      <Trash2 size={16} />
+                    </button>
+                  )}
+                </div>
+              ))}
+              <button type="button" className={styles.addNamaBtn} onClick={addNama}>
+                <Plus size={14} /> Tambah Nama Kegiatan
+              </button>
             </div>
-            <div className={styles.fg}>
-              <label className={styles.lbl}>Nama (English) <span className={styles.req}>*</span></label>
-              <input className={styles.input} value={form.nama_en}
-                onChange={e => set("nama_en", e.target.value)}
-                placeholder="Example: National React.js Workshop" />
+          ) : (
+            <div className={styles.row2}>
+              <div className={styles.fg}>
+                <label className={styles.lbl}>Nama (Bahasa Indonesia) {labelRequired("nama_id")}</label>
+                <input className={styles.input} value={form.nama_id}
+                  onChange={e => set("nama_id", e.target.value)}
+                  placeholder="Contoh: Workshop React.js" />
+              </div>
+              <div className={styles.fg}>
+                <label className={styles.lbl}>Nama (English) {labelRequired("nama_en")}</label>
+                <input className={styles.input} value={form.nama_en}
+                  onChange={e => set("nama_en", e.target.value)}
+                  placeholder="Example: National Workshop" />
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* STEP 2 — KATEGORI SKPI */}
         <div className={styles.card}>
           <p className={styles.cardTitle}>Kategori SKPI <span className={styles.req}>*</span></p>
-          <p className={styles.cardHint}>Pilih kategori utama pencapaian ini — pilihan di bawah akan menyesuaikan</p>
           <div className={styles.katGrid}>
             {Object.entries(SKPI_MAP).map(([id, m]) => {
               const isActive = form.kategori_skpi === id;
@@ -301,7 +427,7 @@ export default function TambahKegiatanPage() {
                 >
                   <span className={styles.katNo}
                     style={{ background: isActive ? pc : "#f5ece4", color: isActive ? "#fff" : "#9e7b5e" }}>
-                    {id !== "praktik" ? id.charAt(0).toUpperCase() : "5"}
+                    {id === "pembinaan" ? "6" : id === "karakter" ? "7" : id === "kursus" ? "8" : id === "skripsi" ? "9" : id.charAt(0).toUpperCase()}
                   </span>
                   <span className={styles.katLabel}>{m.label}</span>
                   {isActive && <CheckCircle2 size={15} className={styles.katCheck} style={{ color: pc }} />}
@@ -311,16 +437,14 @@ export default function TambahKegiatanPage() {
           </div>
         </div>
 
-        {/* HANYA MUNCUL SETELAH KATEGORI SKPI DIPILIH */}
         {activeMap && (
           <>
             {/* STEP 3 — KLASIFIKASI */}
             <div className={styles.card}>
               <p className={styles.cardTitle}>Klasifikasi Kegiatan</p>
               <div className={styles.row2}>
-                {/* Jenis Aktivitas */}
                 <div className={styles.fg}>
-                  <label className={styles.lbl}>Jenis Aktivitas <span className={styles.req}>*</span></label>
+                  <label className={styles.lbl}>Jenis Aktivitas {labelRequired("jenis_aktivitas")}</label>
                   {filteredJenis.length === 1 ? (
                     <div className={styles.autoFill} style={{ borderColor: `${pc}40`, color: pc, background: `${pc}08` }}>
                       <CheckCircle2 size={13} /> {filteredJenis[0]}
@@ -333,10 +457,8 @@ export default function TambahKegiatanPage() {
                     </select>
                   )}
                 </div>
-
-                {/* Kelompok Aktivitas */}
                 <div className={styles.fg}>
-                  <label className={styles.lbl}>Kelompok Aktivitas <span className={styles.req}>*</span></label>
+                  <label className={styles.lbl}>Kelompok Aktivitas {labelRequired("kelompok")}</label>
                   {filteredKelompok.length === 1 ? (
                     <div className={styles.autoFill} style={{ borderColor: `${pc}40`, color: pc, background: `${pc}08` }}>
                       <CheckCircle2 size={13} /> {filteredKelompok[0]}
@@ -349,31 +471,25 @@ export default function TambahKegiatanPage() {
                     </select>
                   )}
                 </div>
-
-                {/* Kategori Kegiatan */}
                 <div className={styles.fg}>
-                  <label className={styles.lbl}>Kategori Kegiatan <span className={styles.req}>*</span></label>
+                  <label className={styles.lbl}>Kategori Kegiatan {labelRequired("kategori")}</label>
                   <select className={styles.input} value={form.kategori}
                     onChange={e => set("kategori", e.target.value)}>
                     <option value="">-- Pilih Kategori --</option>
                     {filteredKategori.map(k => <option key={k}>{k}</option>)}
                   </select>
                 </div>
-
-                {/* Level */}
                 <div className={styles.fg}>
-                  <label className={styles.lbl}>Tingkat / Level <span className={styles.req}>*</span></label>
+                  <label className={styles.lbl}>Tingkat / Level {labelRequired("level")}</label>
                   <select className={styles.input} value={form.level}
                     onChange={e => set("level", e.target.value)}>
                     <option value="">-- Pilih Level --</option>
                     {LEVEL_OPTIONS.map(l => <option key={l}>{l}</option>)}
                   </select>
                 </div>
-
-                {/* Tingkat Prestasi (hanya jika relevan) */}
                 {showTingkatPrestasi && (
                   <div className={`${styles.fg} ${styles.fullSpan}`}>
-                    <label className={styles.lbl}>Prestasi yang Diraih <span className={styles.optBadge}>opsional</span></label>
+                    <label className={styles.lbl}>Prestasi yang Diraih {labelRequired("tingkat_prestasi")}</label>
                     <select className={styles.input} value={form.tingkat_prestasi}
                       onChange={e => set("tingkat_prestasi", e.target.value)}>
                       <option value="">-- Pilih jika ada --</option>
@@ -389,7 +505,7 @@ export default function TambahKegiatanPage() {
               <p className={styles.cardTitle}>Waktu & Tempat</p>
               <div className={styles.row2}>
                 <div className={styles.fg}>
-                  <label className={styles.lbl}>Periode Semester <span className={styles.req}>*</span></label>
+                  <label className={styles.lbl}>Periode Semester {labelRequired("periode")}</label>
                   <select className={styles.input} value={form.periode}
                     onChange={e => set("periode", e.target.value)}>
                     <option value="">-- Pilih Periode --</option>
@@ -397,19 +513,18 @@ export default function TambahKegiatanPage() {
                   </select>
                 </div>
                 <div className={styles.fg}>
-                  <label className={styles.lbl}>Tanggal Pelaksanaan <span className={styles.req}>*</span></label>
+                  <label className={styles.lbl}>Tanggal Pelaksanaan {labelRequired("tanggal")}</label>
                   <input type="date" className={styles.input} value={form.tanggal}
                     onChange={e => set("tanggal", e.target.value)} />
                 </div>
                 <div className={styles.fg}>
-                  <label className={styles.lbl}>Lokasi / Kota <span className={styles.req}>*</span></label>
-                  <input className={styles.input} placeholder="Contoh: Bengkayang / Online"
+                  <label className={styles.lbl}>Lokasi / Kota {labelRequired("lokasi")}</label>
+                  <input className={styles.input} placeholder="Contoh: Bengkayang"
                     value={form.lokasi} onChange={e => set("lokasi", e.target.value)} />
                 </div>
                 <div className={styles.fg}>
-                  <label className={styles.lbl}>Penyelenggara <span className={styles.req}>*</span></label>
-                  <input className={styles.input}
-                    placeholder="Contoh: KOMINFO / Himpunan Mahasiswa TI"
+                  <label className={styles.lbl}>Penyelenggara {labelRequired("penyelenggara")}</label>
+                  <input className={styles.input} placeholder="Nama penyelenggara"
                     value={form.penyelenggara} onChange={e => set("penyelenggara", e.target.value)} />
                 </div>
               </div>
@@ -417,14 +532,7 @@ export default function TambahKegiatanPage() {
 
             {/* STEP 5 — BUKTI KEGIATAN */}
             <div className={styles.card}>
-              <p className={styles.cardTitle}>Bukti Kegiatan <span className={styles.req}>*</span></p>
-              <p className={styles.cardHint}>
-                Upload sertifikat, SK, atau foto kegiatan.
-                <strong style={{ display: "block", marginTop: 6 }}>
-                  📌 Tidak punya sertifikat? Kamu dapat mengupload: SK, surat keterangan, foto dokumentasi, atau bukti kehadiran.
-                </strong>
-              </p>
-
+              <p className={styles.cardTitle}>Bukti Kegiatan {isBuktiWajib ? <span className={styles.req}>*</span> : <span className={styles.optBadge}>opsional</span>}</p>
               <div
                 className={`${styles.dropZone} ${dragOver ? styles.dropActive : ""}`}
                 onDragOver={e => { e.preventDefault(); setDragOver(true); }}
@@ -432,23 +540,20 @@ export default function TambahKegiatanPage() {
                 onDrop={e => { e.preventDefault(); setDragOver(false); const f = e.dataTransfer.files?.[0]; if (f) processFile(f); }}
                 onClick={() => fileRef.current?.click()}
                 role="button" tabIndex={0}
-                onKeyDown={e => e.key === "Enter" && fileRef.current?.click()}
                 style={file ? { borderColor: pc, background: `${pc}06` } : dragOver ? { borderColor: pc } : {}}
               >
                 <input type="file" ref={fileRef} hidden accept=".pdf,.jpg,.jpeg,.png,.webp"
                   onChange={e => { const f = e.target.files?.[0]; if (f) processFile(f); }} />
-
+                {/* ... tampilan file / dropzone sama seperti sebelumnya ... */}
                 {file ? (
                   <div className={styles.fileRow}>
-                    {previewUrl
-                      ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={previewUrl} alt="preview" className={styles.previewImg} />
-                      )
-                      : <div className={styles.pdfIcon} style={{ background: `${pc}14` }}>
-                          <FileText size={24} color={pc} />
-                        </div>
-                    }
+                    {previewUrl ? (
+                      <img src={previewUrl} alt="preview" className={styles.previewImg} />
+                    ) : (
+                      <div className={styles.pdfIcon} style={{ background: `${pc}14` }}>
+                        <FileText size={24} color={pc} />
+                      </div>
+                    )}
                     <div className={styles.fileInfo}>
                       <p className={styles.fileName}>{file.name}</p>
                       <p className={styles.fileSize}>{(file.size / 1024).toFixed(0)} KB · {file.type.split("/")[1]?.toUpperCase()}</p>
@@ -469,49 +574,24 @@ export default function TambahKegiatanPage() {
                   </div>
                 )}
               </div>
-
-              {uploadError && (
-                <div className={styles.uploadErr}><AlertCircle size={13} /> {uploadError}</div>
-              )}
-
+              {uploadError && <div className={styles.uploadErr}><AlertCircle size={13} /> {uploadError}</div>}
               <div className={styles.fg} style={{ marginTop: 16 }}>
-                <label className={styles.lbl}>
-                  Deskripsi Pendukung <span className={styles.optBadge}>opsional</span>
-                </label>
-                <textarea
-                  className={styles.textarea}
-                  rows={3}
-                  placeholder="Contoh: Foto ini diambil saat kegiatan mentoring, surat keterangan dari ketua panitia, dll."
-                  value={buktiDeskripsi}
-                  onChange={e => setBuktiDeskripsi(e.target.value)}
-                />
-                <small className={styles.fieldNote}>
-                  Informasi tambahan yang dapat membantu admin memahami konteks bukti (opsional).
-                </small>
+                <label className={styles.lbl}>Deskripsi Pendukung <span className={styles.optBadge}>opsional</span></label>
+                <textarea className={styles.textarea} rows={3}
+                  value={buktiDeskripsi} onChange={e => setBuktiDeskripsi(e.target.value)} />
               </div>
             </div>
 
-            {/* INFORMASI VERIFIKASI ADMIN */}
+            {/* INFORMASI */}
             <div className={styles.infoNote}>
               <AlertCircle size={14} />
-              <span>
-                <strong>Perhatian:</strong> Setelah disimpan, kegiatan akan masuk ke antrian verifikasi admin.
-                Pastikan data dan bukti sudah benar. Status kegiatan dapat dilihat di halaman &quot;Kegiatan Saya&quot;.
-              </span>
+              <span><strong>Perhatian:</strong> Setelah disimpan, kegiatan akan masuk ke antrian verifikasi admin.</span>
             </div>
 
-            {/* TOMBOL */}
             <div className={styles.actions}>
-              <button type="button" className={styles.cancelBtn} onClick={() => router.back()}>
-                Batal
-              </button>
-              <button type="submit" className={styles.saveBtn} style={{ background: pc }}
-                disabled={loading || success}>
-                {loading
-                  ? <><span className={styles.spin} /> Menyimpan…</>
-                  : success
-                    ? <><CheckCircle2 size={14} /> Tersimpan!</>
-                    : <><Save size={14} /> Simpan Kegiatan</>}
+              <button type="button" className={styles.cancelBtn} onClick={() => router.back()}>Batal</button>
+              <button type="submit" className={styles.saveBtn} style={{ background: pc }} disabled={loading || success}>
+                {loading ? <><span className={styles.spin} /> Menyimpan…</> : success ? <><CheckCircle2 size={14} /> Tersimpan!</> : <><Save size={14} /> Simpan Kegiatan</>}
               </button>
             </div>
           </>

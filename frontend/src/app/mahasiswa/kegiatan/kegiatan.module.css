@@ -33,6 +33,15 @@
 
 .subtitle { font-size: 13px; color: #9c7a5e; margin: 0; }
 
+/* Add button */
+
+@media (max-width: 480px) {
+  .addBtn {
+    margin-top: 10px;
+    margin-left: auto;
+  }
+}
+
 .addBtn {
   display: inline-flex;
   align-items: center;
@@ -320,6 +329,19 @@
 }
 
 .cellSecondary { color: #765439; font-size: 12.5px; }
+
+.tableScroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  background:
+    linear-gradient(to right, white 30%, rgba(255,255,255,0)),
+    linear-gradient(to right, rgba(255,255,255,0), white 70%) 100% 0,
+    linear-gradient(to right, rgba(0,0,0,0.08), rgba(0,0,0,0)),
+    linear-gradient(to right, rgba(0,0,0,0), rgba(0,0,0,0.08)) 100% 0;
+  background-repeat: no-repeat;
+  background-size: 40px 100%, 40px 100%, 14px 100%, 14px 100%;
+  background-attachment: local, local, scroll, scroll;
+}
 
 /* Kategori SKPI badge */
 .skpiKatBadge {

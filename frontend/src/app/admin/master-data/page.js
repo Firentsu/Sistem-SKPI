@@ -338,7 +338,7 @@ export default function MasterDataPage() {
 
         <p className={styles.typeDesc}>{activeType.desc}</p>
 
-        <div className={styles.tableWrap}>
+        <div className={styles.tableScroll}>
           <table className={styles.table}>
             <thead>
               <tr>
@@ -353,8 +353,10 @@ export default function MasterDataPage() {
               {loading && (
                 <tr>
                   <td colSpan={activeType.hasEng ? 5 : 3} className={styles.loadingTd}>
-                    <Loader2 size={22} className={styles.spin} />
-                    <span>Memuat data...</span>
+                    <div className={styles.loadingState}>
+                      <Loader2 size={22} className={styles.spin} />
+                      <span>Memuat data...</span>
+                    </div>
                   </td>
                 </tr>
               )}

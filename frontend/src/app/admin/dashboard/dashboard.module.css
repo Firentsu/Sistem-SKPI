@@ -1,34 +1,40 @@
 /* =============================================
    DASHBOARD — Clean Warm Brown (ISB SKPI)
    Setiap properti diberi komentar
-   Responsif: breakpoint 1200px, 1000px, 800px, 600px, 500px, 480px
+   Responsif: breakpoint 1200px, 1000px, 800px, 768px, 600px, 500px, 480px
    Keamanan: tidak ada CSS dinamis berbahaya
    ============================================= */
 
+/* ── Animasi shimmer untuk skeleton loader ── */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
 /* ── Halaman utama ── */
 .page {
-  padding: 28px 28px 32px;              /* Ruang di sekeliling konten */
+  padding: 28px 28px 32px;
   display: flex;
-  flex-direction: column;               /* Susun vertikal: header → cards → bottom → progress */
-  gap: 20px;                            /* Jarak antar section */
-  min-height: 100vh;                    /* Pastikan memenuhi layar */
-  font-family: 'Segoe UI', ui-sans-serif, sans-serif; /* Font modern */
+  flex-direction: column;
+  gap: 20px;
+  min-height: 100vh;
+  font-family: 'Segoe UI', ui-sans-serif, sans-serif;
 }
 
 /* ── HEADER ── */
 .header {
   display: flex;
-  align-items: flex-start;              /* Sejajarkan di atas */
-  justify-content: space-between;       /* Judul kiri, tools kanan */
+  align-items: flex-start;
+  justify-content: space-between;
   gap: 16px;
-  flex-wrap: wrap;                      /* Bungkus ke baris baru jika sempit */
+  flex-wrap: wrap;
 }
 
 .title {
   font-size: 22px;
   font-weight: 800;
   color: #2c1a0e;
-  margin: 0 0 3px;                     /* Jarak kecil ke subtitle */
+  margin: 0 0 3px;
   letter-spacing: -0.3px;
 }
 
@@ -42,11 +48,11 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  flex-shrink: 0;                      /* Jangan mengecil saat header sempit */
+  flex-shrink: 0;
 }
 
 /* ── Filter Prodi ── */
-.filterBox { position: relative; }     /* Untuk dropdown absolute */
+.filterBox { position: relative; }
 
 .filterBtn {
   display: flex;
@@ -60,7 +66,8 @@
   font-weight: 600;
   color: #765439;
   cursor: pointer;
-  transition: border-color 0.15s, background 0.15s; /* Animasi halus */
+  transition: border-color 0.15s, background 0.15s;
+  white-space: nowrap;
 }
 
 .filterBtn:hover {
@@ -68,19 +75,27 @@
   border-color: #c8945a;
 }
 
-/* Dropdown filter */
+.filterLabel {
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: inline-block;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
 .dropdown {
   position: absolute;
-  top: calc(100% + 4px);                /* Tepat di bawah tombol */
+  top: calc(100% + 4px);
   right: 0;
   background: #fff;
   border: 1px solid #ddd0c4;
   border-radius: 10px;
-  box-shadow: 0 6px 20px rgba(118,84,57,0.12); /* Bayangan lembut */
-  z-index: 50;                          /* Di atas elemen lain */
+  box-shadow: 0 6px 20px rgba(118,84,57,0.12);
+  z-index: 50;
   min-width: 180px;
-  overflow: hidden;                     /* Klip sudut */
-  animation: fadeDown 0.12s ease;       /* Animasi muncul */
+  overflow: hidden;
+  animation: fadeDown 0.12s ease;
 }
 
 @keyframes fadeDown {
@@ -104,7 +119,6 @@
 .dropItem:hover { background: #fdf4ec; }
 .dropActive { color: #765439; font-weight: 700; background: #fdf4ec; }
 
-/* Tombol refresh */
 .refreshBtn {
   width: 34px;
   height: 34px;
@@ -121,19 +135,20 @@
 
 .refreshBtn:hover {
   background: #fdf4ec;
-  transform: rotate(90deg);             /* Putar ikon saat hover */
+  transform: rotate(90deg);
 }
 
 /* ── STAT CARDS ── */
 .cards {
   display: grid;
-  grid-template-columns: repeat(4, 1fr); /* 4 kolom di desktop */
+  grid-template-columns: repeat(4, 1fr);
   gap: 12px;
 }
 
-@media (max-width: 1200px) { .cards { grid-template-columns: repeat(3, 1fr); } } /* 3 kolom */
-@media (max-width: 800px)  { .cards { grid-template-columns: repeat(2, 1fr); } } /* 2 kolom */
-@media (max-width: 500px)  { .cards { grid-template-columns: 1fr; } }            /* 1 kolom */
+@media (max-width: 1200px) { .cards { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 800px)  { .cards { grid-template-columns: repeat(2, 1fr); } }
+/* Di bawah 500px tetap dua kolom agar tidak terlalu panjang */
+@media (max-width: 500px)  { .cards { grid-template-columns: repeat(2, 1fr); } }
 
 .card {
   background: #fff;
@@ -143,13 +158,13 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  animation: fadeUp 0.35s ease both;    /* Animasi muncul dengan delay */
+  animation: fadeUp 0.35s ease both;
   transition: box-shadow 0.2s, transform 0.2s;
 }
 
 .card:hover {
   box-shadow: 0 4px 16px rgba(118,84,57,0.1);
-  transform: translateY(-1px);          /* Angkat sedikit */
+  transform: translateY(-1px);
 }
 
 @keyframes fadeUp {
@@ -164,10 +179,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;                      /* Ikon tidak mengecil */
+  flex-shrink: 0;
 }
 
-.cardBody { flex: 1; min-width: 0; }   /* Ambil sisa ruang */
+.cardBody { flex: 1; min-width: 0; }
 
 .cardValue {
   font-size: 24px;
@@ -183,14 +198,27 @@
   line-height: 1.3;
 }
 
-/* ── BOTTOM GRID (tabel + notifikasi) ── */
+/* ── BOTTOM GRID (TABEL + NOTIFIKASI) ── */
 .bottom {
   display: grid;
-  grid-template-columns: 1fr 300px;     /* Tabel fleksibel, notifikasi 300px */
+  /* Kolom notifikasi dibatasi antara 260px hingga 300px agar fleksibel */
+  grid-template-columns: 1fr minmax(260px, 300px);
   gap: 16px;
 }
 
-@media (max-width: 1000px) { .bottom { grid-template-columns: 1fr; } } /* Tumpuk */
+/* Di bawah 1000px, tumpuk menjadi satu kolom */
+@media (max-width: 1000px) {
+  .bottom {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Di bawah 768px, kurangi gap dan pastikan tidak ada margin aneh */
+@media (max-width: 768px) {
+  .bottom {
+    gap: 12px;
+  }
+}
 
 /* ── SECTION (card putih) ── */
 .section {
@@ -198,6 +226,8 @@
   border: 1px solid #ede0d4;
   border-radius: 12px;
   padding: 18px 20px;
+  /* Mencegah overflow konten keluar dari card */
+  min-width: 0;
 }
 
 .sectionHead {
@@ -216,7 +246,7 @@
   color: #3d2006;
 }
 
-.sectionTitle svg { color: #765439; }  /* Ikon section */
+.sectionTitle svg { color: #765439; }
 
 .linkBtn {
   display: flex;
@@ -235,11 +265,24 @@
 
 .linkBtn:hover { background: #fdf4ec; border-color: #c8945a; }
 
-/* ── TABLE ── */
-.tableWrap { overflow-x: auto; }       /* Scroll horizontal jika sempit */
+/* ── TABEL ── */
+.tableWrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  /* Indikator scroll */
+  background:
+    linear-gradient(to right, white 30%, rgba(255,255,255,0)),
+    linear-gradient(to right, rgba(255,255,255,0), white 70%) 100% 0,
+    linear-gradient(to right, rgba(0,0,0,0.08), rgba(0,0,0,0)),
+    linear-gradient(to right, rgba(0,0,0,0), rgba(0,0,0,0.08)) 100% 0;
+  background-repeat: no-repeat;
+  background-size: 40px 100%, 40px 100%, 14px 100%, 14px 100%;
+  background-attachment: local, local, scroll, scroll;
+}
 
 .table {
   width: 100%;
+  min-width: 600px;            /* Pastikan tabel tidak tercekik */
   border-collapse: collapse;
   font-size: 12.5px;
 }
@@ -277,7 +320,6 @@
 .tdProdi { font-weight: 600; color: #5c3317; }
 .tdNum   { color: #6b4f38; }
 
-/* Tag badge */
 .tag {
   display: inline-block;
   padding: 2px 9px;
@@ -307,6 +349,22 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
+  max-height: 400px;                 /* Batasi tinggi */
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-right: 4px;
+}
+
+/* Scrollbar tipis untuk notifikasi */
+.notifList::-webkit-scrollbar {
+  width: 4px;
+}
+.notifList::-webkit-scrollbar-track {
+  background: transparent;
+}
+.notifList::-webkit-scrollbar-thumb {
+  background: #ddd0c4;
+  border-radius: 99px;
 }
 
 .notifItem {
@@ -365,12 +423,12 @@
 /* ── PROGRESS ── */
 .progressGrid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr); /* 4 kolom */
+  grid-template-columns: repeat(4, 1fr);
   gap: 20px;
 }
 
 @media (max-width: 800px)  { .progressGrid { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 480px)  { .progressGrid { grid-template-columns: 1fr; } }
+@media (max-width: 480px)  { .progressGrid { grid-template-columns: 1fr; gap: 14px; } }
 
 .progressItem {
   display: flex;
@@ -401,7 +459,7 @@
 .fill {
   height: 100%;
   border-radius: 99px;
-  transition: width 0.9s cubic-bezier(0.22, 1, 0.36, 1); /* Animasi progress */
+  transition: width 0.9s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .progressSub {
@@ -410,8 +468,32 @@
   margin: 0;
 }
 
-/* ── RESPONSIVE PAGE ── */
+/* ── RESPONSIVE TWEAKS ── */
 @media (max-width: 600px) {
-  .page { padding: 16px; }
+  .page { padding: 16px; gap: 16px; }
+  .section { padding: 14px 12px; }
   .title { font-size: 18px; }
+  .subtitle { font-size: 12px; }
+  .card { padding: 12px; gap: 10px; }
+  .cardValue { font-size: 20px; }
+  .cardLabel { font-size: 10.5px; }
+
+  .table th,
+  .table td { padding: 6px 8px; font-size: 11px; }
+  .tag { font-size: 10px; padding: 1px 6px; }
+
+  .notifList { max-height: 320px; }
+}
+
+@media (max-width: 480px) {
+  .filterBtn { padding: 5px 8px; font-size: 11px; }
+  .filterLabel { max-width: 80px; }
+  .refreshBtn { width: 30px; height: 30px; }
+  .notifList { max-height: 280px; }
+}
+
+/* Animasi spin */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
