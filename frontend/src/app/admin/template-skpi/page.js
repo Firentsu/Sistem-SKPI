@@ -120,9 +120,9 @@ function Toast({ msg, onClose }) {
 ============================================================ */
 function PreviewModal({ prodi, onClose }) {
   const slug = toSlug(prodi);
-  const cfg = getPC(prodi);
-  const [status, setStatus] = useState("loading");
-  const [errMsg, setErrMsg] = useState("");
+  const cfg  = getPC(prodi);
+  const [status,  setStatus]  = useState("loading");
+  const [errMsg,  setErrMsg]  = useState("");
   const [blobUrl, setBlobUrl] = useState("");
 
   useEffect(() => {
@@ -153,20 +153,6 @@ function PreviewModal({ prodi, onClose }) {
 
   useEffect(() => () => { if (blobUrl) URL.revokeObjectURL(blobUrl); }, [blobUrl]);
 
-  const [zoom, setZoom] = useState(100);
-  const zoomIn = () => setZoom(z => Math.min(z+10, 200));
-  const zoomOut = () => setZoom(z => Math.max(z-10, 40));
-  const handleWheel = useCallback((e) => {
-    if (e.ctrlKey || e.metaKey) { e.preventDefault(); setZoom(z => Math.min(Math.max(z - Math.sign(e.deltaY)*5, 40), 200)); }
-  }, []);
-  const scrollRef = useRef(null);
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    el.addEventListener("wheel", handleWheel, { passive:false });
-    return () => el.removeEventListener("wheel", handleWheel);
-  }, [handleWheel]);
-
   const download = () => {
     const a = Object.assign(document.createElement("a"), {
       href: `${API}/uploads/templates/${slug}.docx`,
@@ -177,36 +163,58 @@ function PreviewModal({ prodi, onClose }) {
 
   return (
     <div className={styles.previewOverlay}>
+      {/* Toolbar */}
       <div className={styles.previewBar}>
         <div className={styles.previewBarLeft}>
           <FileText size={16}/>
           <span>Preview Template — <strong>{prodi}</strong></span>
-          {status === "ok" && <span className={styles.previewBadge}>PDF</span>}
+          {status === "ok" && (
+            <span className={styles.previewBadge} style={{ background:"#dc2626" }}>PDF</span>
+          )}
+          {status === "loading" && (
+            <span style={{ display:"inline-flex", alignItems:"center", gap:5, fontSize:12, color:"rgba(255,255,255,0.5)" }}>
+              <Loader2 size={12} className={styles.spin}/> Memproses…
+            </span>
+          )}
         </div>
         <div className={styles.previewBarRight}>
-          <button className={styles.btnDownloadDocx} onClick={download}><Download size={14}/> Download .docx</button>
-          <button className={styles.previewClose} onClick={onClose}><X size={18}/></button>
+          <button className={styles.btnDownloadDocx} onClick={download}>
+            <Download size={14}/> Download .docx
+          </button>
+          <button className={styles.previewClose} onClick={onClose} title="Tutup (Esc)">
+            <X size={18}/>
+          </button>
         </div>
       </div>
-      <div className={styles.previewScroll} ref={scrollRef} style={{ background:"#525252", padding:0 }}>
+
+      {/* PDF Viewer */}
+      <div style={{ flex:1, position:"relative", overflow:"hidden", background:"#525252" }}>
         {status === "loading" && (
-          <div className={styles.previewLoading}>
-            <Loader2 size={32} className={styles.spin} style={{ color:"#f5dfc0" }}/>
-            <p style={{ color:"#f5dfc0" }}>Mengkonversi ke PDF…</p>
+          <div style={{ position:"absolute", inset:0, display:"flex", flexDirection:"column",
+            alignItems:"center", justifyContent:"center", gap:12 }}>
+            <Loader2 size={36} className={styles.spin} style={{ color:"#f5dfc0" }}/>
+            <p style={{ color:"#f5dfc0", fontSize:14, margin:0 }}>Mengkonversi ke PDF…</p>
+            <p style={{ color:"rgba(245,223,192,0.5)", fontSize:12, margin:0 }}>
+              Memproses template {prodi}
+            </p>
           </div>
         )}
         {status === "error" && (
-          <div className={styles.previewError}>
-            <AlertCircle size={36} style={{ color:"#fca5a5" }}/>
-            <p style={{ color:"#fca5a5" }}>Gagal memuat PDF</p>
-            <p style={{ color:"rgba(252,165,165,.7)" }}>{errMsg}</p>
+          <div style={{ position:"absolute", inset:0, display:"flex", flexDirection:"column",
+            alignItems:"center", justifyContent:"center", gap:8, padding:32, textAlign:"center" }}>
+            <AlertCircle size={44} style={{ color:"#fca5a5" }}/>
+            <p style={{ color:"#fca5a5", fontWeight:700, fontSize:15, margin:"8px 0 0" }}>Gagal memuat PDF</p>
+            <p style={{ color:"rgba(252,165,165,0.7)", fontSize:13, margin:0, maxWidth:420 }}>{errMsg}</p>
+            <p style={{ color:"rgba(255,255,255,0.2)", fontSize:11, margin:0 }}>
+              Pastikan LibreOffice / Microsoft Word terinstall di server
+            </p>
           </div>
         )}
         {status === "ok" && blobUrl && (
           <embed
-            src={`${blobUrl}#toolbar=1&navpanes=0&view=FitH&zoom=${zoom}`}
+            src={`${blobUrl}#toolbar=1&navpanes=0&scrollbar=1&view=FitH`}
             type="application/pdf"
-            style={{ width:"100%", height:"100%", border:"none", display:"block", transition:"transform 0.1s" }}
+            style={{ position:"absolute", inset:0, width:"100%", height:"100%", border:"none" }}
           />
         )}
       </div>

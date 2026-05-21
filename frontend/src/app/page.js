@@ -167,7 +167,7 @@ export default function Home() {
               <label className={styles.checkbox}>
                 <input suppressHydrationWarning type="checkbox" /><span>Ingat saya</span>
               </label>
-              <a href="#" className={styles.forgotPassword}>Lupa password?</a>
+              <a href="/lupa-password" className={styles.forgotPassword}>Lupa password?</a>
             </div>
 
             <button
@@ -238,6 +238,28 @@ export default function Home() {
     setTranslateX(0);
   }, [isDragging, translateX, currentIndex, slides.length]);
 
+  // ── Touch handlers (mobile swipe) ─────────────────────────
+  const handleTouchStart = useCallback((e) => {
+    const tag = e.target.tagName;
+    if (tag === "INPUT" || tag === "BUTTON" || tag === "TEXTAREA") return;
+    setIsDragging(true);
+    setStartX(e.touches[0].clientX);
+  }, []);
+
+  const handleTouchMove = useCallback((e) => {
+    if (!isDragging) return;
+    setTranslateX(e.touches[0].clientX - startX);
+  }, [isDragging, startX]);
+
+  const handleTouchEnd = useCallback(() => {
+    setIsDragging(false);
+    if (Math.abs(translateX) > 50) {
+      if (translateX > 0 && currentIndex > 0) setCurrentIndex(currentIndex - 1);
+      else if (translateX < 0 && currentIndex < slides.length - 1) setCurrentIndex(currentIndex + 1);
+    }
+    setTranslateX(0);
+  }, [isDragging, translateX, currentIndex, slides.length]);
+
   return (
     <div className={styles.container}>
       {showDemo && <DemoBanner />}
@@ -259,9 +281,11 @@ export default function Home() {
               {/* FIX: konsisten "Logo_isb.png" — huruf L kapital */}
               <Image src="/img/Logo_isb.png" alt="ISB Logo" width={150} height={90} className={styles.logo} priority />
             </div>
-            <h1>SKPI ISB</h1>
-            <h2>Surat Keterangan<br />Pendamping Ijazah</h2>
-            <p>Dokumen resmi yang menjelaskan capaian akademik,<br />kegiatan, dan kompetensi lulusan<br />Institut Shanti Bhuana.</p>
+            <div className={styles.leftTextGroup}>
+              <h1>SKPI ISB</h1>
+              <h2>Surat Keterangan<br />Pendamping Ijazah</h2>
+            </div>
+            <p className={styles.leftDesc}>Dokumen resmi yang menjelaskan capaian akademik,<br />kegiatan, dan kompetensi lulusan<br />Institut Shanti Bhuana.</p>
             <div className={styles.infoBadges}>
               {["Terakreditasi", "Resmi", "Terpercaya"].map(b => (
                 <div key={b} className={styles.badge}><CheckCircle size={12} /><span>{b}</span></div>
@@ -289,6 +313,9 @@ export default function Home() {
               onMouseMove={handleDragMove}
               onMouseUp={handleDragEnd}
               onMouseLeave={handleDragEnd}
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
             >
               <div
                 className={styles.sliderTrack}

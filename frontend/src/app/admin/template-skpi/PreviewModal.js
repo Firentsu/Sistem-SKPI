@@ -1,10 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
-import {
-  X, Download, Loader2, ZoomIn, ZoomOut,
-  FileText, AlertCircle, Printer,
-} from "lucide-react";
+import { useEffect, useState } from "react";
+import { X, Download, Loader2, FileText, AlertCircle, Printer } from "lucide-react";
 
 const PRODI_CFG = {
   "Teknologi Informasi":           { primary:"#ff7f00", gradient:"linear-gradient(135deg,#ff7f00,#e06000)" },
@@ -23,27 +20,21 @@ export default function PreviewModal({ prodi, onClose }) {
   const slug = toSlug(prodi);
   const cfg  = getPC(prodi);
 
-  const [status,   setStatus]   = useState("loading"); // loading | ok | error
-  const [errMsg,   setErrMsg]   = useState("");
-  const [zoom,     setZoom]     = useState(100);
-  const [blobUrl,  setBlobUrl]  = useState("");
-  const iframeRef = useRef(null);
-  const containerRef = useRef(null);
+  const [status,  setStatus]  = useState("loading");
+  const [errMsg,  setErrMsg]  = useState("");
+  const [blobUrl, setBlobUrl] = useState("");
 
-  // ESC close
   useEffect(() => {
     const fn = (e) => { if (e.key === "Escape") onClose(); };
     window.addEventListener("keydown", fn);
     return () => window.removeEventListener("keydown", fn);
   }, [onClose]);
 
-  // Lock body scroll
   useEffect(() => {
     document.body.style.overflow = "hidden";
     return () => { document.body.style.overflow = ""; };
   }, []);
 
-  // Fetch PDF dari backend
   useEffect(() => {
     setStatus("loading"); setErrMsg(""); setBlobUrl("");
     fetch(`${API}/api/template-skpi/preview/${slug}`, { credentials:"include" })
@@ -61,33 +52,6 @@ export default function PreviewModal({ prodi, onClose }) {
 
   useEffect(() => () => { if (blobUrl) URL.revokeObjectURL(blobUrl); }, [blobUrl]);
 
-  // Zoom controls
-  const zoomIn    = () => setZoom(z => Math.min(z+10, 200));
-  const zoomOut   = () => setZoom(z => Math.max(z-10, 40));
-  const zoomReset = () => setZoom(100);
-
-  // Ctrl+Scroll untuk zoom
-  const handleWheel = useCallback((e) => {
-    if (e.ctrlKey || e.metaKey) {
-      e.preventDefault();
-      setZoom(z => Math.min(Math.max(z - Math.sign(e.deltaY)*5, 40), 200));
-    }
-  }, []);
-  useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-    el.addEventListener("wheel", handleWheel, { passive:false });
-    return () => el.removeEventListener("wheel", handleWheel);
-  }, [handleWheel]);
-
-  // Cetak PDF
-  const handlePrint = () => {
-    if (iframeRef.current && iframeRef.current.contentWindow) {
-      iframeRef.current.contentWindow.print();
-    }
-  };
-
-  // Download file .docx asli
   const download = () => {
     const a = Object.assign(document.createElement("a"), {
       href: `${API}/uploads/templates/${slug}.docx`,
@@ -98,104 +62,86 @@ export default function PreviewModal({ prodi, onClose }) {
 
   return (
     <div style={{
-      position: "fixed", inset: 0, zIndex: 9999,
-      display: "flex", flexDirection: "column",
-      background: "#1e1e1e", fontFamily: "'Segoe UI', system-ui, sans-serif"
+      position:"fixed", inset:0, zIndex:9999,
+      display:"flex", flexDirection:"column",
+      background:"#1e1e1e", fontFamily:"'Segoe UI', system-ui, sans-serif",
     }}>
       {/* Toolbar */}
       <div style={{
-        height: 48, background: "#2d2d2d", borderBottom: "1px solid #3d3d3d",
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-        padding: "0 16px", gap: 12, flexShrink: 0, userSelect: "none"
+        height:50, background:"#2d2d2d", borderBottom:"1px solid #3d3d3d",
+        display:"flex", alignItems:"center", justifyContent:"space-between",
+        padding:"0 16px", gap:12, flexShrink:0, userSelect:"none",
       }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, flex: 1, minWidth: 0 }}>
+        <div style={{ display:"flex", alignItems:"center", gap:10, flex:1, minWidth:0 }}>
           <FileText size={16} color={cfg.primary}/>
-          <span style={{ fontSize: 13, fontWeight: 600, color: "#f0dfc0", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-            Print Layout — {prodi}
+          <span style={{ fontSize:13, fontWeight:600, color:"#f0dfc0",
+            whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>
+            Template SKPI — {prodi}
           </span>
           {status === "ok" && (
-            <span style={{ fontSize: 10, fontWeight: 700, background: "#dc2626", color: "#fff", padding: "2px 8px", borderRadius: 4 }}>
-              PDF
+            <span style={{ fontSize:10, fontWeight:700, background:"#dc2626",
+              color:"#fff", padding:"2px 8px", borderRadius:4 }}>PDF</span>
+          )}
+          {status === "loading" && (
+            <span style={{ display:"inline-flex", alignItems:"center", gap:5,
+              fontSize:12, color:"rgba(255,255,255,0.45)" }}>
+              <Loader2 size={12} style={{ animation:"spin 1s linear infinite" }}/> Memproses…
             </span>
           )}
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <button className="wp-icon-btn" onClick={zoomOut} title="Perkecil"><ZoomOut size={14}/></button>
-          <button className="wp-zoom-pct" onClick={zoomReset} title="Reset">{zoom}%</button>
-          <button className="wp-icon-btn" onClick={zoomIn} title="Perbesar"><ZoomIn size={14}/></button>
-          <input type="range" min={40} max={200} step={5} value={zoom}
-            onChange={e => setZoom(Number(e.target.value))}
-            style={{ width: 100, accentColor: cfg.primary }}/>
-        </div>
-
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          {status === "ok" && (
-            <button className="wp-btn" onClick={handlePrint} title="Cetak PDF">
-              <Printer size={14}/> Cetak
-            </button>
-          )}
-          <button className="wp-btn" onClick={download}>
+        <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+          <button onClick={download} title="Download .docx"
+            style={{ display:"inline-flex", alignItems:"center", gap:6, padding:"0 14px",
+              height:32, borderRadius:6, border:"1px solid rgba(255,255,255,.18)",
+              background:"rgba(255,255,255,.09)", color:"#ddd", cursor:"pointer",
+              fontSize:12, fontWeight:600 }}>
             <Download size={14}/> Download .docx
           </button>
-          <button className="wp-icon-btn" onClick={onClose} title="Tutup (Esc)" style={{ marginLeft: 4 }}>
+          <button onClick={onClose} title="Tutup (Esc)"
+            style={{ width:32, height:32, borderRadius:6, border:"1px solid rgba(255,255,255,.15)",
+              background:"rgba(255,255,255,.07)", color:"#ddd", cursor:"pointer",
+              display:"inline-flex", alignItems:"center", justifyContent:"center" }}>
             <X size={16}/>
           </button>
         </div>
       </div>
 
-      {/* Ruler (opsional, hanya muncul jika PDF berhasil) */}
-      {status === "ok" && (
-        <div style={{
-          height: 24, background: "#e8e8e8", borderBottom: "1px solid #bbb",
-          flexShrink: 0, overflow: "hidden", position: "relative"
-        }}>
-          <div style={{
-            position: "absolute", left: "50%", transform: "translateX(-50%)",
-            width: "210mm", height: "100%", display: "flex"
-          }}>
-            {Array.from({ length: 21 }, (_, i) => (
-              <div key={i} style={{ flex: 1, position: "relative", borderLeft: i > 0 ? "1px solid #bbb" : "none" }}>
-                {i % 2 === 0 && i > 0 && (
-                  <span style={{ position: "absolute", top: 10, left: 2, fontSize: 9, color: "#666" }}>{i}</span>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Canvas PDF */}
-      <div ref={containerRef} style={{
-        flex: 1, overflow: "auto", background: "#525252", display: "flex",
-        justifyContent: "center", alignItems: "flex-start"
-      }}>
+      {/* PDF Viewer */}
+      <div style={{ flex:1, position:"relative", overflow:"hidden", background:"#525252" }}>
         {status === "loading" && (
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", paddingTop: 100, textAlign: "center" }}>
-            <Loader2 size={40} className="wp-spin" color={cfg.primary}/>
-            <p style={{ color: "#e8c99a", marginTop: 18, fontSize: 15, fontWeight: 500 }}>Mengkonversi ke PDF…</p>
-            <p style={{ color: "rgba(232,201,154,.5)", fontSize: 13, marginTop: 6 }}>Memproses template {prodi}</p>
+          <div style={{ position:"absolute", inset:0, display:"flex", flexDirection:"column",
+            alignItems:"center", justifyContent:"center", gap:12 }}>
+            <Loader2 size={36} color={cfg.primary}
+              style={{ animation:"spin 1s linear infinite" }}/>
+            <p style={{ color:"#e8c99a", fontSize:15, fontWeight:500, margin:0 }}>
+              Mengkonversi ke PDF…
+            </p>
+            <p style={{ color:"rgba(232,201,154,0.5)", fontSize:13, margin:0 }}>
+              Memproses template {prodi}
+            </p>
           </div>
         )}
         {status === "error" && (
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", paddingTop: 100, textAlign: "center" }}>
-            <AlertCircle size={44} color="#fca5a5"/>
-            <p style={{ color: "#fca5a5", fontWeight: 700, marginTop: 16, fontSize: 16 }}>Gagal memuat template</p>
-            <p style={{ color: "rgba(252,165,165,.7)", fontSize: 13, marginTop: 10, maxWidth: 400, textAlign: "center" }}>{errMsg}</p>
-            <p style={{ color: "rgba(255,255,255,.2)", fontSize: 11, marginTop: 8 }}>Pastikan LibreOffice / Microsoft Word terinstall di server</p>
+          <div style={{ position:"absolute", inset:0, display:"flex", flexDirection:"column",
+            alignItems:"center", justifyContent:"center", gap:8, padding:32, textAlign:"center" }}>
+            <AlertCircle size={48} color="#fca5a5"/>
+            <p style={{ color:"#fca5a5", fontWeight:700, fontSize:16, margin:"8px 0 0" }}>
+              Gagal memuat template
+            </p>
+            <p style={{ color:"rgba(252,165,165,0.7)", fontSize:13, margin:0, maxWidth:400 }}>
+              {errMsg}
+            </p>
+            <p style={{ color:"rgba(255,255,255,0.2)", fontSize:11, margin:0 }}>
+              Pastikan LibreOffice / Microsoft Word terinstall di server
+            </p>
           </div>
         )}
         {status === "ok" && blobUrl && (
-          <iframe
-            ref={iframeRef}
-            src={`${blobUrl}#toolbar=0&navpanes=0&view=FitH&zoom=${zoom}`}
-            style={{
-              width: "100%", height: "100%", border: "none",
-              transform: `scale(${zoom/100})`,
-              transformOrigin: "top center",
-              background: "#fff"
-            }}
-            title={`Template SKPI ${prodi}`}
+          <embed
+            src={`${blobUrl}#toolbar=1&navpanes=0&scrollbar=1&view=FitH`}
+            type="application/pdf"
+            style={{ position:"absolute", inset:0, width:"100%", height:"100%", border:"none" }}
           />
         )}
       </div>
@@ -203,40 +149,16 @@ export default function PreviewModal({ prodi, onClose }) {
       {/* Status bar */}
       {status === "ok" && (
         <div style={{
-          height: 26, background: "#2d2d2d", borderTop: "1px solid #3d3d3d",
-          display: "flex", alignItems: "center", justifyContent: "space-between",
-          padding: "0 16px", fontSize: 11, color: "rgba(255,255,255,.4)", flexShrink: 0
+          height:26, background:"#2d2d2d", borderTop:"1px solid #3d3d3d",
+          display:"flex", alignItems:"center", justifyContent:"space-between",
+          padding:"0 16px", fontSize:11, color:"rgba(255,255,255,0.35)", flexShrink:0,
         }}>
           <span>Template {prodi} — PDF siap</span>
-          <span>Zoom {zoom}% &nbsp;·&nbsp; Ctrl+Scroll untuk zoom</span>
+          <span>Gunakan toolbar PDF untuk zoom</span>
         </div>
       )}
 
-      {/* Global styles for buttons (because inline style cannot cover hover) */}
-      <style jsx>{`
-        .wp-icon-btn, .wp-btn, .wp-zoom-pct {
-          width: 32px; height: 32px; border-radius: 6px;
-          border: 1px solid rgba(255,255,255,.15);
-          background: rgba(255,255,255,.07); color: #ddd;
-          cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
-          transition: all .15s;
-        }
-        .wp-btn {
-          width: auto; padding: 0 14px; gap: 6px;
-          font-size: 12px; font-weight: 600;
-          background: rgba(255,255,255,.09); border: 1px solid rgba(255,255,255,.18);
-        }
-        .wp-zoom-pct {
-          width: auto; min-width: 52px; padding: 0 8px;
-          font-size: 12px; font-weight: 600;
-          background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.14);
-        }
-        .wp-icon-btn:hover, .wp-btn:hover, .wp-zoom-pct:hover {
-          background: rgba(255,255,255,.16); color: #fff;
-        }
-        .wp-spin { animation: spin 1s linear infinite; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-      `}</style>
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 }

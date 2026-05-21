@@ -478,6 +478,15 @@ export async function uploadBuktiKegiatan(id, formData) {
 // Base endpoint: /api/mahasiswa/pengajuan
 // =============================================================================
 
+export async function getMahasiswaIcp() {
+  if (_mockMode || !API_URL) return { total_poin: 0, detail: [] };
+  try {
+    const res = await apiFetch("/api/mahasiswa/pengajuan/icp");
+    if (res.ok) return res.json();
+    return { total_poin: 0, detail: [] };
+  } catch { return { total_poin: 0, detail: [] }; }
+}
+
 export async function getPengajuanStatus() {
   if (_mockMode || !API_URL) return null;
   try {
@@ -909,6 +918,18 @@ export async function deleteAdminNotifikasi(id) {
   }
 }
 
+export async function deleteAllReadAdminNotif() {
+  if (_mockMode || !API_URL) {
+    _mockMode = true;
+    _mockNotifs = _mockNotifs.filter(n => !n.status_baca);
+    return { ok: true };
+  }
+  try {
+    const res = await apiFetch("/api/admin/notifikasi", { method: "DELETE" });
+    return { ok: res.ok };
+  } catch { return { ok: false }; }
+}
+
 // =============================================================================
 // MAHASISWA — Notifikasi
 // Base endpoint: /api/mahasiswa/notifikasi
@@ -963,6 +984,28 @@ export async function markAllMahasiswaNotifRead() {
     _mockMode = true;
     return markAllMahasiswaNotifRead();
   }
+}
+
+export async function deleteMahasiswaNotif(id) {
+  if (_mockMode || !API_URL) {
+    _mockMahasiswaNotifs = _mockMahasiswaNotifs.filter(n => n.id_notifikasi !== id);
+    return { ok: true };
+  }
+  try {
+    const res = await apiFetch(`/api/mahasiswa/notifikasi/${id}`, { method: "DELETE" });
+    return { ok: res.ok };
+  } catch { return { ok: false }; }
+}
+
+export async function deleteAllReadMahasiswaNotif() {
+  if (_mockMode || !API_URL) {
+    _mockMahasiswaNotifs = _mockMahasiswaNotifs.filter(n => !n.status_baca);
+    return { ok: true };
+  }
+  try {
+    const res = await apiFetch("/api/mahasiswa/notifikasi", { method: "DELETE" });
+    return { ok: res.ok };
+  } catch { return { ok: false }; }
 }
 
 // =============================================================================

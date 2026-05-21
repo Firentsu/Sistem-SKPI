@@ -43,6 +43,33 @@ router.patch("/:id/baca", async (req, res) => {
   }
 });
 
+router.delete("/:id", async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) return res.status(400).json({ error: "ID tidak valid" });
+
+    await prisma.notifikasi.deleteMany({
+      where: { id_notifikasi: id, id_user: req.mahasiswaUser.user_id },
+    });
+    return res.json({ ok: true });
+  } catch (err) {
+    console.error("DELETE /mahasiswa/notifikasi/:id error:", err);
+    return res.status(500).json({ error: "Server error" });
+  }
+});
+
+router.delete("/", async (req, res) => {
+  try {
+    await prisma.notifikasi.deleteMany({
+      where: { id_user: req.mahasiswaUser.user_id, status_baca: true },
+    });
+    return res.json({ ok: true });
+  } catch (err) {
+    console.error("DELETE /mahasiswa/notifikasi error:", err);
+    return res.status(500).json({ error: "Server error" });
+  }
+});
+
 router.get("/", async (req, res) => {
   try {
     const limit  = Math.min(parseInt(req.query.limit) || 20, 50);

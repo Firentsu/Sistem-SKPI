@@ -40,6 +40,20 @@ const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads", "avatars");
 // ════════════════════════════════════════════════════════════
 //  POST /api/auth/login
 // ════════════════════════════════════════════════════════════
+router.get("/cek-akun", async (req, res) => {
+  try {
+    const { username } = req.query;
+    if (!username) return res.json({ exists: false });
+    const user = await prisma.users.findFirst({
+      where: { username: username.trim(), role: "admin" },
+      select: { user_id: true },
+    });
+    res.json({ exists: !!user });
+  } catch {
+    res.json({ exists: false });
+  }
+});
+
 router.post("/login", async (req, res) => {
   try {
     const { username, password } = req.body;

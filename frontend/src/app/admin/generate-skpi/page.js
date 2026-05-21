@@ -136,11 +136,8 @@ function PreviewModal({ mhs, onClose, onGenerate, onPublish, generating, publish
   useEffect(() => {
     if (!mhs?.id_mahasiswa) return;
     let cancelled = false;
-
     const fetchPdf = async () => {
-      setStatus("loading");
-      setErrMsg("");
-      setNoTemplate(null);
+      setStatus("loading"); setErrMsg(""); setNoTemplate(null);
       try {
         const res = await fetch(`${API}/api/skpi/preview-pdf/${mhs.id_mahasiswa}`, { credentials: "include" });
         if (!cancelled) {
@@ -148,25 +145,19 @@ function PreviewModal({ mhs, onClose, onGenerate, onPublish, generating, publish
             const json = await res.json().catch(() => ({}));
             if (json.code === "NO_TEMPLATE") {
               setNoTemplate({ prodi: mhs.prodi, available: json.available || [] });
-              setStatus("error");
             } else {
               setErrMsg(json.error || `Error ${res.status}`);
-              setStatus("error");
             }
-            return;
+            setStatus("error"); return;
           }
           const blob = await res.blob();
           setPdfUrl(URL.createObjectURL(blob));
           setStatus("ok");
         }
       } catch (e) {
-        if (!cancelled) {
-          setErrMsg(e.message);
-          setStatus("error");
-        }
+        if (!cancelled) { setErrMsg(e.message); setStatus("error"); }
       }
     };
-
     fetchPdf();
     return () => { cancelled = true; };
   }, [mhs?.id_mahasiswa]);
@@ -180,8 +171,7 @@ function PreviewModal({ mhs, onClose, onGenerate, onPublish, generating, publish
       const blob = await res.blob();
       const url  = URL.createObjectURL(blob);
       const a    = Object.assign(document.createElement("a"), {
-        href: url,
-        download: `SKPI_${mhs.nim}_${(mhs.nama || "").replace(/[^a-zA-Z0-9]/g, "_")}.docx`,
+        href: url, download: `SKPI_${mhs.nim}_${(mhs.nama || "").replace(/[^a-zA-Z0-9]/g, "_")}.docx`,
       });
       document.body.appendChild(a); a.click(); document.body.removeChild(a);
       URL.revokeObjectURL(url);
@@ -192,8 +182,7 @@ function PreviewModal({ mhs, onClose, onGenerate, onPublish, generating, publish
   const handleDownloadPdf = () => {
     if (!pdfUrl) return;
     const a = Object.assign(document.createElement("a"), {
-      href: pdfUrl,
-      download: `SKPI_${mhs.nim}_${(mhs.nama || "").replace(/[^a-zA-Z0-9]/g, "_")}.pdf`,
+      href: pdfUrl, download: `SKPI_${mhs.nim}_${(mhs.nama || "").replace(/[^a-zA-Z0-9]/g, "_")}.pdf`,
     });
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
   };
@@ -202,6 +191,7 @@ function PreviewModal({ mhs, onClose, onGenerate, onPublish, generating, publish
 
   return (
     <div className={styles.previewOverlay}>
+      {/* Toolbar */}
       <div className={styles.previewBar}>
         <div className={styles.previewBarLeft}>
           <FileText size={16}/>
@@ -211,8 +201,8 @@ function PreviewModal({ mhs, onClose, onGenerate, onPublish, generating, publish
             <TierIcon size={11}/> {tier.label}
           </span>
           {status === "ok" && (
-            <span style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", marginLeft: 4 }}>
-              PDF · {mhs.prodi}
+            <span style={{ fontSize: 11, color: "rgba(255,255,255,0.45)", marginLeft: 4 }}>
+              {mhs.prodi}
             </span>
           )}
         </div>
@@ -220,11 +210,11 @@ function PreviewModal({ mhs, onClose, onGenerate, onPublish, generating, publish
           <button className={styles.btnDownloadDocx} onClick={handleDownload}
             disabled={downloading || status !== "ok"}>
             {downloading ? <Loader2 size={14} className={styles.spin}/> : <Download size={14}/>}
-            {downloading ? "Mengunduh..." : "Download .docx"}
+            {downloading ? "Mengunduh..." : ".docx"}
           </button>
           <button className={styles.btnDownloadPdf} onClick={handleDownloadPdf}
             disabled={status !== "ok"}>
-            <Download size={14}/> Download PDF
+            <Download size={14}/> PDF
           </button>
           {!existingSkpi && (
             <button
@@ -237,65 +227,67 @@ function PreviewModal({ mhs, onClose, onGenerate, onPublish, generating, publish
             </button>
           )}
           {existingSkpi?.status === "draft" && (
-            <button
-              className={`${styles.btnPublish} ${publishing ? styles.btnLoading : ""}`}
+            <button className={`${styles.btnPublish} ${publishing ? styles.btnLoading : ""}`}
               onClick={onPublish} disabled={publishing}>
               {publishing ? <Loader2 size={14} className={styles.spin}/> : <Send size={14}/>}
-              {publishing ? "Menerbitkan..." : "Terbitkan Resmi"}
+              {publishing ? "Menerbitkan..." : "Terbitkan"}
             </button>
           )}
           {existingSkpi?.status === "resmi" && (
-            <span className={styles.btnResmi}><CheckSquare size={14}/> Sudah Diterbitkan</span>
+            <span className={styles.btnResmi}><CheckSquare size={14}/> Diterbitkan</span>
           )}
-          <button className={styles.previewClose} onClick={onClose}><X size={18}/></button>
+          <button className={styles.previewClose} onClick={onClose} title="Tutup (Esc)"><X size={18}/></button>
         </div>
       </div>
 
-      <div className={styles.previewScroll} style={{ background: "#525252", padding: 0 }}>
+      {/* PDF Viewer */}
+      <div style={{ flex: 1, position: "relative", overflow: "hidden", background: "#525252" }}>
         {status === "loading" && (
-          <div className={styles.previewLoading}>
-            <Loader2 size={32} className={styles.spin} style={{ color: "#f5dfc0" }}/>
-            <p style={{ color: "#f5dfc0", marginTop: 14, fontSize: 14 }}>Mengkonversi ke PDF…</p>
-            <p style={{ color: "rgba(245,223,192,0.5)", fontSize: 12, marginTop: 4 }}>
-              LibreOffice memproses SKPI {mhs.nama}
+          <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column",
+            alignItems: "center", justifyContent: "center", gap: 12 }}>
+            <Loader2 size={36} className={styles.spin} style={{ color: "#f5dfc0" }}/>
+            <p style={{ color: "#f5dfc0", fontSize: 14, margin: 0 }}>Mengkonversi ke PDF…</p>
+            <p style={{ color: "rgba(245,223,192,0.5)", fontSize: 12, margin: 0 }}>
+              Memproses SKPI {mhs.nama}
             </p>
           </div>
         )}
         {status === "error" && noTemplate && (
-          <div className={styles.previewError}>
-            <FileText size={48} style={{ color: "#f59e0b", marginBottom: 12 }}/>
-            <p style={{ color: "#f59e0b", fontWeight: 700, fontSize: 16 }}>Template Belum Tersedia</p>
-            <p style={{ color: "rgba(255,220,100,0.85)", fontSize: 14, marginTop: 8, textAlign: "center", maxWidth: 460 }}>
-              Template SKPI untuk Program Studi{" "}
-              <strong style={{ color: "#fbbf24" }}>{noTemplate.prodi}</strong> belum diupload.
+          <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column",
+            alignItems: "center", justifyContent: "center", gap: 8, padding: 32, textAlign: "center" }}>
+            <FileText size={52} style={{ color: "#f59e0b" }}/>
+            <p style={{ color: "#f59e0b", fontWeight: 700, fontSize: 16, margin: "8px 0 0" }}>
+              Template Belum Tersedia
+            </p>
+            <p style={{ color: "rgba(255,220,100,0.85)", fontSize: 13, margin: 0, maxWidth: 440 }}>
+              Template SKPI untuk <strong style={{ color: "#fbbf24" }}>{noTemplate.prodi}</strong> belum diupload.
             </p>
             {noTemplate.available.length > 0 && (
-              <p style={{ color: "rgba(255,220,100,0.6)", fontSize: 12, marginTop: 8, textAlign: "center" }}>
-                Template tersedia: {noTemplate.available.join(", ")}
+              <p style={{ color: "rgba(255,220,100,0.55)", fontSize: 12, margin: 0 }}>
+                Tersedia: {noTemplate.available.join(", ")}
               </p>
             )}
-            <p style={{ color: "rgba(255,220,100,0.5)", fontSize: 12, marginTop: 6 }}>
-              Upload template di halaman <strong>Template SKPI</strong>
+            <p style={{ color: "rgba(255,220,100,0.4)", fontSize: 12, margin: 0 }}>
+              Upload di halaman <strong>Template SKPI</strong>
             </p>
           </div>
         )}
         {status === "error" && !noTemplate && (
-          <div className={styles.previewError}>
-            <AlertCircle size={36} style={{ color: "#fca5a5" }}/>
-            <p style={{ color: "#fca5a5", fontWeight: 700, marginTop: 12 }}>Gagal memuat PDF</p>
-            <p style={{ color: "rgba(252,165,165,0.7)", fontSize: 13, marginTop: 6, textAlign: "center", maxWidth: 420 }}>
-              {errMsg}
-            </p>
-            <p style={{ color: "rgba(255,255,255,0.2)", fontSize: 11, marginTop: 8 }}>
+          <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column",
+            alignItems: "center", justifyContent: "center", gap: 8, padding: 32, textAlign: "center" }}>
+            <AlertCircle size={40} style={{ color: "#fca5a5" }}/>
+            <p style={{ color: "#fca5a5", fontWeight: 700, fontSize: 15, margin: "8px 0 0" }}>Gagal memuat PDF</p>
+            <p style={{ color: "rgba(252,165,165,0.7)", fontSize: 13, margin: 0, maxWidth: 400 }}>{errMsg}</p>
+            <p style={{ color: "rgba(255,255,255,0.2)", fontSize: 11, margin: 0 }}>
               Pastikan LibreOffice terinstall di server
             </p>
           </div>
         )}
         {status === "ok" && pdfUrl && (
           <embed
-            src={`${pdfUrl}#toolbar=1&navpanes=0&view=Fit&zoom=75`}
+            src={`${pdfUrl}#toolbar=1&navpanes=0&scrollbar=1&view=FitH`}
             type="application/pdf"
-            style={{ width: "100%", height: "100%", border: "none", display: "block" }}
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: "none" }}
           />
         )}
       </div>

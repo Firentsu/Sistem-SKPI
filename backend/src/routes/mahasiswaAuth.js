@@ -43,6 +43,20 @@ const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads", "avatars");
 //  POST /api/mahasiswa/auth/login
 //  Body: { nim, password }
 // ════════════════════════════════════════════════════════════
+router.get("/cek-akun", async (req, res) => {
+    try {
+        const { nim } = req.query;
+        if (!nim) return res.json({ exists: false });
+        const mhs = await prisma.mahasiswa.findFirst({
+            where: { nim: nim.trim() },
+            select: { id_mahasiswa: true },
+        });
+        res.json({ exists: !!mhs });
+    } catch {
+        res.json({ exists: false });
+    }
+});
+
 router.post("/login", async (req, res) => {
     try {
         const { nim, password } = req.body;

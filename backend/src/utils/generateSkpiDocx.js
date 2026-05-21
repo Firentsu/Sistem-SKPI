@@ -27,11 +27,11 @@ const toSlug = (s) =>
 
 function getAktivitas(kegiatan, kata) {
   const items = kegiatan.filter(k =>
-    (k.kategoriaktivitas?.nama_kategori || k.kelompokaktivitas?.nama_kelompok || "")
+    (k.jenisaktivitas?.nama_indo || k.kategoriaktivitas?.nama_indo || k.kelompokaktivitas?.nama_indo || "")
       .toLowerCase().includes(kata.toLowerCase())
   );
   return items.length
-    ? items.map((k, i) => `${i + 1}. ${k.nama_kegiatan || k.deskripsi || ""}`).join("\n")
+    ? items.map(k => k.nama_kegiatan || k.deskripsi || "").join("\n")
     : "";
 }
 

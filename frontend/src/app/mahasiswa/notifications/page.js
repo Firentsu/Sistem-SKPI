@@ -3,11 +3,11 @@
 import { useState, useEffect, useCallback } from "react";
 import {
   Bell, CheckCircle2, XCircle, AlertTriangle, Award, Info,
-  Clock, CheckCheck, RefreshCw,
+  Clock, CheckCheck, RefreshCw, X, BellOff, Trash2,
 } from "lucide-react";
 import {
-  getMahasiswaNotifikasi, markMahasiswaNotifRead,
-  markAllMahasiswaNotifRead, inferMahasiswaNotifType,
+  getMahasiswaNotifikasi, markMahasiswaNotifRead, markAllMahasiswaNotifRead,
+  deleteMahasiswaNotif, deleteAllReadMahasiswaNotif, inferMahasiswaNotifType,
 } from "@/lib/api";
 import styles from "./notifications.module.css";
 
@@ -29,14 +29,15 @@ const TYPE_CFG = {
 };
 
 export default function MahasiswaNotificationsPage() {
-  const [notifs, setNotifs]   = useState([]);
-  const [unread, setUnread]   = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [filter, setFilter]   = useState("semua");
+  const [notifs,   setNotifs]   = useState([]);
+  const [unread,   setUnread]   = useState(0);
+  const [loading,  setLoading]  = useState(true);
+  const [filter,   setFilter]   = useState("semua");
+  const [deleting, setDeleting] = useState(null);
 
   const load = useCallback(async () => {
     setLoading(true);
-    const data = await getMahasiswaNotifikasi(50);
+    const data = await getMahasiswaNotifikasi(100);
     setNotifs(data.rows ?? []);
     setUnread(data.unread ?? 0);
     setLoading(false);
@@ -61,26 +62,49 @@ export default function MahasiswaNotificationsPage() {
     setUnread(0);
   };
 
+  const handleDelete = async (e, id) => {
+    e.stopPropagation();
+    setDeleting(id);
+    await deleteMahasiswaNotif(id);
+    const deleted = notifs.find(n => n.id_notifikasi === id);
+    setNotifs(prev => prev.filter(n => n.id_notifikasi !== id));
+    if (deleted && !deleted.status_baca) setUnread(prev => Math.max(0, prev - 1));
+    setDeleting(null);
+  };
+
+  const handleDeleteRead = async () => {
+    await deleteAllReadMahasiswaNotif();
+    setNotifs(prev => prev.filter(n => !n.status_baca));
+  };
+
   const filtered = notifs.filter(n => {
     if (filter === "belum_dibaca") return !n.status_baca;
     if (filter === "dibaca")       return n.status_baca;
     return true;
   });
 
+  const readCount = notifs.filter(n => n.status_baca).length;
+
   return (
     <div className={styles.page}>
-      {/* Header */}
+
+      {/* ── Header ── */}
       <div className={styles.header}>
         <div className={styles.headerLeft}>
           <div className={styles.headerIcon}><Bell size={20} /></div>
           <div>
             <h1 className={styles.title}>Semua Notifikasi</h1>
             <p className={styles.subtitle}>
-              {loading ? "Memuat…" : unread > 0 ? `${unread} belum dibaca` : "Semua sudah dibaca"}
+              {loading ? "Memuat…" : unread > 0 ? `${unread} belum dibaca · ${notifs.length} total` : `${notifs.length} notifikasi · semua sudah dibaca`}
             </p>
           </div>
         </div>
         <div className={styles.headerActions}>
+          {readCount > 0 && (
+            <button className={styles.deleteReadBtn} onClick={handleDeleteRead} title="Hapus semua yang sudah dibaca">
+              <Trash2 size={13} /> Hapus dibaca ({readCount})
+            </button>
+          )}
           {unread > 0 && (
             <button className={styles.readAllBtn} onClick={handleReadAll}>
               <CheckCheck size={14} /> Tandai semua dibaca
@@ -92,12 +116,12 @@ export default function MahasiswaNotificationsPage() {
         </div>
       </div>
 
-      {/* Filter tabs */}
+      {/* ── Filter Tabs ── */}
       <div className={styles.tabs}>
         {[
           { key: "semua",        label: "Semua",        count: notifs.length },
           { key: "belum_dibaca", label: "Belum Dibaca", count: notifs.filter(n => !n.status_baca).length },
-          { key: "dibaca",       label: "Sudah Dibaca", count: notifs.filter(n => n.status_baca).length  },
+          { key: "dibaca",       label: "Sudah Dibaca", count: readCount },
         ].map(t => (
           <button
             key={t.key}
@@ -112,7 +136,7 @@ export default function MahasiswaNotificationsPage() {
         ))}
       </div>
 
-      {/* List */}
+      {/* ── List ── */}
       <div className={styles.list}>
         {loading ? (
           <div className={styles.empty}>
@@ -121,8 +145,8 @@ export default function MahasiswaNotificationsPage() {
           </div>
         ) : filtered.length === 0 ? (
           <div className={styles.empty}>
-            <Bell size={40} strokeWidth={1.2} />
-            <span>Tidak ada notifikasi</span>
+            <BellOff size={40} strokeWidth={1.2} />
+            <span>{filter === "belum_dibaca" ? "Tidak ada notifikasi yang belum dibaca" : "Tidak ada notifikasi"}</span>
           </div>
         ) : (
           filtered.map(notif => {
@@ -146,15 +170,27 @@ export default function MahasiswaNotificationsPage() {
                     {timeAgo(notif.created_at)}
                   </div>
                 </div>
-                {!notif.status_baca && (
+                <div className={styles.itemActions}>
+                  {!notif.status_baca && (
+                    <button
+                      className={styles.markBtn}
+                      onClick={e => { e.stopPropagation(); handleRead(notif.id_notifikasi); }}
+                      title="Tandai sudah dibaca"
+                    >
+                      <CheckCircle2 size={15} />
+                    </button>
+                  )}
                   <button
-                    className={styles.markBtn}
-                    onClick={e => { e.stopPropagation(); handleRead(notif.id_notifikasi); }}
-                    title="Tandai sudah dibaca"
+                    className={styles.deleteBtn}
+                    onClick={e => handleDelete(e, notif.id_notifikasi)}
+                    disabled={deleting === notif.id_notifikasi}
+                    title="Hapus notifikasi"
                   >
-                    <CheckCircle2 size={15} />
+                    {deleting === notif.id_notifikasi
+                      ? <RefreshCw size={14} className={styles.spin} />
+                      : <X size={14} />}
                   </button>
-                )}
+                </div>
               </div>
             );
           })

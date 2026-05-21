@@ -53,6 +53,28 @@ router.get("/riwayat", async (req, res) => {
 });
 
 // ════════════════════════════════════════════════════════════
+//  GET /api/mahasiswa/pengajuan/icp  → ICP summary mahasiswa
+// ════════════════════════════════════════════════════════════
+router.get("/icp", async (req, res) => {
+    try {
+        const { mahasiswa } = req;
+        const icpRows = await prisma.icpmahasiswa.findMany({
+            where: { id_mahasiswa: mahasiswa.id_mahasiswa },
+            include: { icpkategori: true },
+        });
+        const total_poin = icpRows.reduce((s, r) => s + (r.total_poin ?? 0), 0);
+        const detail = icpRows.map(r => ({
+            nama_indo:  r.icpkategori?.nama_indo || "",
+            total_poin: r.total_poin ?? 0,
+        }));
+        res.json({ total_poin, detail });
+    } catch (err) {
+        console.error("GET /mahasiswa/pengajuan/icp error:", err);
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
+// ════════════════════════════════════════════════════════════
 //  POST /api/mahasiswa/pengajuan  → ajukan SKPI
 // ════════════════════════════════════════════════════════════
 router.post("/", async (req, res) => {
@@ -80,6 +102,17 @@ router.post("/", async (req, res) => {
         if (kegiatanDisetujui === 0) {
             return res.status(400).json({
                 error: "Belum ada kegiatan yang disetujui. Ajukan minimal 1 kegiatan terlebih dahulu.",
+            });
+        }
+
+        // Cek ICP minimal 100 poin (Bronze)
+        const icpRows = await prisma.icpmahasiswa.findMany({
+            where: { id_mahasiswa: mahasiswa.id_mahasiswa },
+        });
+        const totalIcp = icpRows.reduce((s, r) => s + (r.total_poin ?? 0), 0);
+        if (totalIcp < 100) {
+            return res.status(400).json({
+                error: `Total ICP Anda ${totalIcp} poin. Minimal 100 poin (Bronze) untuk mengajukan SKPI.`,
             });
         }
 

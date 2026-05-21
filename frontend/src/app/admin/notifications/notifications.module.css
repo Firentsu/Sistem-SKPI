@@ -6,12 +6,12 @@
 
 .page {
   padding: 28px 32px 52px;
-  max-width: 800px;
-  margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px;
   font-family: 'Segoe UI', ui-sans-serif, sans-serif;
+  background: #faf5f0;
+  min-height: 100vh;
   animation: fadeUp 0.3s ease both;
 }
 
@@ -56,6 +56,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
 }
 .readAllBtn {
   display: inline-flex;
@@ -72,6 +73,21 @@
   transition: background 0.15s;
 }
 .readAllBtn:hover { background: #5c3317; }
+.deleteReadBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  background: #fff;
+  border: 1px solid #fca5a5;
+  color: #b91c1c;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.deleteReadBtn:hover { background: #fee2e2; }
 .refreshBtn {
   width: 36px;
   height: 36px;
@@ -113,6 +129,7 @@
   color: #9c7a5e;
   cursor: pointer;
   transition: all 0.15s;
+  font-family: inherit;
 }
 .tab:hover { background: #fdf4ec; color: #765439; }
 .tabActive { background: #765439 !important; color: #fff !important; }
@@ -131,23 +148,21 @@
 }
 .tabBadgeActive { background: rgba(255,255,255,0.25); color: #fff; }
 
-/* ── Notification List ── */
+/* ── List ── */
 .list {
   display: flex;
   flex-direction: column;
-  gap: 0;
   background: #fff;
   border: 1px solid #ede0d4;
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 2px 12px rgba(118,84,57,0.06);
 }
-
 .item {
   display: flex;
   align-items: flex-start;
   gap: 14px;
-  padding: 16px 20px;
+  padding: 14px 18px;
   cursor: pointer;
   border-bottom: 1px solid #f5ece4;
   transition: background 0.15s;
@@ -155,14 +170,13 @@
 }
 .item:last-child { border-bottom: none; }
 .item:hover { background: #fdfaf8; }
-
 .itemUnread { background: #fdf8f4; }
 .itemUnread:hover { background: #faf3ec; }
 
 .unreadDot {
   position: absolute;
   top: 18px;
-  right: 16px;
+  left: 6px;
   width: 7px;
   height: 7px;
   background: #3b82f6;
@@ -189,17 +203,17 @@
 /* ── Content ── */
 .content { flex: 1; min-width: 0; }
 .itemTitle {
-  font-size: 14px;
+  font-size: 13.5px;
   font-weight: 700;
   color: #2c1a0e;
-  margin-bottom: 4px;
+  margin-bottom: 3px;
   line-height: 1.3;
 }
 .itemMsg {
   font-size: 13px;
   color: #5c3317;
   line-height: 1.5;
-  margin-bottom: 6px;
+  margin-bottom: 5px;
 }
 .itemTime {
   display: flex;
@@ -209,21 +223,44 @@
   color: #9c7a5e;
 }
 
-/* ── Mark button ── */
-.markBtn {
+/* ── Item Actions ── */
+.itemActions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
   flex-shrink: 0;
+  margin-top: 2px;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.item:hover .itemActions { opacity: 1; }
+.markBtn {
   background: none;
   border: none;
   cursor: pointer;
   color: #cbd5e1;
-  padding: 4px;
+  padding: 5px;
   border-radius: 6px;
-  transition: color 0.15s;
-  margin-top: 2px;
+  transition: color 0.15s, background 0.15s;
+  display: flex;
+  align-items: center;
 }
-.markBtn:hover { color: #047857; }
+.markBtn:hover { color: #047857; background: #dcfce7; }
+.deleteBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #cbd5e1;
+  padding: 5px;
+  border-radius: 6px;
+  transition: color 0.15s, background 0.15s;
+  display: flex;
+  align-items: center;
+}
+.deleteBtn:hover { color: #dc2626; background: #fee2e2; }
+.deleteBtn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-/* ── Empty state ── */
+/* ── Empty State ── */
 .empty {
   display: flex;
   flex-direction: column;
@@ -238,4 +275,5 @@
   .page { padding: 16px 14px 40px; }
   .tabs { flex-direction: column; }
   .tab  { justify-content: flex-start; }
+  .itemActions { opacity: 1; }
 }

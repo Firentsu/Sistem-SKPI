@@ -187,6 +187,10 @@
   animation: slideInLeft 0.8s cubic-bezier(0.2, 0.9, 0.4, 1.1);
 }
 
+.leftTextGroup { /* group wrapper for h1+h2 — no desktop-specific styles needed */ }
+
+.leftDesc { /* alias for the description <p> */ }
+
 @keyframes slideInLeft {
   from {
     opacity: 0;
@@ -247,7 +251,8 @@
   text-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
-.leftContent p {
+.leftContent p,
+.leftDesc {
   font-size: 14px;
   line-height: 1.7;
   opacity: 0.9;
@@ -784,83 +789,246 @@
   font-weight: 300;
 }
 
-/* RESPONSIVE */
+/* ── Responsive ───────────────────────────────────────────── */
+
+/* Tablet */
 @media (max-width: 1024px) {
-  .sliderContainer {
-    width: 380px;
-  }
-  
-  .card {
-    padding: 30px 28px;
-  }
-  
-  .leftContent h2 {
-    font-size: 28px;
-  }
-
-  .footerContent {
-    flex-wrap: wrap;
-    gap: 24px;
-  }
-
-  .footerSection {
-    min-width: 200px;
-  }
+  .sliderContainer { width: 360px; }
+  .leftContent { padding: 24px; }
+  .leftContent h2 { font-size: 28px; }
+  .card { padding: 26px 24px; }
 }
 
+/* Mobile — full-screen no-scroll layout */
 @media (max-width: 768px) {
-  .container {
-    position: fixed;
-    overflow: hidden;
-  }
+
+  /* Container & main area */
+  .container { position: fixed; overflow: hidden; }
 
   .mainContent {
     position: absolute;
-    top: 56px;
-    bottom: 60px;
+    top: 54px;   /* header height */
+    bottom: 40px; /* footer height */
+    left: 0; right: 0;
     flex-direction: column;
-    overflow-y: auto;
+    align-items: stretch;
+    overflow: hidden;
   }
 
+  /* ── Left: compact horizontal branding strip ── */
   .left {
     flex: none;
-    padding: 30px 20px;
-    min-height: auto;
+    height: 76px;
+    width: 100%;
+    padding: 0 18px;
     clip-path: none;
-    height: auto;
+    background: linear-gradient(135deg, #765439 0%, #5a3c22 100%);
+    overflow: hidden;
   }
 
+  .left::after, .right::before { display: none; }
+
+  .leftContent {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 0;
+    max-width: 100%;
+    animation: none;
+  }
+
+  .logoWrapper { margin-bottom: 0; flex-shrink: 0; }
+
+  .logo {
+    width: 52px !important;
+    height: auto !important;
+    animation: none;
+  }
+
+  .leftTextGroup { text-align: left; }
+
+  .leftContent h1 {
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    margin-bottom: 3px;
+  }
+
+  .leftContent h2 {
+    font-size: 15px;
+    margin-bottom: 0;
+    line-height: 1.3;
+  }
+
+  /* Hide desc + badges in compact strip */
+  .leftDesc, .infoBadges { display: none; }
+
+  /* ── Right: fills remaining height ── */
   .right {
-    flex: none;
-    padding: 30px 20px;
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+    padding: 10px 14px;
     clip-path: none;
     box-shadow: none;
-    height: auto;
-  }
-
-  .left::after,
-  .right::before {
-    display: none;
-  }
-
-  .sliderContainer {
-    width: 100%;
-    max-width: 400px;
-  }
-
-  .navArrow {
-    display: none;
-  }
-  
-  .card {
-    padding: 30px 24px;
-  }
-
-  .footer {
-    position: fixed;
-  }
-
-  .contactItem {
+    background: #f5f0ec;
+    overflow: hidden;
+    align-items: stretch;      /* stretch so sliderContainer gets full height */
     justify-content: center;
   }
+
+  /* ── Slider fills right section completely ── */
+  .sliderContainer {
+    width: 100%;
+    max-width: 440px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .sliderWrapper {
+    flex: 1;
+    min-height: 0;
+    border-radius: 20px;
+    max-height: none;
+    overflow: hidden;
+    cursor: default;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+  }
+
+  .sliderTrack { height: 100%; }
+
+  .slide {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .card {
+    height: 100%;
+    padding: 16px 18px;
+    box-sizing: border-box;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .card h2 { font-size: 20px; margin-bottom: 4px; }
+
+  .cardSubtitle { font-size: 12px; margin-bottom: 12px; }
+
+  /* Form & inputs */
+  .inputGroup { margin-bottom: 0; flex-shrink: 0; }
+
+  .input {
+    padding: 10px 13px;
+    margin-bottom: 8px;
+    border-radius: 12px;
+  }
+
+  .loginOptions {
+    margin-bottom: 10px;
+    font-size: 12px;
+  }
+
+  .button {
+    padding: 11px;
+    font-size: 14px;
+    border-radius: 12px;
+    flex-shrink: 0;
+  }
+
+  .noteText { margin-top: 8px; font-size: 10px; }
+
+  .toast { margin-top: 8px; padding: 8px 10px; }
+  .toastMessage { font-size: 11px; }
+
+  /* About section — 2×2 grid */
+  .aboutContent {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+  }
+
+  .aboutCards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  .aboutCard {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 10px 6px;
+    gap: 5px;
+  }
+
+  .aboutIcon { width: 30px; height: 30px; border-radius: 8px; }
+  .aboutCard strong { font-size: 11px; margin-bottom: 2px; }
+  .aboutCard span { font-size: 9px; }
+
+  .aboutFooter { margin-top: 8px; padding-top: 8px; }
+  .infoBox { padding: 6px 8px; font-size: 10px; }
+
+  /* Nav & dots */
+  .navArrow { display: none; }
+  .dots { margin-top: 8px; flex-shrink: 0; }
+
+  /* Header compact on mobile → total ~54px */
+  .headerContent { padding: 7px 16px; }
+
+  /* Footer compact → total ~40px */
+  .footer { position: fixed; }
+  .footerBottom { padding: 11px 16px; }
+  .footerBottom p { font-size: 11px; }
+}
+
+/* Small mobile (≤480px) */
+@media (max-width: 480px) {
+  .mainContent { top: 50px; bottom: 36px; }
+
+  .headerContent { padding: 7px 12px; }
+  .headerTitle span:first-child { font-size: 10px; letter-spacing: 0.6px; }
+  .headerTitle span:last-child { font-size: 13px; }
+
+  .left { height: 68px; padding: 0 14px; }
+  .leftContent { gap: 10px; }
+  .logo { width: 44px !important; }
+  .leftContent h1 { font-size: 10px; letter-spacing: 1px; }
+  .leftContent h2 { font-size: 13px; }
+
+  .right { padding: 8px 10px; }
+
+  .card { padding: 14px 14px; }
+  .card h2 { font-size: 18px; }
+  .cardSubtitle { font-size: 11px; margin-bottom: 10px; }
+
+  .input { padding: 9px 11px; margin-bottom: 6px; }
+  .input input { font-size: 13px; }
+  .loginOptions { margin-bottom: 8px; font-size: 11px; }
+  .button { padding: 10px; font-size: 13px; }
+  .noteText { font-size: 9px; margin-top: 6px; }
+
+  .aboutCards { gap: 6px; }
+  .aboutCard { padding: 8px 4px; }
+  .aboutCard strong { font-size: 10px; }
+
+  .footerBottom { padding: 8px 12px; }
+  .footerBottom p { font-size: 10px; }
+}
+
+/* Extra small (≤360px) */
+@media (max-width: 360px) {
+  .mainContent { top: 48px; bottom: 34px; }
+  .left { height: 62px; }
+  .logo { width: 38px !important; }
+  .leftContent h2 { font-size: 12px; }
+  .card { padding: 12px 12px; }
+  .card h2 { font-size: 17px; }
+  .cardSubtitle { margin-bottom: 8px; }
+  .input { padding: 8px 10px; margin-bottom: 5px; }
+  .button { padding: 9px; }
 }

@@ -1,0 +1,291 @@
+@keyframes spin    { to { transform: rotate(360deg); } }
+@keyframes fadeUp  { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ── Page ── */
+.page {
+  min-height: 100vh;
+  width: 100%;
+  background: linear-gradient(150deg, #fdf6ef 0%, #f5e8d8 60%, #ede0cc 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px;
+  font-family: 'Segoe UI', ui-sans-serif, sans-serif;
+}
+
+/* ── Card ── */
+.card {
+  width: 100%;
+  max-width: 440px;
+  background: #fff;
+  border-radius: 20px;
+  box-shadow: 0 4px 32px rgba(118, 84, 57, 0.13), 0 1px 4px rgba(118, 84, 57, 0.08);
+  overflow: hidden;
+  animation: fadeUp 0.3s ease both;
+}
+
+/* ── Card Header ── */
+.cardHeader {
+  background: linear-gradient(135deg, #5c3317 0%, #765439 60%, #9a6840 100%);
+  padding: 28px 32px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.iconWrap {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1.5px solid rgba(255, 255, 255, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+}
+.brand {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.65);
+  margin: 0;
+  letter-spacing: 0.2px;
+}
+
+/* ── Body ── */
+.body {
+  padding: 28px 32px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  animation: fadeUp 0.25s ease both;
+}
+
+.title {
+  font-size: 22px;
+  font-weight: 800;
+  color: #2c1a0e;
+  margin: 0;
+  letter-spacing: -0.3px;
+}
+.subtitle {
+  font-size: 13.5px;
+  color: #8a6448;
+  margin: -8px 0 0;
+  line-height: 1.6;
+}
+
+/* ── Input ── */
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.label {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #3d2006;
+  letter-spacing: 0.1px;
+}
+.inputWrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #faf5f0;
+  border: 1.5px solid #e0cfc2;
+  border-radius: 10px;
+  padding: 12px 14px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.inputWrap:focus-within {
+  border-color: #765439;
+  box-shadow: 0 0 0 3px rgba(118, 84, 57, 0.1);
+  background: #fff;
+}
+.inputWrapError { border-color: #fca5a5 !important; background: #fff5f5 !important; }
+.inputIcon { color: #a07050; flex-shrink: 0; }
+.input {
+  flex: 1;
+  border: none;
+  background: none;
+  outline: none;
+  font-size: 14px;
+  color: #2c1a0e;
+  font-family: inherit;
+}
+.input::placeholder { color: #bba090; }
+
+.detectHint {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  color: #047857;
+  margin: 0;
+}
+.errorMsg {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: #b91c1c;
+  margin: 0;
+}
+
+/* ── Buttons ── */
+.btnPrimary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 13px;
+  background: linear-gradient(135deg, #765439 0%, #5c3317 100%);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s;
+  font-family: inherit;
+  box-shadow: 0 3px 10px rgba(118, 84, 57, 0.28);
+}
+.btnPrimary:hover:not(:disabled) { opacity: 0.88; transform: translateY(-1px); }
+.btnPrimary:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; transform: none; }
+
+.btnSecondary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  flex: 1;
+  padding: 12px;
+  background: #fff;
+  color: #765439;
+  border: 1.5px solid #ddd0c4;
+  border-radius: 10px;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+.btnSecondary:hover { background: #fdf4ec; border-color: #c4a882; }
+
+.btnBack {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0;
+  background: none;
+  border: none;
+  color: #9a7460;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.btnBack:hover { color: #5c3317; }
+
+.btnRow {
+  display: flex;
+  gap: 10px;
+}
+.btnRow .btnPrimary { flex: 1; }
+
+.spin { animation: spin 0.75s linear infinite; }
+
+/* ── Result icon ── */
+.resultIcon {
+  width: 58px;
+  height: 58px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── Steps ── */
+.stepsBox {
+  background: #faf5f0;
+  border: 1px solid #edd8c4;
+  border-radius: 12px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+}
+.stepsTitle {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #7a5030;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin: 0 0 4px;
+}
+.stepRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.stepNum {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #765439, #5c3317);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.stepText {
+  font-size: 13px;
+  color: #3d2006;
+  line-height: 1.6;
+}
+
+/* ── Contact ── */
+.contactBox {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 10px;
+  padding: 13px 16px;
+}
+.contactItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #065f46;
+}
+.contactItem svg { color: #15803d; flex-shrink: 0; }
+
+/* ── Not found ── */
+.notFoundBox {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  border-radius: 10px;
+  padding: 13px 16px;
+  font-size: 13px;
+  color: #92400e;
+  line-height: 1.6;
+}
+.notFoundBox svg { flex-shrink: 0; margin-top: 1px; color: #b45309; }
+
+/* ── Responsive ── */
+@media (max-width: 480px) {
+  .card { border-radius: 16px; }
+  .cardHeader { padding: 22px 22px 18px; }
+  .body { padding: 22px 22px 26px; gap: 16px; }
+}

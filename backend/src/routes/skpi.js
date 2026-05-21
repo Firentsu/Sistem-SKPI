@@ -337,7 +337,7 @@ router.get("/download/:mahasiswaId", requireAuth, async (req, res) => {
         programstudi: true,
         kegiatanmahasiswa: {
           where: { status_verifikasi: "disetujui" },
-          include: { kategoriaktivitas: true, kelompokaktivitas: true },
+          include: { jenisaktivitas: true, kategoriaktivitas: true, kelompokaktivitas: true },
         },
       },
     });
@@ -407,7 +407,7 @@ router.get("/preview-docx/:mahasiswaId", requireAuth, async (req, res) => {
         programstudi: true,
         kegiatanmahasiswa: {
           where: { status_verifikasi: "disetujui" },
-          include: { kategoriaktivitas: true, kelompokaktivitas: true },
+          include: { jenisaktivitas: true, kategoriaktivitas: true, kelompokaktivitas: true },
         },
       },
     });
@@ -480,7 +480,7 @@ router.get("/preview-pdf/:mahasiswaId", requireAuth, async (req, res) => {
         programstudi: true,
         kegiatanmahasiswa: {
           where: { status_verifikasi: "disetujui" },
-          include: { kategoriaktivitas: true, kelompokaktivitas: true },
+          include: { jenisaktivitas: true, kategoriaktivitas: true, kelompokaktivitas: true },
         },
       },
     });

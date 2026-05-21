@@ -229,6 +229,18 @@ router.delete("/notifikasi/:id", async (req, res) => {
   }
 });
 
+router.delete("/notifikasi", async (req, res) => {
+  try {
+    await prisma.notifikasi.deleteMany({
+      where: { id_user: req.user.user_id, status_baca: true },
+    });
+    return res.json({ ok: true });
+  } catch (err) {
+    console.error("DELETE /admin/notifikasi error:", err);
+    return res.status(500).json({ error: "Server error" });
+  }
+});
+
 // ════════════════════════════════════════════════════════════
 //  GET  /api/admin/profile
 //  PATCH /api/admin/profile
