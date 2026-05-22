@@ -1,7 +1,7 @@
-// frontend/src/app/admin/admin/page.js
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import Link from "next/link";
 import * as XLSX from "xlsx";
 import {
   Search, Plus, Edit2, KeyRound, ToggleLeft, ToggleRight,
@@ -22,8 +22,6 @@ import {
 
 /* ─────────────────────────────────────────
    CONSTANTS
-   Mock data sudah ada di api.js (_mockAdmins).
-   Halaman ini cukup konsumsi dari getAdmins().
 ───────────────────────────────────────── */
 const PER_PAGE = 10;
 
@@ -493,8 +491,6 @@ export default function AdminManagementPage() {
   const [modalImport, setModalImport] = useState(false);
   const { toasts, add: toast, remove } = useToast();
 
-  // ── Conflict 2 resolved: use clean loadData without isMockMode/MOCK_ADMINS
-  //    (mocks are handled inside api.js getAdmins() automatically) ──
   const loadData = useCallback(async (q = search, page = currentPage) => {
     setLoading(true);
     const result = await getAdmins({ q, page });
@@ -509,16 +505,14 @@ export default function AdminManagementPage() {
   useEffect(() => { loadData(); }, [loadData]);
 
   useEffect(() => {
-    document.title = "Manajemen Admin | SKPI";
+    document.title = "Manajemen Akun | SKPI";
   }, []);
 
-  // Debounce search
   useEffect(() => {
     const t = setTimeout(() => { setCurrentPage(1); loadData(search, 1); }, 400);
     return () => clearTimeout(t);
   }, [search]);
 
-  // ── Conflict 3 resolved: use downloadTemplate (not downloadTemplateAdmin) ──
   const downloadTemplate = () => {
     const ws = XLSX.utils.json_to_sheet([{
       "Nama": "Contoh Admin", "Username": "admin_example",
@@ -530,7 +524,6 @@ export default function AdminManagementPage() {
     toast("Template berhasil diunduh");
   };
 
-  // ── CRUD handlers ────────────────────────────────────────
   const handleAddSave = async (payload) => {
     const res = await createAdmin(payload);
     if (res.ok) {
@@ -603,7 +596,6 @@ export default function AdminManagementPage() {
       skipped > 0 ? `${skipped} dilewati (sudah ada)` : null,
       failed  > 0 ? `${failed} gagal`                  : null,
     ].filter(Boolean).join(", ");
-    // Tunggu data dimuat, baru tutup modal
     setCurrentPage(1);
     await loadData("", 1);
     setModalImport(false);
@@ -613,7 +605,6 @@ export default function AdminManagementPage() {
     );
   };
 
-  // ── Stats ────────────────────────────────────────────────
   const aktifCount = data.filter(r => r.aktif).length;
   const activeFilters = search ? 1 : 0;
 
@@ -624,31 +615,43 @@ export default function AdminManagementPage() {
     <div className={styles.page}>
       <Toast toasts={toasts} remove={remove} />
 
+      {/* HEADER + NAVIGASI TAB */}
       <div className={styles.pageHeader}>
         <div>
           <h1 className={styles.pageTitle}>Manajemen Administrator</h1>
           <p className={styles.pageSub}>Kelola akun admin, reset password, dan status akun</p>
         </div>
-        <div className={styles.headerActions}>
-          {/* ── Conflict 4 resolved: use downloadTemplate + label "Template" ── */}
-          <button className={styles.btnOutline} onClick={downloadTemplate}>
-            <Download size={15} /> Template
-          </button>
-          <button className={styles.btnOutline} onClick={() => setModalImport(true)}>
-            <Upload size={15} /> Import Excel
-          </button>
-          <button className={styles.btnPrimary} onClick={() => setModalAdd(true)}>
-            <Plus size={15} /> Tambah Admin
-          </button>
+        <div className={styles.headerNav}>
+          <span className={`${styles.navTab} ${styles.navTabActive}`}>
+            <Shield size={15} /> Admin
+          </span>
+          <Link href="/admin/mahasiswa" className={styles.navTab}>
+            <Users size={15} /> Mahasiswa
+          </Link>
         </div>
       </div>
 
+      {/* ACTION BUTTONS (Template, Import, Tambah) */}
+      <div className={styles.actionButtons}>
+        <button className={styles.btnOutline} onClick={downloadTemplate}>
+          <Download size={14} /> Template
+        </button>
+        <button className={styles.btnOutline} onClick={() => setModalImport(true)}>
+          <Upload size={14} /> Import Excel
+        </button>
+        <button className={styles.btnPrimary} onClick={() => setModalAdd(true)}>
+          <Plus size={15} /> Tambah Admin
+        </button>
+      </div>
+
+      {/* STAT CARDS */}
       <div className={styles.statsGrid}>
         <StatCard icon={UserCog} title="Total Admin" value={total} subtitle={`${aktifCount} akun aktif`} color="blue" />
         <StatCard icon={Shield} title="Admin Aktif" value={aktifCount} subtitle="dapat mengakses sistem" color="green" />
         <StatCard icon={RefreshCw} title="Nonaktif" value={total - aktifCount} subtitle="akun dibekukan" color="orange" />
       </div>
 
+      {/* TOOLBAR: search + filter + info + refresh */}
       <div className={styles.toolbar}>
         <div className={styles.searchWrap}>
           <Search size={15} className={styles.searchIcon} />
@@ -693,7 +696,7 @@ export default function AdminManagementPage() {
       )}
 
       <div className={styles.tableCard}>
-        <div className={styles.tableScroll}>   {/* ✅ BARU: wrapper scroll */}
+        <div className={styles.tableScroll}>
           <table className={styles.table}>
             <thead>
               <tr>
@@ -732,7 +735,6 @@ export default function AdminManagementPage() {
                   <td>
                     <div className={styles.nameCell}>
                       {row.avatar ? (
-                        // eslint-disable-next-line @next/next/no-img-element
                         <img
                           src={getAvatarUrl(row.avatar)}
                           alt={row.nama}
@@ -769,7 +771,7 @@ export default function AdminManagementPage() {
               ))}
             </tbody>
           </table>
-         </div>  {/* ✅ tutup wrapper */}
+        </div>
       </div>
 
       {totalPages > 1 && (

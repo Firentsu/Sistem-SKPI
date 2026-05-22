@@ -81,10 +81,31 @@
 .refreshIconBtn:disabled { opacity: 0.45; cursor: not-allowed; }
 .spinIcon { animation: spinAnim 0.75s linear infinite; }
 
+/* ── Tombol Kembali ── */
+.backBtn {
+  width: 36px;
+  height: 36px;
+  border: 1.5px solid #e8d5c4;
+  border-radius: 9px;
+  background: #fff;
+  cursor: pointer;
+  color: #9e7b5e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.15s, color 0.15s;
+  margin-right: 4px;
+}
+.backBtn:hover {
+  background: #f5ece4;
+  color: #765439;
+}
+
 /* ── Stat Cards Grid ── */
 .statsGrid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 14px;
   animation: fadeUp 0.35s ease 0.05s both;
 }
@@ -451,7 +472,7 @@
   .statsGrid { grid-template-columns: 1fr 1fr !important; }
 }
 @media (max-width: 600px) {
-  .statsGrid { grid-template-columns: 1fr !important; }
+  .statsGrid { grid-template-columns: repeat(2, 1fr) !important; }
   .stepsRow { gap: 0; }
   .stepLabel { font-size: 10px; }
   .ajukanBtn { width: 100%; justify-content: center; }

@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { useMahasiswa } from "@/context/MahasiswaContext";
 import { getMahasiswaKegiatan, getMahasiswaIcp, getPengajuanStatus, submitPengajuanSkpi } from "@/lib/api";
 import {
   Send, CheckCircle, AlertCircle, Award, Shield,
   RefreshCw, History, ClipboardCheck, FileCheck,
-  Trophy, Medal, TrendingUp,
+  Trophy, Medal, TrendingUp, ArrowLeft,
 } from "lucide-react";
 import styles from "./pengajuan.module.css";
 
@@ -26,6 +27,7 @@ function getIcpLevel(poin) {
 }
 
 export default function PengajuanPage() {
+  const router = useRouter();
   const { prodiConfig } = useMahasiswa();
 
   const [pengajuan, setPengajuan]   = useState(null);
@@ -56,8 +58,9 @@ export default function PengajuanPage() {
 
   useEffect(() => {
     document.title = "Pengajuan SKPI | Mahasiswa SKPI";
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     loadData();
-  }, [loadData]);
+  }, []); // ← dijalankan hanya sekali saat mount
 
   const kegiatanDisetujui = kegiatan.filter(k => k.status_verifikasi === "disetujui");
   const icpTotal          = icpData.total_poin ?? 0;
@@ -117,6 +120,14 @@ export default function PengajuanPage() {
       {/* ── Header ── */}
       <div className={styles.header}>
         <div className={styles.headerLeft}>
+          {/* Tombol Kembali */}
+          <button
+            className={styles.backBtn}
+            onClick={() => router.back()}
+            title="Kembali ke halaman sebelumnya"
+          >
+            <ArrowLeft size={18} />
+          </button>
           <div className={styles.headerBadge}><Send size={18}/></div>
           <div>
             <h1 className={styles.title}>Pengajuan SKPI</h1>
@@ -129,7 +140,7 @@ export default function PengajuanPage() {
       </div>
 
       {/* ── 4 Stat Cards ── */}
-      <div className={styles.statsGrid} style={{ gridTemplateColumns: "repeat(4, 1fr)" }}>
+      <div className={styles.statsGrid}>
         <div className={`${styles.statCard} ${styles.statCardGreen}`}>
           <div className={`${styles.statAccent} ${styles.accentGreen}`}/>
           <div className={`${styles.statIconWrap} ${styles.iconGreen}`}><Award size={18}/></div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import Link from "next/link";
 import * as XLSX from "xlsx";
 import {
   Search, Plus, Upload, Download, Edit2, KeyRound,
@@ -9,7 +10,7 @@ import {
   GraduationCap, Filter, MoreVertical,
   Eye, EyeOff, RefreshCw, CheckCircle2,
   TrendingUp, UserCheck, ChevronDown, Loader2,
-  FileText, PieChart as PieChartIcon
+  FileText, PieChart as PieChartIcon, Shield,
 } from "lucide-react";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import styles from "./page.module.css";
@@ -263,7 +264,6 @@ function StatCard({ icon: Icon, title, value, subtitle, color }) {
 
 /* ── PRODI DISTRIBUTION CHART ── */
 function ProdiDistBar({ data }) {
-  // Placeholder jika data kosong
   if (!data || data.length === 0) {
     return (
       <div className={styles.prodiDistCard}>
@@ -958,23 +958,33 @@ export default function MahasiswaPage() {
     <div className={styles.page}>
       <Toast toasts={toasts} remove={remove} />
 
-      {/* Header */}
+      {/* HEADER + NAVIGASI TAB */}
       <div className={styles.pageHeader}>
         <div>
           <h1 className={styles.pageTitle}>Manajemen Mahasiswa</h1>
           <p className={styles.pageSub}>Kelola data mahasiswa, reset password, dan status akun</p>
         </div>
-        <div className={styles.headerActions}>
-          <button className={styles.btnOutline} onClick={downloadTemplate}>
-            <Download size={15} /> Template
-          </button>
-          <button className={styles.btnOutline} onClick={() => setModalImport(true)}>
-            <Upload size={15} /> Import Excel
-          </button>
-          <button className={styles.btnPrimary} onClick={() => setModalAdd(true)}>
-            <Plus size={15} /> Tambah Mahasiswa
-          </button>
+        <div className={styles.headerNav}>
+          <Link href="/admin/Manajemen-Akun" className={styles.navTab}>
+            <Shield size={15} /> Admin
+          </Link>
+          <span className={`${styles.navTab} ${styles.navTabActive}`}>
+            <GraduationCap size={15} /> Mahasiswa
+          </span>
         </div>
+      </div>
+
+      {/* ACTION BUTTONS (Template, Import, Tambah) */}
+      <div className={styles.actionButtons}>
+        <button className={styles.btnOutline} onClick={downloadTemplate}>
+          <Download size={14} /> Template
+        </button>
+        <button className={styles.btnOutline} onClick={() => setModalImport(true)}>
+          <Upload size={14} /> Import Excel
+        </button>
+        <button className={styles.btnPrimary} onClick={() => setModalAdd(true)}>
+          <Plus size={15} /> Tambah Mahasiswa
+        </button>
       </div>
 
       {/* Stat Cards */}

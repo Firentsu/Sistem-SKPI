@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
 import Link from "next/link";
@@ -8,7 +9,7 @@ import {
   ChevronRight, Bell, Shield, BookOpen, Award,
   Camera, X, Check, Upload, WifiOff,
   CheckCircle2, AlertTriangle, ClipboardCheck, Send, Clock,
-  Menu, // ← tombol menu untuk mobile
+  Menu, User,// ← tombol menu untuk mobile
 } from "lucide-react";
 import styles from "./admin.module.css";
 import { useRouter, usePathname } from "next/navigation";
@@ -353,12 +354,12 @@ export default function AdminLayout({ children }) {
 
   const navItems = [
     { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { href: "/admin/admin", label: "Admin", icon: Shield },
-    { href: "/admin/mahasiswa", label: "Mahasiswa", icon: Users },
+    { href: "/admin/Manajemen-Akun", label: "Manajemen Akun", icon: Users },
     { href: "/admin/master-data", label: "Master Data", icon: Settings },
     { href: "/admin/aktivitas", label: "Aktivitas", icon: BookOpen },
     { href: "/admin/template-skpi", label: "Template SKPI", icon: FileText },
     { href: "/admin/generate-skpi", label: "Generate SKPI", icon: Award },
+    { href: "/admin/profile", label: "Profile", icon: User },
   ];
 
   async function handleLogout() {
@@ -414,7 +415,7 @@ export default function AdminLayout({ children }) {
       <aside className={`${styles.sidebar} ${sidebarOpen ? styles.open : ""}`} style={mockMode ? { marginTop: 29 } : {}}>
         <div className={styles.brand}>
           <div className={styles.logo}>
-            <Image src="/img/Logo_isb.png" alt="logo" width={80} height={35} priority style={{ width: "auto", height: "auto" }} />
+            <Image src="/img/logo_isb.png" alt="logo" width={80} height={35} priority style={{ height: "auto" }} />
           </div>
           <div className={styles.brandText}><strong>SKPI</strong><span>Admin Panel</span></div>
         </div>

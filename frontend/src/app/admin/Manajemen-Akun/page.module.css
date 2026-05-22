@@ -34,20 +34,66 @@
   margin: 0;
 }
 
-.headerActions {
+/* ── Navigasi Tab (Admin / Mahasiswa) ── */
+.headerNav {
   display: flex;
-  gap: 10px;
-  align-items: center;
-  flex-wrap: wrap;
+  gap: 6px;
+  background: #f0e8e0;
+  padding: 4px;
+  border-radius: 12px;
   flex-shrink: 0;
+  margin-left: auto;
 }
 
-/* Tombol header di layar kecil: grid 2 kolom */
+.navTab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #8a6345;
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+
+.navTab:hover {
+  background: #e8dcd2;
+  color: #5c3317;
+}
+
+.navTabActive {
+  background: #fff;
+  color: #3d2006;
+  font-weight: 700;
+  box-shadow: 0 1px 4px rgba(60, 30, 10, 0.1);
+  cursor: default;
+}
+
+.navTabActive:hover {
+  background: #fff;
+}
+
+/* ── Action Buttons Bar ── */
+.actionButtons {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 22px;
+  /* Di desktop: dorong ke kanan, sejajar di bawah tab */
+  margin-left: auto;
+  justify-content: flex-end;
+}
+
 @media (max-width: 600px) {
-  .headerActions {
+  .actionButtons {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     width: 100%;
+    margin-left: 0;
+    justify-content: stretch;
   }
 }
 
@@ -148,7 +194,6 @@
   .statsGrid { grid-template-columns: repeat(2, 1fr); }
 }
 
-/* Di bawah 480px, stat card 2 kolom agar tidak terlalu tinggi */
 @media (max-width: 480px) {
   .statsGrid { grid-template-columns: repeat(2, 1fr); }
 }

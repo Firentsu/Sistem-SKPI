@@ -10,7 +10,7 @@ import {
   Camera, X, Check, Upload, WifiOff,
   BookOpen, ClipboardList, History, BookMarked,
   CheckCircle2, XCircle, AlertTriangle, Award, Info, Clock,
-  Menu, // ← tombol hamburger mobile
+  Menu, User, // ← tambahan User
 } from "lucide-react";
 import styles from "./mahasiswa.module.css";
 import { useRouter, usePathname } from "next/navigation";
@@ -314,16 +314,15 @@ function MahasiswaLayoutInner({ children }) {
     };
   }, [updateUser]);
 
-  // Menu mahasiswa
+  // Menu mahasiswa — Profil ditambahkan di akhir
   const navItems = [
     { href: "/mahasiswa/dashboard", label: "Dashboard",   icon: LayoutDashboard },
     { href: "/mahasiswa/kegiatan",  label: "Kegiatan",    icon: BookOpen },
-    { href: "/mahasiswa/pengajuan", label: "Pengajuan",   icon: ClipboardList },
-    { href: "/mahasiswa/riwayat",   label: "Riwayat",     icon: History },
     { href: "/mahasiswa/panduan",   label: "Buku Panduan", icon: BookMarked },
+    { href: "/mahasiswa/profile",   label: "Profil",      icon: User },        // ← BARU
   ];
 
-  // Auto-poll unread count setiap 60 detik
+  // Auto-poll unread count via SSE
   useEffect(() => {
     const es = createMahasiswaSSE();
     if (!es) return;

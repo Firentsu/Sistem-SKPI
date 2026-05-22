@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMahasiswa } from "@/context/MahasiswaContext";
 import {
-  Plus, Edit2, Trash2, X,
+  Plus, Edit2, Trash2, X, Send,
   CheckCircle2, AlertCircle, FileText, Eye,
   Search, Filter, ChevronDown, RefreshCw,
 } from "lucide-react";
@@ -23,13 +23,14 @@ import {
   getTingkatPrestasi,
 } from "@/lib/masterData";
 
-// MASTER DATA
+// ═══ MASTER DATA (dari cache) ═══
 const JENIS_AKTIVITAS = getJenisAktivitas();
 const KATEGORI_OPTIONS = getKategoriAktivitas();
 const KELOMPOK_OPTIONS = getKelompokAktivitas();
 const LEVEL_OPTIONS = getLevelKegiatan();
 const TINGKAT_PRESTASI = getTingkatPrestasi();
 
+// ═══ STATUS LABEL ═══
 const STATUS_LABEL = {
   diproses: "Menunggu",
   disetujui: "Disetujui",
@@ -50,7 +51,7 @@ const KATEGORI_SKPI_MAHASISWA = [
   { no: "9", id: "skripsi", label: "Skripsi", en: "Thesis / Final Project" },
 ];
 
-// Mock data (jika mode mock aktif)
+// ═══ MOCK DATA (fallback) ═══
 const MOCK_KEGIATAN = [
   {
     id: 1, nama_id: "Workshop React.js", nama_en: "React.js Workshop",
@@ -74,7 +75,9 @@ const MOCK_KEGIATAN = [
   },
 ];
 
-// ========== TOAST ==========
+// ═══════════════════════════════════════
+// TOAST NOTIFICATION
+// ═══════════════════════════════════════
 function Toast({ message, onClose }) {
   if (!message) return null;
   return (
@@ -86,7 +89,9 @@ function Toast({ message, onClose }) {
   );
 }
 
-// ========== MODAL LIHAT BUKTI ==========
+// ═══════════════════════════════════════
+// MODAL LIHAT BUKTI
+// ═══════════════════════════════════════
 function BuktiModal({ bukti, namaKegiatan, onClose }) {
   const isImage = bukti && /\.(jpg|jpeg|png|webp|gif)$/i.test(bukti);
   const isPdf   = bukti && /\.pdf$/i.test(bukti);
@@ -143,25 +148,42 @@ function BuktiModal({ bukti, namaKegiatan, onClose }) {
   );
 }
 
-// ========== HALAMAN UTAMA ==========
+// ═══════════════════════════════════════
+// HALAMAN UTAMA — KEGIATAN SAYA
+// ═══════════════════════════════════════
 export default function KegiatanPage() {
   const router = useRouter();
   const { prodiConfig, removePendingKegiatan } = useMahasiswa();
 
-  const [kegiatan, setKegiatan] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [modalBukti, setModalBukti] = useState(null);
-  const [toast, setToast] = useState(null);
-  const [search, setSearch] = useState("");
-  const [filterStatus, setFilterStatus] = useState("Semua");
+  const [kegiatan, setKegiatan]       = useState([]);
+  const [loading, setLoading]         = useState(true);
+  const [modalBukti, setModalBukti]   = useState(null);
+  const [toast, setToast]             = useState(null);
+  const [search, setSearch]           = useState("");
+  const [filterStatus, setFilterStatus]     = useState("Semua");
   const [filterKategori, setFilterKategori] = useState("Semua");
-  const [filterOpen, setFilterOpen] = useState(false);
+  const [filterOpen, setFilterOpen]   = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
 
+  // ── Tutup dropdown saat klik di luar ──
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // ── Toast helper ──
   const showToast = (text, type = "success") => {
     setToast({ text, type });
     setTimeout(() => setToast(null), 3000);
   };
 
+  // ── Load data kegiatan ──
   const loadKegiatan = useCallback(async () => {
     setLoading(true);
     try {
@@ -203,8 +225,10 @@ export default function KegiatanPage() {
     }
   }, []);
 
+  // ── Panggil loadData saat mount ──
   useEffect(() => { loadKegiatan(); }, [loadKegiatan]);
 
+  // ── Auto‑refresh saat tab aktif kembali ──
   useEffect(() => {
     const handleFocus = () => loadKegiatan();
     window.addEventListener("focus", handleFocus);
@@ -213,6 +237,7 @@ export default function KegiatanPage() {
 
   useEffect(() => { document.title = "Kegiatan Saya | SKPI Mahasiswa"; }, []);
 
+  // ── Handle delete ──
   const handleDelete = async (idOrTmp) => {
     const item = kegiatan.find(k => k.id === idOrTmp || k.tmpId === idOrTmp);
     if (!item) return showToast("Kegiatan tidak ditemukan", "error");
@@ -241,6 +266,7 @@ export default function KegiatanPage() {
     }
   };
 
+  // ── Handle edit ──
   const handleEdit = (k) => {
     const normalizedStatus = (k.status || "").toString().toLowerCase();
     const isMenunggu = normalizedStatus === "menunggu" || normalizedStatus === "diproses";
@@ -255,6 +281,7 @@ export default function KegiatanPage() {
     router.push(`/mahasiswa/kegiatan/edit-kegiatan/${k.id}`);
   };
 
+  // ── Filter lokal ──
   const filtered = kegiatan.filter(k => {
     const q = search.toLowerCase();
     const matchSearch = k.nama_id.toLowerCase().includes(q) || k.nama_en.toLowerCase().includes(q);
@@ -267,7 +294,6 @@ export default function KegiatanPage() {
   const totalDisetujui = kegiatan.filter(k => k.status === "Disetujui").length;
   const totalMenunggu = kegiatan.filter(k => k.status === "Menunggu").length;
 
-  // Hitung kategori yang sudah terisi (disetujui)
   const kategoriTerisi = KATEGORI_SKPI_MAHASISWA.filter(k =>
     kegiatan.some(g => g.kategori_skpi === k.id && g.status === "Disetujui")
   ).length;
@@ -276,20 +302,48 @@ export default function KegiatanPage() {
     <div className={styles.container}>
       <Toast message={toast} onClose={() => setToast(null)} />
 
+      {/* ═══ HEADER + DROPDOWN ═══ */}
       <div className={styles.header}>
         <div>
           <h1 className={styles.title}>Kegiatan Saya</h1>
           <p className={styles.subtitle}>Catat aktivitas sesuai kategori SKPI — diverifikasi oleh admin</p>
         </div>
-        <Link
-          href="/mahasiswa/kegiatan/tambah-kegiatan"
-          className={styles.addBtn}
-          style={{ background: prodiConfig.primary }}
-        >
-          <Plus size={15} /> Tambah Kegiatan
-        </Link>
+
+        {/* Dropdown Gabungan: Tambah Kegiatan & Pengajuan */}
+        <div className={styles.dropdownWrap} ref={dropdownRef}>
+          <button
+            className={styles.addBtn}
+            style={{ background: prodiConfig.primary }}
+            onClick={() => setDropdownOpen(!dropdownOpen)}
+            aria-haspopup="true"
+            aria-expanded={dropdownOpen}
+          >
+            <Plus size={15} /> Tambah / Ajukan
+            <ChevronDown size={14} style={{ marginLeft: 4, transition: "transform 0.2s", transform: dropdownOpen ? "rotate(180deg)" : "none" }} />
+          </button>
+
+          {dropdownOpen && (
+            <div className={styles.dropdownMenu}>
+              <Link
+                href="/mahasiswa/kegiatan/tambah-kegiatan"
+                className={styles.dropdownItem}
+                onClick={() => setDropdownOpen(false)}
+              >
+                <Plus size={14} /> Tambah Kegiatan
+              </Link>
+              <Link
+                href="/mahasiswa/pengajuan"
+                className={styles.dropdownItem}
+                onClick={() => setDropdownOpen(false)}
+              >
+                <Send size={14} /> Pengajuan SKPI
+              </Link>
+            </div>
+          )}
+        </div>
       </div>
 
+      {/* ═══ STAT CARDS ═══ */}
       <div className={styles.statsRow}>
         <div className={styles.statCard}>
           <span className={styles.statValue} style={{ color: prodiConfig.primary }}>{kegiatan.length}</span>
@@ -312,6 +366,7 @@ export default function KegiatanPage() {
         </div>
       </div>
 
+      {/* ═══ FILTER BAR ═══ */}
       <div className={styles.filterBar}>
         <div className={styles.searchWrap}>
           <Search size={14} className={styles.searchIcon} />
@@ -337,6 +392,7 @@ export default function KegiatanPage() {
         </div>
       </div>
 
+      {/* ═══ FILTER PANEL ═══ */}
       {filterOpen && (
         <div className={styles.filterPanel}>
           <div className={styles.filterGroup}>
@@ -374,6 +430,7 @@ export default function KegiatanPage() {
         </div>
       )}
 
+      {/* ═══ TABEL ═══ */}
       <div className={styles.tableWrapper}>
         {loading ? (
           <div className={styles.loadingRow}>
@@ -386,7 +443,6 @@ export default function KegiatanPage() {
               <tr>
                 <th>Nama Kegiatan</th>
                 <th>Kategori SKPI</th>
-                <th>Jenis</th>
                 <th>Tanggal</th>
                 <th className={styles.thCenter}>Status</th>
                 <th className={styles.thCenter}>Bukti</th>
@@ -419,7 +475,6 @@ export default function KegiatanPage() {
                         </span>
                       ) : <span className={styles.naKat}>—</span>}
                     </td>
-                    <td className={styles.cellSecondary}>{k.jenis_aktivitas}</td>
                     <td className={styles.cellSecondary}>{k.tanggal}</td>
                     <td className={styles.thCenter}>
                       <span className={`${styles.statusBadge} ${styles[`status_${k.status?.toLowerCase()}`]}`}>
@@ -458,7 +513,7 @@ export default function KegiatanPage() {
                   <td colSpan={7} className={styles.emptyRow}>
                     {search || filterStatus !== "Semua" || filterKategori !== "Semua"
                       ? "Tidak ada kegiatan yang sesuai filter."
-                      : "Belum ada kegiatan. Klik \"Tambah Kegiatan\" untuk mulai."}
+                      : "Belum ada kegiatan. Klik \"Tambah / Ajukan\" untuk mulai."}
                   </td>
                 </tr>
               )}
@@ -467,6 +522,7 @@ export default function KegiatanPage() {
         )}
       </div>
 
+      {/* ═══ MODAL BUKTI ═══ */}
       {modalBukti && (
         <BuktiModal
           bukti={modalBukti.bukti}

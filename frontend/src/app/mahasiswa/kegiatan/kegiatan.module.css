@@ -919,4 +919,45 @@
   .filterBar  { flex-direction: column; align-items: stretch; }
   .toolbarRight { justify-content: flex-end; }
   .modalContainer { max-height: 95vh; }
+  .dropdownWrap { width: 100%; justify-content: flex-end;}
+}
+
+/* ── Dropdown Gabungan ── */
+.dropdownWrap {
+  position: relative;
+  display: inline-flex;
+}
+
+.dropdownMenu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  background: #fff;
+  border: 1px solid #e8d5c4;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  min-width: 180px;
+  z-index: 200;
+  overflow: hidden;
+  animation: fadeDown 0.15s ease;
+}
+
+.dropdownItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #3d2006;
+  text-decoration: none;
+  transition: background 0.1s;
+  border-bottom: 1px solid #f0e4d8;
+}
+.dropdownItem:last-child { border-bottom: none; }
+.dropdownItem:hover { background: #fdf4ec; }
+
+@keyframes fadeDown {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
