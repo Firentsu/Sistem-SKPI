@@ -479,6 +479,20 @@ export async function uploadBuktiKegiatan(id, formData) {
 // =============================================================================
 
 export async function getMahasiswaIcp() {
+  const ICP_API_URL = process.env.NEXT_PUBLIC_ICP_API_URL;
+
+  // Jika ada endpoint ICP eksternal (sistem ICP sudah di-hosting)
+  if (ICP_API_URL) {
+    try {
+      const res = await fetch(`${ICP_API_URL}/mahasiswa/icp`, {
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+      });
+      if (res.ok) return res.json();
+    } catch { /* fallback ke backend utama */ }
+  }
+
+  // Fallback: endpoint di backend SKPI (sementara)
   if (_mockMode || !API_URL) return { total_poin: 0, detail: [] };
   try {
     const res = await apiFetch("/api/mahasiswa/pengajuan/icp");

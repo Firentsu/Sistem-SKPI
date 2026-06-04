@@ -6,11 +6,11 @@ import Image from "next/image";
 import { useState, useEffect, useRef, useCallback } from "react";
 import {
   LayoutDashboard, FileText, LogOut,
-  ChevronRight, Bell,
+  ChevronRight, ChevronDown, Bell,
   Camera, X, Check, Upload, WifiOff,
-  BookOpen, ClipboardList, History, BookMarked,
+  BookOpen, ClipboardList, BookMarked,
   CheckCircle2, XCircle, AlertTriangle, Award, Info, Clock,
-  Menu, User, // ← tambahan User
+  Menu, User,
 } from "lucide-react";
 import styles from "./mahasiswa.module.css";
 import { useRouter, usePathname } from "next/navigation";
@@ -263,12 +263,21 @@ function MahasiswaLayoutInner({ children }) {
   const [avatarSrc, setAvatarSrc] = useState("/img/avatar-default.jpg");
   const [notifOpen, setNotifOpen] = useState(false);
   const [notifUnread, setNotifUnread] = useState(0);
-  const [sidebarOpen, setSidebarOpen] = useState(false); // ← untuk mobile
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const notifRef = useRef(null);
 
   const router = useRouter();
   const pathname = usePathname();
   const { user, updateUser, prodiConfig } = useMahasiswa();
+
+  // SKPI dropdown state
+  const isOnSkpiPage = pathname.startsWith("/mahasiswa/kegiatan") || pathname.startsWith("/mahasiswa/icp");
+  const [skpiOpen, setSkpiOpen] = useState(false);
+
+  // Auto-buka dropdown SKPI saat berada di halaman SKPI
+  useEffect(() => {
+    if (isOnSkpiPage) setSkpiOpen(true);
+  }, [isOnSkpiPage]);
 
   // Cek sesi mahasiswa
   useEffect(() => {
@@ -314,13 +323,24 @@ function MahasiswaLayoutInner({ children }) {
     };
   }, [updateUser]);
 
-  // Menu mahasiswa — Profil ditambahkan di akhir
+  // Menu mahasiswa dengan grup dropdown SKPI
   const navItems = [
-    { href: "/mahasiswa/dashboard", label: "Dashboard",   icon: LayoutDashboard },
-    { href: "/mahasiswa/kegiatan",  label: "Kegiatan",    icon: BookOpen },
+    { href: "/mahasiswa/dashboard", label: "Dashboard",    icon: LayoutDashboard },
+    {
+      type: "group", id: "skpi", label: "SKPI", icon: Award,
+      items: [
+        { href: "/mahasiswa/kegiatan", label: "Kegiatan", icon: BookOpen },
+        { href: "/mahasiswa/icp",      label: "ICP",      icon: ClipboardList },
+      ],
+    },
     { href: "/mahasiswa/panduan",   label: "Buku Panduan", icon: BookMarked },
-    { href: "/mahasiswa/profile",   label: "Profil",      icon: User },        // ← BARU
+    { href: "/mahasiswa/profile",   label: "Profil",       icon: User },
   ];
+
+  // Semua item rata (untuk breadcrumb)
+  const allNavFlat = navItems.flatMap(item =>
+    item.type === "group" ? item.items : [item]
+  );
 
   // Auto-poll unread count via SSE
   useEffect(() => {
@@ -383,7 +403,7 @@ function MahasiswaLayoutInner({ children }) {
     setShowEditor(false);
   }, [updateUser]);
 
-  const activeNav = navItems.find(n => pathname.startsWith(n.href));
+  const activeNav = allNavFlat.find(n => pathname.startsWith(n.href));
   const breadcrumb = activeNav ? activeNav.label : "Dashboard";
 
   if (checking) {
@@ -434,6 +454,48 @@ function MahasiswaLayoutInner({ children }) {
         <nav className={styles.nav}>
           <p className={styles.navSection}>MENU</p>
           {navItems.map((item) => {
+            if (item.type === "group") {
+              const GroupIcon = item.icon;
+              const isGroupActive = item.items.some(sub => pathname.startsWith(sub.href));
+              return (
+                <div key={item.id} className={styles.navGroup}>
+                  <button
+                    className={`${styles.navGroupBtn} ${isGroupActive ? styles.navGroupBtnActive : ""}`}
+                    onClick={() => setSkpiOpen(o => !o)}
+                  >
+                    {isGroupActive && <span className={styles.activeAccent} style={{ background: prodiConfig.primary }} />}
+                    <span className={styles.iconWrap}><GroupIcon size={17} /></span>
+                    <span className={styles.navLabel}>{item.label}</span>
+                    <ChevronDown
+                      size={13}
+                      className={styles.groupChevron}
+                      style={{ transform: skpiOpen ? "rotate(180deg)" : "none" }}
+                    />
+                  </button>
+                  {skpiOpen && (
+                    <div className={styles.navSubItems}>
+                      {item.items.map(sub => {
+                        const SubIcon = sub.icon;
+                        const isSubActive = pathname.startsWith(sub.href);
+                        return (
+                          <Link
+                            key={sub.href}
+                            href={sub.href}
+                            className={`${styles.navSubItem} ${isSubActive ? styles.navSubItemActive : ""}`}
+                            onClick={() => setSidebarOpen(false)}
+                          >
+                            {isSubActive && <span className={styles.activeAccent} style={{ background: prodiConfig.primary }} />}
+                            <span className={styles.iconWrap}><SubIcon size={15} /></span>
+                            <span className={styles.navLabel}>{sub.label}</span>
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            }
+
             const Icon = item.icon;
             const isActive = pathname.startsWith(item.href);
             return (
@@ -441,7 +503,7 @@ function MahasiswaLayoutInner({ children }) {
                 key={item.href}
                 href={item.href}
                 className={`${styles.navItem} ${isActive ? styles.navItemActive : ""}`}
-                onClick={() => setSidebarOpen(false)} // tutup sidebar setelah klik link
+                onClick={() => setSidebarOpen(false)}
               >
                 {isActive && <span className={styles.activeAccent} style={{ background: prodiConfig.primary }} />}
                 <span className={styles.iconWrap}><Icon size={17} /></span>

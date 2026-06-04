@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation";
 import {
   User, Mail, Lock, Eye, EyeOff, Camera, Check, X, Upload,
   GraduationCap, Clock, Loader2, KeyRound, AtSign, Save,
-  CheckCircle2, AlertCircle, ArrowLeft, ImageIcon, Hash, BookOpen,
-  Trash2, FileText, MapPin, Calendar,
+  CheckCircle2, AlertCircle, Hash, BookOpen,
+  Trash2, Award, TrendingUp, Shield, Sparkles,
 } from "lucide-react";
 import styles from "./profile.module.css";
 import { useMahasiswa } from "@/context/MahasiswaContext";
@@ -17,7 +17,9 @@ import {
   updateMahasiswaPassword,
   getAvatarUrl,
   deleteMahasiswaAvatar,
-  updateMahasiswaBiodata,
+  getMahasiswaKegiatan,
+  getMahasiswaIcp,
+  getPengajuanStatus,
 } from "@/lib/api";
 import AvatarCropModal from "@/components/AvatarCropModal";
 
@@ -100,60 +102,40 @@ function AvatarViewModal({ src, name, prodi, onClose, onEdit }) {
 
   return (
     <div className={styles.modalOverlay} onClick={onClose}>
-      <div onClick={(e) => e.stopPropagation()} style={{
-        background: "#1a0e06", borderRadius: 20, padding: "24px 24px 20px",
-        display: "flex", flexDirection: "column", alignItems: "center", gap: 18,
-        maxWidth: 360, width: "100%",
-        boxShadow: "0 32px 80px rgba(0,0,0,0.55)",
-        border: "1px solid rgba(253,230,138,0.12)",
-        animation: "slideUp 0.22s cubic-bezier(.4,0,.2,1)",
-      }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <div style={{
-              width: 28, height: 28, background: "rgba(253,230,138,0.1)", borderRadius: 8,
-              display: "flex", alignItems: "center", justifyContent: "center",
-            }}>
-              <ImageIcon size={14} color="#fde68a" />
-            </div>
-            <span style={{ color: "#fde68a", fontWeight: 800, fontSize: 14 }}>Foto Profil</span>
+      <div onClick={(e) => e.stopPropagation()} className={styles.viewerModal}>
+        <div className={styles.viewerHeader}>
+          <div className={styles.viewerHeaderLeft}>
+            <div className={styles.viewerHeaderIcon}><Camera size={14} /></div>
+            <span>Foto Profil</span>
           </div>
-          <button onClick={onClose} style={{
-            background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)",
-            borderRadius: 7, width: 28, height: 28, cursor: "pointer",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            color: "rgba(253,230,138,0.5)",
-          }} aria-label="Tutup"><X size={14} /></button>
+          <button onClick={onClose} className={styles.viewerClose} aria-label="Tutup"><X size={14} /></button>
         </div>
-
-        <div style={{ position: "relative" }}>
-          <div style={{
-            position: "absolute", inset: -6, borderRadius: "50%",
-            background: "linear-gradient(135deg,rgba(253,230,138,0.25),transparent)",
-            filter: "blur(8px)",
-          }} />
+        <div className={styles.viewerImgWrap}>
+          <div className={styles.viewerImgGlow} />
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={src} alt={name} style={{
-            width: 190, height: 190, borderRadius: "50%", objectFit: "cover",
-            border: "3px solid rgba(253,230,138,0.4)",
-            boxShadow: "0 12px 40px rgba(0,0,0,0.5)", display: "block", position: "relative",
-          }} />
+          <img src={src} alt={name} className={styles.viewerImg} />
         </div>
-
-        <div style={{ textAlign: "center" }}>
-          <p style={{ margin: 0, color: "#fde68a", fontWeight: 800, fontSize: 16 }}>{name}</p>
-          <p style={{ margin: "5px 0 0", color: "#a07858", fontSize: 12 }}>{prodi} · Institut Shanti Bhuana</p>
+        <div className={styles.viewerInfo}>
+          <p className={styles.viewerName}>{name}</p>
+          <p className={styles.viewerProdi}>{prodi} · Institut Shanti Bhuana</p>
         </div>
-
-        <div style={{ display: "flex", gap: 8, width: "100%" }}>
-          <button className={styles.modalBtnCancel} onClick={onClose} style={{ flex: 1 }}>Tutup</button>
-          <button className={styles.modalBtnSave} onClick={onEdit} style={{ flex: 1, justifyContent: "center" }}>
-            <Camera size={14} /> Ganti Foto
-          </button>
+        <div className={styles.viewerActions}>
+          <button className={styles.modalBtnCancel} onClick={onClose}>Tutup</button>
+          <button className={styles.modalBtnSave} onClick={onEdit}><Camera size={14} /> Ganti Foto</button>
         </div>
       </div>
     </div>
   );
+}
+
+/* ─────────────────────────────────────────
+   ICP Level helper
+───────────────────────────────────────── */
+function getIcpLevel(poin) {
+  if (poin >= 200) return { label: "Gold",   color: "#ca8a04", bg: "#fef9c3" };
+  if (poin >= 150) return { label: "Silver", color: "#2563eb", bg: "#dbeafe" };
+  if (poin >= 100) return { label: "Bronze", color: "#92400e", bg: "#fef3c7" };
+  return           { label: "—",     color: "#9c7a5e",  bg: "#f5ede4" };
 }
 
 /* ─────────────────────────────────────────
@@ -164,18 +146,23 @@ export default function MahasiswaProfilePage() {
   const { user, updateUser } = useMahasiswa();
   const { toast, show: showToast, hide: hideToast } = useToast();
 
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading]         = useState(true);
   const [profileData, setProfileData] = useState(null);
 
+  /* ── Stats ── */
+  const [stats, setStats] = useState({ total: 0, disetujui: 0, icpPoin: 0, statusSkpi: null });
+  const [statsLoading, setStatsLoading] = useState(true);
+
   /* ── Avatar ── */
-  const [avatarSrc,       setAvatarSrc]       = useState("/img/avatar.jpg");
-  const [showViewer,      setShowViewer]       = useState(false);
-  const [showUploader,    setShowUploader]     = useState(false);
-  const [avatarCropFile,  setAvatarCropFile]   = useState(null);  // file waiting to be cropped
-  const [avatarFile,      setAvatarFile]       = useState(null);  // cropped File/Blob ready to upload
-  const [avatarPreview,   setAvatarPreview]    = useState(null);
-  const [uploadingAvatar, setUploadingAvatar]  = useState(false);
-  const [draggingAvatar,  setDraggingAvatar]   = useState(false);
+  const [avatarSrc,      setAvatarSrc]      = useState("/img/avatar.jpg");
+  const [showViewer,     setShowViewer]     = useState(false);
+  const [showUploader,   setShowUploader]   = useState(false);
+  const [avatarCropFile, setAvatarCropFile] = useState(null);
+  const [avatarFile,     setAvatarFile]     = useState(null);
+  const [avatarPreview,  setAvatarPreview]  = useState(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [draggingAvatar,  setDraggingAvatar]  = useState(false);
+  const [deletingAvatar,  setDeletingAvatar]  = useState(false);
   const avatarInputRef = useRef(null);
 
   /* ── Email ── */
@@ -191,17 +178,7 @@ export default function MahasiswaProfilePage() {
   const [showPwCon, setShowPwCon] = useState(false);
   const [pwSaving,  setPwSaving]  = useState(false);
 
-  /* ── Hapus Foto ── */
-  const [deletingAvatar, setDeletingAvatar] = useState(false);
-
-  /* ── Biodata SKPI ── */
-  const [biodata, setBiodata] = useState({
-    tempat_lahir: "", tgl_lahir: "", tanggal_masuk: "",
-    tanggal_lulus: "", nomor_ijazah: "", gelar: "", gelar_eng: "",
-  });
-  const [biodataSaving, setBiodataSaving] = useState(false);
-
-  /* ── Load data ── */
+  /* ── Load profile ── */
   useEffect(() => {
     (async () => {
       try {
@@ -211,15 +188,6 @@ export default function MahasiswaProfilePage() {
         setEmail(data.email ?? user?.email ?? "");
         const foto = data.avatar ?? data.foto_profil ?? data.foto;
         if (foto) setAvatarSrc(getAvatarUrl(foto));
-        setBiodata({
-          tempat_lahir:  data.tempat_lahir  ?? "",
-          tgl_lahir:     data.tgl_lahir     ? data.tgl_lahir.slice(0, 10)     : "",
-          tanggal_masuk: data.tanggal_masuk ? data.tanggal_masuk.slice(0, 10) : "",
-          tanggal_lulus: data.tanggal_lulus ? data.tanggal_lulus.slice(0, 10) : "",
-          nomor_ijazah:  data.nomor_ijazah  ?? "",
-          gelar:         data.gelar         ?? "",
-          gelar_eng:     data.gelar_eng     ?? "",
-        });
       } catch {
         setEmail(user?.email ?? "");
       } finally {
@@ -227,6 +195,21 @@ export default function MahasiswaProfilePage() {
       }
     })();
   // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  /* ── Load stats ── */
+  useEffect(() => {
+    Promise.all([getMahasiswaKegiatan(), getMahasiswaIcp(), getPengajuanStatus()])
+      .then(([kegiatan, icp, pengajuan]) => {
+        const rows = kegiatan?.rows ?? [];
+        setStats({
+          total:      rows.length,
+          disetujui:  rows.filter(k => k.status_verifikasi === "disetujui").length,
+          icpPoin:    icp?.total_poin ?? 0,
+          statusSkpi: pengajuan?.status_pengajuan ?? null,
+        });
+      })
+      .finally(() => setStatsLoading(false));
   }, []);
 
   /* ── Avatar helpers ── */
@@ -267,8 +250,7 @@ export default function MahasiswaProfilePage() {
       form.append("avatar", avatarFile, avatarFile.name);
       const result = await uploadMahasiswaAvatar(form);
       if (!result.ok) {
-        showToast(result.data?.error ?? "Gagal mengunggah foto.", "error");
-        return;
+        showToast(result.data?.error ?? "Gagal mengunggah foto.", "error"); return;
       }
       const newUrl = getAvatarUrl(result.data.avatar);
       setAvatarSrc(newUrl);
@@ -285,6 +267,23 @@ export default function MahasiswaProfilePage() {
   }
 
   useEffect(() => () => { if (avatarPreview) URL.revokeObjectURL(avatarPreview); }, [avatarPreview]);
+
+  async function handleDeleteAvatar() {
+    if (deletingAvatar) return;
+    setDeletingAvatar(true);
+    try {
+      const { ok, data } = await deleteMahasiswaAvatar();
+      if (!ok) { showToast(data?.error ?? "Gagal menghapus foto.", "error"); return; }
+      setAvatarSrc("/img/avatar.jpg");
+      updateUser({ foto: "/img/avatar.jpg" });
+      window.dispatchEvent(new CustomEvent("avatar:updated", { detail: { avatar: "/img/avatar.jpg" } }));
+      showToast("Foto profil berhasil dihapus.");
+    } catch {
+      showToast("Gagal menghapus foto. Coba lagi.", "error");
+    } finally {
+      setDeletingAvatar(false);
+    }
+  }
 
   /* ── Email save ── */
   async function handleEmailSave(e) {
@@ -329,55 +328,21 @@ export default function MahasiswaProfilePage() {
     }
   }
 
-  /* ── Biodata SKPI save ── */
-  async function handleBiodataSave(e) {
-    e.preventDefault();
-    if (biodataSaving) return;
-    setBiodataSaving(true);
-    try {
-      const payload = {};
-      if (biodata.tempat_lahir  !== undefined) payload.tempat_lahir  = biodata.tempat_lahir;
-      if (biodata.tgl_lahir     !== undefined) payload.tgl_lahir     = biodata.tgl_lahir     || null;
-      if (biodata.tanggal_masuk !== undefined) payload.tanggal_masuk = biodata.tanggal_masuk || null;
-      if (biodata.tanggal_lulus !== undefined) payload.tanggal_lulus = biodata.tanggal_lulus || null;
-      if (biodata.nomor_ijazah  !== undefined) payload.nomor_ijazah  = biodata.nomor_ijazah;
-      if (biodata.gelar         !== undefined) payload.gelar         = biodata.gelar;
-      if (biodata.gelar_eng     !== undefined) payload.gelar_eng     = biodata.gelar_eng;
-      const { ok, data } = await updateMahasiswaBiodata(payload);
-      if (!ok) { showToast(data?.error ?? "Gagal menyimpan biodata.", "error"); return; }
-      showToast("Biodata SKPI berhasil disimpan.");
-    } catch {
-      showToast("Gagal menyimpan biodata. Coba lagi.", "error");
-    } finally {
-      setBiodataSaving(false);
-    }
-  }
-
-  /* ── Hapus Foto ── */
-  async function handleDeleteAvatar() {
-    if (deletingAvatar) return;
-    setDeletingAvatar(true);
-    try {
-      const { ok, data } = await deleteMahasiswaAvatar();
-      if (!ok) { showToast(data?.error ?? "Gagal menghapus foto.", "error"); return; }
-      setAvatarSrc("/img/avatar.jpg");
-      updateUser({ foto: "/img/avatar.jpg" });
-      window.dispatchEvent(new CustomEvent("avatar:updated", { detail: { avatar: "/img/avatar.jpg" } }));
-      showToast("Foto profil berhasil dihapus.");
-    } catch {
-      showToast("Gagal menghapus foto. Coba lagi.", "error");
-    } finally {
-      setDeletingAvatar(false);
-    }
-  }
-
   const pwMatch    = pwConfirm && pwNew === pwConfirm;
   const pwMismatch = pwConfirm && pwNew !== pwConfirm;
 
-  const displayName     = profileData?.nama      ?? user?.nama      ?? "Mahasiswa";
-  const displayNim      = profileData?.nim       ?? user?.nim       ?? "-";
-  const displayProdi    = profileData?.prodi     ?? user?.prodi     ?? "-";
-  const displayAngkatan = profileData?.angkatan  ?? user?.angkatan  ?? "-";
+  const displayName     = profileData?.nama     ?? user?.nama     ?? "Mahasiswa";
+  const displayNim      = profileData?.nim      ?? user?.nim      ?? "-";
+  const displayProdi    = profileData?.prodi    ?? user?.prodi    ?? "-";
+  const displayAngkatan = profileData?.angkatan ?? user?.angkatan ?? "-";
+  const icpLevel = getIcpLevel(stats.icpPoin);
+
+  const skpiStatusLabel = {
+    menunggu:  { text: "Diproses",  color: "#b45309", bg: "#fff7ed" },
+    disetujui: { text: "Selesai",   color: "#047857", bg: "#f0fdf4" },
+    ditolak:   { text: "Ditolak",   color: "#b91c1c", bg: "#fff5f5" },
+  };
+  const skpiStatus = stats.statusSkpi ? (skpiStatusLabel[stats.statusSkpi] ?? { text: stats.statusSkpi, color: "#765439", bg: "#fdf4ec" }) : { text: "Belum Diajukan", color: "#765439", bg: "#fdf4ec" };
 
   if (loading) {
     return (
@@ -402,9 +367,7 @@ export default function MahasiswaProfilePage() {
 
       {showViewer && (
         <AvatarViewModal
-          src={avatarSrc}
-          name={displayName}
-          prodi={displayProdi}
+          src={avatarSrc} name={displayName} prodi={displayProdi}
           onClose={() => setShowViewer(false)}
           onEdit={() => { setShowViewer(false); setShowUploader(true); }}
         />
@@ -412,355 +375,259 @@ export default function MahasiswaProfilePage() {
 
       <div className={styles.page}>
 
-        {/* ── Header ── */}
-        <div className={styles.pageHeader}>
-          <div className={styles.pageTitleRow}>
-            <button
-              onClick={() => router.back()}
-              style={{
-                background: "none", border: "1.5px solid #e8d5c4", borderRadius: 10,
-                width: 38, height: 38, display: "flex", alignItems: "center",
-                justifyContent: "center", cursor: "pointer", color: "#9e7b5e",
-                flexShrink: 0, transition: "all 0.15s",
-              }}
-              onMouseEnter={e => { e.currentTarget.style.background = "#f5ece4"; e.currentTarget.style.color = "#765439"; }}
-              onMouseLeave={e => { e.currentTarget.style.background = "none"; e.currentTarget.style.color = "#9e7b5e"; }}
-              aria-label="Kembali"
-            ><ArrowLeft size={16} /></button>
-            <div className={styles.pageTitleIcon}><User size={22} /></div>
-            <div>
-              <h1 className={styles.pageTitle}>Profil Saya</h1>
-              <p className={styles.pageSubtitle}>Kelola informasi akun dan keamanan Anda</p>
+        {/* ══════════════════════════════
+            HERO CARD
+        ══════════════════════════════ */}
+        <div className={styles.heroCard}>
+          {/* Decorative bg shapes */}
+          <div className={styles.heroBg1} />
+          <div className={styles.heroBg2} />
+          <div className={styles.heroBg3} />
+
+          <div className={styles.heroContent}>
+            {/* Avatar */}
+            <div className={styles.heroAvatarWrap}>
+              <div className={styles.heroAvatarRing} onClick={() => setShowViewer(true)} title="Klik untuk melihat foto penuh">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={avatarSrc} alt="Foto Profil" className={styles.heroAvatar}
+                  onError={e => { e.currentTarget.onerror = null; e.currentTarget.src = "/img/avatar.jpg"; }}
+                />
+              </div>
+              <button className={styles.heroCameraBtn} onClick={() => setShowUploader(v => !v)} aria-label="Ganti foto">
+                <Camera size={14} />
+              </button>
             </div>
+
+            {/* Info */}
+            <div className={styles.heroInfo}>
+              <div className={styles.heroBadgeRow}>
+                <span className={styles.heroBadge}><Sparkles size={10} /> Mahasiswa Aktif</span>
+                <span className={styles.heroBadge}>Angkatan {displayAngkatan}</span>
+              </div>
+              <h1 className={styles.heroName}>{displayName}</h1>
+              <div className={styles.heroMeta}>
+                <span className={styles.heroMetaItem}>
+                  <GraduationCap size={13} /> {displayProdi}
+                </span>
+                <span className={styles.heroMetaDivider}>·</span>
+                <span className={styles.heroMetaItem}>
+                  <Hash size={13} /> {displayNim}
+                </span>
+                <span className={styles.heroMetaDivider}>·</span>
+                <span className={styles.heroMetaItem}>
+                  <AtSign size={13} /> {email || "—"}
+                </span>
+              </div>
+            </div>
+
+            {/* Stats */}
+            <div className={styles.heroStatsWrap}>
+              <div className={styles.heroStatItem}>
+                <span className={styles.heroStatNum}>{statsLoading ? "—" : stats.total}</span>
+                <span className={styles.heroStatLabel}>Kegiatan</span>
+              </div>
+              <div className={styles.heroStatDivider} />
+              <div className={styles.heroStatItem}>
+                <span className={styles.heroStatNum} style={{ color: "#4ade80" }}>{statsLoading ? "—" : stats.disetujui}</span>
+                <span className={styles.heroStatLabel}>Disetujui</span>
+              </div>
+              <div className={styles.heroStatDivider} />
+              <div className={styles.heroStatItem}>
+                <span className={styles.heroStatNum} style={{ color: icpLevel.color !== "#9c7a5e" ? "#fde68a" : "rgba(253,230,138,0.6)" }}>
+                  {statsLoading ? "—" : stats.icpPoin}
+                </span>
+                <span className={styles.heroStatLabel}>Poin ICP</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Upload panel */}
+          {showUploader && (
+            <div className={styles.heroUploadPanel}>
+              {!avatarFile ? (
+                <>
+                  <div
+                    className={`${styles.heroDrop} ${draggingAvatar ? styles.heroDropActive : ""}`}
+                    onDragOver={(e) => { e.preventDefault(); setDraggingAvatar(true); }}
+                    onDragLeave={() => setDraggingAvatar(false)}
+                    onDrop={(e) => { e.preventDefault(); setDraggingAvatar(false); const f = e.dataTransfer.files?.[0]; if (f) processAvatarFile(f); }}
+                    onClick={() => avatarInputRef.current?.click()}
+                    role="button" tabIndex={0}
+                    onKeyDown={(e) => e.key === "Enter" && avatarInputRef.current?.click()}
+                  >
+                    <div className={styles.heroDropIcon}><Upload size={18} /></div>
+                    <span className={styles.heroDropText}>{draggingAvatar ? "Lepaskan di sini…" : "Klik atau seret foto ke sini"}</span>
+                    <span className={styles.heroDropHint}>JPG, PNG, WebP, GIF · maks. 2 MB · dipangkas otomatis</span>
+                  </div>
+                  <input ref={avatarInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif"
+                    style={{ display: "none" }}
+                    onChange={(e) => { const f = e.target.files?.[0]; if (f) processAvatarFile(f); }} />
+                  <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
+                    <button className={styles.heroUploadCancel} onClick={() => setShowUploader(false)}>Batal</button>
+                    {avatarSrc !== "/img/avatar.jpg" && (
+                      <button className={styles.heroUploadDelete} disabled={deletingAvatar} onClick={handleDeleteAvatar}>
+                        {deletingAvatar ? <><Loader2 size={12} className={styles.spin} /> Menghapus…</> : <><Trash2 size={12} /> Hapus Foto</>}
+                      </button>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <div className={styles.heroPreviewWrap}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={avatarPreview} alt="preview" className={styles.heroPreviewImg} />
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <button className={styles.heroUploadSave} onClick={handleAvatarUpload} disabled={uploadingAvatar}>
+                      {uploadingAvatar ? <><Loader2 size={13} className={styles.spin} /> Mengunggah…</> : <><Upload size={13} /> Simpan Foto</>}
+                    </button>
+                    <button className={styles.heroUploadCancel} onClick={cancelAvatarSelect} disabled={uploadingAvatar}>Batal</button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* ══════════════════════════════
+            STATS ROW
+        ══════════════════════════════ */}
+        <div className={styles.statsRow}>
+          {/* Total Kegiatan */}
+          <div className={styles.statCard}>
+            <div className={styles.statIconWrap} style={{ background: "#fdf4ec", color: "#765439" }}>
+              <BookOpen size={20} />
+            </div>
+            <div className={styles.statBody}>
+              <span className={styles.statNum}>{statsLoading ? <Loader2 size={16} className={styles.spin} /> : stats.total}</span>
+              <span className={styles.statLabel}>Total Kegiatan</span>
+            </div>
+            <div className={styles.statAccent} style={{ background: "#765439" }} />
+          </div>
+
+          {/* Kegiatan Disetujui */}
+          <div className={styles.statCard}>
+            <div className={styles.statIconWrap} style={{ background: "#f0fdf4", color: "#047857" }}>
+              <CheckCircle2 size={20} />
+            </div>
+            <div className={styles.statBody}>
+              <span className={styles.statNum} style={{ color: "#047857" }}>{statsLoading ? <Loader2 size={16} className={styles.spin} /> : stats.disetujui}</span>
+              <span className={styles.statLabel}>Kegiatan Disetujui</span>
+            </div>
+            <div className={styles.statAccent} style={{ background: "#047857" }} />
+          </div>
+
+          {/* ICP Poin */}
+          <div className={styles.statCard}>
+            <div className={styles.statIconWrap} style={{ background: icpLevel.bg, color: icpLevel.color }}>
+              <TrendingUp size={20} />
+            </div>
+            <div className={styles.statBody}>
+              <span className={styles.statNum} style={{ color: icpLevel.color }}>
+                {statsLoading ? <Loader2 size={16} className={styles.spin} /> : (
+                  <>{stats.icpPoin} <span style={{ fontSize: 11, fontWeight: 600, padding: "1px 7px", borderRadius: 20, background: icpLevel.bg, marginLeft: 4 }}>{icpLevel.label}</span></>
+                )}
+              </span>
+              <span className={styles.statLabel}>Poin ICP</span>
+            </div>
+            <div className={styles.statAccent} style={{ background: icpLevel.color }} />
+          </div>
+
+          {/* Status SKPI */}
+          <div className={styles.statCard}>
+            <div className={styles.statIconWrap} style={{ background: skpiStatus.bg, color: skpiStatus.color }}>
+              <Shield size={20} />
+            </div>
+            <div className={styles.statBody}>
+              <span className={styles.statNum} style={{ color: skpiStatus.color, fontSize: 15 }}>
+                {statsLoading ? <Loader2 size={16} className={styles.spin} /> : skpiStatus.text}
+              </span>
+              <span className={styles.statLabel}>Status SKPI</span>
+            </div>
+            <div className={styles.statAccent} style={{ background: skpiStatus.color }} />
           </div>
         </div>
 
-        <div className={styles.grid}>
+        {/* ══════════════════════════════
+            CARDS GRID
+        ══════════════════════════════ */}
+        <div className={styles.cardsGrid}>
 
-          {/* LEFT — Avatar Card */}
-          <div className={styles.avatarCard}>
-            <div className={styles.avatarSection}>
-              <div className={styles.avatarBgCircle1} />
-              <div className={styles.avatarBgCircle2} />
-              <div className={styles.avatarRing}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={avatarSrc} alt="Foto Profil" className={styles.avatarImg}
-                  onError={e => { e.currentTarget.onerror = null; e.currentTarget.src = "/img/avatar.jpg"; }}
-                  onClick={() => setShowViewer(true)} style={{ cursor: "pointer" }}
-                  title="Klik untuk melihat foto penuh"
-                />
-                <button className={styles.cameraBtn}
-                  onClick={() => setShowUploader((v) => !v)}
-                  aria-label="Ganti foto profil">
-                  <Camera size={14} />
-                </button>
+          {/* ── Data Akademik ── */}
+          <div className={styles.formCard}>
+            <div className={styles.formCardHeader}>
+              <div className={styles.formCardIcon}><GraduationCap size={20} /></div>
+              <div className={styles.formCardHeaderText}>
+                <h2 className={styles.formCardTitle}>Data Akademik</h2>
+                <p className={styles.formCardSub}>Informasi akademik — hubungi admin untuk perubahan</p>
               </div>
-              <p className={styles.avatarName}>{displayName}</p>
-              <div className={styles.avatarRole}><GraduationCap size={11} /> {displayProdi}</div>
-              <p className={styles.avatarUsername}>{displayNim}</p>
+              <span className={styles.readOnlyBadge}>Read-only</span>
             </div>
 
-            {/* Upload Panel */}
-            {showUploader && (
-              <div className={styles.uploadArea}>
-                {!avatarFile ? (
-                  <>
-                    <div
-                      onDragOver={(e) => { e.preventDefault(); setDraggingAvatar(true); }}
-                      onDragLeave={() => setDraggingAvatar(false)}
-                      onDrop={(e) => {
-                        e.preventDefault(); setDraggingAvatar(false);
-                        const f = e.dataTransfer.files?.[0]; if (f) processAvatarFile(f);
-                      }}
-                      onClick={() => avatarInputRef.current?.click()}
-                      role="button" tabIndex={0}
-                      onKeyDown={(e) => e.key === "Enter" && avatarInputRef.current?.click()}
-                      style={{
-                        border: `1.5px dashed ${draggingAvatar ? "#765439" : "#d5bfaf"}`,
-                        borderRadius: 12, padding: "18px 12px",
-                        display: "flex", flexDirection: "column", alignItems: "center", gap: 6,
-                        cursor: "pointer", background: draggingAvatar ? "#fdf3ec" : "#fdf8f4",
-                        transition: "all 0.2s", width: "100%", boxSizing: "border-box",
-                      }}
-                    >
-                      <div style={{
-                        width: 38, height: 38, background: "linear-gradient(135deg,#fde8cc,#f5d0a0)",
-                        borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center",
-                      }}>
-                        <Upload size={18} color="#765439" />
-                      </div>
-                      <span style={{ fontSize: 13, color: "#5c3317", fontWeight: 600, textAlign: "center" }}>
-                        {draggingAvatar ? "Lepaskan di sini…" : "Klik atau seret foto"}
-                      </span>
-                      <span style={{ fontSize: 11, color: "#b09880" }}>JPG, PNG, WebP, GIF · maks. 2 MB · akan dipangkas otomatis</span>
-                    </div>
-                    <input ref={avatarInputRef} type="file"
-                      accept="image/jpeg,image/png,image/webp,image/gif" style={{ display: "none" }}
-                      onChange={(e) => { const f = e.target.files?.[0]; if (f) processAvatarFile(f); }} />
-                    <div style={{ display: "flex", gap: 8, width: "100%" }}>
-                      <button
-                        style={{ flex: 1, background: "none", border: "none", cursor: "pointer", color: "#b09880", fontSize: 12, marginTop: 2 }}
-                        onClick={() => setShowUploader(false)}>
-                        Batal
-                      </button>
-                      {avatarSrc !== "/img/avatar.jpg" && (
-                        <button
-                          disabled={deletingAvatar}
-                          onClick={handleDeleteAvatar}
-                          style={{
-                            flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
-                            background: "none", border: "1.5px solid #fecaca", borderRadius: 8,
-                            cursor: deletingAvatar ? "not-allowed" : "pointer",
-                            color: "#dc2626", fontSize: 12, fontWeight: 600, padding: "5px 10px",
-                            opacity: deletingAvatar ? 0.6 : 1, marginTop: 2,
-                          }}>
-                          {deletingAvatar
-                            ? <><Loader2 size={12} className={styles.spin} /> Menghapus…</>
-                            : <><Trash2 size={12} /> Hapus Foto</>}
-                        </button>
-                      )}
-                    </div>
-                  </>
-                ) : (
-                  <div className={styles.fileSelected}>
-                    <div style={{ display: "flex", justifyContent: "center", marginBottom: 4 }}>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={avatarPreview} alt="preview" style={{
-                        width: 80, height: 80, borderRadius: "50%", objectFit: "cover",
-                        border: "2.5px solid #e8d5c4", boxShadow: "0 4px 14px rgba(118,84,57,0.18)",
-                      }} />
-                    </div>
-                    <div className={styles.fileInfo}>
-                      <span>{avatarFile.name}</span>
-                      <span className={styles.fileSize}>{(avatarFile.size / 1024).toFixed(0)} KB</span>
-                    </div>
-                    <div className={styles.uploadActions}>
-                      <button className={styles.btnUpload} onClick={handleAvatarUpload} disabled={uploadingAvatar}>
-                        {uploadingAvatar
-                          ? <><Loader2 size={14} className={styles.spin} /> Mengunggah…</>
-                          : <><Upload size={14} /> Simpan Foto</>}
-                      </button>
-                      <button className={styles.btnCancel} onClick={cancelAvatarSelect} disabled={uploadingAvatar}>
-                        Batal
-                      </button>
-                    </div>
-                  </div>
-                )}
+            <div className={styles.akademikGrid}>
+              <div className={styles.akademikField}>
+                <div className={styles.akademikFieldIcon}><User size={16} /></div>
+                <div className={styles.akademikFieldBody}>
+                  <span className={styles.akademikFieldLabel}>Nama Lengkap</span>
+                  <span className={styles.akademikFieldValue}>{displayName}</span>
+                </div>
               </div>
-            )}
+              <div className={styles.akademikField}>
+                <div className={styles.akademikFieldIcon}><Hash size={16} /></div>
+                <div className={styles.akademikFieldBody}>
+                  <span className={styles.akademikFieldLabel}>NIM</span>
+                  <span className={styles.akademikFieldValue}>{displayNim}</span>
+                </div>
+              </div>
+              <div className={styles.akademikField}>
+                <div className={styles.akademikFieldIcon}><BookOpen size={16} /></div>
+                <div className={styles.akademikFieldBody}>
+                  <span className={styles.akademikFieldLabel}>Program Studi</span>
+                  <span className={styles.akademikFieldValue}>{displayProdi}</span>
+                </div>
+              </div>
+              <div className={styles.akademikField}>
+                <div className={styles.akademikFieldIcon}><Clock size={16} /></div>
+                <div className={styles.akademikFieldBody}>
+                  <span className={styles.akademikFieldLabel}>Angkatan</span>
+                  <span className={styles.akademikFieldValue}>{displayAngkatan}</span>
+                </div>
+              </div>
+              <div className={styles.akademikField}>
+                <div className={styles.akademikFieldIcon}><AtSign size={16} /></div>
+                <div className={styles.akademikFieldBody}>
+                  <span className={styles.akademikFieldLabel}>Email</span>
+                  <span className={styles.akademikFieldValue}>{email || "—"}</span>
+                </div>
+              </div>
+              <div className={styles.akademikField}>
+                <div className={styles.akademikFieldIcon}><Award size={16} /></div>
+                <div className={styles.akademikFieldBody}>
+                  <span className={styles.akademikFieldLabel}>Level ICP</span>
+                  <span className={styles.akademikFieldValue} style={{ color: icpLevel.color }}>
+                    {icpLevel.label} ({stats.icpPoin} poin)
+                  </span>
+                </div>
+              </div>
+            </div>
 
-            {/* Meta */}
-            <div className={styles.infoMeta}>
-              <div className={styles.metaRow}>
-                <div className={styles.metaIconWrap}><Hash size={13} className={styles.metaIcon} /></div>
-                <span className={styles.metaLabel}>NIM</span>
-                <span className={styles.metaValue}>{displayNim}</span>
-              </div>
-              <div className={styles.metaRow}>
-                <div className={styles.metaIconWrap}><BookOpen size={13} className={styles.metaIcon} /></div>
-                <span className={styles.metaLabel}>Prodi</span>
-                <span className={styles.metaValue}>{displayProdi}</span>
-              </div>
-              <div className={styles.metaRow}>
-                <div className={styles.metaIconWrap}><Clock size={13} className={styles.metaIcon} /></div>
-                <span className={styles.metaLabel}>Angkatan</span>
-                <span className={styles.metaValue}>{displayAngkatan}</span>
-              </div>
-              <div className={styles.metaRow}>
-                <div className={styles.metaIconWrap}><AtSign size={13} className={styles.metaIcon} /></div>
-                <span className={styles.metaLabel}>Email</span>
-                <span className={styles.metaValue}>{email || "-"}</span>
-              </div>
+            <div className={styles.readOnlyNote}>
+              <GraduationCap size={13} />
+              Data akademik bersifat <strong>read-only</strong>. Hubungi admin kampus jika ada perubahan data.
             </div>
           </div>
 
-          {/* RIGHT — Forms */}
+          {/* ── Keamanan Akun ── */}
           <div className={styles.formsCol}>
 
-            {/* Data Akademik (read-only) */}
+            {/* Email */}
             <div className={styles.formCard}>
               <div className={styles.formCardHeader}>
-                <div className={styles.formCardIcon}><GraduationCap size={20} /></div>
-                <div className={styles.formCardHeaderText}>
-                  <h2 className={styles.formCardTitle}>Data Akademik</h2>
-                  <p className={styles.formCardSub}>Informasi akademik Anda — hubungi admin untuk perubahan</p>
+                <div className={styles.formCardIcon} style={{ background: "linear-gradient(135deg,#dbeafe,#bfdbfe)", color: "#1d4ed8" }}>
+                  <Mail size={20} />
                 </div>
-              </div>
-              <div className={styles.form}>
-                <div className={styles.formRow}>
-                  <div className={styles.fieldGroup}>
-                    <label className={styles.label}>Nama Lengkap</label>
-                    <div className={styles.inputWrap} style={{ background: "#faf7f4" }}>
-                      <User size={15} className={styles.inputIcon} />
-                      <input className={styles.input} value={displayName} readOnly
-                        style={{ cursor: "default", color: "#765439" }} />
-                    </div>
-                  </div>
-                  <div className={styles.fieldGroup}>
-                    <label className={styles.label}>NIM</label>
-                    <div className={styles.inputWrap} style={{ background: "#faf7f4" }}>
-                      <Hash size={15} className={styles.inputIcon} />
-                      <input className={styles.input} value={displayNim} readOnly
-                        style={{ cursor: "default", color: "#765439" }} />
-                    </div>
-                  </div>
-                </div>
-                <div className={styles.formRow}>
-                  <div className={styles.fieldGroup}>
-                    <label className={styles.label}>Program Studi</label>
-                    <div className={styles.inputWrap} style={{ background: "#faf7f4" }}>
-                      <BookOpen size={15} className={styles.inputIcon} />
-                      <input className={styles.input} value={displayProdi} readOnly
-                        style={{ cursor: "default", color: "#765439" }} />
-                    </div>
-                  </div>
-                  <div className={styles.fieldGroup}>
-                    <label className={styles.label}>Angkatan</label>
-                    <div className={styles.inputWrap} style={{ background: "#faf7f4" }}>
-                      <Clock size={15} className={styles.inputIcon} />
-                      <input className={styles.input} value={displayAngkatan} readOnly
-                        style={{ cursor: "default", color: "#765439" }} />
-                    </div>
-                  </div>
-                </div>
-                <div style={{
-                  background: "#fdf8f4", border: "1px solid #f0e0cc", borderRadius: 10,
-                  padding: "10px 14px", display: "flex", alignItems: "center", gap: 8,
-                }}>
-                  <div style={{
-                    width: 28, height: 28, borderRadius: 8,
-                    background: "linear-gradient(135deg,#fde8cc,#f5d0a0)",
-                    display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-                  }}>
-                    <GraduationCap size={14} color="#765439" />
-                  </div>
-                  <p style={{ margin: 0, fontSize: 12, color: "#9e7b5e", lineHeight: 1.5 }}>
-                    Data akademik bersifat <strong style={{ color: "#765439" }}>read-only</strong>. Hubungi admin kampus jika ada perubahan.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Biodata SKPI Form */}
-            <div className={styles.formCard}>
-              <div className={styles.formCardHeader}>
-                <div className={styles.formCardIcon} style={{ background: "linear-gradient(135deg,#d1fae5,#a7f3d0)", color: "#065f46" }}>
-                  <FileText size={20} />
-                </div>
-                <div className={styles.formCardHeaderText}>
-                  <h2 className={styles.formCardTitle}>Biodata SKPI</h2>
-                  <p className={styles.formCardSub}>Data ini akan tercetak di dokumen SKPI Anda secara otomatis</p>
-                </div>
-              </div>
-              <form className={styles.form} onSubmit={handleBiodataSave}>
-                <div className={styles.formRow}>
-                  <div className={styles.fieldGroup}>
-                    <label className={styles.label} htmlFor="tempat_lahir">Tempat Lahir</label>
-                    <div className={styles.inputWrap}>
-                      <MapPin size={15} className={styles.inputIcon} />
-                      <input id="tempat_lahir" type="text" className={styles.input}
-                        value={biodata.tempat_lahir}
-                        onChange={e => setBiodata(p => ({ ...p, tempat_lahir: e.target.value }))}
-                        placeholder="Contoh: Bengkayang" />
-                    </div>
-                  </div>
-                  <div className={styles.fieldGroup}>
-                    <label className={styles.label} htmlFor="tgl_lahir">Tanggal Lahir</label>
-                    <div className={styles.inputWrap}>
-                      <Calendar size={15} className={styles.inputIcon} />
-                      <input id="tgl_lahir" type="date" className={styles.input}
-                        value={biodata.tgl_lahir}
-                        onChange={e => setBiodata(p => ({ ...p, tgl_lahir: e.target.value }))} />
-                    </div>
-                  </div>
-                </div>
-                <div className={styles.formRow}>
-                  <div className={styles.fieldGroup}>
-                    <label className={styles.label} htmlFor="tanggal_masuk">Tanggal Masuk Kuliah</label>
-                    <div className={styles.inputWrap}>
-                      <Calendar size={15} className={styles.inputIcon} />
-                      <input id="tanggal_masuk" type="date" className={styles.input}
-                        value={biodata.tanggal_masuk}
-                        onChange={e => setBiodata(p => ({ ...p, tanggal_masuk: e.target.value }))} />
-                    </div>
-                  </div>
-                  <div className={styles.fieldGroup}>
-                    <label className={styles.label} htmlFor="tanggal_lulus">Tanggal Lulus / Sidang</label>
-                    <div className={styles.inputWrap}>
-                      <Calendar size={15} className={styles.inputIcon} />
-                      <input id="tanggal_lulus" type="date" className={styles.input}
-                        value={biodata.tanggal_lulus}
-                        onChange={e => setBiodata(p => ({ ...p, tanggal_lulus: e.target.value }))} />
-                    </div>
-                  </div>
-                </div>
-                <div className={styles.fieldGroup}>
-                  <label className={styles.label} htmlFor="nomor_ijazah">Nomor Seri Ijazah</label>
-                  <div className={styles.inputWrap}>
-                    <Hash size={15} className={styles.inputIcon} />
-                    <input id="nomor_ijazah" type="text" className={styles.input}
-                      value={biodata.nomor_ijazah}
-                      onChange={e => setBiodata(p => ({ ...p, nomor_ijazah: e.target.value }))}
-                      placeholder="Contoh: DN-0123456" />
-                  </div>
-                </div>
-                <div className={styles.formRow}>
-                  <div className={styles.fieldGroup}>
-                    <label className={styles.label} htmlFor="gelar">Gelar (Indonesia)</label>
-                    <div className={styles.inputWrap}>
-                      <GraduationCap size={15} className={styles.inputIcon} />
-                      <input id="gelar" type="text" className={styles.input}
-                        value={biodata.gelar}
-                        onChange={e => setBiodata(p => ({ ...p, gelar: e.target.value }))}
-                        placeholder="Contoh: S.Kom." />
-                    </div>
-                  </div>
-                  <div className={styles.fieldGroup}>
-                    <label className={styles.label} htmlFor="gelar_eng">Gelar (English)</label>
-                    <div className={styles.inputWrap}>
-                      <GraduationCap size={15} className={styles.inputIcon} />
-                      <input id="gelar_eng" type="text" className={styles.input}
-                        value={biodata.gelar_eng}
-                        onChange={e => setBiodata(p => ({ ...p, gelar_eng: e.target.value }))}
-                        placeholder="Contoh: S.T." />
-                    </div>
-                  </div>
-                </div>
-                <div style={{
-                  background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: 10,
-                  padding: "10px 14px", display: "flex", alignItems: "center", gap: 8,
-                }}>
-                  <div style={{
-                    width: 28, height: 28, borderRadius: 8,
-                    background: "linear-gradient(135deg,#bbf7d0,#6ee7b7)",
-                    display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-                  }}>
-                    <FileText size={14} color="#065f46" />
-                  </div>
-                  <p style={{ margin: 0, fontSize: 12, color: "#065f46", lineHeight: 1.5 }}>
-                    Data ini akan otomatis <strong>tercetak di dokumen SKPI</strong> saat admin melakukan generate. Pastikan semua data benar sebelum mengajukan SKPI.
-                  </p>
-                </div>
-                <div className={styles.formFooter}>
-                  <button type="submit" className={styles.btnPrimary}
-                    style={{ background: "linear-gradient(135deg,#059669,#065f46)" }}
-                    disabled={biodataSaving}>
-                    {biodataSaving
-                      ? <><Loader2 size={15} className={styles.spin} /> Menyimpan…</>
-                      : <><Save size={15} /> Simpan Biodata</>}
-                  </button>
-                </div>
-              </form>
-            </div>
-
-            {/* Email Form */}
-            <div className={styles.formCard}>
-              <div className={styles.formCardHeader}>
-                <div className={styles.formCardIcon}><Mail size={20} /></div>
                 <div className={styles.formCardHeaderText}>
                   <h2 className={styles.formCardTitle}>Ubah Email</h2>
-                  <p className={styles.formCardSub}>Perbarui alamat email untuk login dan notifikasi SKPI</p>
+                  <p className={styles.formCardSub}>Perbarui alamat email untuk login dan notifikasi</p>
                 </div>
               </div>
               <form className={styles.form} onSubmit={handleEmailSave}>
@@ -774,7 +641,9 @@ export default function MahasiswaProfilePage() {
                   </div>
                 </div>
                 <div className={styles.formFooter}>
-                  <button type="submit" className={styles.btnPrimary} disabled={emailSaving}>
+                  <button type="submit" className={styles.btnPrimary}
+                    style={{ background: "linear-gradient(135deg,#2563eb,#1d4ed8)" }}
+                    disabled={emailSaving}>
                     {emailSaving
                       ? <><Loader2 size={15} className={styles.spin} /> Menyimpan…</>
                       : <><Save size={15} /> Simpan Email</>}
@@ -783,7 +652,7 @@ export default function MahasiswaProfilePage() {
               </form>
             </div>
 
-            {/* Password Form */}
+            {/* Password */}
             <div className={styles.formCard}>
               <div className={styles.formCardHeader}>
                 <div className={`${styles.formCardIcon} ${styles.formCardIconRed}`}><KeyRound size={20} /></div>
@@ -802,7 +671,7 @@ export default function MahasiswaProfilePage() {
                       className={styles.input} value={pwCurrent}
                       onChange={(e) => setPwCurrent(e.target.value)}
                       placeholder="Masukkan password saat ini" autoComplete="current-password" />
-                    <button type="button" className={styles.eyeBtn} onClick={() => setShowPwCur((v) => !v)}>
+                    <button type="button" className={styles.eyeBtn} onClick={() => setShowPwCur(v => !v)}>
                       {showPwCur ? <EyeOff size={15} /> : <Eye size={15} />}
                     </button>
                   </div>
@@ -817,13 +686,12 @@ export default function MahasiswaProfilePage() {
                         className={styles.input} value={pwNew}
                         onChange={(e) => setPwNew(e.target.value)}
                         placeholder="Min. 8 karakter" autoComplete="new-password" />
-                      <button type="button" className={styles.eyeBtn} onClick={() => setShowPwNew((v) => !v)}>
+                      <button type="button" className={styles.eyeBtn} onClick={() => setShowPwNew(v => !v)}>
                         {showPwNew ? <EyeOff size={15} /> : <Eye size={15} />}
                       </button>
                     </div>
                     <StrengthBar password={pwNew} />
                   </div>
-
                   <div className={styles.fieldGroup}>
                     <label className={styles.label} htmlFor="pw-confirm">Konfirmasi Password</label>
                     <div className={styles.inputWrap} style={
@@ -835,41 +703,31 @@ export default function MahasiswaProfilePage() {
                         className={styles.input} value={pwConfirm}
                         onChange={(e) => setPwConfirm(e.target.value)}
                         placeholder="Ulangi password baru" autoComplete="new-password" />
-                      <button type="button" className={styles.eyeBtn} onClick={() => setShowPwCon((v) => !v)}>
+                      <button type="button" className={styles.eyeBtn} onClick={() => setShowPwCon(v => !v)}>
                         {showPwCon ? <EyeOff size={15} /> : <Eye size={15} />}
                       </button>
                     </div>
                     {pwMatch    && <div className={styles.matchHint} style={{ color: "#16a34a" }}><Check size={13} /> Password cocok</div>}
-                    {pwMismatch && <div className={styles.matchHint} style={{ color: "#dc2626" }}><X     size={13} /> Password tidak cocok</div>}
+                    {pwMismatch && <div className={styles.matchHint} style={{ color: "#dc2626" }}><X size={13} /> Password tidak cocok</div>}
                   </div>
                 </div>
 
-                {/* Tips checklist */}
-                <div style={{ background: "#fdf8f4", border: "1px solid #f0e0cc", borderRadius: 10, padding: "12px 14px" }}>
-                  <p style={{
-                    margin: "0 0 8px", fontSize: 11.5, fontWeight: 700, color: "#765439",
-                    textTransform: "uppercase", letterSpacing: "0.05em",
-                  }}>Tips Password Kuat</p>
+                {/* Tips */}
+                <div className={styles.pwTips}>
+                  <p className={styles.pwTipsTitle}>Tips Password Kuat</p>
                   {[
-                    { ok: pwNew.length >= 8,          text: "Minimal 8 karakter" },
-                    { ok: /[A-Z]/.test(pwNew),         text: "Mengandung huruf kapital (A–Z)" },
-                    { ok: /[0-9]/.test(pwNew),         text: "Mengandung angka (0–9)" },
-                    { ok: /[^A-Za-z0-9]/.test(pwNew), text: "Mengandung simbol (!@#$…)" },
+                    { ok: pwNew.length >= 8,           text: "Minimal 8 karakter" },
+                    { ok: /[A-Z]/.test(pwNew),          text: "Mengandung huruf kapital (A–Z)" },
+                    { ok: /[0-9]/.test(pwNew),          text: "Mengandung angka (0–9)" },
+                    { ok: /[^A-Za-z0-9]/.test(pwNew),  text: "Mengandung simbol (!@#$…)" },
                   ].map((tip, i) => (
-                    <div key={i} style={{ display: "flex", alignItems: "center", gap: 7, marginTop: 5 }}>
-                      <div style={{
-                        width: 16, height: 16, borderRadius: "50%",
-                        background: tip.ok && pwNew ? "#dcfce7" : "#f5e8e0",
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                        flexShrink: 0, transition: "background 0.25s",
-                      }}>
+                    <div key={i} className={styles.pwTipItem}>
+                      <div className={styles.pwTipDot} style={{ background: tip.ok && pwNew ? "#dcfce7" : "#f5e8e0" }}>
                         {tip.ok && pwNew ? <Check size={10} color="#16a34a" /> : <X size={9} color="#c8945a" />}
                       </div>
-                      <span style={{
-                        fontSize: 12, transition: "color 0.25s",
-                        color: tip.ok && pwNew ? "#16a34a" : "#9e7b5e",
-                        fontWeight: tip.ok && pwNew ? 600 : 400,
-                      }}>{tip.text}</span>
+                      <span style={{ color: tip.ok && pwNew ? "#16a34a" : "#9e7b5e", fontWeight: tip.ok && pwNew ? 600 : 400 }}>
+                        {tip.text}
+                      </span>
                     </div>
                   ))}
                 </div>

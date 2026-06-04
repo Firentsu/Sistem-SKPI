@@ -1,76 +1,80 @@
 /* =============================
    PANDUAN PAGE — CSS MODULE
+   Mengikuti desain halaman Profile
    ============================= */
 
 @keyframes fadeUp {
-  from { opacity: 0; transform: translateY(10px); }
+  from { opacity: 0; transform: translateY(14px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
+/* ── Page ── */
 .page {
   padding: 28px 32px 52px;
   display: flex;
   flex-direction: column;
-  gap: 18px;
-  font-family: 'Segoe UI', ui-sans-serif, sans-serif;
-  background: #faf5f0;
+  gap: 20px;
+  font-family: 'Segoe UI', ui-sans-serif, system-ui, sans-serif;
+  background: #faf7f4;
   min-height: 100vh;
-  max-width: 880px;
+  max-width: 920px;
   margin: 0 auto;
   animation: fadeUp 0.3s ease both;
 }
 
-/* ── Hero Banner ── */
+/* ── Hero Banner (page header card) ── */
 .heroBanner {
+  background: #fff;
+  border-radius: 20px;
+  border: 1.5px solid #e0c9b6;
+  border-top: 4px solid #765439;
+  box-shadow: 0 2px 16px rgba(118,84,57,0.09);
+  padding: 22px 28px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  background: linear-gradient(135deg, #765439 0%, #4a2f1a 100%);
-  border-radius: 16px;
-  padding: 24px 28px;
-  color: #fff;
   flex-wrap: wrap;
 }
 .heroLeft {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 18px;
 }
 .heroIcon {
-  width: 54px;
-  height: 54px;
-  background: rgba(255,255,255,0.15);
-  border: 1.5px solid rgba(255,255,255,0.25);
+  width: 50px;
+  height: 50px;
+  background: linear-gradient(135deg, #765439 0%, #5c3317 100%);
   border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
+  color: #fde68a;
   flex-shrink: 0;
-  color: #fff;
+  box-shadow: 0 4px 14px rgba(118,84,57,0.25);
 }
 .heroTitle {
   font-size: 22px;
   font-weight: 800;
+  color: #3d2006;
   margin: 0 0 4px;
-  letter-spacing: -0.3px;
-  color: #fff;
+  letter-spacing: -0.4px;
 }
 .heroSubtitle {
   font-size: 13px;
-  color: rgba(255,255,255,0.72);
+  color: #9c7a5e;
   margin: 0;
 }
 .heroBadge {
   display: inline-flex;
   align-items: center;
   padding: 7px 16px;
-  background: rgba(255,255,255,0.15);
-  border: 1px solid rgba(255,255,255,0.25);
+  background: #fdf0e4;
+  border: 1px solid #e8d0b8;
   border-radius: 99px;
   font-size: 12px;
   font-weight: 700;
-  color: #fff;
+  color: #765439;
   flex-shrink: 0;
 }
 
@@ -80,34 +84,70 @@
   align-items: flex-start;
   gap: 10px;
   background: #fffbeb;
-  border: 1px solid #fcd34d;
+  border: 1px solid #fde68a;
   border-left: 4px solid #f59e0b;
-  border-radius: 10px;
+  border-radius: 12px;
   padding: 12px 16px;
-  color: #92400e;
+  color: #78350f;
   font-size: 13px;
   line-height: 1.55;
 }
-.infoBanner svg { flex-shrink: 0; margin-top: 1px; color: #b45309; }
+.infoBanner svg { flex-shrink: 0; margin-top: 1px; color: #d97706; }
 .infoBanner p { margin: 0; }
 
-/* ── Syarat Section ── */
-.syaratSection {
+/* ── Shared Card (matches .formCard in profile) ── */
+.syaratSection,
+.icpSection,
+.section {
   background: #fff;
-  border: 1px solid #ede0d4;
-  border-radius: 14px;
-  padding: 20px 22px;
-  box-shadow: 0 2px 12px rgba(118,84,57,0.07);
+  border-radius: 20px;
+  border: 1.5px solid #f0e0d0;
+  box-shadow: 0 2px 16px rgba(118,84,57,0.07);
+  padding: 26px 26px 24px;
+  animation: fadeUp 0.4s ease both;
 }
-.syaratHeader {
+
+/* ── Card Header (matches .formCardHeader in profile) ── */
+.cardHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 20px;
+  padding-bottom: 18px;
+  border-bottom: 1.5px solid #f5ece4;
+}
+.cardIcon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #fde8cc, #f5d0a0);
+  color: #765439;
   display: flex;
   align-items: center;
-  gap: 7px;
-  font-size: 14px;
-  font-weight: 700;
-  color: #765439;
-  margin-bottom: 16px;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(118,84,57,0.15);
 }
+.cardHeaderText {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding-top: 2px;
+}
+.cardTitle {
+  font-size: 15.5px;
+  font-weight: 800;
+  color: #3d2006;
+  margin: 0;
+  letter-spacing: -0.2px;
+}
+.cardSub {
+  font-size: 12.5px;
+  color: #a07858;
+  margin: 0;
+}
+
+/* ── Syarat Grid ── */
 .syaratGrid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -118,14 +158,19 @@
   align-items: flex-start;
   gap: 12px;
   background: #fdfaf8;
-  border: 1px solid #ede0d4;
-  border-radius: 10px;
+  border: 1.5px solid #f0e0d0;
+  border-radius: 14px;
   padding: 14px 16px;
+  transition: box-shadow 0.15s, transform 0.15s;
+}
+.syaratCard:hover {
+  box-shadow: 0 4px 14px rgba(118,84,57,0.09);
+  transform: translateY(-1px);
 }
 .syaratCardIcon {
-  width: 36px;
-  height: 36px;
-  border-radius: 9px;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -134,7 +179,7 @@
 .syaratCardTitle {
   font-size: 13px;
   font-weight: 700;
-  margin: 0 0 3px;
+  margin: 0 0 4px;
 }
 .syaratCardDesc {
   font-size: 12px;
@@ -143,45 +188,33 @@
   line-height: 1.5;
 }
 
-/* ── ICP Section ── */
-.icpSection {
-  background: #fff;
-  border: 1px solid #ede0d4;
-  border-radius: 14px;
-  padding: 20px 22px;
-  box-shadow: 0 2px 12px rgba(118,84,57,0.07);
-}
-.icpHeader {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  font-size: 14px;
-  font-weight: 700;
-  color: #765439;
-  margin-bottom: 14px;
-}
+/* ── ICP Grid ── */
 .icpGrid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 12px;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 .icpCard {
   display: flex;
   align-items: flex-start;
   gap: 12px;
   border: 1.5px solid;
-  border-radius: 10px;
+  border-top-width: 3px;
+  border-radius: 14px;
   padding: 14px 16px;
+  transition: box-shadow 0.15s, transform 0.15s;
 }
-.icpCardIcon {
-  flex-shrink: 0;
-  margin-top: 2px;
+.icpCard:hover {
+  box-shadow: 0 4px 14px rgba(118,84,57,0.09);
+  transform: translateY(-1px);
 }
+.icpCardIcon { flex-shrink: 0; margin-top: 2px; }
 .icpCardLabel {
-  font-size: 13.5px;
+  font-size: 14px;
   font-weight: 800;
   margin: 0 0 2px;
+  letter-spacing: -0.2px;
 }
 .icpCardRange {
   font-size: 12px;
@@ -201,34 +234,7 @@
   margin: 0;
   line-height: 1.5;
   border-top: 1px solid #f0e4d8;
-  padding-top: 10px;
-}
-
-/* ── Generic Section ── */
-.section {
-  background: #fff;
-  border: 1px solid #ede0d4;
-  border-radius: 14px;
-  padding: 22px 24px;
-  box-shadow: 0 2px 12px rgba(118,84,57,0.07);
-}
-.sectionHead {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 4px;
-  color: #765439;
-}
-.sectionTitle {
-  font-size: 14px;
-  font-weight: 700;
-  color: #3d2006;
-  margin: 0;
-}
-.sectionSubtitle {
-  font-size: 12.5px;
-  color: #9c7a5e;
-  margin: 0 0 14px;
+  padding-top: 12px;
 }
 
 /* ── Step Cards ── */
@@ -238,16 +244,21 @@
   gap: 8px;
 }
 .stepCard {
-  border: 1px solid #ede0d4;
-  border-radius: 10px;
+  border: 1.5px solid #f0e0d0;
+  border-left: 4px solid #f0e0d0;
+  border-radius: 14px;
   overflow: hidden;
   transition: box-shadow 0.15s, border-color 0.15s;
   background: #fff;
+  box-shadow: 0 1px 6px rgba(118,84,57,0.04);
 }
-.stepCard:hover { box-shadow: 0 2px 10px rgba(118,84,57,0.09); }
+.stepCard:hover {
+  box-shadow: 0 3px 12px rgba(118,84,57,0.09);
+}
 .stepCardOpen {
-  border-color: #ddd0c4;
-  box-shadow: 0 3px 14px rgba(118,84,57,0.1);
+  border-color: #e8d5c4;
+  border-left-color: var(--step-border, #765439);
+  box-shadow: 0 4px 16px rgba(118,84,57,0.1);
 }
 .stepHeader {
   display: flex;
@@ -300,17 +311,18 @@
 .stepTitle {
   font-size: 13.5px;
   font-weight: 700;
-  color: #2c1a0e;
+  color: #3d2006;
 }
 .stepDesc {
   font-size: 12px;
-  color: #9c7a5e;
+  color: #a07858;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 .stepChevron {
   flex-shrink: 0;
+  color: #c8a888;
   transition: transform 0.15s;
 }
 .stepDetailList {
@@ -320,7 +332,7 @@
   display: flex;
   flex-direction: column;
   gap: 9px;
-  border-top: 1px solid #f5ece4;
+  border-top: 1.5px solid #f5ece4;
   background: #fdfaf8;
 }
 .stepDetailItem {
@@ -338,20 +350,20 @@
   border-radius: 50%;
   flex-shrink: 0;
   margin-top: 7px;
-  opacity: 0.8;
+  opacity: 0.75;
 }
 
 /* ── Bottom Row ── */
 .bottomRow {
   display: flex;
-  gap: 18px;
+  gap: 20px;
   align-items: flex-start;
 }
 .rightCol {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
   min-width: 0;
 }
 
@@ -362,23 +374,28 @@
   gap: 6px;
 }
 .faqCard {
-  border: 1px solid #ede0d4;
-  border-radius: 10px;
+  border: 1.5px solid #f0e0d0;
+  border-left: 4px solid #f0e0d0;
+  border-radius: 12px;
   overflow: hidden;
   background: #fff;
+  box-shadow: 0 1px 4px rgba(118,84,57,0.04);
   transition: box-shadow 0.15s, border-color 0.15s;
 }
-.faqCard:hover { box-shadow: 0 2px 8px rgba(118,84,57,0.07); }
+.faqCard:hover {
+  box-shadow: 0 3px 10px rgba(118,84,57,0.08);
+}
 .faqCardOpen {
-  border-color: #ddd0c4;
-  box-shadow: 0 3px 12px rgba(118,84,57,0.09);
+  border-left-color: #c8945a;
+  border-color: #e8d5c4;
+  box-shadow: 0 4px 14px rgba(118,84,57,0.09);
 }
 .faqQuestion {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 12px 16px;
+  padding: 13px 16px;
   width: 100%;
   text-align: left;
   background: none;
@@ -386,7 +403,7 @@
   cursor: pointer;
   font-size: 13px;
   font-weight: 600;
-  color: #2c1a0e;
+  color: #3d2006;
   transition: background 0.12s;
   font-family: inherit;
   line-height: 1.4;
@@ -394,7 +411,7 @@
 .faqQuestion:hover { background: #fdfaf7; }
 .faqChevron {
   flex-shrink: 0;
-  color: #9c7a5e;
+  color: #c8a888;
   display: flex;
   align-items: center;
 }
@@ -404,81 +421,117 @@
   color: #5c3317;
   line-height: 1.65;
   margin: 0;
-  border-top: 1px solid #f5ece4;
+  border-top: 1.5px solid #f5ece4;
   background: #fdfaf8;
 }
 
 /* ── Contact Box ── */
 .contactBox {
-  background: #f0fdf4;
-  border: 1px solid #bbf7d0;
-  border-radius: 14px;
-  padding: 18px 20px;
-  box-shadow: 0 2px 10px rgba(4,120,87,0.06);
+  background: #fff;
+  border: 1.5px solid #f0e0d0;
+  border-top: 4px solid #047857;
+  border-radius: 20px;
+  padding: 22px 22px 20px;
+  box-shadow: 0 2px 16px rgba(118,84,57,0.07);
 }
 .contactHeader {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 10px;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding-bottom: 14px;
+  border-bottom: 1.5px solid #f5ece4;
 }
 .contactIcon {
-  width: 36px;
-  height: 36px;
-  background: #dcfce7;
+  width: 44px;
+  height: 44px;
+  background: linear-gradient(135deg, #dcfce7, #bbf7d0);
   color: #047857;
-  border-radius: 10px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  border: 1px solid #bbf7d0;
+  box-shadow: 0 2px 8px rgba(4,120,87,0.15);
 }
 .contactTitle {
-  font-size: 14px;
-  font-weight: 700;
-  color: #065f46;
+  font-size: 15px;
+  font-weight: 800;
+  color: #3d2006;
+  margin: 0 0 2px;
+  letter-spacing: -0.2px;
+}
+.contactSubtitle {
+  font-size: 12.5px;
+  color: #a07858;
   margin: 0;
 }
 .contactText {
   font-size: 12.5px;
-  color: #047857;
+  color: #5c3317;
   margin: 0 0 12px;
   line-height: 1.6;
 }
 .contactLinks {
   display: flex;
   flex-direction: column;
-  gap: 7px;
+  gap: 8px;
 }
 .contactLink {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   font-size: 12.5px;
   color: #047857;
   font-weight: 500;
+  padding: 7px 10px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 9px;
 }
-.contactLink svg { flex-shrink: 0; opacity: 0.7; }
+.contactLink svg { flex-shrink: 0; opacity: 0.75; }
 
 /* ── Tips Box ── */
 .tipsBox {
   background: #fff;
-  border: 1px solid #ede0d4;
-  border-radius: 14px;
-  padding: 18px 20px;
-  box-shadow: 0 2px 10px rgba(118,84,57,0.07);
+  border: 1.5px solid #f0e0d0;
+  border-top: 4px solid #765439;
+  border-radius: 20px;
+  padding: 22px 22px 20px;
+  box-shadow: 0 2px 16px rgba(118,84,57,0.07);
 }
 .tipsHeader {
   display: flex;
   align-items: center;
-  gap: 7px;
-  font-size: 13.5px;
-  font-weight: 700;
-  color: #765439;
-  margin-bottom: 12px;
+  gap: 12px;
+  margin-bottom: 14px;
+  padding-bottom: 14px;
+  border-bottom: 1.5px solid #f5ece4;
 }
-.tipsHeader svg { color: #b45309; }
+.tipsIcon {
+  width: 44px;
+  height: 44px;
+  background: linear-gradient(135deg, #fde8cc, #f5d0a0);
+  color: #765439;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(118,84,57,0.15);
+}
+.tipsTitle {
+  font-size: 15px;
+  font-weight: 800;
+  color: #3d2006;
+  margin: 0 0 2px;
+  letter-spacing: -0.2px;
+}
+.tipsSubtitle {
+  font-size: 12.5px;
+  color: #a07858;
+  margin: 0;
+}
 .tipsList {
   list-style: none;
   padding: 0;
@@ -489,18 +542,32 @@
 }
 .tipsList li {
   display: flex;
-  align-items: flex-start;
-  gap: 8px;
+  align-items: center;
+  gap: 10px;
   font-size: 12.5px;
   color: #5c3317;
   line-height: 1.5;
+  padding: 7px 10px;
+  background: #fdfaf8;
+  border: 1px solid #f5ece4;
+  border-radius: 9px;
+  transition: background 0.12s;
 }
+.tipsList li:hover { background: #fdf4ec; }
 .tipsList li::before {
-  content: "•";
-  color: #765439;
-  font-weight: 900;
+  content: "✓";
+  color: #fff;
+  font-weight: 700;
+  font-size: 10px;
   flex-shrink: 0;
-  margin-top: 1px;
+  background: linear-gradient(135deg, #765439, #5c3317);
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 4px rgba(118,84,57,0.2);
 }
 
 /* ── Responsive ── */
@@ -510,18 +577,39 @@
   .syaratGrid { grid-template-columns: repeat(2, 1fr); }
   .icpGrid { grid-template-columns: repeat(3, 1fr); }
 }
+
 @media (max-width: 720px) {
-  .page { padding: 16px 16px 32px; gap: 14px; max-width: 100%; }
+  .page { padding: 16px 16px 32px; gap: 16px; max-width: 100%; }
   .heroBanner { padding: 18px 20px; }
-  .heroTitle { font-size: 18px; }
+  .heroTitle { font-size: 19px; }
   .heroBadge { display: none; }
   .syaratGrid { grid-template-columns: 1fr; }
-  .icpGrid { grid-template-columns: 1fr; }
+  .icpGrid { grid-template-columns: repeat(2, 1fr); }
   .rightCol { flex-direction: column; }
   .stepDesc { display: none; }
   .stepDetailList { padding-left: 16px; }
-  .section { padding: 16px; }
+  .syaratSection, .icpSection, .section { padding: 20px 20px 18px; }
+  .contactBox, .tipsBox { padding: 18px 18px 16px; }
 }
+
+@media (max-width: 640px) {
+  .bottomRow { flex-direction: column; }
+  .rightCol { flex-direction: column; }
+}
+
 @media (max-width: 480px) {
+  .page { padding: 12px 12px 28px; gap: 14px; }
+  .heroBanner { padding: 16px 18px; border-radius: 16px; }
+  .heroTitle { font-size: 17px; }
+  .heroIcon { width: 44px; height: 44px; border-radius: 12px; }
+  .heroLeft { gap: 14px; }
+  .icpGrid { grid-template-columns: 1fr; }
+  .syaratSection, .icpSection, .section { padding: 16px 16px 14px; border-radius: 16px; }
+  .contactBox, .tipsBox { padding: 16px; border-radius: 16px; }
+  .cardIcon { width: 38px; height: 38px; border-radius: 10px; }
+  .cardTitle { font-size: 14px; }
+  .stepHeader { padding: 12px 14px; }
+  .stepDetailList { padding: 0 12px 14px 12px; }
+  .faqQuestion { padding: 11px 14px; }
   .bottomRow { gap: 14px; }
 }

@@ -61,7 +61,7 @@
 
 /* Mobile overlay untuk menutup sidebar */
 .sidebarOverlay {
-  display: none;
+  display: block;
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.4);
@@ -768,11 +768,6 @@
    Responsive
 ───────────────────────────────────────── */
 @media (max-width: 768px) {
-  .sidebar { width: 64px; }
-  .brandText { display: none !important; }
-  .navSection { display: none !important; }
-  .navLabel { display: none !important; }
-  .sidebarFooter { display: none !important; }
   .topbar { padding: 0 16px; }
   .modal { max-width: 100%; }
   .userInfoBtn .userRole { display: none; }
@@ -1890,16 +1885,6 @@
 }
 
 /* Overlay gelap saat sidebar terbuka di mobile */
-.sidebarOverlay {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.45);
-  backdrop-filter: blur(3px);
-  z-index: 35;
-  cursor: pointer;
-  transition: opacity 0.2s ease;
-}
 
 /* Mobile & tablet: lebar layar ≤960px */
 @media (max-width: 960px) {
@@ -1925,11 +1910,6 @@
   .sidebar.open {
     left: 0;
     box-shadow: 4px 0 20px rgba(0, 0, 0, 0.25);
-  }
-
-  /* Tampilkan overlay */
-  .sidebarOverlay.show {
-    display: block;
   }
 
   /* Penyesuaian topbar agar tidak terlalu padat */

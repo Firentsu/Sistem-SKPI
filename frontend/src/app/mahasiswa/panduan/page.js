@@ -36,7 +36,7 @@ const STEPS = [
     border: "#86efac",
     description: "Daftarkan semua kegiatan yang telah Anda ikuti selama perkuliahan.",
     details: [
-      "Klik menu Kegiatan di sidebar kiri.",
+      "Klik menu SKPI → Kegiatan di sidebar kiri.",
       "Klik tombol Tambah Kegiatan.",
       "Isi formulir: nama kegiatan, jenis, kategori, tingkat, tanggal, dan peran Anda.",
       "Unggah bukti kegiatan berupa sertifikat, foto, atau dokumen (JPG, PNG, PDF, maks. 5 MB).",
@@ -69,10 +69,10 @@ const STEPS = [
     border: "#c4b5fd",
     description: "Setelah syarat terpenuhi (kegiatan disetujui + ICP ≥ 100 poin), ajukan SKPI.",
     details: [
-      "Buka menu Pengajuan di sidebar kiri.",
+      "Klik menu SKPI → Kegiatan di sidebar kiri.",
+      "Klik tab Pengajuan SKPI di bagian atas halaman.",
       "Pastikan minimal 1 kegiatan sudah berstatus Disetujui.",
       "Pastikan total poin ICP Anda sudah mencapai minimal 100 poin (Bronze).",
-      "Periksa kelengkapan data profil mahasiswa.",
       "Klik Ajukan SKPI untuk mengirim permohonan penerbitan.",
       "Admin akan memeriksa dan menerbitkan SKPI jika semua syarat terpenuhi.",
     ],
@@ -84,12 +84,12 @@ const STEPS = [
     color: "#0891b2",
     bg: "#f0fdfe",
     border: "#67e8f9",
-    description: "SKPI yang telah diterbitkan dapat dilihat dan diunduh melalui menu Riwayat.",
+    description: "SKPI yang telah diterbitkan dapat dilihat dan diunduh melalui tab Pengajuan SKPI.",
     details: [
-      "Buka menu Riwayat di sidebar kiri.",
-      "Daftar SKPI yang pernah diterbitkan akan ditampilkan.",
-      "Klik Lihat / Preview untuk melihat isi SKPI.",
-      "Klik Unduh / Download untuk mengunduh SKPI dalam format PDF.",
+      "Klik menu SKPI → Kegiatan di sidebar kiri.",
+      "Klik tab Pengajuan SKPI di bagian atas halaman.",
+      "Setelah admin menerbitkan SKPI, status pengajuan berubah menjadi Selesai.",
+      "Klik tombol Unduh / Download untuk mengunduh SKPI dalam format PDF.",
       "Simpan SKPI Anda sebagai dokumen resmi akademik.",
     ],
   },
@@ -108,11 +108,11 @@ const FAQS = [
   },
   {
     q: "Apa saja syarat untuk mengajukan SKPI?",
-    a: "Ada dua syarat utama: (1) Minimal 1 kegiatan berstatus Disetujui oleh admin, dan (2) Total poin ICP minimal 100 poin (level Bronze). Pastikan kedua syarat ini terpenuhi sebelum mengajukan SKPI.",
+    a: "Ada dua syarat utama: (1) Minimal 1 kegiatan berstatus Disetujui oleh admin, dan (2) Total poin ICP minimal 100 poin (level Bronze). Setelah terpenuhi, ajukan melalui tab Pengajuan SKPI di halaman Kegiatan.",
   },
   {
     q: "Apa itu ICP dan bagaimana cara mendapatkan poin?",
-    a: "ICP (Integrity Credit Points) adalah sistem penilaian yang mencakup aspek Fisik, Iman, Intelektualitas, Kepribadian, Keterampilan, dan Moral. Poin ICP dikelola dan diverifikasi oleh admin. Hubungi admin atau pembimbing akademik untuk informasi lebih lanjut tentang perolehan poin ICP.",
+    a: "ICP (Integrity Credit Point) adalah sistem penilaian yang mencakup aspek integritas mahasiswa di luar akademik, seperti kepemimpinan, organisasi, dan pengembangan diri. Poin ICP dikelola dan diverifikasi oleh admin. Hubungi admin atau pembimbing akademik untuk informasi lebih lanjut tentang perolehan poin ICP Anda.",
   },
   {
     q: "Berapa banyak kegiatan yang harus saya ajukan?",
@@ -132,7 +132,7 @@ const FAQS = [
   },
   {
     q: "Bagaimana cara mengubah password?",
-    a: "Klik nama profil Anda di sudut kanan atas, pilih Profil, kemudian ubah password di bagian pengaturan akun.",
+    a: "Klik menu Profil di sidebar kiri, kemudian ubah password di bagian Ubah Password. Masukkan password lama dan password baru, lalu klik Perbarui Password.",
   },
 ];
 

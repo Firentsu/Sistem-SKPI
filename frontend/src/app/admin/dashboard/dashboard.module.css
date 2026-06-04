@@ -419,6 +419,8 @@
 }
 
 .notifMore:hover { background: #f5ece4; color: #765439; }
+.notifUnread { background: #fefce8; }
+.emptyNotif { text-align: center; padding: 24px; color: #b09880; font-size: 12px; }
 
 /* ── PROGRESS ── */
 .progressGrid {

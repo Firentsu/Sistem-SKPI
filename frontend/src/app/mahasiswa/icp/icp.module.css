@@ -1,0 +1,337 @@
+/* ─────────────────────────────────────────
+   ICP Mahasiswa Page
+───────────────────────────────────────── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.container {
+  padding: 28px 32px 52px;
+  min-height: 100vh;
+  background: #faf7f4;
+  font-family: 'Inter', 'Segoe UI', sans-serif;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ── Header ── */
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  animation: fadeUp 0.3s ease both;
+}
+
+.headerLeft { display: flex; align-items: center; gap: 14px; }
+
+.headerBadge {
+  width: 46px; height: 46px;
+  background: linear-gradient(135deg, #fde8cc, #f5d0a0);
+  border: 1px solid #ede0d4;
+  border-radius: 13px;
+  display: flex; align-items: center; justify-content: center;
+  color: #765439;
+  flex-shrink: 0;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: 800;
+  color: #2c1a0e;
+  margin: 0 0 3px;
+  letter-spacing: -0.4px;
+}
+
+.subtitle { font-size: 13px; color: #9c7a5e; margin: 0; }
+
+.refreshBtn {
+  width: 36px; height: 36px;
+  border-radius: 8px;
+  background: #fff;
+  border: 1px solid #ede0d4;
+  color: #765439;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+.refreshBtn:hover { background: #fdf4ec; }
+.refreshBtn:disabled { opacity: 0.45; cursor: not-allowed; }
+.spinIcon { animation: spin 0.75s linear infinite; }
+
+/* ── Loading ── */
+.loadingWrap {
+  display: flex; align-items: center; justify-content: center;
+  gap: 10px; padding: 60px 20px;
+  color: #9e7b5e; font-size: 13.5px; font-weight: 500;
+}
+
+/* ── Level Hero Card ── */
+.levelCard {
+  background: #fff;
+  border: 1.5px solid #f0e0d0;
+  border-radius: 18px;
+  padding: 26px 28px;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  box-shadow: 0 2px 16px rgba(118,84,57,0.08);
+  animation: fadeUp 0.35s ease 0.05s both;
+}
+
+.levelIconWrap {
+  width: 72px; height: 72px;
+  border-radius: 18px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  font-size: 36px;
+}
+
+.levelBody { flex: 1; min-width: 0; }
+
+.levelName {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  margin: 0 0 4px;
+}
+
+.levelDesc { font-size: 13px; color: #9c7a5e; margin: 0; }
+
+.levelBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  border: 1.5px solid;
+  margin-top: 10px;
+}
+
+.levelRight { text-align: right; flex-shrink: 0; }
+
+.poinValue {
+  font-size: 42px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -1px;
+}
+
+.poinLabel { font-size: 12px; color: #9c7a5e; font-weight: 500; margin-top: 2px; }
+
+/* ── Progress Section ── */
+.progressCard {
+  background: #fff;
+  border: 1.5px solid #f0e0d0;
+  border-radius: 16px;
+  padding: 22px 24px;
+  box-shadow: 0 1px 8px rgba(118,84,57,0.06);
+  animation: fadeUp 0.35s ease 0.1s both;
+}
+
+.progressTitle {
+  font-size: 14px;
+  font-weight: 700;
+  color: #3d2006;
+  margin: 0 0 16px;
+}
+
+.levelTrack {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-bottom: 12px;
+}
+
+.levelMilestone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.milestoneCircle {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700;
+  border: 2px solid;
+}
+
+.milestoneLabel {
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.milestonePoin {
+  font-size: 9px;
+  color: #b09880;
+}
+
+.trackBar {
+  flex: 1;
+  height: 8px;
+  border-radius: 99px;
+  overflow: hidden;
+  margin: 0 8px;
+  margin-bottom: 26px;
+  background: #f0e4d8;
+}
+
+.trackFill {
+  height: 100%;
+  border-radius: 99px;
+  transition: width 0.6s ease;
+}
+
+/* ── Stat Cards Row ── */
+.statsRow {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  animation: fadeUp 0.35s ease 0.15s both;
+}
+
+.statCard {
+  background: #fff;
+  border: 1.5px solid #f0e0d0;
+  border-radius: 14px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  box-shadow: 0 1px 8px rgba(118,84,57,0.06);
+}
+
+.statValue {
+  font-size: 28px;
+  font-weight: 800;
+  color: #2c1a0e;
+  line-height: 1;
+  letter-spacing: -0.5px;
+}
+
+.statLabel { font-size: 12px; color: #a07858; font-weight: 500; }
+
+/* ── Detail Table ── */
+.detailCard {
+  background: #fff;
+  border: 1.5px solid #f0e0d0;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 1px 8px rgba(118,84,57,0.06);
+  animation: fadeUp 0.35s ease 0.2s both;
+}
+
+.detailTitle {
+  font-size: 13px;
+  font-weight: 700;
+  color: #3d2006;
+  padding: 16px 20px 14px;
+  border-bottom: 1.5px solid #f0e0d0;
+  background: #fdfaf8;
+  margin: 0;
+}
+
+.detailTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.detailTable th {
+  padding: 10px 16px;
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #9e7b5e;
+  text-align: left;
+  background: #fdfaf8;
+  border-bottom: 1px solid #f5ece4;
+}
+
+.detailTable td {
+  padding: 12px 16px;
+  font-size: 13px;
+  color: #3d2006;
+  border-bottom: 1px solid #faf3ee;
+  vertical-align: middle;
+}
+
+.detailTable tbody tr:last-child td { border-bottom: none; }
+.detailTable tbody tr:hover { background: #fdfaf7; }
+
+.emptyDetail {
+  text-align: center;
+  padding: 32px 20px;
+  color: #b09880;
+  font-size: 13.5px;
+}
+
+/* ── Info Card ── */
+.infoCard {
+  background: linear-gradient(135deg, #fdf8f3 0%, #fef3e8 100%);
+  border: 1.5px solid #f0dcc8;
+  border-radius: 16px;
+  padding: 22px 24px;
+  animation: fadeUp 0.35s ease 0.25s both;
+}
+
+.infoTitle {
+  font-size: 14px;
+  font-weight: 700;
+  color: #5c3317;
+  margin: 0 0 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.infoList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.infoItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 13px;
+  color: #4a2c1a;
+  line-height: 1.6;
+}
+
+.infoDot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: #c8945a;
+  margin-top: 7px;
+  flex-shrink: 0;
+}
+
+/* ── Responsive ── */
+@media (max-width: 960px) {
+  .container { padding: 20px 16px 36px; }
+  .statsRow  { grid-template-columns: repeat(3, 1fr); }
+  .levelCard { flex-direction: column; align-items: flex-start; }
+  .levelRight { text-align: left; }
+}
+
+@media (max-width: 640px) {
+  .statsRow { grid-template-columns: 1fr 1fr; }
+  .levelCard { gap: 16px; }
+  .poinValue { font-size: 32px; }
+}

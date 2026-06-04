@@ -61,7 +61,7 @@
 
 /* Mobile overlay untuk menutup sidebar */
 .sidebarOverlay {
-  display: none;
+  display: block;
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.4);
@@ -764,15 +764,92 @@
   flex-shrink: 0;
 }
 
+/* ── Nav Group (Dropdown SKPI) ── */
+.navGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.navGroupBtn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 9px 10px;
+  border-radius: 9px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: rgba(253, 220, 160, 0.65);
+  font-size: 13.5px;
+  font-weight: 500;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+  width: 100%;
+  text-align: left;
+}
+
+.navGroupBtn:hover {
+  background: rgba(255, 220, 150, 0.1);
+  color: rgba(253, 230, 138, 0.9);
+}
+
+.navGroupBtnActive {
+  background: rgba(253, 230, 138, 0.15);
+  color: #fde68a;
+  font-weight: 600;
+}
+
+.groupChevron {
+  margin-left: auto;
+  flex-shrink: 0;
+  transition: transform 0.2s;
+}
+
+.navSubItems {
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  animation: subSlideDown 0.15s ease;
+}
+
+@keyframes subSlideDown {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.navSubItem {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  text-decoration: none;
+  color: rgba(253, 210, 140, 0.5);
+  font-size: 13px;
+  font-weight: 500;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+
+.navSubItem:hover {
+  background: rgba(255, 220, 150, 0.08);
+  color: rgba(253, 230, 138, 0.85);
+}
+
+.navSubItemActive {
+  background: rgba(253, 230, 138, 0.12);
+  color: #fde68a;
+  font-weight: 600;
+}
+
 /* ─────────────────────────────────────────
    Responsive
 ───────────────────────────────────────── */
 @media (max-width: 768px) {
-  .sidebar { width: 64px; }
-  .brandText { display: none !important; }
-  .navSection { display: none !important; }
-  .navLabel { display: none !important; }
-  .sidebarFooter { display: none !important; }
   .topbar { padding: 0 16px; }
   .modal { max-width: 100%; }
   .userInfoBtn .userRole { display: none; }
@@ -1890,16 +1967,6 @@
 }
 
 /* Overlay gelap saat sidebar terbuka di mobile */
-.sidebarOverlay {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.45);
-  backdrop-filter: blur(3px);
-  z-index: 35;
-  cursor: pointer;
-  transition: opacity 0.2s ease;
-}
 
 /* Mobile & tablet: lebar layar ≤960px */
 @media (max-width: 960px) {
@@ -1925,11 +1992,6 @@
   .sidebar.open {
     left: 0;
     box-shadow: 4px 0 20px rgba(0, 0, 0, 0.25);
-  }
-
-  /* Tampilkan overlay */
-  .sidebarOverlay.show {
-    display: block;
   }
 
   /* Penyesuaian topbar agar tidak terlalu padat */

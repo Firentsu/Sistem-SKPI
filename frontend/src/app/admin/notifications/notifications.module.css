@@ -272,8 +272,42 @@
 }
 
 @media (max-width: 640px) {
-  .page { padding: 16px 14px 40px; }
-  .tabs { flex-direction: column; }
-  .tab  { justify-content: flex-start; }
+  .page { padding: 16px 14px 40px; gap: 14px; }
+  .title { font-size: 18px; }
+  .subtitle { font-size: 12px; }
+
+  /* Header actions: lebih rapat */
+  .headerActions { gap: 6px; }
+  .readAllBtn,
+  .deleteReadBtn { padding: 7px 10px; font-size: 11px; }
+
+  /* Tabs: scroll horizontal, tidak stack vertikal */
+  .tabs {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab { flex: none; padding: 8px 10px; font-size: 12px; white-space: nowrap; }
+
+  /* Item */
+  .item { padding: 12px 14px; gap: 10px; }
   .itemActions { opacity: 1; }
+  .itemMsg { font-size: 12px; }
+}
+
+@media (max-width: 480px) {
+  .page { padding: 12px 12px 32px; gap: 12px; }
+  .headerIcon { width: 36px; height: 36px; }
+  .title { font-size: 16px; }
+  .headerLeft { gap: 10px; }
+  .readAllBtn,
+  .deleteReadBtn { padding: 6px 9px; font-size: 11px; }
+  .refreshBtn { width: 32px; height: 32px; }
+  .typeIcon { width: 32px; height: 32px; border-radius: 8px; }
+  .item { padding: 10px 12px; gap: 8px; }
+  .itemTitle { font-size: 13px; }
+  .itemMsg { font-size: 12px; }
+  .unreadDot { left: 4px; top: 14px; }
 }

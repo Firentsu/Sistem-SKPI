@@ -764,3 +764,590 @@
 @media (hover: none) and (pointer: coarse) {
   .btnPrimary { min-height: 44px; }
 }
+
+/* ===== HERO CARD — ISB Brand ===== */
+.heroCard {
+  position: relative;
+  background: #fff;
+  border-radius: 20px;
+  border: 1.5px solid #e0c9b6;
+  box-shadow: 0 2px 16px rgba(118,84,57,0.09);
+  overflow: hidden;
+  /* Accent bar ISB di atas */
+  border-top: 4px solid #765439;
+}
+
+/* Dekorasi — dinonaktifkan, border-top sudah cukup */
+.heroBg1, .heroBg2, .heroBg3 { display: none; }
+
+.heroContent {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  padding: 24px 28px;
+}
+
+/* Avatar */
+.heroAvatarWrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.heroAvatarRing {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  cursor: pointer;
+  /* ISB double-ring: putih luar, cokelat dalam */
+  border: 3px solid #fff;
+  box-shadow: 0 0 0 3px #765439, 0 3px 12px rgba(118,84,57,0.22);
+  transition: box-shadow 0.2s;
+  overflow: hidden;
+}
+
+.heroAvatarRing:hover {
+  box-shadow: 0 0 0 3px #5c3317, 0 5px 18px rgba(118,84,57,0.3);
+}
+
+.heroAvatar {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+}
+
+.heroCameraBtn {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #765439;
+  border: 2px solid #fff;
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 6px rgba(118,84,57,0.3);
+  transition: background 0.2s;
+  z-index: 2;
+}
+
+.heroCameraBtn:hover { background: #5c3317; }
+
+/* Info */
+.heroInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.heroBadgeRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 5px;
+  flex-wrap: wrap;
+}
+
+/* Badge — ISB warm tone */
+.heroBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 20px;
+  background: #fdf0e4;
+  color: #765439;
+  border: 1px solid #e8d0b8;
+}
+
+.heroName {
+  font-size: 19px;
+  font-weight: 800;
+  color: #3d2006;
+  margin: 0 0 7px;
+  letter-spacing: -0.3px;
+  line-height: 1.25;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.heroMeta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.heroMetaItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: #9c7a5e;
+  font-weight: 500;
+}
+
+.heroMetaDivider { color: #d4b8a0; font-size: 13px; }
+
+/* Stats inline — kotak krem ISB */
+.heroStatsWrap {
+  display: flex;
+  align-items: center;
+  background: #fdf4ec;
+  border: 1.5px solid #e8d0b8;
+  border-radius: 14px;
+  flex-shrink: 0;
+}
+
+.heroStatItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 11px 18px;
+}
+
+/* Angka pakai ISB primary */
+.heroStatNum {
+  font-size: 19px;
+  font-weight: 800;
+  color: #765439;
+  line-height: 1;
+}
+
+.heroStatLabel {
+  font-size: 10.5px;
+  color: #a07858;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.heroStatDivider {
+  width: 1px;
+  height: 30px;
+  background: #e8d0b8;
+  flex-shrink: 0;
+}
+
+/* Upload panel */
+.heroUploadPanel {
+  background: #fdfaf8;
+  border-top: 1.5px solid #f0e4d8;
+  padding: 16px 28px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+  animation: fadeUp 0.25s ease both;
+}
+
+.heroDrop {
+  border: 1.5px dashed #c8a888;
+  border-radius: 12px;
+  padding: 18px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: #fff;
+}
+
+.heroDrop:hover, .heroDropActive {
+  border-color: #765439;
+  background: #fdf7f3;
+}
+
+.heroDropIcon { color: #c8945a; margin-bottom: 2px; }
+.heroDropText { font-size: 13px; font-weight: 600; color: #765439; }
+.heroDropHint { font-size: 11.5px; color: #a07858; }
+
+.heroUploadCancel {
+  padding: 7px 14px;
+  background: #f5ece4;
+  border: 1.5px solid #e8d5c4;
+  border-radius: 9px;
+  color: #765439;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.heroUploadCancel:hover { background: #f0ddd0; }
+
+.heroUploadDelete {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  background: #fff5f5;
+  border: 1.5px solid #fecaca;
+  border-radius: 9px;
+  color: #b91c1c;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.heroUploadDelete:hover:not(:disabled) { background: #fee2e2; }
+.heroUploadDelete:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.heroUploadSave {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  background: linear-gradient(135deg, #765439, #5c3317);
+  border: none;
+  border-radius: 9px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(118,84,57,0.25);
+  transition: opacity 0.15s;
+}
+
+.heroUploadSave:hover:not(:disabled) { opacity: 0.88; }
+.heroUploadSave:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.heroPreviewWrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.heroPreviewImg {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #fff;
+  box-shadow: 0 0 0 2px #765439, 0 3px 12px rgba(118,84,57,0.2);
+}
+
+/* ===== STATS ROW ===== */
+.statsRow {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+
+.statCard {
+  position: relative;
+  background: #fff;
+  border-radius: 16px;
+  border: 1.5px solid #e8d5c4;
+  box-shadow: 0 2px 10px rgba(118,84,57,0.06);
+  padding: 15px 18px 15px 20px;
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  overflow: hidden;
+  animation: fadeUp 0.4s ease both;
+}
+
+/* Left accent bar — ISB-styled per card */
+.statAccent {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  border-radius: 16px 0 0 16px;
+  display: block;
+  opacity: 0.9;
+}
+
+.statIconWrap {
+  width: 40px;
+  height: 40px;
+  border-radius: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.statBody {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.statNum {
+  font-size: 20px;
+  font-weight: 800;
+  color: #3d2006;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.statLabel {
+  font-size: 11.5px;
+  color: #a07858;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ===== CARDS GRID ===== */
+.cardsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  align-items: start;
+}
+
+/* ===== AKADEMIK GRID ===== */
+.akademikGrid {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 16px;
+}
+
+.akademikField {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 8px;
+  border-bottom: 1px solid #faf3ee;
+  transition: background 0.15s;
+  border-radius: 8px;
+}
+
+.akademikField:last-child { border-bottom: none; }
+.akademikField:hover { background: #fdf7f3; }
+
+/* ISB icon: gradient cokelat + ikon putih */
+.akademikFieldIcon {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: linear-gradient(135deg, #765439, #5c3317);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.akademikFieldBody {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.akademikFieldLabel {
+  font-size: 11px;
+  font-weight: 600;
+  color: #a07858;
+}
+
+.akademikFieldValue {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #3d2006;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* read-only */
+.readOnlyBadge {
+  margin-left: auto;
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 600;
+  color: #9c7a5e;
+  background: #fdf0e4;
+  border: 1px solid #e8d0b8;
+  border-radius: 20px;
+  padding: 3px 10px;
+}
+
+.readOnlyNote {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 12px;
+  color: #9c7a5e;
+  background: #fdf7f3;
+  border: 1px solid #f0e4d8;
+  border-left: 3px solid #765439;
+  border-radius: 0 10px 10px 0;
+  padding: 10px 13px;
+  line-height: 1.5;
+}
+
+/* ===== PASSWORD TIPS ===== */
+.pwTips {
+  background: #fdf7f3;
+  border: 1.5px solid #f0e4d8;
+  border-radius: 12px;
+  padding: 13px 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.pwTipsTitle {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #765439;
+  margin: 0;
+}
+
+.pwTipItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  color: #9e7b5e;
+}
+
+.pwTipDot {
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* ===== AVATAR VIEWER MODAL ===== */
+.viewerModal {
+  background: #fff;
+  border-radius: 20px;
+  border: 1.5px solid #e0c9b6;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.13);
+  width: 100%;
+  max-width: 340px;
+  overflow: hidden;
+  /* ISB accent top */
+  border-top: 4px solid #765439;
+  animation: slideUp 0.28s cubic-bezier(0.2, 0.9, 0.4, 1.05) both;
+}
+
+.viewerHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px 12px;
+  border-bottom: 1.5px solid #f5ece4;
+}
+
+.viewerHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #3d2006;
+}
+
+.viewerHeaderIcon {
+  width: 26px;
+  height: 26px;
+  background: #fdf0e4;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #765439;
+}
+
+.viewerClose {
+  width: 26px;
+  height: 26px;
+  background: #f5ece4;
+  border: 1.5px solid #e8d5c4;
+  border-radius: 7px;
+  color: #9c7a5e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.viewerClose:hover { background: #f0ddd0; color: #5c3317; }
+
+.viewerImgWrap {
+  display: flex;
+  justify-content: center;
+  padding: 26px 24px 18px;
+  background: #fdfaf8;
+}
+
+.viewerImgGlow { display: none; }
+
+.viewerImg {
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #fff;
+  box-shadow: 0 0 0 3px #765439, 0 4px 16px rgba(118,84,57,0.18);
+}
+
+.viewerInfo {
+  text-align: center;
+  padding: 12px 24px 16px;
+}
+
+.viewerName {
+  font-size: 15px;
+  font-weight: 800;
+  color: #3d2006;
+  margin: 0 0 3px;
+}
+
+.viewerProdi {
+  font-size: 12px;
+  color: #9c7a5e;
+  margin: 0;
+  font-weight: 500;
+}
+
+.viewerActions {
+  display: flex;
+  gap: 10px;
+  padding: 0 18px 18px;
+}
+
+/* ===== RESPONSIVE — PROFILE REDESIGN ===== */
+@media (max-width: 1100px) {
+  .statsRow { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 900px) {
+  .heroContent { flex-direction: column; align-items: flex-start; gap: 14px; padding: 20px 20px 22px; }
+  .heroStatsWrap { width: 100%; justify-content: space-around; }
+  .heroUploadPanel { padding: 14px 20px 18px; }
+  .cardsGrid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 640px) {
+  .heroContent { padding: 18px 14px 20px; }
+  .heroName { font-size: 17px; }
+  .statsRow { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .statNum { font-size: 18px; }
+  .heroUploadPanel { padding: 12px 14px 16px; }
+}
