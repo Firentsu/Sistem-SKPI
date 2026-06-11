@@ -12,7 +12,7 @@ import {
 } from "@/lib/api";
 
 /* ─────────────────────────────────────────
-   MOCK DATA
+   MOCK DATA (sebagai fallback)
 ───────────────────────────────────────── */
 const MOCK_MAHASISWA = [
   {
@@ -191,7 +191,6 @@ function PreviewModal({ mhs, onClose, onGenerate, onPublish, generating, publish
 
   return (
     <div className={styles.previewOverlay}>
-      {/* Toolbar */}
       <div className={styles.previewBar}>
         <div className={styles.previewBarLeft}>
           <FileText size={16}/>
@@ -239,8 +238,6 @@ function PreviewModal({ mhs, onClose, onGenerate, onPublish, generating, publish
           <button className={styles.previewClose} onClick={onClose} title="Tutup (Esc)"><X size={18}/></button>
         </div>
       </div>
-
-      {/* PDF Viewer */}
       <div style={{ flex: 1, position: "relative", overflow: "hidden", background: "#525252" }}>
         {status === "loading" && (
           <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column",
@@ -456,12 +453,13 @@ export default function GenerateSkpiPage() {
     rataIcp:     rows.length ? Math.round(rows.reduce((s, r) => s + r.total_poin, 0) / rows.length) : 0,
   };
   const safePage = Math.min(page, totalPages);
+  const startIndex = (safePage - 1) * PER_PAGE;
+  const paginatedRows = rows.slice(startIndex, startIndex + PER_PAGE);
 
   return (
     <div className={styles.container}>
       <Toasts toasts={toasts} remove={remove}/>
 
-      {/* Header */}
       <div className={styles.header}>
         <div>
           <h1 className={styles.title}>Generate &amp; Penerbitan SKPI</h1>
@@ -472,7 +470,6 @@ export default function GenerateSkpiPage() {
         </button>
       </div>
 
-      {/* Stats */}
       <div className={styles.statsGrid}>
         {[
           { icon: Users,       label: "Total Mahasiswa", val: stats.total,         color: "#765439", bg: "#fdf4ec" },
@@ -493,14 +490,12 @@ export default function GenerateSkpiPage() {
         })}
       </div>
 
-      {/* Banner */}
       <div className={styles.icpBanner}>
         <Shield size={14}/>
         <span>Syarat generate SKPI: minimal <strong>Bronze Achievement (100 ICP)</strong> &nbsp;|&nbsp;
           🥉 Bronze: 100–149 &nbsp;·&nbsp; 🥈 Silver: 150–199 &nbsp;·&nbsp; 🥇 Gold: ≥200 poin</span>
       </div>
 
-      {/* Filter Bar */}
       <div className={styles.filterBar}>
         <div className={styles.searchBox}>
           <Search size={15} className={styles.searchIco}/>
@@ -540,7 +535,6 @@ export default function GenerateSkpiPage() {
         </div>
       </div>
 
-      {/* Tabel */}
       <div className={styles.tableWrapper}>
         <div className={styles.tableScroll}>
           <table className={styles.table}>
@@ -563,14 +557,14 @@ export default function GenerateSkpiPage() {
                     <Loader2 size={30} className={styles.spin}/><p>Memuat data...</p>
                   </div>
                 </td></tr>
-              ) : rows.length === 0 ? (
+              ) : paginatedRows.length === 0 ? (
                 <tr><td colSpan={8} className={styles.emptyTd}>
                   <div className={styles.emptyState}>
                     <FileText size={42}/><p>Tidak ada data mahasiswa</p>
                     <span>Coba ubah filter pencarian</span>
                   </div>
                 </td></tr>
-              ) : rows.map((row, idx) => {
+              ) : paginatedRows.map((row, idx) => {
                 const tier      = getIcpTier(row.total_poin);
                 const TierIcon  = tier.icon;
                 const prodiCfg  = getProdiCfg(row.prodi);
@@ -580,7 +574,7 @@ export default function GenerateSkpiPage() {
 
                 return (
                   <tr key={row.id_mahasiswa} className={row.total_poin < 100 ? styles.rowDim : ""}>
-                    <td className={styles.tdNo}>{(safePage - 1) * PER_PAGE + idx + 1}</td>
+                    <td className={styles.tdNo}>{startIndex + idx + 1}</td>
                     <td>
                       <div className={styles.mhsCell}>
                         <div className={styles.avatar} style={{ background: prodiCfg.gradient }}>
@@ -594,12 +588,13 @@ export default function GenerateSkpiPage() {
                     <td><code className={styles.mhsNim}>{row.nim}</code></td>
                     <td>
                       <span className={styles.prodiBadge}
-                        style={{ background: prodiCfg.bg, color: prodiCfg.color, borderColor: prodiCfg.border }}>
+                        style={{ background: prodiCfg.bg, color: prodiCfg.color, borderColor: prodiCfg.border }}
+                        title={row.prodi}>
                         <span className={styles.prodiDot}
                           style={{ background: prodiCfg.gradient, fontSize: prodiCfg.label.length > 3 ? 7 : 8 }}>
                           {prodiCfg.label}
                         </span>
-                        {row.prodi}
+                        <span className={styles.prodiName}>{row.prodi}</span>
                       </span>
                     </td>
                     <td className={styles.colAngkatan}>
@@ -644,11 +639,10 @@ export default function GenerateSkpiPage() {
         </div>
       </div>
 
-      {/* Pagination */}
       {totalPages > 1 && (
         <div className={styles.pagination}>
           <span className={styles.paginInfo}>
-            {total === 0 ? 0 : (safePage - 1) * PER_PAGE + 1}–{Math.min(safePage * PER_PAGE, total)} dari {total}
+            {total === 0 ? 0 : startIndex + 1}–{Math.min(startIndex + PER_PAGE, total)} dari {total}
           </span>
           <div className={styles.paginBtns}>
             <button className={styles.pBtn} onClick={() => { setPage(1); }} disabled={safePage === 1}>«</button>
