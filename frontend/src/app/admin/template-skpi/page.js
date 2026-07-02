@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import styles from "./page.module.css";
 import { PRODI_LIST, getProdiTemplate } from "@/lib/prodi-templates";
+import { getProdiConfig } from "@/lib/prodi-config";
 
 // Konfigurasi API (sesuaikan dengan .env)
 const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
@@ -31,15 +32,7 @@ const toSlug = (s) => s.trim().replace(/\s+/g, "_").replace(/[^a-zA-Z0-9_]/g, ""
 /* ============================================================
    KONFIGURASI WARNA PER PRODI (hanya untuk tampilan)
 ============================================================ */
-const PRODI_CFG = {
-  "Teknologi Informasi":           { primary:"#ff7f00", border:"#ffaa33", gradient:"linear-gradient(135deg,#ff7f00,#e06000)", label:"TI"   },
-  "Sistem Informasi":              { primary:"#3d1111", border:"#8a4444", gradient:"linear-gradient(135deg,#3d1111,#7a3333)", label:"SI"   },
-  "Manajemen":                     { primary:"#0077aa", border:"#33aadd", gradient:"linear-gradient(135deg,#0077aa,#005588)", label:"MNJ"  },
-  "Kewirausahaan":                 { primary:"#cc2200", border:"#ff6644", gradient:"linear-gradient(135deg,#cc2200,#992200)", label:"KWU"  },
-  "Pendidikan Guru Sekolah Dasar": { primary:"#7a0087", border:"#bb44cc", gradient:"linear-gradient(135deg,#7a0087,#550066)", label:"PGSD" },
-  "Agroekoteknologi":              { primary:"#008b80", border:"#33ccbb", gradient:"linear-gradient(135deg,#008b80,#006655)", label:"AGRO" },
-};
-const getPC = (n) => PRODI_CFG[n] || { primary:"#765439", border:"#c8945a", gradient:"linear-gradient(135deg,#765439,#3d200a)", label:"?" };
+const getPC = (n) => getProdiConfig(n);
 
 /* ============================================================
    DAFTAR BAGIAN CPL (4 kelompok)

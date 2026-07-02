@@ -10,6 +10,7 @@ import {
   getMahasiswaList, getProdiList, getIcpSummary,
   generateSkpi, publishSkpi, getSkpiList,
 } from "@/lib/api";
+import { getProdiConfig } from "@/lib/prodi-config";
 
 /* ─────────────────────────────────────────
    MOCK DATA (sebagai fallback)
@@ -68,17 +69,8 @@ const STATUS_SKPI_CFG = {
   diterbitkan: { label: "Diterbitkan", color: "#16a34a", bg: "#dcfce7", border: "#86efac" },
 };
 
-const PRODI_CFG = {
-  "Teknologi Informasi":           { color: "#5b21b6", bg: "#ede9fe", border: "#c4b5fd", gradient: "linear-gradient(135deg,#7c3aed,#5b21b6)", label: "TI" },
-  "Sistem Informasi":              { color: "#765439", bg: "#fde8cc", border: "#d4a06a", gradient: "linear-gradient(135deg,#765439,#5c3317)", label: "SI" },
-  "Manajemen":                     { color: "#a16207", bg: "#fefce8", border: "#fde047", gradient: "linear-gradient(135deg,#ca8a04,#a16207)", label: "MNJ" },
-  "Kewirausahaan":                 { color: "#065f46", bg: "#d1fae5", border: "#6ee7b7", gradient: "linear-gradient(135deg,#059669,#065f46)", label: "KWU" },
-  "Pendidikan Guru Sekolah Dasar": { color: "#854d0e", bg: "#fef9c3", border: "#fde047", gradient: "linear-gradient(135deg,#ca8a04,#854d0e)", label: "PGSD" },
-  "Agroekoteknologi":              { color: "#166534", bg: "#dcfce7", border: "#86efac", gradient: "linear-gradient(135deg,#16a34a,#166534)", label: "AGRO" },
-};
-function getProdiCfg(nama) {
-  return PRODI_CFG[nama] || { color: "#765439", bg: "#fdf4ec", border: "#e4d4c4", gradient: "linear-gradient(135deg,#765439,#4a2f1a)", label: "?" };
-}
+// use centralized prodi color config
+function getProdiCfg(nama) { return getProdiConfig(nama); }
 
 function getAngkatanList() {
   const currentYear = new Date().getFullYear();

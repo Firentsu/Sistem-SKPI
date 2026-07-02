@@ -23,67 +23,13 @@ import {
   getProdiList,
   getAvatarUrl,
 } from "@/lib/api";
+import { getProdiConfig } from "@/lib/prodi-config";
 
 // ========== MOCK DATA ==========
 const USE_MOCK = false;
 
-export const PRODI_CONFIG = {
-  "Teknologi Informasi": {
-    primary: "#ff7f00", light: "#fff3e6", dark: "#cc6600",
-    gradient: "linear-gradient(135deg, #ff7f00, #ffaa33)",
-    bg: "#fff3e6", color: "#ff7f00", border: "#ffaa33",
-    bgDark: "#cc6600", bgLight: "#fff3e6", dot: "#ff7f00",
-    label: "TI", fakultas: "Teknologi",
-  },
-  "Manajemen": {
-    primary: "#a16207", light: "#fefce8", dark: "#713f12",
-    gradient: "linear-gradient(135deg, #a16207, #ca8a04)",
-    bg: "#fefce8", color: "#a16207", border: "#fde047",
-    bgDark: "#713f12", bgLight: "#fefce8", dot: "#a16207",
-    label: "MJ", fakultas: "Bisnis",
-  },
-  "Kewirausahaan": {
-    primary: "#ff3300", light: "#ffe6e0", dark: "#cc2900",
-    gradient: "linear-gradient(135deg, #ff3300, #ff7755)",
-    bg: "#ffe6e0", color: "#ff3300", border: "#ff7755",
-    bgDark: "#cc2900", bgLight: "#ffe6e0", dot: "#ff3300",
-    label: "KW", fakultas: "Bisnis",
-  },
-  "Pendidikan Guru Sekolah Dasar": {
-    primary: "#800080", light: "#f3e6f3", dark: "#660066",
-    gradient: "linear-gradient(135deg, #800080, #b300b3)",
-    bg: "#f3e6f3", color: "#800080", border: "#b300b3",
-    bgDark: "#660066", bgLight: "#f3e6f3", dot: "#800080",
-    label: "PGSD", fakultas: "Pendidikan",
-  },
-  "Agroekoteknologi": {
-    primary: "#00bfb3", light: "#e6faf8", dark: "#009988",
-    gradient: "linear-gradient(135deg, #00bfb3, #33ffdd)",
-    bg: "#e6faf8", color: "#00bfb3", border: "#33ffdd",
-    bgDark: "#009988", bgLight: "#e6faf8", dot: "#00bfb3",
-    label: "AGR", fakultas: "Pertanian",
-  },
-  "Sistem Informasi": {
-    primary: "#765439", light: "#fdf4ec", dark: "#5c3317",
-    gradient: "linear-gradient(135deg, #765439, #5c3317)",
-    bg: "#fdf4ec", color: "#5c3317", border: "#d4a06a",
-    bgDark: "#3d200a", bgLight: "#fdf4ec", dot: "#765439",
-    label: "SI", fakultas: "Teknologi",
-  },
-};
-
-const PRODI_FALLBACK = [
-  { bg: "#f3e8ff", color: "#7e22ce", border: "#d8b4fe", bgDark: "#9333ea", bgLight: "#fdf4ff", label: "?", gradient: "linear-gradient(135deg,#9333ea,#7e22ce)", dot: "#c084fc" },
-  { bg: "#fce7f3", color: "#9d174d", border: "#f9a8d4", bgDark: "#db2777", bgLight: "#fdf2f8", label: "?", gradient: "linear-gradient(135deg,#db2777,#9d174d)", dot: "#f472b6" },
-  { bg: "#ffedd5", color: "#c2410c", border: "#fdba74", bgDark: "#ea580c", bgLight: "#fff7ed", label: "?", gradient: "linear-gradient(135deg,#ea580c,#c2410c)", dot: "#fb923c" },
-];
-
-function getProdiConfig(nama) {
-  if (!nama || nama === "-") return PRODI_FALLBACK[0];
-  if (PRODI_CONFIG[nama]) return PRODI_CONFIG[nama];
-  const hash = (nama || "").split("").reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
-  return PRODI_FALLBACK[hash % PRODI_FALLBACK.length];
-}
+// use centralized prodi config
+function getProdiConfigLocal(nama) { return getProdiConfig(nama); }
 
 const MOCK_PRODI_LIST = [
   { id_prodi: "1", nama_prodi: "Teknologi Informasi" },

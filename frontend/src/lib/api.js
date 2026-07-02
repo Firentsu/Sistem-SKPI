@@ -7,11 +7,11 @@
  * 3. Frontend tetap bisa jalan walaupun tanpa backend
  */
 
-// Gunakan NEXT_PUBLIC_API_URL_LOCAL untuk localhost,
-// atau NEXT_PUBLIC_API_URL_NETWORK untuk akses dari jaringan (IP).
-// Sistem otomatis pilih berdasarkan dari mana halaman dibuka.
-const API_URL_LOCAL   = process.env.NEXT_PUBLIC_API_URL_LOCAL   || "";
-const API_URL_NETWORK = process.env.NEXT_PUBLIC_API_URL_NETWORK || API_URL_LOCAL;
+// Gunakan NEXT_PUBLIC_API_URL untuk backend lokal, atau opts tambahan untuk
+// koneksi jaringan jika diperlukan.
+const API_URL_PUBLIC  = process.env.NEXT_PUBLIC_API_URL || "";
+const API_URL_LOCAL   = process.env.NEXT_PUBLIC_API_URL_LOCAL   || API_URL_PUBLIC;
+const API_URL_NETWORK = process.env.NEXT_PUBLIC_API_URL_NETWORK || API_URL_PUBLIC;
 
 function resolveApiUrl() {
   if (typeof window === "undefined") return API_URL_LOCAL; // SSR

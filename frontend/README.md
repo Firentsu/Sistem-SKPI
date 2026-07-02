@@ -43,13 +43,19 @@ npm install
 cp .env.example .env.local
 ```
 
-Isi `NEXT_PUBLIC_API_URL` dengan URL backend:
+Isi `NEXT_PUBLIC_API_URL` dengan URL backend lokal:
 ```
 NEXT_PUBLIC_API_URL=http://localhost:5000
 ```
 
+Jika Anda ingin mengakses backend dari perangkat lain di jaringan lokal, gunakan IP komputer backend:
+```
+NEXT_PUBLIC_API_URL=http://192.168.x.x:5000
+```
+
 ### 3. Jalankan
 ```bash
+npm install
 npm run dev    # buka http://localhost:3000
 ```
 

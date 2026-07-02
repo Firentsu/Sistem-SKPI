@@ -2,16 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { X, Download, Loader2, FileText, AlertCircle, Printer } from "lucide-react";
+import { getProdiConfig } from "@/lib/prodi-config";
 
-const PRODI_CFG = {
-  "Teknologi Informasi":           { primary:"#ff7f00", gradient:"linear-gradient(135deg,#ff7f00,#e06000)" },
-  "Sistem Informasi":              { primary:"#3d1111", gradient:"linear-gradient(135deg,#3d1111,#7a3333)" },
-  "Manajemen":                     { primary:"#0077aa", gradient:"linear-gradient(135deg,#0077aa,#005588)" },
-  "Kewirausahaan":                 { primary:"#cc2200", gradient:"linear-gradient(135deg,#cc2200,#992200)" },
-  "Pendidikan Guru Sekolah Dasar": { primary:"#7a0087", gradient:"linear-gradient(135deg,#7a0087,#550066)" },
-  "Agroekoteknologi":              { primary:"#008b80", gradient:"linear-gradient(135deg,#008b80,#006655)" },
-};
-const getPC  = (n) => PRODI_CFG[n] || { primary:"#765439", gradient:"linear-gradient(135deg,#765439,#3d200a)" };
+const getPC  = (n) => getProdiConfig(n);
 const toSlug = (s) => s.trim().replace(/\s+/g,"_").replace(/[^a-zA-Z0-9_]/g,"");
 
 const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";

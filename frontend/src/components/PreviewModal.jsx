@@ -6,19 +6,12 @@ import {
   FileText, AlertCircle, Printer, RotateCcw,
   ChevronLeft, ChevronRight, FileWarning,
 } from "lucide-react";
+import { getProdiConfig } from "@/lib/prodi-config";
 
 /* ─────────────────────────────────────────
    KONFIGURASI WARNA PRODI
 ───────────────────────────────────────── */
-const PRODI_CFG = {
-  "Teknologi Informasi": { primary: "#ff7f00", light: "#fff3e6", border: "#ffaa33", gradient: "linear-gradient(135deg,#ff7f00,#e06000)", label: "TI" },
-  "Sistem Informasi": { primary: "#3d1111", light: "#f0ecec", border: "#8a4444", gradient: "linear-gradient(135deg,#3d1111,#7a3333)", label: "SI" },
-  "Manajemen": { primary: "#0077aa", light: "#e6f4fa", border: "#33aadd", gradient: "linear-gradient(135deg,#0077aa,#005588)", label: "MJ" },
-  "Kewirausahaan": { primary: "#cc2200", light: "#ffe8e0", border: "#ff6644", gradient: "linear-gradient(135deg,#cc2200,#992200)", label: "KW" },
-  "Pendidikan Guru Sekolah Dasar": { primary: "#7a0087", light: "#f5e6f8", border: "#bb44cc", gradient: "linear-gradient(135deg,#7a0087,#550066)", label: "PGSD" },
-  "Agroekoteknologi": { primary: "#008b80", light: "#e0f8f5", border: "#33ccbb", gradient: "linear-gradient(135deg,#008b80,#006655)", label: "AGR" },
-};
-const getPC = (nama) => PRODI_CFG[nama] || { primary: "#765439", light: "#fdf4ec", border: "#c8945a", gradient: "linear-gradient(135deg,#765439,#3d200a)", label: "?" };
+const getPC = (nama) => getProdiConfig(nama);
 const toSlug = (s) => s.trim().replace(/\s+/g, "_").replace(/[^a-zA-Z0-9_]/g, "");
 
 /* ─────────────────────────────────────────
