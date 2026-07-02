@@ -23,7 +23,6 @@ const STATUS_LABEL = {
   revisi:    "Revisi",
 };
 
-
 function relativeTime(isoString) {
   const diff = Math.floor((Date.now() - new Date(isoString)) / 1000);
   if (diff < 60) return `${diff} detik lalu`;

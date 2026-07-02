@@ -446,7 +446,7 @@ function MahasiswaLayoutInner({ children }) {
       >
         <div className={styles.brand}>
           <div className={styles.logo}>
-            <Image src="/img/logo_isb.png" alt="logo" width={80} height={35} priority style={{ height: "auto" }} />
+            <Image src="/img/logo_isb.png" alt="logo" width={80} height={35} priority style={{ width: "auto", height: "auto" }} />
           </div>
           <div className={styles.brandText}><strong>SKPI</strong><span>Mahasiswa</span></div>
         </div>

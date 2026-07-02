@@ -53,7 +53,7 @@ const PER_PAGE = 10;
 /* ── ICP Tiers ── */
 const ICP_TIERS = [
   { min: 200, label: "Gold Achievement",   color: "#ca8a04", bg: "#fef9c3", border: "#fde047", icon: Trophy },
-  { min: 150, label: "Silver Achievement", color: "#2563eb", bg: "#dbeafe", border: "#93c5fd", icon: Medal },
+  { min: 150, label: "Silver Achievement", color: "#765439", bg: "#fde8cc", border: "#d4a06a", icon: Medal },
   { min: 100, label: "Bronze Achievement", color: "#92400e", bg: "#fef3c7", border: "#fcd34d", icon: Award },
   { min: 0,   label: "Belum Memenuhi",     color: "#dc2626", bg: "#fee2e2", border: "#fca5a5", icon: AlertCircle },
 ];
@@ -70,8 +70,8 @@ const STATUS_SKPI_CFG = {
 
 const PRODI_CFG = {
   "Teknologi Informasi":           { color: "#5b21b6", bg: "#ede9fe", border: "#c4b5fd", gradient: "linear-gradient(135deg,#7c3aed,#5b21b6)", label: "TI" },
-  "Sistem Informasi":              { color: "#1d4ed8", bg: "#dbeafe", border: "#93c5fd", gradient: "linear-gradient(135deg,#2563eb,#1d4ed8)", label: "SI" },
-  "Manajemen":                     { color: "#0369a1", bg: "#e0f2fe", border: "#7dd3fc", gradient: "linear-gradient(135deg,#0284c7,#0369a1)", label: "MNJ" },
+  "Sistem Informasi":              { color: "#765439", bg: "#fde8cc", border: "#d4a06a", gradient: "linear-gradient(135deg,#765439,#5c3317)", label: "SI" },
+  "Manajemen":                     { color: "#a16207", bg: "#fefce8", border: "#fde047", gradient: "linear-gradient(135deg,#ca8a04,#a16207)", label: "MNJ" },
   "Kewirausahaan":                 { color: "#065f46", bg: "#d1fae5", border: "#6ee7b7", gradient: "linear-gradient(135deg,#059669,#065f46)", label: "KWU" },
   "Pendidikan Guru Sekolah Dasar": { color: "#854d0e", bg: "#fef9c3", border: "#fde047", gradient: "linear-gradient(135deg,#ca8a04,#854d0e)", label: "PGSD" },
   "Agroekoteknologi":              { color: "#166534", bg: "#dcfce7", border: "#86efac", gradient: "linear-gradient(135deg,#16a34a,#166534)", label: "AGRO" },
@@ -477,7 +477,7 @@ export default function GenerateSkpiPage() {
         {[
           { icon: Users,       label: "Total Mahasiswa", val: stats.total,         color: "#765439", bg: "#fdf4ec" },
           { icon: Award,       label: "Siap Generate",   val: stats.siap,          color: "#16a34a", bg: "#dcfce7" },
-          { icon: CheckSquare, label: "Diterbitkan",     val: stats.diterbitkan,   color: "#2563eb", bg: "#dbeafe" },
+          { icon: CheckSquare, label: "Diterbitkan",     val: stats.diterbitkan,   color: "#765439", bg: "#fde8cc" },
           { icon: TrendingUp,  label: "Rata-rata ICP",   val: stats.rataIcp,       color: "#7c3aed", bg: "#ede9fe" },
         ].map(s => {
           const Icon = s.icon;

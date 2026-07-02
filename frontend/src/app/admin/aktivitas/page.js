@@ -408,14 +408,17 @@ export default function AktivitasPage() {
           <table className={styles.table}>
             <thead>
               <tr>
-                <th className={styles.thNo}>No.</th>
-                <th>Nama Kegiatan</th>
-                <th>Mahasiswa</th>
-                <th>Kategori</th>
-                <th className={styles.thCenter}>Tanggal</th>
+                <th className={`${styles.thNo} ${styles.hideMobile}`}>No.</th>
+                <th>
+                  <span className={styles.colLabelFull}>Nama Kegiatan</span>
+                  <span className={styles.colLabelShort}>Kegiatan</span>
+                </th>
+                <th className={styles.hideMobile}>Mahasiswa</th>
+                <th className={`${styles.thCenter} ${styles.hideMobile}`}>Kategori</th>
+                <th className={`${styles.thCenter} ${styles.hideMobile}`}>Tanggal</th>
                 <th className={styles.thCenter}>Status</th>
                 <th className={styles.thCenter}>Bukti</th>
-                <th className={styles.thCenter}>Aksi</th>
+                <th className={`${styles.thCenter} ${styles.thAksi}`}>Aksi</th>
               </tr>
             </thead>
             <tbody>
@@ -440,21 +443,21 @@ export default function AktivitasPage() {
                 </tr>
               ) : filteredRows.map((row, idx) => (
                 <tr key={row.id_kegiatan}>
-                  <td className={styles.tdNo}>{(safePage - 1) * PER_PAGE + idx + 1}</td>
+                  <td className={`${styles.tdNo} ${styles.hideMobile}`}>{(safePage - 1) * PER_PAGE + idx + 1}</td>
                   <td>
                     <div className={styles.kegiatanName}>{row.nama_kegiatan}</div>
                     {row.penyelenggara && (
                       <div className={styles.kegiatanSub}><Building2 size={10}/>{row.penyelenggara}</div>
                     )}
                   </td>
-                  <td>
+                  <td className={styles.hideMobile}>
                     <div className={styles.mhsName}>{row.mahasiswa?.nama || "-"}</div>
                     <code className={styles.mhsNim}>{row.mahasiswa?.nim || "-"}</code>
                   </td>
-                  <td className={styles.tdKat}>
+                  <td className={`${styles.tdKat} ${styles.hideMobile}`}>
                     {SKPI_LABELS[row.kategori_skpi] || row.kategoriaktivitas?.nama_indo || "-"}
                   </td>
-                  <td className={styles.tdCenter}>
+                  <td className={`${styles.tdCenter} ${styles.hideMobile}`}>
                     <div className={styles.tglBadge}>
                       {row.tanggal_kegiatan
                         ? new Date(row.tanggal_kegiatan).toLocaleDateString("id-ID",{day:"2-digit",month:"short",year:"numeric"})

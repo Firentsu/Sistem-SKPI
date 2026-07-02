@@ -76,8 +76,8 @@ app.use(session({
   },
 }));
 
-// Sajikan folder uploads
-app.use("/uploads", express.static("public/uploads"));
+// Sajikan folder uploads (cache 1 jam agar PDF loading cepat)
+app.use("/uploads", express.static("public/uploads", { maxAge: "1h" }));
 
 // ── Routes admin ─────────────────────────────────────────────
 app.use("/api/auth",        authRoutes);
@@ -86,7 +86,7 @@ app.use("/api/aktivitas",   aktivitasRoutes);
 app.use("/api/skpi",        skpiRoutes);
 app.use("/api/master-data",    masterDataRoutes);
 app.use("/api/template-skpi", templateSkpiRoutes);
-app.use("/api/icp",         icpRoutes);
+app.use("/api/icp",         icpRoutes); 
 
 // ── Routes mahasiswa (spesifik dulu, umum belakangan) ────────
 app.use("/api/mahasiswa/auth",        mahasiswaAuthRoutes);
@@ -118,5 +118,6 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`   Auth     : Session-based (MySQL Store)`);
   console.log(`   Database : ${process.env.DB_NAME}@${process.env.DB_HOST}`);
   console.log(`   Admin    : /api/auth | /api/admin | /api/aktivitas | /api/skpi | /api/master-data | /api/icp`);
-  console.log(`   Mahasiswa: /api/mahasiswa/auth | /api/mahasiswa/kegiatan | /api/mahasiswa/pengajuan\n`);
+  console.log(`   Mahasiswa: /api/mahasiswa/auth | /api/mahasiswa/kegiatan | /api/mahasiswa/pengajuan`);
+  console.log(`   Tailscale: /api/tailscale-sync/test | /api/tailscale-sync/mahasiswa | /api/tailscale-sync/icp | /api/tailscale-sync/both\n`);
 });

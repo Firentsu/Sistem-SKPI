@@ -208,6 +208,88 @@
   text-overflow: ellipsis;
 }
 
+/* ── Group / Dropdown di Sidebar ── */
+.navGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.navGroupBtn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 9px 10px;
+  border-radius: 9px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: rgba(253, 220, 160, 0.65);
+  font-size: 13.5px;
+  font-weight: 500;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+  width: 100%;
+  text-align: left;
+}
+
+.navGroupBtn:hover {
+  background: rgba(255, 220, 150, 0.1);
+  color: rgba(253, 230, 138, 0.9);
+}
+
+.navGroupBtnActive {
+  background: rgba(253, 230, 138, 0.15);
+  color: #fde68a;
+  font-weight: 600;
+}
+
+.groupChevron {
+  margin-left: auto;
+  flex-shrink: 0;
+  transition: transform 0.2s;
+}
+
+.navSubItems {
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  animation: subSlideDown 0.15s ease;
+}
+
+@keyframes subSlideDown {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.navSubItem {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  text-decoration: none;
+  color: rgba(253, 210, 140, 0.5);
+  font-size: 13px;
+  font-weight: 500;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+
+.navSubItem:hover {
+  background: rgba(255, 220, 150, 0.08);
+  color: rgba(253, 230, 138, 0.85);
+}
+
+.navSubItemActive {
+  background: rgba(253, 230, 138, 0.12);
+  color: #fde68a;
+  font-weight: 600;
+}
+
 .sidebarFooter {
   padding: 12px 14px;
   border-top: 1px solid rgba(255, 220, 150, 0.1);
@@ -1565,8 +1647,8 @@
 }
 
 .iconBtn:hover {
-  background: #f3f4f6;
-  color: #1e3a8a;
+  background: #f5ece4;
+  color: #765439;
   transform: translateY(-1px);
 }
 
@@ -1638,7 +1720,7 @@
   border: none;
   font-size: 0.7rem;
   font-weight: 500;
-  color: #3b82f6;
+  color: #765439;
   cursor: pointer;
   transition: opacity 0.2s;
   padding: 0.2rem 0.5rem;
@@ -1646,7 +1728,7 @@
 }
 
 .notifMarkAllBtn:hover {
-  background: #eef2ff;
+  background: #f5ece4;
   opacity: 0.9;
 }
 
@@ -1709,7 +1791,7 @@
 
 .notifTypePublished  { background: #dcfce7; color: #047857; }
 .notifTypeRevision   { background: #fff7ed; color: #b45309; }
-.notifTypeSkpi       { background: #eff6ff; color: #3b82f6; }
+.notifTypeSkpi       { background: #fde8cc; color: #765439; }
 .notifTypeVerifikasi { background: #f3e8ff; color: #7c3aed; }
 
 .notifUnreadDot {
@@ -1718,7 +1800,7 @@
   right: 12px;
   width: 7px;
   height: 7px;
-  background: #3b82f6;
+  background: #765439;
   border-radius: 50%;
   border: 1.5px solid #fff;
 }
@@ -1766,7 +1848,7 @@
 .notifFooter a {
   font-size: 0.75rem;
   font-weight: 500;
-  color: #3b82f6;
+  color: #765439;
   text-decoration: none;
   transition: all 0.2s;
   display: inline-flex;
@@ -1776,7 +1858,7 @@
 
 .notifFooter a:hover {
   gap: 8px;
-  color: #1d4ed8;
+  color: #5c3317;
 }
 
 /* Empty state */

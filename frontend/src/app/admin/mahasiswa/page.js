@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import Link from "next/link";
 import * as XLSX from "xlsx";
 import {
   Search, Plus, Upload, Download, Edit2, KeyRound,
@@ -10,7 +9,7 @@ import {
   GraduationCap, Filter, MoreVertical,
   Eye, EyeOff, RefreshCw, CheckCircle2,
   TrendingUp, UserCheck, ChevronDown, Loader2,
-  FileText, PieChart as PieChartIcon, Shield,
+  FileText, PieChart as PieChartIcon,
 } from "lucide-react";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import styles from "./page.module.css";
@@ -37,10 +36,10 @@ export const PRODI_CONFIG = {
     label: "TI", fakultas: "Teknologi",
   },
   "Manajemen": {
-    primary: "#0099cc", light: "#e6f5fa", dark: "#0077aa",
-    gradient: "linear-gradient(135deg, #0099cc, #33ccff)",
-    bg: "#e6f5fa", color: "#0099cc", border: "#33ccff",
-    bgDark: "#0077aa", bgLight: "#e6f5fa", dot: "#0099cc",
+    primary: "#a16207", light: "#fefce8", dark: "#713f12",
+    gradient: "linear-gradient(135deg, #a16207, #ca8a04)",
+    bg: "#fefce8", color: "#a16207", border: "#fde047",
+    bgDark: "#713f12", bgLight: "#fefce8", dot: "#a16207",
     label: "MJ", fakultas: "Bisnis",
   },
   "Kewirausahaan": {
@@ -65,10 +64,10 @@ export const PRODI_CONFIG = {
     label: "AGR", fakultas: "Pertanian",
   },
   "Sistem Informasi": {
-    primary: "#2563eb", light: "#eff6ff", dark: "#1d4ed8",
-    gradient: "linear-gradient(135deg, #2563eb, #3b82f6)",
-    bg: "#eff6ff", color: "#1d4ed8", border: "#93c5fd",
-    bgDark: "#1e40af", bgLight: "#eff6ff", dot: "#2563eb",
+    primary: "#765439", light: "#fdf4ec", dark: "#5c3317",
+    gradient: "linear-gradient(135deg, #765439, #5c3317)",
+    bg: "#fdf4ec", color: "#5c3317", border: "#d4a06a",
+    bgDark: "#3d200a", bgLight: "#fdf4ec", dot: "#765439",
     label: "SI", fakultas: "Teknologi",
   },
 };
@@ -958,19 +957,11 @@ export default function MahasiswaPage() {
     <div className={styles.page}>
       <Toast toasts={toasts} remove={remove} />
 
-      {/* HEADER + NAVIGASI TAB */}
+      {/* HEADER */}
       <div className={styles.pageHeader}>
         <div>
           <h1 className={styles.pageTitle}>Manajemen Mahasiswa</h1>
           <p className={styles.pageSub}>Kelola data mahasiswa, reset password, dan status akun</p>
-        </div>
-        <div className={styles.headerNav}>
-          <Link href="/admin/Manajemen-Akun" className={styles.navTab}>
-            <Shield size={15} /> Admin
-          </Link>
-          <span className={`${styles.navTab} ${styles.navTabActive}`}>
-            <GraduationCap size={15} /> Mahasiswa
-          </span>
         </div>
       </div>
 
@@ -1077,14 +1068,17 @@ export default function MahasiswaPage() {
           <table className={styles.table}>
             <thead>
               <tr>
-                <th className={styles.thNo}>No.</th>
-                <th>Nama Mahasiswa</th>
+                <th className={`${styles.thNo} ${styles.hideMobile}`}>No.</th>
+                <th>
+                  <span className={styles.colLabelFull}>Nama Mahasiswa</span>
+                  <span className={styles.colLabelShort}>Nama</span>
+                </th>
                 <th>NIM</th>
-                <th>Program Studi</th>
-                <th className={styles.thCenter}>Angkatan</th>
-                <th className={styles.thCenter}>Status SKPI</th>
+                <th className={`${styles.thCenter} ${styles.hideMobile}`}>Prodi</th>
+                <th className={`${styles.thCenter} ${styles.hideMobile}`}>Angkt</th>
+                <th className={styles.thCenter}>SKPI</th>
                 <th className={styles.thCenter}>Akun</th>
-                <th className={styles.thCenter}>Aksi</th>
+                <th className={`${styles.thCenter} ${styles.thAksi}`}>Aksi</th>
               </tr>
             </thead>
             <tbody>
@@ -1108,7 +1102,7 @@ export default function MahasiswaPage() {
                 </tr>
               ) : filtered.map((row, idx) => (
                 <tr key={row.id} className={!row.aktif ? styles.rowInactive : ""}>
-                  <td className={styles.tdNo}>{start + idx + 1}</td>
+                  <td className={`${styles.tdNo} ${styles.hideMobile}`}>{start + idx + 1}</td>
                   <td>
                     <div className={styles.nameCell}>
                       <MhsAvatar row={row} />
@@ -1119,8 +1113,8 @@ export default function MahasiswaPage() {
                     </div>
                   </td>
                   <td><span className={styles.nimBadge}>{row.nim}</span></td>
-                  <td><ProdiChip nama={row.nama_prodi} /></td>
-                  <td className={styles.tdCenter}>
+                  <td className={styles.hideMobile}><ProdiChip nama={row.nama_prodi} /></td>
+                  <td className={`${styles.tdCenter} ${styles.hideMobile}`}>
                     <span className={styles.angkatanBadge}>{row.angkatan}</span>
                   </td>
                   <td className={styles.tdCenter}><StatusBadge status={row.status_skpi} /></td>

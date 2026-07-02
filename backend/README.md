@@ -97,6 +97,21 @@ npm run start      # production
 | PATCH  | /api/mahasiswa/:id   | Update data mahasiswa   | ✅    |
 | DELETE | /api/mahasiswa/:id   | Hapus mahasiswa         | ✅    |
 
+### Tailscale Sync — `/api/tailscale-sync`
+| Method | Endpoint                        | Deskripsi                           | Auth? |
+|--------|---------------------------------|-------------------------------------|-------|
+| GET    | /api/tailscale-sync/test        | Test koneksi ke Tailscale API       | ✅    |
+| GET    | /api/tailscale-sync/mahasiswa   | Sinkronisasi data mahasiswa         | ✅    |
+| GET    | /api/tailscale-sync/icp         | Sinkronisasi data ICP               | ✅    |
+| GET    | /api/tailscale-sync/both        | Sinkronisasi mahasiswa & ICP        | ✅    |
+
+> **Catatan:** Konfigurasi API Tailscale ada di file `.env`:
+> ```env
+> TAILSCALE_API_URL="http://100.110.153.63:5001"
+> TAILSCALE_API_KEY=""
+> ```
+> Lihat [TAILSCALE_SYNC_GUIDE.md](../TAILSCALE_SYNC_GUIDE.md) untuk detail lengkap.
+
 ### Health Check
 | Method | Endpoint      | Deskripsi       |
 |--------|---------------|-----------------|

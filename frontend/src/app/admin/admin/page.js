@@ -1,11 +1,10 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import Link from "next/link";
 import * as XLSX from "xlsx";
 import {
   Search, Plus, Edit2, KeyRound, ToggleLeft, ToggleRight,
-  ChevronLeft, ChevronRight, X, Check, AlertCircle, Users,
+  ChevronLeft, ChevronRight, X, Check, AlertCircle,
   Filter, MoreVertical, Eye, EyeOff, RefreshCw, CheckCircle2,
   Shield, UserCog, Mail, AtSign, Trash2, ShieldCheck, ShieldOff,
   ChevronDown, Upload, Download, FileSpreadsheet, Loader2,
@@ -505,7 +504,7 @@ export default function AdminManagementPage() {
   useEffect(() => { loadData(); }, [loadData]);
 
   useEffect(() => {
-    document.title = "Manajemen Akun | SKPI";
+    document.title = "Manajemen Admin | SKPI";
   }, []);
 
   useEffect(() => {
@@ -592,9 +591,9 @@ export default function AdminManagementPage() {
       }
     }
     const parts = [
-      success > 0 ? `${success} berhasil`             : null,
+      success > 0 ? `${success} berhasil` : null,
       skipped > 0 ? `${skipped} dilewati (sudah ada)` : null,
-      failed  > 0 ? `${failed} gagal`                  : null,
+      failed > 0 ? `${failed} gagal` : null,
     ].filter(Boolean).join(", ");
     setCurrentPage(1);
     await loadData("", 1);
@@ -615,19 +614,11 @@ export default function AdminManagementPage() {
     <div className={styles.page}>
       <Toast toasts={toasts} remove={remove} />
 
-      {/* HEADER + NAVIGASI TAB */}
+      {/* HEADER */}
       <div className={styles.pageHeader}>
         <div>
           <h1 className={styles.pageTitle}>Manajemen Administrator</h1>
           <p className={styles.pageSub}>Kelola akun admin, reset password, dan status akun</p>
-        </div>
-        <div className={styles.headerNav}>
-          <span className={`${styles.navTab} ${styles.navTabActive}`}>
-            <Shield size={15} /> Admin
-          </span>
-          <Link href="/admin/mahasiswa" className={styles.navTab}>
-            <Users size={15} /> Mahasiswa
-          </Link>
         </div>
       </div>
 
@@ -700,13 +691,16 @@ export default function AdminManagementPage() {
           <table className={styles.table}>
             <thead>
               <tr>
-                <th className={styles.thNo}>No.</th>
-                <th>Nama Administrator</th>
+                <th className={`${styles.thNo} ${styles.hideMobile}`}>No.</th>
+                <th>
+                  <span className={styles.colLabelFull}>Nama Administrator</span>
+                  <span className={styles.colLabelShort}>Nama</span>
+                </th>
                 <th>Username</th>
                 <th className={styles.thCenter}>Akun</th>
-                <th className={styles.thCenter}>Dibuat</th>
-                <th className={styles.thCenter}>Login Terakhir</th>
-                <th className={styles.thCenter}>Aksi</th>
+                <th className={`${styles.thCenter} ${styles.hideMobile}`}>Dibuat</th>
+                <th className={`${styles.thCenter} ${styles.hideMobile}`}>Login Terakhir</th>
+                <th className={`${styles.thCenter} ${styles.thAksi}`}>Aksi</th>
               </tr>
             </thead>
             <tbody>
@@ -731,7 +725,7 @@ export default function AdminManagementPage() {
                 </tr>
               ) : data.map((row, idx) => (
                 <tr key={row.id} className={!row.aktif ? styles.rowInactive : ""}>
-                  <td className={styles.tdNo}>{start + idx + 1}</td>
+                  <td className={`${styles.tdNo} ${styles.hideMobile}`}>{start + idx + 1}</td>
                   <td>
                     <div className={styles.nameCell}>
                       {row.avatar ? (
@@ -756,8 +750,8 @@ export default function AdminManagementPage() {
                       {row.aktif ? "Aktif" : "Nonaktif"}
                     </span>
                   </td>
-                  <td className={styles.tdCenter}><span className={styles.dateText}>{row.created_at}</span></td>
-                  <td className={styles.tdCenter}><span className={styles.dateText}>{row.last_login}</span></td>
+                  <td className={`${styles.tdCenter} ${styles.hideMobile}`}><span className={styles.dateText}>{row.created_at}</span></td>
+                  <td className={`${styles.tdCenter} ${styles.hideMobile}`}><span className={styles.dateText}>{row.last_login}</span></td>
                   <td className={styles.tdCenter}>
                     <RowActions
                       row={row}

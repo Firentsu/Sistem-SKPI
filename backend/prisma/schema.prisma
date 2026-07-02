@@ -239,6 +239,16 @@ model tandatangandigital {
   status       Boolean @default(true)
 }
 
+model tailscale_config {
+  id           Int      @id @default(autoincrement())
+  api_url      String   @default("")
+  api_key      String   @default("")
+  mahasiswa_ep String   @default("/api/users/by-role/mahasiswa")
+  icp_ep       String   @default("/api/icp/balance/ranking")
+  updated_at   DateTime @updatedAt
+  updated_by   Int?
+}
+
 model templateskpi {
   id_template     Int               @id @default(autoincrement())
   nama_template   String

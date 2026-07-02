@@ -179,7 +179,7 @@
   left: 6px;
   width: 7px;
   height: 7px;
-  background: #3b82f6;
+  background: #765439;
   border-radius: 50%;
   border: 1.5px solid #fff;
 }
@@ -197,7 +197,7 @@
 }
 .iconPublished  { background: #dcfce7; color: #047857; }
 .iconRevisi     { background: #fff7ed; color: #b45309; }
-.iconSkpi       { background: #eff6ff; color: #3b82f6; }
+.iconSkpi       { background: #fde8cc; color: #765439; }
 .iconVerifikasi { background: #f3e8ff; color: #7c3aed; }
 
 /* ── Content ── */

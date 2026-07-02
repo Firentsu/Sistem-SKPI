@@ -6,10 +6,10 @@ import Image from "next/image";
 import { useState, useEffect, useRef, useCallback } from "react";
 import {
   LayoutDashboard, Users, FileText, Settings, LogOut,
-  ChevronRight, Bell, Shield, BookOpen, Award,
+  ChevronRight, ChevronDown, Bell, Shield, BookOpen, Award,
   Camera, X, Check, Upload, WifiOff,
   CheckCircle2, AlertTriangle, ClipboardCheck, Send, Clock,
-  Menu, User,// ← tombol menu untuk mobile
+  Menu, User, RefreshCcw,// ← tombol menu untuk mobile + icon sync
 } from "lucide-react";
 import styles from "./admin.module.css";
 import { useRouter, usePathname } from "next/navigation";
@@ -264,6 +264,7 @@ export default function AdminLayout({ children }) {
   const [notifOpen, setNotifOpen] = useState(false);
   const [notifUnread, setNotifUnread] = useState(0);
   const [sidebarOpen, setSidebarOpen] = useState(false); // ← state untuk sidebar di mobile
+  const [akunManajemenOpen, setAkunManajemenOpen] = useState(false);
   const notifRef = useRef(null);
 
   const [avatarSrc, setAvatarSrc] = useState("/img/avatar.jpg");
@@ -352,15 +353,32 @@ export default function AdminLayout({ children }) {
     setSidebarOpen(false);
   }, [pathname]);
 
+  // Auto-buka dropdown Manajemen Akun saat berada di halaman terkait
+  const isOnManajemenAkun = pathname.startsWith("/admin/admin") || pathname.startsWith("/admin/mahasiswa");
+  useEffect(() => {
+    if (isOnManajemenAkun) setAkunManajemenOpen(true);
+  }, [isOnManajemenAkun]);
+
   const navItems = [
     { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { href: "/admin/Manajemen-Akun", label: "Manajemen Akun", icon: Users },
+    {
+      type: "group", id: "manajemen-akun", label: "Manajemen Akun", icon: Users,
+      items: [
+        { href: "/admin/admin", label: "Admin", icon: Shield },
+        { href: "/admin/mahasiswa", label: "Mahasiswa", icon: User },
+      ],
+    },
     { href: "/admin/master-data", label: "Master Data", icon: Settings },
     { href: "/admin/aktivitas", label: "Aktivitas", icon: BookOpen },
     { href: "/admin/template-skpi", label: "Template SKPI", icon: FileText },
     { href: "/admin/generate-skpi", label: "Generate SKPI", icon: Award },
     { href: "/admin/profile", label: "Profile", icon: User },
   ];
+
+  // Semua item rata (untuk breadcrumb)
+  const allNavFlat = navItems.flatMap(item =>
+    item.type === "group" ? item.items : [item]
+  );
 
   async function handleLogout() {
     if (loggingOut) return;
@@ -375,7 +393,7 @@ export default function AdminLayout({ children }) {
     setShowEditor(false);
   }, []);
 
-  const activeNav = navItems.find(n => pathname.startsWith(n.href));
+  const activeNav = allNavFlat.find(n => pathname.startsWith(n.href));
   const isProfile = pathname.startsWith("/admin/profile");
   const breadcrumb = isProfile ? "Profile" : (activeNav ? activeNav.label : "Dashboard");
 
@@ -423,6 +441,48 @@ export default function AdminLayout({ children }) {
         <nav className={styles.nav}>
           <p className={styles.navSection}>MENU</p>
           {navItems.map((item) => {
+            if (item.type === "group") {
+              const GroupIcon = item.icon;
+              const isGroupActive = item.items.some(sub => pathname.startsWith(sub.href));
+              return (
+                <div key={item.id} className={styles.navGroup}>
+                  <button
+                    className={`${styles.navGroupBtn} ${isGroupActive ? styles.navGroupBtnActive : ""}`}
+                    onClick={() => setAkunManajemenOpen(o => !o)}
+                  >
+                    {isGroupActive && <span className={styles.activeAccent} />}
+                    <span className={styles.iconWrap}><GroupIcon size={17} /></span>
+                    <span className={styles.navLabel}>{item.label}</span>
+                    <ChevronDown
+                      size={13}
+                      className={styles.groupChevron}
+                      style={{ transform: akunManajemenOpen ? "rotate(180deg)" : "none" }}
+                    />
+                  </button>
+                  {akunManajemenOpen && (
+                    <div className={styles.navSubItems}>
+                      {item.items.map(sub => {
+                        const SubIcon = sub.icon;
+                        const isSubActive = pathname.startsWith(sub.href);
+                        return (
+                          <Link
+                            key={sub.href}
+                            href={sub.href}
+                            className={`${styles.navSubItem} ${isSubActive ? styles.navSubItemActive : ""}`}
+                            onClick={() => setSidebarOpen(false)}
+                          >
+                            {isSubActive && <span className={styles.activeAccent} />}
+                            <span className={styles.iconWrap}><SubIcon size={15} /></span>
+                            <span className={styles.navLabel}>{sub.label}</span>
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            }
+
             const Icon = item.icon;
             const isActive = pathname.startsWith(item.href);
             return (

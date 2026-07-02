@@ -17,7 +17,7 @@ import {
   ChevronDown, Search, Loader2, BookOpen, FileText,
   Trash2, Download, Edit3, Plus, Save, RotateCcw,
   GraduationCap, Info, ChevronUp, Shield, Wrench, Star,
-  Building2, Award, Calendar, PenTool, GripVertical,
+  Building2, PenTool, GripVertical,
 } from "lucide-react";
 import styles from "./page.module.css";
 import { PRODI_LIST, getProdiTemplate } from "@/lib/prodi-templates";
@@ -116,14 +116,14 @@ function Toast({ msg, onClose }) {
 }
 
 /* ============================================================
-   PREVIEW MODAL – Menampilkan PDF hasil konversi dari backend
+   PREVIEW MODAL – PDF langsung dari static URL (tanpa API)
 ============================================================ */
 function PreviewModal({ prodi, onClose }) {
   const slug = toSlug(prodi);
-  const cfg  = getPC(prodi);
-  const [status,  setStatus]  = useState("loading");
-  const [errMsg,  setErrMsg]  = useState("");
-  const [blobUrl, setBlobUrl] = useState("");
+  const [errMsg, setErrMsg] = useState("");
+
+  // URL static PDF — langsung dari folder public, tanpa auth/konversi
+  const pdfUrl = `${API}/uploads/templates/pdf/${slug}.pdf?t=${Date.now()}`;
 
   useEffect(() => {
     const fn = (e) => { if (e.key === "Escape") onClose(); };
@@ -136,29 +136,16 @@ function PreviewModal({ prodi, onClose }) {
     return () => { document.body.style.overflow = ""; };
   }, []);
 
-  useEffect(() => {
-    setStatus("loading"); setErrMsg(""); setBlobUrl("");
-    fetch(`${API}/api/template-skpi/preview/${slug}`, { credentials:"include" })
-      .then(async res => {
-        if (!res.ok) {
-          const j = await res.json().catch(() => ({}));
-          throw new Error(j.error || `Error ${res.status}`);
-        }
-        const blob = await res.blob();
-        setBlobUrl(URL.createObjectURL(blob));
-        setStatus("ok");
-      })
-      .catch(e => { setErrMsg(e.message); setStatus("error"); });
-  }, [slug]);
-
-  useEffect(() => () => { if (blobUrl) URL.revokeObjectURL(blobUrl); }, [blobUrl]);
-
   const download = () => {
     const a = Object.assign(document.createElement("a"), {
       href: `${API}/uploads/templates/${slug}.docx`,
       download: `Template_SKPI_${prodi}.docx`,
     });
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  };
+
+  const onIframeError = () => {
+    setErrMsg("PDF tidak ditemukan. Upload template .docx terlebih dahulu.");
   };
 
   return (
@@ -168,14 +155,7 @@ function PreviewModal({ prodi, onClose }) {
         <div className={styles.previewBarLeft}>
           <FileText size={16}/>
           <span>Preview Template — <strong>{prodi}</strong></span>
-          {status === "ok" && (
-            <span className={styles.previewBadge} style={{ background:"#dc2626" }}>PDF</span>
-          )}
-          {status === "loading" && (
-            <span style={{ display:"inline-flex", alignItems:"center", gap:5, fontSize:12, color:"rgba(255,255,255,0.5)" }}>
-              <Loader2 size={12} className={styles.spin}/> Memproses…
-            </span>
-          )}
+          <span className={styles.previewBadge}>PDF</span>
         </div>
         <div className={styles.previewBarRight}>
           <button className={styles.btnDownloadDocx} onClick={download}>
@@ -187,34 +167,23 @@ function PreviewModal({ prodi, onClose }) {
         </div>
       </div>
 
-      {/* PDF Viewer */}
+      {/* PDF Viewer — iframe langsung, tanpa loading buatan */}
       <div style={{ flex:1, position:"relative", overflow:"hidden", background:"#525252" }}>
-        {status === "loading" && (
-          <div style={{ position:"absolute", inset:0, display:"flex", flexDirection:"column",
-            alignItems:"center", justifyContent:"center", gap:12 }}>
-            <Loader2 size={36} className={styles.spin} style={{ color:"#f5dfc0" }}/>
-            <p style={{ color:"#f5dfc0", fontSize:14, margin:0 }}>Mengkonversi ke PDF…</p>
-            <p style={{ color:"rgba(245,223,192,0.5)", fontSize:12, margin:0 }}>
-              Memproses template {prodi}
-            </p>
-          </div>
-        )}
-        {status === "error" && (
+        {errMsg ? (
           <div style={{ position:"absolute", inset:0, display:"flex", flexDirection:"column",
             alignItems:"center", justifyContent:"center", gap:8, padding:32, textAlign:"center" }}>
             <AlertCircle size={44} style={{ color:"#fca5a5" }}/>
-            <p style={{ color:"#fca5a5", fontWeight:700, fontSize:15, margin:"8px 0 0" }}>Gagal memuat PDF</p>
-            <p style={{ color:"rgba(252,165,165,0.7)", fontSize:13, margin:0, maxWidth:420 }}>{errMsg}</p>
-            <p style={{ color:"rgba(255,255,255,0.2)", fontSize:11, margin:0 }}>
-              Pastikan LibreOffice / Microsoft Word terinstall di server
+            <p style={{ color:"#fca5a5", fontWeight:700, fontSize:15, margin:"8px 0 0" }}>{errMsg}</p>
+            <p style={{ color:"rgba(252,165,165,0.7)", fontSize:13, margin:0 }}>
+              Upload .docx terlebih dahulu melalui tombol Upload
             </p>
           </div>
-        )}
-        {status === "ok" && blobUrl && (
-          <embed
-            src={`${blobUrl}#toolbar=1&navpanes=0&scrollbar=1&view=FitH`}
-            type="application/pdf"
+        ) : (
+          <iframe
+            src={pdfUrl}
+            title={`Preview ${prodi}`}
             style={{ position:"absolute", inset:0, width:"100%", height:"100%", border:"none" }}
+            onError={onIframeError}
           />
         )}
       </div>
@@ -325,7 +294,7 @@ function EditCplModal({ item, sectionLabel, prodiColor, onSave, onClose }) {
             <span className={styles.charCount}>{textId.length} karakter</span>
           </div>
           <div className={styles.cplEditGroup}>
-            <label className={styles.cplEditLabel}><span className={styles.langBadge} style={{ background:"#dbeafe",color:"#1d4ed8" }}>EN English</span>English Text <span className={styles.optBadge}>opsional</span></label>
+            <label className={styles.cplEditLabel}><span className={styles.langBadge} style={{ background:"#fde8cc",color:"#765439" }}>EN English</span>English Text <span className={styles.optBadge}>opsional</span></label>
             <textarea className={styles.cplTextarea} rows={4} value={textEn} onChange={e=>setTextEn(e.target.value)} placeholder="Write CPL item in English…"/>
             <span className={styles.charCount}>{textEn.length} karakter</span>
           </div>

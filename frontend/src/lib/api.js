@@ -94,7 +94,7 @@ export async function login(username, password) {
   } catch {
     _mockMode = true;
     if (username === "admin" && password === "admin123") return { ok: true };
-    return { ok: false, error: "Server tidak aktif. Gunakan admin / admin123 untuk demo." };
+    return { ok: false, error: "Server tidak aktif. <\n> Gunakan admin / admin123 untuk demo." };
   }
 }
 
@@ -1109,7 +1109,7 @@ export async function updateMahasiswa(id, payload) {
 export async function resetMahasiswaPassword(id) {
   if (_mockMode || !API_URL) {
     return { ok: true, data: { success: true, message: "Password direset (mode demo)" } };
-  }
+  }2
   try {
     const res = await apiFetch(`/api/admin/mahasiswa/${id}/akun`, {
       method: "PATCH",

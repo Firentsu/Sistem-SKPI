@@ -181,7 +181,7 @@
   left: 6px;
   width: 7px;
   height: 7px;
-  background: #3b82f6;
+  background: #765439;
   border-radius: 50%;
   border: 1.5px solid #fff;
 }
@@ -201,7 +201,7 @@
 .iconRejected  { background: #fee2e2; color: #b91c1c; }
 .iconRevision  { background: #fff7ed; color: #b45309; }
 .iconPublished { background: #fef9c3; color: #92400e; }
-.iconInfo      { background: #eff6ff; color: #3b82f6; }
+.iconInfo      { background: #fde8cc; color: #765439; }
 
 /* ── Content ── */
 .content { flex: 1; min-width: 0; }
