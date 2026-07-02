@@ -42,8 +42,22 @@ npm install
 ### 2. Buat file .env
 ```bash
 cp .env.example .env
-# Lalu edit .env dan isi DATABASE_URL dan JWT_SECRET
 ```
+
+Lalu edit `.env` jika diperlukan. Untuk setup MySQL lokal di Windows dengan XAMPP, gunakan konfigurasi default:
+
+```env
+DATABASE_URL="mysql://root:@localhost:3306/skpi_db"
+DB_HOST=localhost
+DB_PORT=3306
+DB_USER=root
+DB_PASSWORD=
+DB_NAME=skpi_db
+SESSION_SECRET=skpi-dev-secret
+FRONTEND_URL=http://localhost:3000
+```
+
+Jika MySQL XAMPP belum aktif, buka XAMPP Control Panel dan jalankan MySQL.
 
 ### 3. Generate Prisma client
 ```bash

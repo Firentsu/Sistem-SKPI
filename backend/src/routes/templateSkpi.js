@@ -111,6 +111,18 @@ function findNextParaPos(xml, fromPos) {
     return -1;
 }
 
+function getNextParagraph(xml, fromPos, limitPos = xml.length) {
+    const pStart = findNextParaPos(xml, fromPos);
+    if (pStart === -1 || pStart >= limitPos) return null;
+    const pEnd = xml.indexOf('</w:p>', pStart);
+    if (pEnd === -1) return null;
+    return { start: pStart, endFull: pEnd + 6, xml: xml.substring(pStart, pEnd + 6) };
+}
+
+function isSectionMarkerText(text) {
+    return /^(SIKAP|Proposition of Attitude|PENGETAHUAN|Knowledge|KETERAMPILAN UMUM|General Competence|KETERAMPILAN KHUSUS|Specific Competence|Telah lulus|SKPI)/i.test(text);
+}
+
 function buildCplParagraph(templateXml, number, text) {
     const pPrM = templateXml.match(/<w:pPr>[\s\S]*?<\/w:pPr>/);
     const pPr  = pPrM ? pPrM[0] : '';
@@ -161,16 +173,77 @@ function injectCplSection(xml, markers, nextMarkerGroups, items) {
         if (/^\d+[.\)]\s/.test(text)) {
             if (firstStart === -1) { firstStart = pStart; templatePara = paraXml; }
             lastEnd = pEndFull;
+            const nextPara = getNextParagraph(xml, pEndFull, limitPos);
+            if (nextPara) {
+                const nextText = extractParaText(nextPara.xml).trim();
+                if (nextText && !/^\d+[.\)]\s/.test(nextText) && !isSectionMarkerText(nextText)) {
+                    lastEnd = nextPara.endFull;
+                }
+            }
         }
         pos = pEndFull;
     }
 
-    if (firstStart === -1 || !templatePara) return xml;
+    if (firstStart === -1 || !templatePara) {
+        pos = afterHeader;
+        let altFirst = -1, altLast = -1, altPara = null;
+        while (pos < limitPos) {
+            const pStart = findNextParaPos(xml, pos);
+            if (pStart === -1 || pStart >= limitPos) break;
+            const pEnd = xml.indexOf('</w:p>', pStart);
+            if (pEnd === -1) break;
+            const pEndFull = pEnd + 6;
+            const paraXml = xml.substring(pStart, pEndFull);
+            const text = extractParaText(paraXml).trim();
+
+            const listLike = /(^-|\u2022|•|^•|^\d+[.\)]\s)/.test(text)
+                || /Telah lulus/i.test(text)
+                || /skpi/i.test(text)
+                || ((text.match(/-/g) || []).length >= 2);
+            if (listLike) {
+                if (altFirst === -1) { altFirst = pStart; altPara = paraXml; }
+                altLast = pEndFull;
+                const nextPara = getNextParagraph(xml, pEndFull, limitPos);
+                if (nextPara) {
+                    const nextText = extractParaText(nextPara.xml).trim();
+                    if (nextText && !/^\d+[.\)]\s/.test(nextText) && !isSectionMarkerText(nextText)) {
+                        altLast = nextPara.endFull;
+                    }
+                }
+            } else if (altFirst !== -1) {
+                break;
+            }
+            pos = pEndFull;
+        }
+        if (altFirst === -1 || !altPara) return xml;
+
+        // Expand the removal block backward if a preceding paragraph is part of the same placeholder block.
+        let scanBackPos = altFirst;
+        while (scanBackPos > afterHeader) {
+            const prevStart = xml.lastIndexOf('<w:p', scanBackPos - 1);
+            if (prevStart === -1 || prevStart < afterHeader) break;
+            const prevEnd = xml.indexOf('</w:p>', prevStart);
+            if (prevEnd === -1 || prevEnd >= altFirst) break;
+            const prevText = extractParaText(xml.substring(prevStart, prevEnd + 6)).trim();
+            if (/^(Telah lulus|Penciri|Amarean|Integritas|Nilai-nilai|SKPI)/i.test(prevText)
+                || /Telah lulus/i.test(prevText)
+                || /Penciri Institusi/i.test(prevText)
+                || /SKPI/i.test(prevText)) {
+                altFirst = prevStart;
+            } else {
+                break;
+            }
+            scanBackPos = prevStart;
+        }
+
+        firstStart = altFirst; lastEnd = altLast; templatePara = altPara;
+    }
 
     const newParas = items.map((item, i) =>
         buildCplParagraph(templatePara, i + 1, item.id)
     ).join('');
 
+    // Replace the existing template block (numbered or list placeholder) with the new CPL list.
     return xml.substring(0, firstStart) + newParas + xml.substring(lastEnd);
 }
 
