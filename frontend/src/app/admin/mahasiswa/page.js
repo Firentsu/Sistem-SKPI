@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useLayoutEffect } from "react";
+import { createPortal } from "react-dom";
 import * as XLSX from "xlsx";
 import {
   Search, Plus, Upload, Download, Edit2, KeyRound,
@@ -655,19 +656,58 @@ function ImportExcelModal({ onClose, onDone }) {
 /* ── ROW ACTION DROPDOWN ── */
 function RowActions({ row, onEdit, onResetPw, onToggleActive }) {
   const [open, setOpen] = useState(false);
-  const ref = useRef(null);
-  useEffect(() => {
-    const fn = e => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
-    document.addEventListener("mousedown", fn);
-    return () => document.removeEventListener("mousedown", fn);
+  const [coords, setCoords] = useState({ top: 0, left: 0 });
+  const triggerRef = useRef(null);
+  const menuRef = useRef(null);
+
+  // Hitung posisi menu (fixed) dari posisi tombol, agar tidak terpotong tabel
+  const updatePosition = useCallback(() => {
+    if (!triggerRef.current) return;
+    const rect = triggerRef.current.getBoundingClientRect();
+    const MENU_W = 190;
+    const MENU_H = 140; // perkiraan tinggi menu
+    const gap = 8;
+    const openUp = rect.bottom + MENU_H + gap > window.innerHeight;
+    const top = openUp ? rect.top - MENU_H - gap : rect.bottom + gap;
+    const left = Math.max(8, rect.right - MENU_W);
+    setCoords({ top, left });
   }, []);
+
+  const toggle = () => {
+    if (!open) updatePosition();
+    setOpen(o => !o);
+  };
+
+  useLayoutEffect(() => {
+    if (!open) return;
+    const close = e => {
+      if (
+        triggerRef.current && !triggerRef.current.contains(e.target) &&
+        menuRef.current && !menuRef.current.contains(e.target)
+      ) setOpen(false);
+    };
+    const reposition = () => updatePosition();
+    document.addEventListener("mousedown", close);
+    window.addEventListener("scroll", reposition, true);
+    window.addEventListener("resize", reposition);
+    return () => {
+      document.removeEventListener("mousedown", close);
+      window.removeEventListener("scroll", reposition, true);
+      window.removeEventListener("resize", reposition);
+    };
+  }, [open, updatePosition]);
+
   return (
-    <div className={styles.ddWrap} ref={ref}>
-      <button className={styles.ddTrigger} onClick={() => setOpen(o => !o)}>
+    <div className={styles.ddWrap}>
+      <button ref={triggerRef} className={styles.ddTrigger} onClick={toggle}>
         <MoreVertical size={15} />
       </button>
-      {open && (
-        <div className={styles.ddMenu}>
+      {open && typeof document !== "undefined" && createPortal(
+        <div
+          ref={menuRef}
+          className={styles.ddMenu}
+          style={{ position: "fixed", top: coords.top, left: coords.left, right: "auto" }}
+        >
           <button onClick={() => { onEdit(); setOpen(false); }}><Edit2 size={13} /> Edit Data</button>
           <button onClick={() => { onResetPw(); setOpen(false); }}><KeyRound size={13} /> Reset Password</button>
           <div className={styles.ddDivider} />
@@ -677,7 +717,8 @@ function RowActions({ row, onEdit, onResetPw, onToggleActive }) {
             {row.aktif ? <EyeOff size={13} /> : <Eye size={13} />}
             {row.aktif ? "Nonaktifkan" : "Aktifkan"}
           </button>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

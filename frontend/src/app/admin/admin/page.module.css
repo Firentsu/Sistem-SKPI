@@ -898,10 +898,8 @@
   box-shadow: 0 2px 8px rgba(118, 84, 57, 0.15);
 }
 
+/* Posisi (top/left) di-set inline via JS + portal ke body agar tidak terpotong tabel */
 .ddMenu {
-  position: absolute;
-  right: 0;
-  top: calc(100% + 8px);
   background: #fff;
   border: 1px solid #e8d5c4;
   border-radius: 14px;
@@ -912,15 +910,9 @@
   overflow: hidden;
   z-index: 9999;
   min-width: 190px;
+  max-width: calc(100vw - 24px);
   pointer-events: auto;
   animation: ddSlideIn 0.15s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-@media (max-width: 480px) {
-  .ddMenu {
-    right: -8px;
-    max-width: calc(100vw - 24px);
-  }
 }
 
 @keyframes ddSlideIn {

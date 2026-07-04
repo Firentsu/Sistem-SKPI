@@ -83,26 +83,37 @@ export default function Home() {
     setLoadingLogin(true);
     try {
       const input = username.trim();
-      const isMahasiswa = /^\d+$/.test(input);
+      // Pola NIM (angka semua) → coba login MAHASISWA dulu; selain itu ADMIN dulu.
+      // Selalu ada FALLBACK ke peran satunya, karena username mahasiswa dari SICP
+      // bisa non-numerik (mis. "sicpmhs") sehingga tak keliru dikira admin.
+      const isNumeric = /^\d+$/.test(input);
 
-      if (isMahasiswa) {
-        const result = await loginMahasiswa(input, password);
-        if (result.ok) {
+      const tryMahasiswa = async () => {
+        const r = await loginMahasiswa(input, password);
+        if (r.ok) {
           if (isMockMode()) setShowDemo(true);
           window.location.href = "/mahasiswa/dashboard";
-        } else {
-          triggerError(result.error || "Login gagal. Periksa NIM dan password.");
-          if (isMockMode()) setShowDemo(true);
+          return true;
         }
-      } else {
-        const result = await login(input, password);
-        if (result.ok) {
+        return false;
+      };
+      const tryAdmin = async () => {
+        const r = await login(input, password);
+        if (r.ok) {
           if (isMockMode()) setShowDemo(true);
           window.location.href = "/admin/dashboard";
-        } else {
-          triggerError(result.error || "Login gagal. Periksa username dan password.");
-          if (isMockMode()) setShowDemo(true);
+          return true;
         }
+        return false;
+      };
+
+      const ok = isNumeric
+        ? (await tryMahasiswa()) || (await tryAdmin())
+        : (await tryAdmin())     || (await tryMahasiswa());
+
+      if (!ok) {
+        triggerError("Login gagal. Periksa username/NIM dan password Anda.");
+        if (isMockMode()) setShowDemo(true);
       }
     } finally {
       setLoadingLogin(false);

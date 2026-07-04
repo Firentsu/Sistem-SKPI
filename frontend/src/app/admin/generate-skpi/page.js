@@ -115,6 +115,7 @@ function PreviewModal({ mhs, onClose, onGenerate, onPublish, generating, publish
   const [noTemplate,  setNoTemplate]  = useState(null);
   const [pdfUrl,      setPdfUrl]      = useState("");
   const [downloading, setDownloading] = useState(false);
+  const fetchedIdRef = useRef(null);
 
   const tier     = getIcpTier(mhs?.total_poin ?? 0);
   const TierIcon = tier.icon;
@@ -125,34 +126,46 @@ function PreviewModal({ mhs, onClose, onGenerate, onPublish, generating, publish
     return () => window.removeEventListener("keydown", fn);
   }, [onClose]);
 
+  // Nomor urut request: hasil hanya diterapkan bila masih request terbaru.
+  // Berguna saat user menekan "Coba Lagi" — request lama yang masih berjalan
+  // otomatis diabaikan agar tidak menimpa hasil request baru.
+  const reqSeqRef = useRef(0);
+  const fetchPdf = useCallback(async () => {
+    if (!mhs?.id_mahasiswa) return;
+    const myId = ++reqSeqRef.current;
+    setStatus("loading"); setErrMsg(""); setNoTemplate(null);
+    try {
+      const res = await fetch(`${API}/api/skpi/preview-pdf/${mhs.id_mahasiswa}`, { credentials: "include" });
+      if (myId !== reqSeqRef.current) return;                 // sudah digantikan request lain
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({}));
+        if (json.code === "NO_TEMPLATE") setNoTemplate({ prodi: mhs.prodi, available: json.available || [] });
+        else                             setErrMsg(json.error || `Error ${res.status}`);
+        setStatus("error"); return;
+      }
+      const blob = await res.blob();
+      if (myId !== reqSeqRef.current) return;
+      setPdfUrl(URL.createObjectURL(blob));
+      setStatus("ok");
+    } catch (e) {
+      if (myId === reqSeqRef.current) { setErrMsg(e.message); setStatus("error"); }
+    }
+  }, [mhs?.id_mahasiswa, mhs?.prodi]);
+
   useEffect(() => {
     if (!mhs?.id_mahasiswa) return;
-    let cancelled = false;
-    const fetchPdf = async () => {
-      setStatus("loading"); setErrMsg(""); setNoTemplate(null);
-      try {
-        const res = await fetch(`${API}/api/skpi/preview-pdf/${mhs.id_mahasiswa}`, { credentials: "include" });
-        if (!cancelled) {
-          if (!res.ok) {
-            const json = await res.json().catch(() => ({}));
-            if (json.code === "NO_TEMPLATE") {
-              setNoTemplate({ prodi: mhs.prodi, available: json.available || [] });
-            } else {
-              setErrMsg(json.error || `Error ${res.status}`);
-            }
-            setStatus("error"); return;
-          }
-          const blob = await res.blob();
-          setPdfUrl(URL.createObjectURL(blob));
-          setStatus("ok");
-        }
-      } catch (e) {
-        if (!cancelled) { setErrMsg(e.message); setStatus("error"); }
-      }
-    };
+    // React StrictMode (Next dev) menjalankan effect ini dua kali saat mount.
+    // Penjaga fetchedIdRef memastikan hanya SATU fetch preview-pdf per mahasiswa
+    // sehingga tidak memicu dua konversi LibreOffice sekaligus.
+    //
+    // PENTING: JANGAN menaikkan reqSeqRef di cleanup. Di StrictMode, cleanup
+    // berjalan di antara dua invoke effect; karena invoke kedua di-skip oleh
+    // penjaga di atas, menaikkan reqSeqRef akan membatalkan SATU-SATUNYA request
+    // yang berjalan — hasilnya preview macet selamanya di "Mengkonversi...".
+    if (fetchedIdRef.current === mhs.id_mahasiswa) return;
+    fetchedIdRef.current = mhs.id_mahasiswa;
     fetchPdf();
-    return () => { cancelled = true; };
-  }, [mhs?.id_mahasiswa]);
+  }, [mhs?.id_mahasiswa, fetchPdf]);
 
   useEffect(() => () => { if (pdfUrl) URL.revokeObjectURL(pdfUrl); }, [pdfUrl]);
 
@@ -267,9 +280,17 @@ function PreviewModal({ mhs, onClose, onGenerate, onPublish, generating, publish
             <AlertCircle size={40} style={{ color: "#fca5a5" }}/>
             <p style={{ color: "#fca5a5", fontWeight: 700, fontSize: 15, margin: "8px 0 0" }}>Gagal memuat PDF</p>
             <p style={{ color: "rgba(252,165,165,0.7)", fontSize: 13, margin: 0, maxWidth: 400 }}>{errMsg}</p>
-            <p style={{ color: "rgba(255,255,255,0.2)", fontSize: 11, margin: 0 }}>
-              Pastikan LibreOffice terinstall di server
+            <p style={{ color: "rgba(255,255,255,0.2)", fontSize: 11, margin: 0, maxWidth: 420 }}>
+              Konversi PDF gagal/timeout. Pastikan tidak ada jendela
+              LibreOffice/Word yang masih terbuka di server.
             </p>
+            <button
+              onClick={fetchPdf}
+              style={{ marginTop: 8, padding: "8px 18px", borderRadius: 8, border: "none",
+                background: "#dc2626", color: "#fff", fontWeight: 600, fontSize: 13, cursor: "pointer" }}
+            >
+              Coba Lagi
+            </button>
           </div>
         )}
         {status === "ok" && pdfUrl && (

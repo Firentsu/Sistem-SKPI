@@ -22,21 +22,6 @@ import {
   getPengajuanStatus,
   submitPengajuanSkpi,
 } from "@/lib/api";
-import {
-  getJenisAktivitas,
-  getKategoriAktivitas,
-  getKelompokAktivitas,
-  getLevelKegiatan,
-  getTingkatPrestasi,
-} from "@/lib/masterData";
-
-// ═══ MASTER DATA ═══
-const JENIS_AKTIVITAS = getJenisAktivitas();
-const KATEGORI_OPTIONS = getKategoriAktivitas();
-const KELOMPOK_OPTIONS = getKelompokAktivitas();
-const LEVEL_OPTIONS = getLevelKegiatan();
-const TINGKAT_PRESTASI = getTingkatPrestasi();
-
 // ═══ PENGAJUAN CONSTANTS ═══
 const MIN_ICP = 100;
 

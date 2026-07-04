@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useLayoutEffect } from "react";
+import { createPortal } from "react-dom";
 import * as XLSX from "xlsx";
 import {
   Search, Plus, Edit2, KeyRound, ToggleLeft, ToggleRight,
@@ -442,17 +443,58 @@ function ImportExcelModal({ onClose, onDone }) {
 ───────────────────────────────────────── */
 function RowActions({ row, onEdit, onResetPw, onToggleActive, onDelete }) {
   const [open, setOpen] = useState(false);
-  const ref = useRef(null);
-  useEffect(() => {
-    const fn = e => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
-    document.addEventListener("mousedown", fn);
-    return () => document.removeEventListener("mousedown", fn);
+  const [coords, setCoords] = useState({ top: 0, left: 0 });
+  const triggerRef = useRef(null);
+  const menuRef = useRef(null);
+
+  // Hitung posisi menu (fixed) dari posisi tombol, agar tidak terpotong tabel
+  const updatePosition = useCallback(() => {
+    if (!triggerRef.current) return;
+    const rect = triggerRef.current.getBoundingClientRect();
+    const MENU_W = 190;
+    const MENU_H = 230; // perkiraan tinggi menu
+    const gap = 8;
+    // Buka ke atas jika ruang di bawah kurang
+    const openUp = rect.bottom + MENU_H + gap > window.innerHeight;
+    const top = openUp ? rect.top - MENU_H - gap : rect.bottom + gap;
+    // Rata kanan tombol, jaga agar tidak keluar layar kiri
+    const left = Math.max(8, rect.right - MENU_W);
+    setCoords({ top, left });
   }, []);
+
+  const toggle = () => {
+    if (!open) updatePosition();
+    setOpen(o => !o);
+  };
+
+  useLayoutEffect(() => {
+    if (!open) return;
+    const close = e => {
+      if (
+        triggerRef.current && !triggerRef.current.contains(e.target) &&
+        menuRef.current && !menuRef.current.contains(e.target)
+      ) setOpen(false);
+    };
+    const reposition = () => updatePosition();
+    document.addEventListener("mousedown", close);
+    window.addEventListener("scroll", reposition, true);
+    window.addEventListener("resize", reposition);
+    return () => {
+      document.removeEventListener("mousedown", close);
+      window.removeEventListener("scroll", reposition, true);
+      window.removeEventListener("resize", reposition);
+    };
+  }, [open, updatePosition]);
+
   return (
-    <div className={styles.ddWrap} ref={ref}>
-      <button className={styles.ddTrigger} onClick={() => setOpen(o => !o)}><MoreVertical size={15} /></button>
-      {open && (
-        <div className={styles.ddMenu}>
+    <div className={styles.ddWrap}>
+      <button ref={triggerRef} className={styles.ddTrigger} onClick={toggle}><MoreVertical size={15} /></button>
+      {open && typeof document !== "undefined" && createPortal(
+        <div
+          ref={menuRef}
+          className={styles.ddMenu}
+          style={{ position: "fixed", top: coords.top, left: coords.left, right: "auto" }}
+        >
           <button onClick={() => { onEdit(); setOpen(false); }}><Edit2 size={13} /> Edit Data</button>
           <button onClick={() => { onResetPw(); setOpen(false); }}><KeyRound size={13} /> Reset Password</button>
           <div className={styles.ddDivider} />
@@ -466,7 +508,8 @@ function RowActions({ row, onEdit, onResetPw, onToggleActive, onDelete }) {
           <button className={styles.ddDanger} onClick={() => { onDelete(); setOpen(false); }}>
             <Trash2 size={13} /> Hapus Admin
           </button>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

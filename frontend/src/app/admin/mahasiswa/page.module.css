@@ -403,6 +403,7 @@
   background-repeat: no-repeat;
   background-size: 40px 100%, 40px 100%, 14px 100%, 14px 100%;
   background-attachment: local, local, scroll, scroll;
+  padding-bottom: 4px; /* ruang untuk scrollbar — samakan dgn admin */
 }
 
 .table {
@@ -442,7 +443,7 @@
 .rowInactive { opacity: 0.55; }
 .rowInactive:hover { opacity: 0.7; }
 
-.thNo     { width: 48px; text-align: center; }
+.thNo     { width: 40px; text-align: center; }
 .thCenter { text-align: center; }
 .tdNo     { text-align: center; color: #b09880; font-size: 12px; }
 .tdCenter { text-align: center; }
@@ -455,7 +456,12 @@
 
 .thAksi { width: 44px; }
 
-.nameCell { display: flex; align-items: center; gap: 10px; }
+.nameCell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 180px; /* batasi lebar agar tidak dorong kolom — samakan dgn admin */
+}
 
 .avatar {
   width: 34px; height: 34px; border-radius: 50%;
@@ -467,18 +473,24 @@
 
 .avatarImg {
   width: 34px; height: 34px; border-radius: 50%;
-  object-fit: cover; flex-shrink: 0;
-  border: 2px solid #f0e0d0; display: block;
+  object-fit: cover; flex-shrink: 0; display: block;
 }
 
-.nameText  { font-size: 13.5px; font-weight: 600; color: #2c1a0e; white-space: nowrap; }
-.emailText { font-size: 11.5px; color: #9c7a5e; white-space: nowrap; }
+.nameText {
+  font-size: 13px; font-weight: 600; color: #2c1a0e;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px;
+}
+.emailText {
+  font-size: 11px; color: #9c7a5e;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px;
+}
 
 .nimBadge {
   font-size: 12px; font-weight: 700; font-family: 'Courier New', monospace;
   background: #fdf4ec; color: #765439;
   padding: 3px 8px; border-radius: 6px;
   border: 1px solid #f0dcc8; letter-spacing: 0.02em;
+  white-space: nowrap;
 }
 
 .badge {
@@ -550,16 +562,12 @@
 }
 .ddTrigger:hover { background: #fdeee2; border-color: #b8825a; box-shadow: 0 2px 8px rgba(118,84,57,0.15); }
 
+/* Posisi (top/left) di-set inline via JS + portal ke body agar tidak terpotong tabel */
 .ddMenu {
-  position: absolute; right: 0; top: calc(100% + 8px);
   background: #fff; border: 1px solid #e8d5c4; border-radius: 14px;
   box-shadow: 0 4px 6px rgba(60,30,10,0.04), 0 12px 32px rgba(60,30,10,0.14), 0 0 0 0.5px rgba(118,84,57,0.06);
-  overflow: hidden; z-index: 9999; min-width: 190px;
+  overflow: hidden; z-index: 9999; min-width: 190px; max-width: calc(100vw - 24px);
   pointer-events: auto; animation: ddSlideIn 0.15s cubic-bezier(0.16,1,0.3,1);
-}
-
-@media (max-width: 480px) {
-  .ddMenu { right: -8px; max-width: calc(100vw - 24px); }
 }
 
 @keyframes ddSlideIn {
@@ -1168,11 +1176,6 @@
   .angkatanBadge {
     font-size: 9px;
     padding: 1px 5px;
-  }
-
-  .ddMenu {
-    right: -8px;
-    max-width: calc(100vw - 24px);
   }
 
   .pBtn {

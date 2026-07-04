@@ -3,76 +3,178 @@ import prisma from "../lib/prisma.js";
 import { requireAuth } from "../middleware/auth.js";
 import { generateSkpiDocx } from "../utils/generateSkpiDocx.js";
 import { createNotif, getMahasiswaUserId } from "../utils/notifikasi.js";
-import { exec }       from "child_process";
-import { promisify }  from "util";
+import { spawn }       from "child_process";
 import { randomUUID } from "crypto";
 import os             from "os";
 import fs             from "fs";
 import path           from "path";
 
-const execAsync = promisify(exec);
-
-function getLoCmd() {
+/**
+ * Path executable LibreOffice.
+ *
+ * Di Windows dipakai soffice.com (varian console) bukan soffice.exe (GUI):
+ * .com menunggu konversi selesai dan mengembalikan exit code dengan benar,
+ * sedangkan .exe bisa langsung detach. Dijalankan via spawn (argumen array),
+ * jadi path TIDAK di-quote — spawn tidak lewat shell sehingga aman dari spasi.
+ */
+function getLoExe() {
   if (process.platform === "win32") {
     for (const p of [
+      "C:\\Program Files\\LibreOffice\\program\\soffice.com",
+      "C:\\Program Files (x86)\\LibreOffice\\program\\soffice.com",
       "C:\\Program Files\\LibreOffice\\program\\soffice.exe",
       "C:\\Program Files (x86)\\LibreOffice\\program\\soffice.exe",
-    ]) { if (fs.existsSync(p)) return `"${p}"`; }
+    ]) { if (fs.existsSync(p)) return p; }
     return "soffice";
   }
   return "libreoffice";
 }
 
 /**
- * Konversi DOCX ke PDF.
- * Windows : coba Word COM via VBScript (100% akurat, support art borders)
- *           fallback ke LibreOffice jika Word tidak tersedia.
- * Linux   : LibreOffice.
+ * Jalankan soffice via spawn dengan timeout yang MEMBUNUH SELURUH pohon proses.
+ *
+ * child_process.exec dengan opsi `timeout` di Windows hanya mengirim SIGTERM ke
+ * launcher; soffice.bin (worker sebenarnya) tetap hidup, menahan lock, lalu
+ * meracuni konversi berikutnya sehingga timeout beruntun. Di sini pada timeout
+ * kita panggil `taskkill /T` pada PID launcher untuk membunuh soffice.bin juga.
+ * Kill ini TARGETED ke PID yang kita spawn — tidak mengganggu jendela LibreOffice
+ * lain yang mungkin sedang dibuka user.
  */
-async function convertDocxToPdf(docxPath, pdfPath) {
-  if (process.platform === "win32") {
-    // ── Coba Microsoft Word via VBScript ──
-    const docxWin = docxPath.replace(/\\/g, '\\\\');
-    const pdfWin  = pdfPath.replace(/\\/g, '\\\\');
-    const vbs = [
-      'Dim oWord, oDoc',
-      'On Error Resume Next',
-      'Set oWord = CreateObject("Word.Application")',
-      'If Err.Number <> 0 Then WScript.Quit(1)',
-      'oWord.Visible = False',
-      'Set oDoc = oWord.Documents.Open("' + docxWin + '")',
-      'If Err.Number <> 0 Then oWord.Quit : WScript.Quit(2)',
-      'oDoc.SaveAs2 "' + pdfWin + '", 17',
-      'oDoc.Close False',
-      'oWord.Quit',
-      'WScript.Quit(0)',
-    ].join('\r\n')
+function spawnSoffice(loExe, argv, timeoutMs) {
+  return new Promise((resolve) => {
+    let stdout = "", stderr = "", timedOut = false, settled = false;
+    const child = spawn(loExe, argv, { windowsHide: true });
 
-    const vbsPath = docxPath.replace(".docx", "_convert.vbs");
-    fs.writeFileSync(vbsPath, vbs, "utf8");
-    try {
-      await execAsync(`cscript //NoLogo "${vbsPath}"`, { timeout: 60000 });
-      if (fs.existsSync(pdfPath)) {
-        fs.unlinkSync(vbsPath);
-        return; // Word conversion berhasil
+    const timer = setTimeout(() => {
+      timedOut = true;
+      if (process.platform === "win32" && child.pid) {
+        try { spawn("taskkill", ["/F", "/T", "/PID", String(child.pid)], { windowsHide: true }); } catch {}
+      } else {
+        try { child.kill("SIGKILL"); } catch {}
       }
-    } catch {}
-    try { fs.unlinkSync(vbsPath); } catch {}
+    }, timeoutMs);
 
-    // ── Fallback: LibreOffice ──
-    const loCmd = getLoCmd();
-    const outDir = path.dirname(pdfPath);
-    const tmpPdf = path.join(outDir, path.basename(docxPath, ".docx") + ".pdf");
-    await execAsync(`${loCmd} --headless --convert-to pdf --outdir "${outDir}" "${docxPath}"`, { timeout: 60000 });
-    if (tmpPdf !== pdfPath && fs.existsSync(tmpPdf)) fs.renameSync(tmpPdf, pdfPath);
-    return;
+    const finish = (result) => { if (settled) return; settled = true; clearTimeout(timer); resolve(result); };
+
+    child.stdout?.on("data", d => { stdout += d; });
+    child.stderr?.on("data", d => { stderr += d; });
+    child.on("error", (err) => finish({ error: err, stdout, stderr, timedOut, code: null }));
+    child.on("close", (code) => finish({
+      error:    (code === 0 || timedOut) ? null : new Error(`soffice keluar dengan kode ${code}`),
+      stdout, stderr, timedOut, code,
+    }));
+  });
+}
+
+/**
+ * Bunuh SEMUA proses soffice sebagai pemulihan setelah konversi gagal/menggantung.
+ *
+ * Kadang soffice.bin menggantung karena kondisi lingkungan (mis. lock basi,
+ * kontensi resource) dan meracuni konversi berikutnya. Karena konversi di sini
+ * DISERIALKAN (tidak ada konversi sah lain yang berjalan bersamaan), aman untuk
+ * menyapu bersih semua soffice sebelum mencoba lagi. Microsoft Word TIDAK
+ * disentuh — hanya image soffice.* yang dibunuh.
+ */
+function killAllSoffice() {
+  return new Promise((resolve) => {
+    if (process.platform !== "win32") {
+      try { spawn("pkill", ["-9", "-f", "soffice"], { windowsHide: true }).on("close", resolve).on("error", resolve); }
+      catch { resolve(); }
+      return;
+    }
+    try {
+      spawn("taskkill", ["/F", "/IM", "soffice.bin", "/IM", "soffice.exe"], { windowsHide: true })
+        .on("close", () => resolve())
+        .on("error", () => resolve());
+    } catch { resolve(); }
+  });
+}
+
+// Profil LibreOffice BERSAMA yang dipakai ulang (warm) lintas konversi.
+// Karena konversi diserialkan (satu proses soffice pada satu waktu), tidak ada
+// konflik penguncian, jadi tak perlu membangun profil baru tiap kali. Membangun
+// profil baru itu berat (banyak I/O init) dan di mesin yang sibuk bisa lambat /
+// menggantung — profil warm menghilangkan overhead itu setelah konversi pertama.
+const LO_PROFILE_DIR = path.join(os.tmpdir(), "skpi_lo_profile");
+
+/**
+ * Jalankan LibreOffice --convert-to pdf dengan profil user BERSAMA (warm).
+ * Bila konversi gagal/menggantung, profil dibuang agar dibangun ulang bersih.
+ */
+async function runLibreOffice(loExe, docxPath, pdfPath, attempt = 1) {
+  const outDir  = path.dirname(pdfPath);
+  const tmpPdf  = path.join(outDir, path.basename(docxPath, ".docx") + ".pdf");
+  const profileUrl = "file:///" + LO_PROFILE_DIR.replace(/\\/g, "/");
+
+  // Flag anti-hang: --norestore (matikan crash-recovery yang bisa menggantung
+  // setelah konversi sebelumnya di-kill), --nofirststartwizard (lewati wizard
+  // first-run pada instalasi baru), --nolockcheck (abaikan lock file basi).
+  const argv = [
+    `-env:UserInstallation=${profileUrl}`,
+    "--headless", "--norestore", "--nologo", "--nodefault", "--nofirststartwizard", "--nolockcheck",
+    "--convert-to", "pdf", "--outdir", outDir, docxPath,
+  ];
+
+  // Timeout 45s: konversi normal ~4–12s, jadi 45s sudah sangat longgar sekaligus
+  // gagal lebih cepat bila menggantung (masih ada satu retry di bawah).
+  // Catatan: soffice kadang keluar non-zero (mis. "Could not find platform
+  // independent libraries") PADAHAL PDF sudah ditulis. Jadi jangan andalkan exit
+  // code — verifikasi keberadaan file PDF sebagai penentu sukses.
+  const r = await spawnSoffice(loExe, argv, 45000);
+
+  // Beri sedikit waktu bila proses baru saja menutup handle file
+  if (!fs.existsSync(tmpPdf)) {
+    await new Promise(res => setTimeout(res, 400));
   }
 
-  // ── Linux: LibreOffice ──
-  const outDir = path.dirname(pdfPath);
-  const tmpPdf = path.join(outDir, path.basename(docxPath, ".docx") + ".pdf");
-  await execAsync(`libreoffice --headless --convert-to pdf --outdir "${outDir}" "${docxPath}"`, { timeout: 60000 });
   if (tmpPdf !== pdfPath && fs.existsSync(tmpPdf)) fs.renameSync(tmpPdf, pdfPath);
+
+  // Sukses jika PDF ada, apa pun exit code-nya.
+  if (fs.existsSync(pdfPath)) return;
+
+  // Gagal menghasilkan PDF (termasuk timeout/hang). Hang biasanya karena satu
+  // instance soffice tersangkut & meracuni konversi berikutnya. Sapu bersih SEMUA
+  // soffice lalu coba SEKALI lagi dari keadaan bersih — ini memulihkan baik kasus
+  // "poison" maupun hang sementara akibat kontensi resource. Word tidak disentuh.
+  if (attempt < 2) {
+    await killAllSoffice();
+    // Buang profil warm — mungkin rusak/terkunci; retry akan membangun ulang bersih.
+    try { fs.rmSync(LO_PROFILE_DIR, { recursive: true, force: true }); } catch {}
+    await new Promise(res => setTimeout(res, 1500));
+    return runLibreOffice(loExe, docxPath, pdfPath, attempt + 1);
+  }
+
+  // Masih gagal setelah retry bersih: bersihkan sisa proses & lempar error jelas.
+  await killAllSoffice();
+  const detail = String(r.stderr || r.error?.message || "LibreOffice tidak menghasilkan PDF.").trim();
+  throw Object.assign(
+    new Error(r.timedOut
+      ? "Konversi PDF timeout — LibreOffice tidak merespons walau sudah dicoba ulang. Tutup semua jendela LibreOffice di server lalu coba lagi."
+      : `Konversi PDF gagal: ${detail}`),
+    { code: "PDF_CONVERT_FAILED" },
+  );
+}
+
+/**
+ * Konversi DOCX ke PDF via LibreOffice (Windows & Linux).
+ *
+ * Sebelumnya Windows mencoba Microsoft Word (COM/VBScript) lebih dulu, tapi
+ * proses WINWORD.EXE sering menggantung sehingga konversi timeout. LibreOffice
+ * terbukti cepat & stabil, jadi dipakai langsung untuk semua platform.
+ *
+ * PENTING — konversi DISERIALKAN (satu proses soffice pada satu waktu).
+ * LibreOffice memakai state instalasi bersama; bila dua konversi start hampir
+ * bersamaan (mis. StrictMode Next dev yang memicu preview dua kali, atau dua
+ * admin), keduanya berebut inisialisasi dan salah satu keluar non-zero tanpa
+ * menghasilkan PDF ("Command failed"). Antrian promise di bawah memastikan
+ * request kedua menunggu yang pertama selesai, bukan berjalan paralel.
+ */
+let _loQueue = Promise.resolve();
+function convertDocxToPdf(docxPath, pdfPath) {
+  const task = () => runLibreOffice(getLoExe(), docxPath, pdfPath);
+  const p = _loQueue.then(task, task);   // jalankan apa pun hasil konversi sebelumnya
+  _loQueue = p.catch(() => {});           // jaga rantai antrian tetap hidup walau gagal
+  return p;
 }
 
 

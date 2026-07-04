@@ -104,36 +104,27 @@ async function fetchMasterData() {
 
   fetchPromise = (async () => {
     try {
-      const endpoints = [
-        { path: "/api/master-data/jenis-aktivitas", field: "jenis_aktivitas", mapper: (data) => data.map(item => item.nama_indo || item.nama || item) },
-        { path: "/api/master-data/kategori-aktivitas", field: "kategori_aktivitas", mapper: (data) => data.map(item => item.nama_indo || item.nama || item) },
-        { path: "/api/master-data/kelompok-aktivitas", field: "kelompok_aktivitas", mapper: (data) => data.map(item => item.nama_indo || item.nama || item) },
-        { path: "/api/master-data/level-kegiatan", field: "level_kegiatan", mapper: (data) => data.map(item => item.nama_level || item.nama || item) },
-        { path: "/api/master-data/tingkat-prestasi", field: "tingkat_prestasi", mapper: (data) => data.map(item => item.nama_indo || item.nama || item) },
-        // ═══ TAMBAHAN ═══
-        { path: "/api/master-data/periode-semester", field: "periode_semester", mapper: (data) => data.map(item => item.nama_periode || item.nama || item) },
-      ];
+      // Satu endpoint khusus mahasiswa (requireMahasiswaAuth) yang mengembalikan
+      // semua master data sekaligus, sudah difilter status aktif oleh backend.
+      // Perbaikan: sebelumnya memanggil route admin /api/master-data/* yang
+      // ditolak (401) untuk mahasiswa sehingga selalu jatuh ke data hardcoded.
+      const res = await apiFetch("/api/mahasiswa/master-data");
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
 
-      const results = await Promise.all(
-        endpoints.map(async ({ path, field, mapper }) => {
-          try {
-            const res = await apiFetch(path);
-            if (res.ok) {
-              const data = await res.json();
-              if (Array.isArray(data)) {
-                return { field, value: mapper(data) };
-              }
-            }
-            return { field, value: DEFAULT_MASTER_DATA[field] };
-          } catch {
-            return { field, value: DEFAULT_MASTER_DATA[field] };
-          }
-        })
-      );
+      const pick = (arr, key) =>
+        Array.isArray(arr) ? arr.map(item => item?.[key] ?? item?.nama ?? item) : null;
 
-      const cache = {};
-      results.forEach(r => { cache[r.field] = r.value; });
-      masterDataCache = cache;
+      masterDataCache = {
+        jenis_aktivitas:    pick(data.jenisAktivitas,    "nama_indo")   || DEFAULT_MASTER_DATA.jenis_aktivitas,
+        kategori_aktivitas: pick(data.kategoriAktivitas, "nama_indo")   || DEFAULT_MASTER_DATA.kategori_aktivitas,
+        kelompok_aktivitas: pick(data.kelompokAktivitas, "nama_indo")   || DEFAULT_MASTER_DATA.kelompok_aktivitas,
+        level_kegiatan:     pick(data.levelKegiatan,     "nama_level")  || DEFAULT_MASTER_DATA.level_kegiatan,
+        periode_semester:   pick(data.periodeAkademik,   "nama_periode")|| DEFAULT_MASTER_DATA.periode_semester,
+        // Tidak ada di endpoint master-data (bukan tabel referensi) → pakai default.
+        tingkat_prestasi:    DEFAULT_MASTER_DATA.tingkat_prestasi,
+        mata_kuliah_penciri: DEFAULT_MASTER_DATA.mata_kuliah_penciri,
+      };
       return masterDataCache;
     } catch (err) {
       console.error("Gagal memuat master data:", err);

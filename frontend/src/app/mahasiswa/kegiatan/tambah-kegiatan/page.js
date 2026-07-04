@@ -16,6 +16,7 @@ import {
   getLevelKegiatan,
   getTingkatPrestasi,
   getPeriodeSemester,
+  refreshMasterData,
 } from "@/lib/masterData";
 
 /* ─────────────────────────────────────────
@@ -146,12 +147,28 @@ export default function TambahKegiatanPage() {
   const router = useRouter();
   const { prodiConfig } = useMahasiswa();
 
-  const JENIS_OPTIONS      = getJenisAktivitas();
-  const KATEGORI_OPTIONS   = getKategoriAktivitas();
-  const KELOMPOK_OPTIONS   = getKelompokAktivitas();
-  const LEVEL_OPTIONS      = getLevelKegiatan();
-  const TINGKAT_OPTIONS    = getTingkatPrestasi();
-  const PERIODE_OPTIONS    = getPeriodeSemester();
+  // Opsi dropdown diambil dari master data (DB) via state agar ikut ter-render
+  // ulang setelah data API tiba. Nilai awal = default agar UI tidak kosong.
+  const [JENIS_OPTIONS,    setJenisOptions]    = useState(getJenisAktivitas);
+  const [KATEGORI_OPTIONS, setKategoriOptions] = useState(getKategoriAktivitas);
+  const [KELOMPOK_OPTIONS, setKelompokOptions] = useState(getKelompokAktivitas);
+  const [LEVEL_OPTIONS,    setLevelOptions]    = useState(getLevelKegiatan);
+  const [TINGKAT_OPTIONS,  setTingkatOptions]  = useState(getTingkatPrestasi);
+  const [PERIODE_OPTIONS,  setPeriodeOptions]  = useState(getPeriodeSemester);
+
+  useEffect(() => {
+    let alive = true;
+    refreshMasterData().then(() => {
+      if (!alive) return;
+      setJenisOptions(getJenisAktivitas());
+      setKategoriOptions(getKategoriAktivitas());
+      setKelompokOptions(getKelompokAktivitas());
+      setLevelOptions(getLevelKegiatan());
+      setTingkatOptions(getTingkatPrestasi());
+      setPeriodeOptions(getPeriodeSemester());
+    });
+    return () => { alive = false; };
+  }, []);
 
   const [form, setForm] = useState(EMPTY_FORM);
   const [namaList, setNamaList] = useState([{ id: 1, nama_id: "", nama_en: "" }]);

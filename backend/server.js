@@ -13,6 +13,7 @@ import skpiRoutes       from "./src/routes/skpi.js";
 import masterDataRoutes from "./src/routes/masterData.js";
 import icpRoutes           from "./src/routes/icp.js";
 import templateSkpiRoutes  from "./src/routes/templateSkpi.js";
+import sicpSyncRoutes      from "./src/routes/sicpSync.js";
 
 // ── Routes mahasiswa ────────────────────────────────────────
 import mahasiswaAuthRoutes       from "./src/routes/mahasiswaAuth.js";
@@ -86,7 +87,8 @@ app.use("/api/aktivitas",   aktivitasRoutes);
 app.use("/api/skpi",        skpiRoutes);
 app.use("/api/master-data",    masterDataRoutes);
 app.use("/api/template-skpi", templateSkpiRoutes);
-app.use("/api/icp",         icpRoutes); 
+app.use("/api/icp",         icpRoutes);
+app.use("/api/sicp-sync",   sicpSyncRoutes);
 
 // ── Routes mahasiswa (spesifik dulu, umum belakangan) ────────
 app.use("/api/mahasiswa/auth",        mahasiswaAuthRoutes);

@@ -10,12 +10,10 @@ import {
 import styles from "../../tambah-kegiatan/tambah.module.css";
 import { getDetailKegiatan, updateKegiatan } from "@/lib/api";
 import {
-  getJenisAktivitas,
-  getKategoriAktivitas,
-  getKelompokAktivitas,
   getLevelKegiatan,
   getTingkatPrestasi,
   getPeriodeSemester,
+  refreshMasterData,
 } from "@/lib/masterData";
 
 // ═══ SKPI_MAP (9 kategori) ═══
@@ -112,13 +110,6 @@ const SKPI_MAP = {
   },
 };
 
-const JENIS_OPTIONS = getJenisAktivitas();
-const KATEGORI_OPTIONS = getKategoriAktivitas();
-const KELOMPOK_OPTIONS = getKelompokAktivitas();
-const LEVEL_OPTIONS = getLevelKegiatan();
-const TINGKAT_PRESTASI = getTingkatPrestasi();
-const PERIODE_OPTIONS = getPeriodeSemester();
-
 function Toast({ message, type, onClose }) {
   useEffect(() => {
     const timer = setTimeout(onClose, 4000);
@@ -157,6 +148,23 @@ export default function EditKegiatanPage() {
   const [error, setError] = useState("");
   const [toast, setToast] = useState(null);
   const fileRef = useRef();
+
+  // Opsi dropdown dari master data (DB). Jenis/Kelompok/Kategori diambil dari
+  // SKPI_MAP (statis), jadi hanya ketiga ini yang perlu data master.
+  const [LEVEL_OPTIONS,   setLevelOptions]   = useState(getLevelKegiatan);
+  const [TINGKAT_PRESTASI, setTingkatPrestasi] = useState(getTingkatPrestasi);
+  const [PERIODE_OPTIONS, setPeriodeOptions] = useState(getPeriodeSemester);
+
+  useEffect(() => {
+    let alive = true;
+    refreshMasterData().then(() => {
+      if (!alive) return;
+      setLevelOptions(getLevelKegiatan());
+      setTingkatPrestasi(getTingkatPrestasi());
+      setPeriodeOptions(getPeriodeSemester());
+    });
+    return () => { alive = false; };
+  }, []);
 
   const activeMap = form.kategori_skpi ? SKPI_MAP[form.kategori_skpi] : null;
   const requiredFields = activeMap?.requiredFields ?? [];

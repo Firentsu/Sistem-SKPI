@@ -18,8 +18,6 @@ function getIcpLevel(poin) {
   return           { label: "Belum",  color: "#dc2626", bg: "#fee2e2", border: "#fca5a5", Icon: AlertCircle, emoji: "⏳", next: 100,   nextLabel: "Bronze" };
 }
 
-const ICP_READY = !!(process.env.NEXT_PUBLIC_ICP_API_URL);
-
 export default function IcpPage() {
   const { prodiConfig } = useMahasiswa();
 
@@ -47,6 +45,10 @@ export default function IcpPage() {
   const detail   = icpData.detail ?? [];
   const level    = getIcpLevel(total);
   const LevelIcon = level.Icon;
+
+  // Data ICP bersumber dari sistem SICP yang disinkronkan admin ke DB SKPI.
+  // Info hanya ditampilkan bila mahasiswa ini memang belum punya poin sama sekali.
+  const hasIcp = total !== 0 || detail.length > 0;
 
   // Progress ke level berikutnya
   const progressBase  = level.label === "Belum" ? 0 : level.label === "Bronze" ? 100 : level.label === "Silver" ? 150 : 200;
@@ -77,7 +79,7 @@ export default function IcpPage() {
         </button>
       </div>
 
-      {!ICP_READY && (
+      {!loading && !hasIcp && (
         <div style={{
           background: "#fff7ed", border: "1.5px solid #fed7aa",
           borderRadius: 12, padding: "14px 18px",
@@ -86,9 +88,9 @@ export default function IcpPage() {
         }}>
           <Info size={16} style={{ flexShrink: 0, marginTop: 1 }} />
           <div>
-            <strong>Sistem ICP belum terhubung.</strong>{" "}
-            Data akan tampil otomatis setelah sistem Integrity Credit Point selesai di-hosting.
-            Hubungi admin untuk informasi lebih lanjut.
+            <strong>Poin ICP Anda belum tersedia.</strong>{" "}
+            Poin ICP diambil dari sistem SICP dan disinkronkan oleh admin. Bila
+            poin Anda belum muncul, hubungi admin untuk menjalankan sinkronisasi data.
           </div>
         </div>
       )}
