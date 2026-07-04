@@ -12,6 +12,7 @@ import PizZip from "pizzip";
 import Docxtemplater from "docxtemplater";
 import fs from "fs";
 import path from "path";
+import { generateIcpChartPng } from "./generateIcpChart.js";
 
 const TEMPLATES_DIR = path.resolve("public/uploads/templates");
 
@@ -440,6 +441,59 @@ function resolveTemplatePath(prodi) {
 }
 
 /* ═════════════════════════════════════════════════════════
+   SISIP PIE CHART ICP
+═════════════════════════════════════════════════════════ */
+const CHART_RID   = "rId9001";                 // id relasi unik (aman dari tabrakan)
+const CHART_MEDIA = "media/icp_chart.png";
+// Ukuran tampil ~5 inci lebar, rasio 900:540 (EMU: 1 inci = 914400).
+const CHART_CX = 4572000, CHART_CY = 2743200;
+
+/** Sisipkan PNG pie chart ICP ke zip docx, di bawah tabel ICP. */
+function insertIcpChart(zip, chartData) {
+  // 1) Tulis PNG ke media
+  zip.file(`word/${CHART_MEDIA}`, generateIcpChartPng(chartData));
+
+  // 2) Tambah relationship gambar (jika belum ada)
+  let rels = zip.file("word/_rels/document.xml.rels").asText();
+  if (!rels.includes(CHART_RID)) {
+    rels = rels.replace(
+      "</Relationships>",
+      `<Relationship Id="${CHART_RID}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="${CHART_MEDIA}"/></Relationships>`,
+    );
+    zip.file("word/_rels/document.xml.rels", rels);
+  }
+
+  // 3) Sisipkan paragraf gambar tepat setelah </w:tbl> tabel ICP
+  let xml = zip.file("word/document.xml").asText();
+  const idxHasil = xml.indexOf("Hasil Pencapaian ICP");
+  if (idxHasil === -1) return;
+  const idxTotal = xml.indexOf("Total", idxHasil);
+  const tblEnd   = xml.indexOf("</w:tbl>", idxTotal === -1 ? idxHasil : idxTotal);
+  if (tblEnd === -1) return;
+  const insertAt = tblEnd + "</w:tbl>".length;
+
+  const drawing =
+    `<w:p><w:pPr><w:jc w:val="center"/><w:spacing w:before="160" w:after="160"/></w:pPr>` +
+    `<w:r><w:drawing ` +
+    `xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" ` +
+    `xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" ` +
+    `xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture" ` +
+    `xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">` +
+    `<wp:inline distT="0" distB="0" distL="0" distR="0">` +
+    `<wp:extent cx="${CHART_CX}" cy="${CHART_CY}"/>` +
+    `<wp:effectExtent l="0" t="0" r="0" b="0"/>` +
+    `<wp:docPr id="9001" name="GrafikICP"/><wp:cNvGraphicFramePr/>` +
+    `<a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">` +
+    `<pic:pic><pic:nvPicPr><pic:cNvPr id="9001" name="GrafikICP"/><pic:cNvPicPr/></pic:nvPicPr>` +
+    `<pic:blipFill><a:blip r:embed="${CHART_RID}"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill>` +
+    `<pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${CHART_CX}" cy="${CHART_CY}"/></a:xfrm>` +
+    `<a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic>` +
+    `</a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>`;
+
+  zip.file("word/document.xml", xml.slice(0, insertAt) + drawing + xml.slice(insertAt));
+}
+
+/* ═════════════════════════════════════════════════════════
    MAIN EXPORT
 ═════════════════════════════════════════════════════════ */
 export async function generateSkpiDocx({ mhs, icp = [], kegiatan = [] }) {
@@ -520,5 +574,23 @@ export async function generateSkpiDocx({ mhs, icp = [], kegiatan = [] }) {
     tgl_pengesahan_en:   fmtEN(mhs.tgl_lulus),
   });
 
-  return doc.getZip().generate({ type: "nodebuffer", compression: "DEFLATE" });
+  const outZip = doc.getZip();
+
+  // ── Sisipkan pie chart Pencapaian ICP di bawah tabel ICP (opsional) ──
+  try {
+    const chartData = [
+      { label: "Fisik",           value: Number(icpMap["fisik"]           ?? 0) },
+      { label: "Iman",            value: Number(icpMap["iman"]            ?? 0) },
+      { label: "Intelektualitas", value: Number(icpMap["intelektualitas"] ?? 0) },
+      { label: "Kepribadian",     value: Number(icpMap["kepribadian"]     ?? 0) },
+      { label: "Keterampilan",    value: Number(icpMap["keterampilan"]    ?? 0) },
+      { label: "Moral",           value: Number(icpMap["moral"]           ?? 0) },
+    ];
+    if (chartData.some(d => d.value !== 0)) insertIcpChart(outZip, chartData);
+  } catch (e) {
+    // Chart opsional — jangan gagalkan pembuatan dokumen bila chart bermasalah.
+    console.error("Gagal menyisipkan grafik ICP:", e.message);
+  }
+
+  return outZip.generate({ type: "nodebuffer", compression: "DEFLATE" });
 }

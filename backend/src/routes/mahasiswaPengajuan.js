@@ -10,6 +10,12 @@ import { Router } from "express";
 import prisma from "../lib/prisma.js";
 import { requireMahasiswaAuth } from "../middleware/mahasiswaAuth.js";
 import { createNotif, notifAllAdmins } from "../utils/notifikasi.js";
+import { generateSkpiDocx } from "../utils/generateSkpiDocx.js";
+import { convertDocxToPdf } from "../utils/libreConvert.js";
+import { randomUUID } from "crypto";
+import os from "os";
+import fs from "fs";
+import path from "path";
 
 const router = Router();
 router.use(requireMahasiswaAuth);
@@ -65,12 +71,98 @@ router.get("/icp", async (req, res) => {
         const total_poin = icpRows.reduce((s, r) => s + (r.total_poin ?? 0), 0);
         const detail = icpRows.map(r => ({
             nama_indo:  r.icpkategori?.nama_indo || "",
+            nama_eng:   r.icpkategori?.nama_eng  || "",
             total_poin: r.total_poin ?? 0,
         }));
         res.json({ total_poin, detail });
     } catch (err) {
         console.error("GET /mahasiswa/pengajuan/icp error:", err);
         res.status(500).json({ error: "Server error" });
+    }
+});
+
+// ════════════════════════════════════════════════════════════
+//  GET /api/mahasiswa/pengajuan/download  → unduh PDF SKPI sendiri
+//  Hanya jika SKPI mahasiswa ini sudah RESMI diterbitkan.
+// ════════════════════════════════════════════════════════════
+router.get("/download", async (req, res) => {
+    const tmpDir  = path.join(os.tmpdir(), `skpi_dl_${randomUUID()}`);
+    const tmpDocx = path.join(tmpDir, "skpi.docx");
+    const tmpPdf  = path.join(tmpDir, "skpi.pdf");
+    try {
+        const id = req.mahasiswa.id_mahasiswa;
+
+        // Syarat: harus sudah ada SKPI berstatus "resmi"
+        const published = await prisma.skpi.findFirst({
+            where:   { id_mahasiswa: id, status: "resmi" },
+            orderBy: { tanggal_terbit: "desc" },
+        });
+        if (!published) {
+            return res.status(403).json({ error: "SKPI Anda belum diterbitkan." });
+        }
+
+        const mhs = await prisma.mahasiswa.findUnique({
+            where: { id_mahasiswa: id },
+            include: {
+                programstudi: true,
+                kegiatanmahasiswa: {
+                    where:   { status_verifikasi: "disetujui" },
+                    include: { jenisaktivitas: true, kategoriaktivitas: true, kelompokaktivitas: true },
+                },
+            },
+        });
+        if (!mhs) return res.status(404).json({ error: "Mahasiswa tidak ditemukan" });
+
+        const icpRows = await prisma.icpmahasiswa.findMany({
+            where: { id_mahasiswa: id },
+            include: { icpkategori: true },
+        });
+        const icpDetail = icpRows.map(r => ({
+            nama_indo:  r.icpkategori?.nama_indo || "",
+            total_poin: r.total_poin ?? 0,
+        }));
+
+        // 1. Buat DOCX terisi
+        const docxBuffer = await generateSkpiDocx({
+            mhs: {
+                id_mahasiswa: mhs.id_mahasiswa,
+                nim:          mhs.nim,
+                nama:         mhs.nama,
+                prodi:        mhs.programstudi?.nama_prodi || "Teknologi Informasi",
+                tempat_lahir: mhs.tempat_lahir,
+                tgl_lahir:    mhs.tgl_lahir,
+                tgl_masuk:    mhs.tanggal_masuk,
+                tgl_lulus:    mhs.tanggal_lulus,
+                nomor_ijazah: mhs.nomor_ijazah,
+                gelar:        mhs.gelar,
+                gelar_eng:    mhs.gelar_eng,
+                nomor_skpi:   published.nomor_skpi,
+            },
+            icp:      icpDetail,
+            kegiatan: mhs.kegiatanmahasiswa || [],
+        });
+
+        // 2. Simpan ke temp lalu konversi ke PDF (LibreOffice, sudah tahan-banting)
+        fs.mkdirSync(tmpDir, { recursive: true });
+        fs.writeFileSync(tmpDocx, docxBuffer);
+        await convertDocxToPdf(tmpDocx, tmpPdf);
+        if (!fs.existsSync(tmpPdf)) {
+            return res.status(500).json({ error: "Konversi PDF gagal." });
+        }
+
+        // 3. Kirim PDF sebagai unduhan
+        const safeName = (mhs.nama || "").replace(/[^a-zA-Z0-9]/g, "_");
+        res.setHeader("Content-Type", "application/pdf");
+        res.setHeader("Content-Disposition", `attachment; filename="SKPI_${mhs.nim}_${safeName}.pdf"`);
+        res.setHeader("Access-Control-Expose-Headers", "Content-Disposition");
+        return res.send(fs.readFileSync(tmpPdf));
+    } catch (err) {
+        console.error("GET /mahasiswa/pengajuan/download error:", err);
+        const status = err.code === "NO_TEMPLATE" ? 404
+                     : err.code === "PDF_CONVERT_FAILED" ? 503 : 500;
+        return res.status(status).json({ error: err.message, code: err.code || "GENERATE_ERROR" });
+    } finally {
+        try { fs.rmSync(tmpDir, { recursive: true, force: true }); } catch {}
     }
 });
 

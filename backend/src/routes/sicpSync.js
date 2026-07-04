@@ -17,9 +17,6 @@ import { fetchStudentsWithIcp, testConnection, isSicpConfigured } from "../utils
 
 const router = express.Router();
 
-// Kategori ICP tujuan penyimpanan total poin dari SICP (bisa diubah via env).
-const ICP_CATEGORY_ID = parseInt(process.env.SICP_ICP_CATEGORY_ID || "1", 10);
-
 /** Resolver nama jurusan SICP → id_prodi SKPI (exact → partial, case-insensitive). */
 async function buildProdiResolver() {
   const allProdi = await prisma.programstudi.findMany();
@@ -86,9 +83,23 @@ async function runMahasiswaSync(students) {
   return { total: students.length, created, updated, failed: errors.length, errors: errors.slice(0, 20) };
 }
 
-/** UPSERT total poin ICP per mahasiswa (dicocokkan berdasarkan NIM). */
+// Bagi `total` ke n bagian bilangan bulat yang jumlahnya PERSIS = total (merata).
+function splitEven(total, n) {
+  const base = Math.trunc(total / n);
+  const rem  = total - base * n;
+  const step = rem >= 0 ? 1 : -1;
+  return Array.from({ length: n }, (_, i) =>
+    (rem !== 0 && ((step > 0 && i < rem) || (step < 0 && i < -rem))) ? base + step : base);
+}
+
+/**
+ * Simpan poin ICP per mahasiswa, DIBAGI RATA ke 6 kategori ISB (id_icp 1..6 =
+ * Fisik, Iman, Intelektualitas, Kepribadian, Keterampilan, Moral).
+ * SICP saat ini hanya memberi TOTAL, jadi dibagi merata sebagai placeholder —
+ * begitu endpoint per-kategori SICP live, ganti bagian ini dengan nilai asli.
+ */
 async function runIcpSync(students) {
-  let created = 0, updated = 0, notFound = 0;
+  let updated = 0, notFound = 0;
   const errors = [];
 
   for (const s of students) {
@@ -96,26 +107,18 @@ async function runIcpSync(students) {
       const mhs = await prisma.mahasiswa.findFirst({ where: { nim: s.nim } });
       if (!mhs) { notFound++; continue; }
 
-      const existing = await prisma.icpmahasiswa.findFirst({
-        where: { id_mahasiswa: mhs.id_mahasiswa, id_icp: ICP_CATEGORY_ID },
+      const parts = splitEven(s.total_icp || 0, 6);
+      // Tulis ulang: hapus baris lama, buat 6 baris (satu per kategori).
+      await prisma.icpmahasiswa.deleteMany({ where: { id_mahasiswa: mhs.id_mahasiswa } });
+      await prisma.icpmahasiswa.createMany({
+        data: parts.map((poin, i) => ({ id_mahasiswa: mhs.id_mahasiswa, id_icp: i + 1, total_poin: poin })),
       });
-      if (existing) {
-        await prisma.icpmahasiswa.update({
-          where: { id_icp_mahasiswa: existing.id_icp_mahasiswa },
-          data:  { total_poin: s.total_icp },
-        });
-        updated++;
-      } else {
-        await prisma.icpmahasiswa.create({
-          data: { id_mahasiswa: mhs.id_mahasiswa, id_icp: ICP_CATEGORY_ID, total_poin: s.total_icp },
-        });
-        created++;
-      }
+      updated++;
     } catch (e) {
       errors.push({ nim: s.nim || "?", error: e.message });
     }
   }
-  return { total: students.length, created, updated, notFound, failed: errors.length, errors: errors.slice(0, 20) };
+  return { total: students.length, updated, notFound, failed: errors.length, errors: errors.slice(0, 20) };
 }
 
 function sicpErrorStatus(err) {
