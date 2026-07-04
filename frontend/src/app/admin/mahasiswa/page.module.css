@@ -519,6 +519,13 @@
   border: 1px solid #f0dcc8;
 }
 
+.icpBadge {
+  display: inline-block; padding: 3px 11px;
+  border-radius: 20px; font-size: 12.5px; font-weight: 800;
+  background: #fef3c7; color: #92400e;
+  border: 1px solid #fcd34d;
+}
+
 .emptyTd { padding: 0 !important; }
 
 .emptyState {

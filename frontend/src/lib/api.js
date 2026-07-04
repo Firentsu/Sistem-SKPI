@@ -33,6 +33,21 @@ export function getAvatarUrl(path) {
   return path;
 }
 
+/**
+ * Konversi path file upload (bukti, dsb) → URL lengkap ke backend.
+ * Backend menyajikan file statis di `${API_URL}/uploads/...`.
+ * - "http(s)://…"                         → dipakai apa adanya
+ * - "/uploads/bukti/x.png"                → `${API_URL}/uploads/bukti/x.png`
+ * - "x.png" (nama file polos)             → `${API_URL}/uploads/bukti/x.png`
+ */
+export function getUploadUrl(path) {
+  if (!path) return "";
+  if (path.startsWith("http://") || path.startsWith("https://")) return path;
+  const base = API_URL || "";
+  if (path.startsWith("/uploads/")) return `${base}${path}`;
+  return `${base}/uploads/bukti/${path}`;
+}
+
 let _mockMode = false;
 export function isMockMode() { return _mockMode; }
 

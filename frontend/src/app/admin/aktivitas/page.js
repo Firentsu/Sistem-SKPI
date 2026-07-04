@@ -6,7 +6,7 @@ import {
   RotateCcw, Paperclip, User, Calendar, MapPin, Tag, Building2,
   ChevronDown, Download, Image as ImageIcon, FileText, SlidersHorizontal,
 } from "lucide-react";
-import { getAktivitasList, verifikasiAktivitas } from "@/lib/api";
+import { getAktivitasList, verifikasiAktivitas, getUploadUrl } from "@/lib/api";
 import styles from "./aktivitas.module.css";
 
 /* ── KONSTANTA ── */
@@ -28,6 +28,22 @@ const SKPI_LABELS = {
   karakter: "7. Pembangunan Karakter dan Kepribadian",
   kursus: "8. Kursus-kursus",
   skripsi: "9. Skripsi",
+};
+
+// Kategori SKPI tidak disimpan sebagai kolom di DB — diturunkan dari "jenis
+// aktivitas" (tiap jenis memetakan 1:1 ke satu kategori SKPI).
+const JENIS_TO_SKPI = {
+  "Prestasi dan Kegiatan":                     "prestasi",
+  "Peningkatan Keterampilan Profesional":      "keterampilan",
+  "Pengalaman Berorganisasi dan Kepemimpinan": "organisasi",
+  "Pengembangan Intelektual":                  "intelektual",
+  "Penelitian":                                "intelektual",
+  "Praktik Kerja":                             "praktik",
+  "Pengabdian Masyarakat":                     "organisasi",
+  "Pembinaan Spiritual":                       "pembinaan",
+  "Pembangunan Karakter dan Kepribadian":      "karakter",
+  "Kursus-kursus":                             "kursus",
+  "Skripsi":                                   "skripsi",
 };
 
 /* ── TOAST ── */
@@ -73,10 +89,7 @@ function StatusBadge({ status, size = "md" }) {
 function BuktiItem({ bukti }) {
   const isImg = ["jpg","jpeg","png","gif","webp"].some(ext =>
     bukti.file_path?.toLowerCase().endsWith(ext));
-  const API = process.env.NEXT_PUBLIC_API_URL || "";
-  const url = bukti.file_path?.startsWith("http")
-    ? bukti.file_path
-    : `${API}/uploads/${bukti.file_path}`;
+  const url = getUploadUrl(bukti.file_path);
 
   return (
     <a href={url} target="_blank" rel="noopener noreferrer" className={styles.buktiItem}>
@@ -260,7 +273,12 @@ export default function AktivitasPage() {
     setLoading(true);
     const res = await getAktivitasList({ q, status, page: pg });
     if (res) {
-      setRows(res.rows ?? []);
+      // Turunkan kategori SKPI dari jenis aktivitas (tidak ada kolomnya di DB).
+      const rows = (res.rows ?? []).map(r => ({
+        ...r,
+        kategori_skpi: r.kategori_skpi || JENIS_TO_SKPI[r.jenisaktivitas?.nama_indo] || "",
+      }));
+      setRows(rows);
       setTotal(res.total ?? 0);
       setTotalPages(Math.ceil((res.total ?? 0) / PER_PAGE) || 1);
     }

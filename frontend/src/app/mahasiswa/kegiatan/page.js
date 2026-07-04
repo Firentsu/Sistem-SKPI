@@ -21,6 +21,7 @@ import {
   getMahasiswaIcp,
   getPengajuanStatus,
   submitPengajuanSkpi,
+  getUploadUrl,
 } from "@/lib/api";
 // ═══ PENGAJUAN CONSTANTS ═══
 const MIN_ICP = 100;
@@ -57,6 +58,22 @@ const KATEGORI_SKPI_MAHASISWA = [
   { no: "8", id: "kursus",      label: "Kursus-kursus",                             en: "Courses" },
   { no: "9", id: "skripsi",     label: "Skripsi",                                   en: "Thesis / Final Project" },
 ];
+
+// Kategori SKPI TIDAK disimpan sebagai kolom di DB — ia diturunkan dari "jenis
+// aktivitas" kegiatan (tiap jenis memetakan 1:1 ke satu kategori SKPI).
+const JENIS_TO_SKPI = {
+  "Prestasi dan Kegiatan":                     "prestasi",
+  "Peningkatan Keterampilan Profesional":      "keterampilan",
+  "Pengalaman Berorganisasi dan Kepemimpinan": "organisasi",
+  "Pengembangan Intelektual":                  "intelektual",
+  "Penelitian":                                "intelektual",
+  "Praktik Kerja":                             "praktik",
+  "Pengabdian Masyarakat":                     "organisasi",
+  "Pembinaan Spiritual":                       "pembinaan",
+  "Pembangunan Karakter dan Kepribadian":      "karakter",
+  "Kursus-kursus":                             "kursus",
+  "Skripsi":                                   "skripsi",
+};
 
 // ═══ MOCK DATA ═══
 const MOCK_KEGIATAN = [
@@ -105,7 +122,7 @@ function BuktiModal({ bukti, namaKegiatan, onClose }) {
     return () => window.removeEventListener("keydown", fn);
   }, [onClose]);
 
-  const buktiUrl = bukti?.startsWith("http") ? bukti : `/api/uploads/bukti/${bukti}`;
+  const buktiUrl = getUploadUrl(bukti);
 
   return (
     <div className={styles.modalOverlay} onClick={onClose}>
@@ -195,7 +212,7 @@ export default function KegiatanPage() {
           nama_id: k.nama_kegiatan,
           nama_en: k.nama_kegiatan_eng || "",
           jenis_aktivitas: k.jenisaktivitas?.nama_indo || "",
-          kategori_skpi: k.kategori_skpi || "",
+          kategori_skpi: k.kategori_skpi || JENIS_TO_SKPI[k.jenisaktivitas?.nama_indo] || "",
           kategori: k.kategoriaktivitas?.nama_indo || "",
           kelompok: k.kelompokaktivitas?.nama_indo || "",
           level: k.levelkegiatan?.nama_level || "",

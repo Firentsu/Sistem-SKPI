@@ -1063,6 +1063,7 @@ export default function MahasiswaPage() {
                 <th>NIM</th>
                 <th className={`${styles.thCenter} ${styles.hideMobile}`}>Prodi</th>
                 <th className={`${styles.thCenter} ${styles.hideMobile}`}>Angkt</th>
+                <th className={styles.thCenter}>ICP</th>
                 <th className={styles.thCenter}>SKPI</th>
                 <th className={styles.thCenter}>Akun</th>
                 <th className={`${styles.thCenter} ${styles.thAksi}`}>Aksi</th>
@@ -1071,7 +1072,7 @@ export default function MahasiswaPage() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={8} className={styles.emptyTd}>
+                  <td colSpan={9} className={styles.emptyTd}>
                     <div className={styles.emptyState}>
                       <Loader2 size={32} className={styles.spin} /><p>Memuat data...</p>
                     </div>
@@ -1079,7 +1080,7 @@ export default function MahasiswaPage() {
                 </tr>
               ) : filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className={styles.emptyTd}>
+                  <td colSpan={9} className={styles.emptyTd}>
                     <div className={styles.emptyState}>
                       <GraduationCap size={44} />
                       <p>Tidak ada data mahasiswa</p>
@@ -1103,6 +1104,9 @@ export default function MahasiswaPage() {
                   <td className={styles.hideMobile}><ProdiChip nama={row.nama_prodi} /></td>
                   <td className={`${styles.tdCenter} ${styles.hideMobile}`}>
                     <span className={styles.angkatanBadge}>{row.angkatan}</span>
+                  </td>
+                  <td className={styles.tdCenter}>
+                    <span className={styles.icpBadge}>{row.total_icp ?? 0}</span>
                   </td>
                   <td className={styles.tdCenter}><StatusBadge status={row.status_skpi} /></td>
                   <td className={styles.tdCenter}>

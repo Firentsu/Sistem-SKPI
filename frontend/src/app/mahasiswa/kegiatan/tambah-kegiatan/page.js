@@ -116,6 +116,8 @@ const SKPI_MAP = {
 };
 
 const EMPTY_FORM = {
+  nama_id: "",
+  nama_en: "",
   kategori_skpi: "",
   jenis_aktivitas: "",
   kelompok: "",
