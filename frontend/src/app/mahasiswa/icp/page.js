@@ -223,19 +223,19 @@ export default function IcpPage() {
             </div>
             <div className={styles.statCard}>
               <span className={styles.statValue} style={{ color: "#765439" }}>{detail.length || "—"}</span>
-              <span className={styles.statLabel}>Komponen ICP</span>
+              <span className={styles.statLabel}>Kategori ICP</span>
             </div>
           </div>
 
           {/* ── Detail Komponen ── */}
           {detail.length > 0 && (
             <div className={styles.detailCard}>
-              <h3 className={styles.detailTitle}>Detail Komponen ICP</h3>
+              <h3 className={styles.detailTitle}>Detail Kategori ICP</h3>
               <div style={{ overflowX: "auto" }}>
                 <table className={styles.detailTable}>
                   <thead>
                     <tr>
-                      <th>Komponen</th>
+                      <th>Kategori</th>
                       <th>Poin</th>
                       <th>Keterangan</th>
                     </tr>
@@ -243,18 +243,18 @@ export default function IcpPage() {
                   <tbody>
                     {detail.map((item, idx) => (
                       <tr key={idx}>
-                        <td style={{ fontWeight: 600 }}>{item.nama || item.komponen || `Komponen ${idx + 1}`}</td>
+                        <td style={{ fontWeight: 600 }}>{item.nama_indo || item.nama || item.komponen || `Kategori ${idx + 1}`}</td>
                         <td>
                           <span style={{
                             fontWeight: 700, color: prodiConfig.primary,
                             background: `${prodiConfig.primary}14`,
                             padding: "3px 10px", borderRadius: 20, fontSize: 12.5,
                           }}>
-                            {item.poin ?? item.nilai ?? 0} poin
+                            {item.total_poin ?? item.poin ?? item.nilai ?? 0} poin
                           </span>
                         </td>
                         <td style={{ color: "#765439", fontSize: 12.5 }}>
-                          {item.keterangan || item.deskripsi || "—"}
+                          {item.nama_eng || item.keterangan || item.deskripsi || "—"}
                         </td>
                       </tr>
                     ))}

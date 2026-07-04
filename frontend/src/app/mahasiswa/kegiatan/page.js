@@ -11,6 +11,7 @@ import {
   BookOpen,
   CheckCircle, Award, Shield, History,
   ClipboardCheck, FileCheck, Trophy, Medal, TrendingUp,
+  Download,
 } from "lucide-react";
 import styles from "./kegiatan.module.css";
 import pStyles from "../pengajuan/pengajuan.module.css";
@@ -22,6 +23,7 @@ import {
   getPengajuanStatus,
   submitPengajuanSkpi,
   getUploadUrl,
+  downloadMahasiswaSkpi,
 } from "@/lib/api";
 // ═══ PENGAJUAN CONSTANTS ═══
 const MIN_ICP = 100;
@@ -757,9 +759,21 @@ export default function KegiatanPage() {
                   )}
 
                   {displayStatus === "Selesai" && (
-                    <div className={pStyles.successNote}>
-                      <CheckCircle size={14}/>
-                      <span>SKPI telah diterbitkan. Lihat di halaman Riwayat untuk mengunduh.</span>
+                    <div className={pStyles.successNote} style={{ flexDirection: "column", alignItems: "flex-start", gap: 10 }}>
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+                        <CheckCircle size={14}/> SKPI Anda telah resmi diterbitkan.
+                      </span>
+                      <button
+                        onClick={async () => {
+                          try { await downloadMahasiswaSkpi(); showToast("SKPI berhasil diunduh"); }
+                          catch (e) { showToast(e.message || "Gagal mengunduh SKPI", "error"); }
+                        }}
+                        style={{ display: "inline-flex", alignItems: "center", gap: 8,
+                          padding: "9px 18px", borderRadius: 8, border: "none",
+                          background: "#166534", color: "#fff", fontWeight: 700, fontSize: 13, cursor: "pointer" }}
+                      >
+                        <Download size={15}/> Unduh SKPI (PDF)
+                      </button>
                     </div>
                   )}
 

@@ -547,6 +547,23 @@ export async function getPengajuanRiwayat() {
   } catch { return []; }
 }
 
+/** Unduh PDF SKPI milik mahasiswa yang login (hanya bila sudah diterbitkan). */
+export async function downloadMahasiswaSkpi() {
+  const res = await apiFetch("/api/mahasiswa/pengajuan/download");
+  if (!res.ok) {
+    const j = await res.json().catch(() => ({}));
+    throw new Error(j.error || `Gagal mengunduh SKPI (${res.status})`);
+  }
+  const blob = await res.blob();
+  const cd = res.headers.get("Content-Disposition") || "";
+  const match = cd.match(/filename="?([^"]+)"?/);
+  const filename = match ? match[1] : "SKPI.pdf";
+  const url = URL.createObjectURL(blob);
+  const a = Object.assign(document.createElement("a"), { href: url, download: filename });
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
 // =============================================================================
 // ADMIN — Manajemen Akun Administrator
 // Base endpoint: /api/admin/admins
