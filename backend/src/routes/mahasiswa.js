@@ -40,12 +40,20 @@ router.get("/", async (req, res) => {
           programstudi: true,
           users: { select: { status_akun: true } },
           _count: { select: { kegiatanmahasiswa: true } },
+          icpmahasiswa: { select: { total_poin: true } },
         },
         orderBy: { id_mahasiswa: "desc" },
       }),
     ]);
 
-    res.json({ total, page: pageNum, pageSize, rows });
+    // Hitung total poin ICP per mahasiswa (jumlah semua kategori), lalu buang
+    // array mentah icpmahasiswa agar respons tetap ringkas.
+    const rowsWithIcp = rows.map(({ icpmahasiswa, ...m }) => ({
+      ...m,
+      total_icp: (icpmahasiswa || []).reduce((s, r) => s + (r.total_poin ?? 0), 0),
+    }));
+
+    res.json({ total, page: pageNum, pageSize, rows: rowsWithIcp });
   } catch (err) {
     console.error("GET /mahasiswa error:", err);
     res.status(500).json({ error: "Server error" });
