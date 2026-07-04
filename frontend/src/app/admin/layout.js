@@ -9,7 +9,7 @@ import {
   ChevronRight, ChevronDown, Bell, Shield, BookOpen, Award,
   Camera, X, Check, Upload, WifiOff,
   CheckCircle2, AlertTriangle, ClipboardCheck, Send, Clock,
-  Menu, User, RefreshCcw,// ← tombol menu untuk mobile + icon sync
+  Menu, User, RefreshCcw,
 } from "lucide-react";
 import styles from "./admin.module.css";
 import { useRouter, usePathname } from "next/navigation";
@@ -164,6 +164,7 @@ function NotificationDropdown({ isOpen, onClose, onUnreadChange }) {
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
 
+  // 🔥 AMBIL DATA SAAT DROPDOWN DIBUKA
   useEffect(() => {
     if (!isOpen) return;
     setLoading(true);
@@ -174,7 +175,15 @@ function NotificationDropdown({ isOpen, onClose, onUnreadChange }) {
     });
   }, [isOpen]);
 
-  // Terima notifikasi real-time saat dropdown sedang terbuka
+  // 🔥 SINKRONKAN UNREAD COUNT KE PARENT (AdminLayout)
+  // Dipisah ke useEffect agar tidak dipanggil saat render
+  useEffect(() => {
+    if (onUnreadChange) {
+      onUnreadChange(unreadCount);
+    }
+  }, [unreadCount, onUnreadChange]);
+
+  // 🔥 TERIMA NOTIFIKASI REAL-TIME
   useEffect(() => {
     if (!isOpen) return;
     const handler = (e) => {
@@ -186,22 +195,26 @@ function NotificationDropdown({ isOpen, onClose, onUnreadChange }) {
     return () => window.removeEventListener("notif:new", handler);
   }, [isOpen]);
 
+  // ✅ HANDLE MARK AS READ (sudah diperbaiki)
   const handleMarkAsRead = async (id) => {
     if (notifications.find(n => n.id_notifikasi === id)?.status_baca) return;
     await markNotifikasiRead(id);
     setNotifications(prev => prev.map(n => n.id_notifikasi === id ? { ...n, status_baca: true } : n));
-    setUnreadCount(prev => {
-      const next = Math.max(0, prev - 1);
-      if (onUnreadChange) onUnreadChange(next);
-      return next;
-    });
+    // ✅ Hanya update state local, callback dipisah di useEffect
+    setUnreadCount(prev => Math.max(0, prev - 1));
   };
 
+  // ✅ HANDLE MARK ALL READ (sudah diperbaiki)
   const handleMarkAllRead = async () => {
     await markAllNotifikasiRead();
     setNotifications(prev => prev.map(n => ({ ...n, status_baca: true })));
+    // ✅ Hanya update state local, callback dipisah di useEffect
     setUnreadCount(0);
-    if (onUnreadChange) onUnreadChange(0);
+  };
+
+  // ✅ TUTUP DROPDOWN SAAT KLIK LINK
+  const handleLinkClick = () => {
+    if (onClose) onClose();
   };
 
   if (!isOpen) return null;
@@ -249,7 +262,9 @@ function NotificationDropdown({ isOpen, onClose, onUnreadChange }) {
         )}
       </div>
       <div className={styles.notifFooter}>
-        <Link href="/admin/notifications" onClick={onClose}>Lihat semua notifikasi</Link>
+        <Link href="/admin/notifications" onClick={handleLinkClick}>
+          Lihat semua notifikasi
+        </Link>
       </div>
     </div>
   );
@@ -263,7 +278,7 @@ export default function AdminLayout({ children }) {
   const [mockMode, setMockMode] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [notifUnread, setNotifUnread] = useState(0);
-  const [sidebarOpen, setSidebarOpen] = useState(false); // ← state untuk sidebar di mobile
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [akunManajemenOpen, setAkunManajemenOpen] = useState(false);
   const notifRef = useRef(null);
 
@@ -488,7 +503,7 @@ export default function AdminLayout({ children }) {
             return (
               <Link key={item.href} href={item.href}
                 className={`${styles.navItem} ${isActive ? styles.navItemActive : ""}`}
-                onClick={() => setSidebarOpen(false)} // tutup sidebar setelah klik link di mobile
+                onClick={() => setSidebarOpen(false)}
               >
                 {isActive && <span className={styles.activeAccent} />}
                 <span className={styles.iconWrap}><Icon size={17} /></span>
