@@ -161,6 +161,7 @@ function NotificationDropdown({ isOpen, onClose, onUnreadChange }) {
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
 
+  // 🔥 AMBIL DATA SAAT DROPDOWN DIBUKA
   useEffect(() => {
     if (!isOpen) return;
     setLoading(true);
@@ -171,7 +172,15 @@ function NotificationDropdown({ isOpen, onClose, onUnreadChange }) {
     });
   }, [isOpen]);
 
-  // Terima notifikasi real-time saat dropdown sedang terbuka
+  // 🔥 SINKRONKAN UNREAD COUNT KE PARENT (Layout)
+  // Dipisah ke useEffect agar tidak dipanggil saat render
+  useEffect(() => {
+    if (onUnreadChange) {
+      onUnreadChange(unreadCount);
+    }
+  }, [unreadCount, onUnreadChange]);
+
+  // 🔥 TERIMA NOTIFIKASI REAL-TIME
   useEffect(() => {
     if (!isOpen) return;
     const handler = (e) => {
@@ -183,22 +192,26 @@ function NotificationDropdown({ isOpen, onClose, onUnreadChange }) {
     return () => window.removeEventListener("notif:new", handler);
   }, [isOpen]);
 
+  // ✅ HANDLE MARK AS READ (sudah diperbaiki)
   const handleMarkAsRead = async (id) => {
     if (notifications.find(n => n.id_notifikasi === id)?.status_baca) return;
     await markMahasiswaNotifRead(id);
     setNotifications(prev => prev.map(n => n.id_notifikasi === id ? { ...n, status_baca: true } : n));
-    setUnreadCount(prev => {
-      const next = Math.max(0, prev - 1);
-      if (onUnreadChange) onUnreadChange(next);
-      return next;
-    });
+    // ✅ Hanya update state local, callback dipisah di useEffect
+    setUnreadCount(prev => Math.max(0, prev - 1));
   };
 
+  // ✅ HANDLE MARK ALL READ (sudah diperbaiki)
   const handleMarkAllRead = async () => {
     await markAllMahasiswaNotifRead();
     setNotifications(prev => prev.map(n => ({ ...n, status_baca: true })));
+    // ✅ Hanya update state local, callback dipisah di useEffect
     setUnreadCount(0);
-    if (onUnreadChange) onUnreadChange(0);
+  };
+
+  // ✅ TUTUP DROPDOWN SAAT KLIK LINK
+  const handleLinkClick = () => {
+    if (onClose) onClose();
   };
 
   if (!isOpen) return null;
@@ -246,7 +259,9 @@ function NotificationDropdown({ isOpen, onClose, onUnreadChange }) {
         )}
       </div>
       <div className={styles.notifFooter}>
-        <Link href="/mahasiswa/notifications" onClick={onClose}>Lihat semua notifikasi</Link>
+        <Link href="/mahasiswa/notifications" onClick={handleLinkClick}>
+          Lihat semua notifikasi
+        </Link>
       </div>
     </div>
   );
@@ -563,8 +578,8 @@ function MahasiswaLayoutInner({ children }) {
                 <span className={styles.avatarOverlay}><Camera size={11} /></span>
               </button>
               <button className={styles.userInfoBtn} onClick={() => router.push("/mahasiswa/profile")}>
-                <span className={styles.userName}>{user.nama}</span>
-                <span className={styles.userRole}>{user.nim}</span>
+                <span className={styles.userName}>{user?.nama || "Mahasiswa"}</span>
+                <span className={styles.userRole}>{user?.nim || "NIM"}</span>
               </button>
               <button className={styles.logoutBtn} title="Logout" onClick={handleLogout} disabled={loggingOut}>
                 {loggingOut ? <span className={styles.logoutSpinner} /> : <LogOut size={14} />}

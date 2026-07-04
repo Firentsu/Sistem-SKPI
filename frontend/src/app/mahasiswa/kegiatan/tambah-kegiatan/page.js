@@ -204,10 +204,16 @@ export default function TambahKegiatanPage() {
     const jenisFiltered = JENIS_OPTIONS.filter(j => map.jenis.includes(j));
     const kelompokFiltered = KELOMPOK_OPTIONS.filter(k => map.kelompok.includes(k));
     setForm({
-      ...EMPTY_FORM,
       kategori_skpi: id,
       jenis_aktivitas: jenisFiltered.length === 1 ? jenisFiltered[0] : "",
       kelompok: kelompokFiltered.length === 1 ? kelompokFiltered[0] : "",
+      kategori: "",
+      level: "",
+      tingkat_prestasi: "",
+      periode: "",
+      lokasi: "",
+      penyelenggara: "",
+      tanggal: "",
     });
     setNamaList([{ id: Date.now(), nama_id: "", nama_en: "" }]);
     setFile(null);
@@ -389,14 +395,14 @@ export default function TambahKegiatanPage() {
                     <div className={styles.fg}>
                       <label className={styles.lbl}>Nama (ID) {labelRequired("nama_id")}</label>
                       <input className={styles.input}
-                        value={item.nama_id}
+                        value={item.nama_id || ""}
                         onChange={e => updateNama(item.id, "nama_id", e.target.value)}
                         placeholder="Nama kegiatan" />
                     </div>
                     <div className={styles.fg}>
                       <label className={styles.lbl}>Nama (EN) {labelRequired("nama_en")}</label>
                       <input className={styles.input}
-                        value={item.nama_en}
+                        value={item.nama_en || ""}
                         onChange={e => updateNama(item.id, "nama_en", e.target.value)}
                         placeholder="English name" />
                     </div>
@@ -416,13 +422,13 @@ export default function TambahKegiatanPage() {
             <div className={styles.row2}>
               <div className={styles.fg}>
                 <label className={styles.lbl}>Nama (Bahasa Indonesia) {labelRequired("nama_id")}</label>
-                <input className={styles.input} value={form.nama_id}
+                <input className={styles.input} value={form.nama_id || ""}
                   onChange={e => set("nama_id", e.target.value)}
                   placeholder="Contoh: Workshop React.js" />
               </div>
               <div className={styles.fg}>
                 <label className={styles.lbl}>Nama (English) {labelRequired("nama_en")}</label>
-                <input className={styles.input} value={form.nama_en}
+                <input className={styles.input} value={form.nama_en || ""}
                   onChange={e => set("nama_en", e.target.value)}
                   placeholder="Example: National Workshop" />
               </div>
@@ -467,7 +473,7 @@ export default function TambahKegiatanPage() {
                       <CheckCircle2 size={13} /> {filteredJenis[0]}
                     </div>
                   ) : (
-                    <select className={styles.input} value={form.jenis_aktivitas}
+                    <select className={styles.input} value={form.jenis_aktivitas || ""}
                       onChange={e => set("jenis_aktivitas", e.target.value)}>
                       <option value="">-- Pilih Jenis --</option>
                       {filteredJenis.map(j => <option key={j}>{j}</option>)}
@@ -481,7 +487,7 @@ export default function TambahKegiatanPage() {
                       <CheckCircle2 size={13} /> {filteredKelompok[0]}
                     </div>
                   ) : (
-                    <select className={styles.input} value={form.kelompok}
+                    <select className={styles.input} value={form.kelompok || ""}
                       onChange={e => set("kelompok", e.target.value)}>
                       <option value="">-- Pilih Kelompok --</option>
                       {filteredKelompok.map(k => <option key={k}>{k}</option>)}
@@ -490,7 +496,7 @@ export default function TambahKegiatanPage() {
                 </div>
                 <div className={styles.fg}>
                   <label className={styles.lbl}>Kategori Kegiatan {labelRequired("kategori")}</label>
-                  <select className={styles.input} value={form.kategori}
+                  <select className={styles.input} value={form.kategori || ""}
                     onChange={e => set("kategori", e.target.value)}>
                     <option value="">-- Pilih Kategori --</option>
                     {filteredKategori.map(k => <option key={k}>{k}</option>)}
@@ -498,7 +504,7 @@ export default function TambahKegiatanPage() {
                 </div>
                 <div className={styles.fg}>
                   <label className={styles.lbl}>Tingkat / Level {labelRequired("level")}</label>
-                  <select className={styles.input} value={form.level}
+                  <select className={styles.input} value={form.level || ""}
                     onChange={e => set("level", e.target.value)}>
                     <option value="">-- Pilih Level --</option>
                     {LEVEL_OPTIONS.map(l => <option key={l}>{l}</option>)}
@@ -507,7 +513,7 @@ export default function TambahKegiatanPage() {
                 {showTingkatPrestasi && (
                   <div className={`${styles.fg} ${styles.fullSpan}`}>
                     <label className={styles.lbl}>Prestasi yang Diraih {labelRequired("tingkat_prestasi")}</label>
-                    <select className={styles.input} value={form.tingkat_prestasi}
+                    <select className={styles.input} value={form.tingkat_prestasi || ""}
                       onChange={e => set("tingkat_prestasi", e.target.value)}>
                       <option value="">-- Pilih jika ada --</option>
                       {TINGKAT_OPTIONS.map(t => <option key={t}>{t}</option>)}
@@ -523,7 +529,7 @@ export default function TambahKegiatanPage() {
               <div className={styles.row2}>
                 <div className={styles.fg}>
                   <label className={styles.lbl}>Periode Semester {labelRequired("periode")}</label>
-                  <select className={styles.input} value={form.periode}
+                  <select className={styles.input} value={form.periode || ""}
                     onChange={e => set("periode", e.target.value)}>
                     <option value="">-- Pilih Periode --</option>
                     {PERIODE_OPTIONS.map(p => <option key={p}>{p}</option>)}
@@ -531,18 +537,18 @@ export default function TambahKegiatanPage() {
                 </div>
                 <div className={styles.fg}>
                   <label className={styles.lbl}>Tanggal Pelaksanaan {labelRequired("tanggal")}</label>
-                  <input type="date" className={styles.input} value={form.tanggal}
+                  <input type="date" className={styles.input} value={form.tanggal || ""}
                     onChange={e => set("tanggal", e.target.value)} />
                 </div>
                 <div className={styles.fg}>
                   <label className={styles.lbl}>Lokasi / Kota {labelRequired("lokasi")}</label>
                   <input className={styles.input} placeholder="Contoh: Bengkayang"
-                    value={form.lokasi} onChange={e => set("lokasi", e.target.value)} />
+                    value={form.lokasi || ""} onChange={e => set("lokasi", e.target.value)} />
                 </div>
                 <div className={styles.fg}>
                   <label className={styles.lbl}>Penyelenggara {labelRequired("penyelenggara")}</label>
                   <input className={styles.input} placeholder="Nama penyelenggara"
-                    value={form.penyelenggara} onChange={e => set("penyelenggara", e.target.value)} />
+                    value={form.penyelenggara || ""} onChange={e => set("penyelenggara", e.target.value)} />
                 </div>
               </div>
             </div>
@@ -561,7 +567,6 @@ export default function TambahKegiatanPage() {
               >
                 <input type="file" ref={fileRef} hidden accept=".pdf,.jpg,.jpeg,.png,.webp"
                   onChange={e => { const f = e.target.files?.[0]; if (f) processFile(f); }} />
-                {/* ... tampilan file / dropzone sama seperti sebelumnya ... */}
                 {file ? (
                   <div className={styles.fileRow}>
                     {previewUrl ? (
@@ -595,7 +600,7 @@ export default function TambahKegiatanPage() {
               <div className={styles.fg} style={{ marginTop: 16 }}>
                 <label className={styles.lbl}>Deskripsi Pendukung <span className={styles.optBadge}>opsional</span></label>
                 <textarea className={styles.textarea} rows={3}
-                  value={buktiDeskripsi} onChange={e => setBuktiDeskripsi(e.target.value)} />
+                  value={buktiDeskripsi || ""} onChange={e => setBuktiDeskripsi(e.target.value)} />
               </div>
             </div>
 
