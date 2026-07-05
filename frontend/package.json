@@ -10,7 +10,6 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@next/swc-win32-x64-msvc": "^16.2.4",
     "@react-pdf/renderer": "^4.5.1",
     "axios": "^1.13.6",
     "docx-preview": "^0.3.4",
