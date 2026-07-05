@@ -25,6 +25,11 @@ import mahasiswaNotifikasiRoutes   from "./src/routes/mahasiswaNotifikasi.js";
 
 const app  = express();
 const PORT = process.env.PORT || 5000;
+const isProd = process.env.NODE_ENV === "production";
+
+// Di belakang reverse proxy Railway (TLS di-terminate di proxy). Wajib agar
+// cookie `secure` bisa di-set dan req.protocol terbaca sebagai https.
+app.set("trust proxy", 1);
 
 // ── MySQL Session Store ─────────────────────────────────────
 // FIX: gunakan pola default export yang kompatibel dengan ES modules
@@ -55,8 +60,21 @@ sessionStore.on("error", (err) => {
 });
 
 // ── Middleware ──────────────────────────────────────────────
+// FRONTEND_URL boleh berisi beberapa URL dipisah koma
+// (mis. URL produksi + http://localhost:3000 untuk dev).
+const allowedOrigins = (process.env.FRONTEND_URL || "http://localhost:3000")
+  .split(",")
+  .map((o) => o.trim().replace(/\/$/, ""))
+  .filter(Boolean);
+
 app.use(cors({
-  origin:      process.env.FRONTEND_URL || "http://localhost:3000",
+  origin(origin, callback) {
+    // Izinkan request tanpa Origin (curl, health check) & origin terdaftar
+    if (!origin || allowedOrigins.includes(origin.replace(/\/$/, ""))) {
+      return callback(null, true);
+    }
+    return callback(new Error(`Origin ${origin} tidak diizinkan oleh CORS`));
+  },
   credentials: true,
 }));
 app.use(express.json());
@@ -71,9 +89,11 @@ app.use(session({
   store:             sessionStore,
   cookie: {
     httpOnly: true,
-    sameSite: "lax",
+    // Cross-site (frontend & backend beda domain Railway) → wajib "none" + secure.
+    // Di dev (http localhost) pakai "lax" + non-secure.
+    sameSite: isProd ? "none" : "lax",
+    secure:   isProd,
     maxAge:   86_400_000,                            // 1 hari
-    secure:   process.env.NODE_ENV === "production",
   },
 }));
 
