@@ -84,14 +84,15 @@ async function main() {
   // ════════════════════════════════════════════════════════════
   // 3. JENIS AKTIVITAS
   // ════════════════════════════════════════════════════════════
+  // Urutan mengikuti id_jenis di database (1..7)
   const jenisData = [
     { nama_indo: "Prestasi dan Kegiatan",                       nama_eng: "Achievement and Activity" },
     { nama_indo: "Peningkatan Keterampilan Profesional",        nama_eng: "Professional Skill Development" },
-    { nama_indo: "Pengalaman Berorganisasi dan Kepemimpinan",   nama_eng: "Organizational and Leadership Experience" },
-    { nama_indo: "Pengembangan Intelektual",                    nama_eng: "Intellectual Development" },
     { nama_indo: "Praktik Kerja",                               nama_eng: "Work Practice" },
     { nama_indo: "Pengabdian Masyarakat",                       nama_eng: "Community Service" },
     { nama_indo: "Penelitian",                                  nama_eng: "Research" },
+    { nama_indo: "Pengalaman Berorganisasi dan Kepemimpinan",   nama_eng: "Organizational and Leadership Experience" },
+    { nama_indo: "Pengembangan Intelektual",                    nama_eng: "Intellectual Development" },
   ];
   for (const j of jenisData) {
     const exists = await prisma.jenisaktivitas.findFirst({ where: { nama_indo: j.nama_indo } });
@@ -102,33 +103,9 @@ async function main() {
   // ════════════════════════════════════════════════════════════
   // 4. KATEGORI AKTIVITAS
   // ════════════════════════════════════════════════════════════
+  // Urutan mengikuti id_kategori di database (1..28)
   const kategoriData = [
-    // Prestasi
-    { nama_indo: "Lomba / Kompetisi",             nama_eng: "Competition" },
-    { nama_indo: "Olimpiade",                     nama_eng: "Olympiad" },
-    { nama_indo: "Penghargaan / Award",           nama_eng: "Award" },
-    // Keterampilan Profesional
-    { nama_indo: "Workshop / Pelatihan",          nama_eng: "Workshop / Training" },
-    { nama_indo: "Seminar / Webinar",             nama_eng: "Seminar / Webinar" },
-    { nama_indo: "Sertifikasi Profesi",           nama_eng: "Professional Certification" },
-    { nama_indo: "Kursus",                        nama_eng: "Course" },
-    { nama_indo: "Kuliah Umum / Studium Generale",nama_eng: "Public Lecture / Studium Generale" },
-    // Organisasi
-    { nama_indo: "Pengurus Organisasi",           nama_eng: "Organization Executive" },
-    { nama_indo: "Kepanitiaan Kegiatan",          nama_eng: "Event Committee" },
-    { nama_indo: "Komunitas / UKM",               nama_eng: "Community / Student Activity Unit" },
-    { nama_indo: "Relawan / Sukarelawan",         nama_eng: "Volunteer" },
-    { nama_indo: "Mentoring / Pembimbing",        nama_eng: "Mentoring" },
-    // Intelektual
-    { nama_indo: "Asisten Penelitian / Riset",   nama_eng: "Research Assistant" },
-    { nama_indo: "Publikasi Ilmiah",              nama_eng: "Scientific Publication" },
-    { nama_indo: "Konferensi Ilmiah",             nama_eng: "Scientific Conference" },
-    { nama_indo: "Pertukaran Pelajar / Exchange", nama_eng: "Student Exchange" },
-    // Praktik Kerja
-    { nama_indo: "Magang / PKL",                  nama_eng: "Internship" },
-    { nama_indo: "Praktik Kerja Lapangan",        nama_eng: "Field Work Practice" },
-    { nama_indo: "Kewirausahaan / Startup",       nama_eng: "Entrepreneurship / Startup" },
-    // Legacy (jaga data lama)
+    // Kategori dasar (id 1-8)
     { nama_indo: "Seminar",       nama_eng: "Seminar" },
     { nama_indo: "Workshop",      nama_eng: "Workshop" },
     { nama_indo: "Lomba",         nama_eng: "Competition" },
@@ -137,6 +114,31 @@ async function main() {
     { nama_indo: "Pelatihan",     nama_eng: "Training" },
     { nama_indo: "KKN",           nama_eng: "Community Service Program" },
     { nama_indo: "Publikasi",     nama_eng: "Publication" },
+    // Prestasi (id 9-11)
+    { nama_indo: "Lomba / Kompetisi",             nama_eng: "Competition" },
+    { nama_indo: "Olimpiade",                     nama_eng: "Olympiad" },
+    { nama_indo: "Penghargaan / Award",           nama_eng: "Award" },
+    // Keterampilan Profesional (id 12-16)
+    { nama_indo: "Workshop / Pelatihan",          nama_eng: "Workshop / Training" },
+    { nama_indo: "Seminar / Webinar",             nama_eng: "Seminar / Webinar" },
+    { nama_indo: "Sertifikasi Profesi",           nama_eng: "Professional Certification" },
+    { nama_indo: "Kursus",                        nama_eng: "Course" },
+    { nama_indo: "Kuliah Umum / Studium Generale",nama_eng: "Public Lecture / Studium Generale" },
+    // Organisasi (id 17-21)
+    { nama_indo: "Pengurus Organisasi",           nama_eng: "Organization Executive" },
+    { nama_indo: "Kepanitiaan Kegiatan",          nama_eng: "Event Committee" },
+    { nama_indo: "Komunitas / UKM",               nama_eng: "Community / Student Activity Unit" },
+    { nama_indo: "Relawan / Sukarelawan",         nama_eng: "Volunteer" },
+    { nama_indo: "Mentoring / Pembimbing",        nama_eng: "Mentoring" },
+    // Intelektual (id 22-25)
+    { nama_indo: "Asisten Penelitian / Riset",   nama_eng: "Research Assistant" },
+    { nama_indo: "Publikasi Ilmiah",              nama_eng: "Scientific Publication" },
+    { nama_indo: "Konferensi Ilmiah",             nama_eng: "Scientific Conference" },
+    { nama_indo: "Pertukaran Pelajar / Exchange", nama_eng: "Student Exchange" },
+    // Praktik Kerja (id 26-28)
+    { nama_indo: "Magang / PKL",                  nama_eng: "Internship" },
+    { nama_indo: "Praktik Kerja Lapangan",        nama_eng: "Field Work Practice" },
+    { nama_indo: "Kewirausahaan / Startup",       nama_eng: "Entrepreneurship / Startup" },
   ];
   for (const k of kategoriData) {
     const exists = await prisma.kategoriaktivitas.findFirst({ where: { nama_indo: k.nama_indo } });
@@ -147,14 +149,15 @@ async function main() {
   // ════════════════════════════════════════════════════════════
   // 5. KELOMPOK AKTIVITAS
   // ════════════════════════════════════════════════════════════
+  // Urutan mengikuti id_kelompok di database (1..7)
   const kelompokData = [
     { nama_indo: "Akademik",       nama_eng: "Academic" },
     { nama_indo: "Non-Akademik",   nama_eng: "Non-Academic" },
     { nama_indo: "Profesional",    nama_eng: "Professional" },
-    { nama_indo: "Organisasi",     nama_eng: "Organization" },
     { nama_indo: "Kepemimpinan",   nama_eng: "Leadership" },
-    { nama_indo: "Penelitian",     nama_eng: "Research" },
     { nama_indo: "Kewirausahaan",  nama_eng: "Entrepreneurship" },
+    { nama_indo: "Organisasi",     nama_eng: "Organization" },
+    { nama_indo: "Penelitian",     nama_eng: "Research" },
   ];
   for (const k of kelompokData) {
     const exists = await prisma.kelompokaktivitas.findFirst({ where: { nama_indo: k.nama_indo } });
@@ -202,13 +205,14 @@ async function main() {
   // ════════════════════════════════════════════════════════════
   // 9. ICP KATEGORI
   // ════════════════════════════════════════════════════════════
+  // Kategori ICP (FIKIMKM) — urutan mengikuti id_icp di database (1..6)
   const icpData = [
-    { nama_indo: "Kegiatan Akademik",           nama_eng: "Academic Activity",           bobot_poin: 10 },
-    { nama_indo: "Kegiatan Non-Akademik",        nama_eng: "Non-Academic Activity",       bobot_poin: 8  },
-    { nama_indo: "Kepemimpinan & Organisasi",    nama_eng: "Leadership & Organization",   bobot_poin: 12 },
-    { nama_indo: "Kewirausahaan",                nama_eng: "Entrepreneurship",            bobot_poin: 15 },
-    { nama_indo: "Pengabdian Masyarakat",        nama_eng: "Community Service",           bobot_poin: 10 },
-    { nama_indo: "Sertifikasi & Kompetensi",     nama_eng: "Certification & Competency",  bobot_poin: 20 },
+    { nama_indo: "Fisik",           nama_eng: "Physical",        bobot_poin: 20 },
+    { nama_indo: "Iman",            nama_eng: "Faith",           bobot_poin: 20 },
+    { nama_indo: "Intelektualitas", nama_eng: "Intellectuality", bobot_poin: 20 },
+    { nama_indo: "Kepribadian",     nama_eng: "Personality",     bobot_poin: 20 },
+    { nama_indo: "Keterampilan",    nama_eng: "Skills",          bobot_poin: 20 },
+    { nama_indo: "Moral",           nama_eng: "Morals",          bobot_poin: 20 },
   ];
   for (const i of icpData) {
     const exists = await prisma.icpkategori.findFirst({ where: { nama_indo: i.nama_indo } });
