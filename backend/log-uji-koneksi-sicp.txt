@@ -1,0 +1,35 @@
+[1m[35m
+╔═══════════════════════════════════════════════════════════════╗
+║     UJI KONEKSI & SINKRONISASI SICP — SISTEM SKPI            ║
+║     Institut Shanti Bhuana                                    ║
+╚═══════════════════════════════════════════════════════════════╝
+[0m
+   [90mBase URL        :[0m [0mhttp://127.0.0.1:5000[0m
+   [90mWaktu uji       :[0m [0m5/7/2026, 14.11.58[0m
+   [90mMode            :[0m [32mUji koneksi saja (read-only)[0m
+
+[1m[34m══ 0. LOGIN ADMIN ════════════════════════════════════════════[0m
+
+   [32m✔ Sesi admin aktif[0m [90m(211ms)[0m
+
+[1m[34m══ A. UJI KONEKSI & AUTENTIKASI KE SICP ══════════════════════[0m
+
+   [32m[1m✔ KONEKSI BERHASIL[0m [90m(242ms)[0m
+
+   [90mBase URL SICP   :[0m [36mhttp://100.110.153.63:5001/api[0m
+   [90mBaris terbaca   :[0m [1m[32m24[0m
+
+   [90mSampel data (maks 3):[0m
+   [1mNIM         Nama                    Jurusan               ICP[0m
+   [90m──────────────────────────────────────────────────────────────[0m
+   2300404012  JIMMY PERSON            Agroekoteknologi      [32m197[0m
+   2300404001  ABUN                    Sistem Informasi      [32m150[0m
+   2300404011  JANWIRKA EPROSINA YESI  Manajemen             [32m143[0m
+
+   [90m(Sinkronisasi dilewati. Jalankan dengan[0m [1m--sync[0m [90muntuk menarik & menyimpan data.)[0m
+
+[1m[34m══ RINGKASAN ═════════════════════════════════════════════════[0m
+
+  [32m[1mHASIL: Integrasi SICP BERFUNGSI[0m
+  [90mSelesai 5/7/2026, 14.11.58[0m
+

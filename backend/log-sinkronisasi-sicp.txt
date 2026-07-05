@@ -1,0 +1,51 @@
+[1m[35m
+╔═══════════════════════════════════════════════════════════════╗
+║     UJI KONEKSI & SINKRONISASI SICP — SISTEM SKPI            ║
+║     Institut Shanti Bhuana                                    ║
+╚═══════════════════════════════════════════════════════════════╝
+[0m
+   [90mBase URL        :[0m [0mhttp://127.0.0.1:5000[0m
+   [90mWaktu uji       :[0m [0m5/7/2026, 14.12.27[0m
+   [90mMode            :[0m [33mUji koneksi + SINKRONISASI (mengubah data)[0m
+
+[1m[34m══ 0. LOGIN ADMIN ════════════════════════════════════════════[0m
+
+   [32m✔ Sesi admin aktif[0m [90m(201ms)[0m
+
+[1m[34m══ A. UJI KONEKSI & AUTENTIKASI KE SICP ══════════════════════[0m
+
+   [32m[1m✔ KONEKSI BERHASIL[0m [90m(371ms)[0m
+
+   [90mBase URL SICP   :[0m [36mhttp://100.110.153.63:5001/api[0m
+   [90mBaris terbaca   :[0m [1m[32m24[0m
+
+   [90mSampel data (maks 3):[0m
+   [1mNIM         Nama                    Jurusan               ICP[0m
+   [90m──────────────────────────────────────────────────────────────[0m
+   2300404012  JIMMY PERSON            Agroekoteknologi      [32m197[0m
+   2300404001  ABUN                    Sistem Informasi      [32m150[0m
+   2300404011  JANWIRKA EPROSINA YESI  Manajemen             [32m143[0m
+
+[1m[34m══ B. SINKRONISASI DATA MAHASISWA ════════════════════════════[0m
+
+   [32m[1m✔ SELESAI[0m [90m(3036ms)[0m
+
+   [90mTotal diproses  :[0m [1m24[0m
+   [90mDibuat baru     :[0m [32m18[0m
+   [90mDiperbarui      :[0m [36m6[0m
+   [90mGagal           :[0m [90m0[0m
+
+[1m[34m══ C. SINKRONISASI TOTAL POIN ICP ════════════════════════════[0m
+
+   [32m[1m✔ SELESAI[0m [90m(512ms)[0m
+
+   [90mTotal diproses  :[0m [1m24[0m
+   [90mDiperbarui      :[0m [32m24[0m
+   [90mNIM tak cocok   :[0m [90m0[0m
+   [90mGagal           :[0m [90m0[0m
+
+[1m[34m══ RINGKASAN ═════════════════════════════════════════════════[0m
+
+  [32m[1mHASIL: Integrasi SICP BERFUNGSI[0m
+  [90mSelesai 5/7/2026, 14.12.31[0m
+

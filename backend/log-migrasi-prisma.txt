@@ -1,0 +1,10 @@
+Environment variables loaded from .env
+Prisma schema loaded from prisma\schema.prisma
+Datasource "db": MySQL database "skpi_db" at "localhost:3306"
+
+3 migrations found in prisma/migrations
+Following migration have not yet been applied:
+20260702132242_db
+
+To apply migrations in development run prisma migrate dev.
+To apply migrations in production run prisma migrate deploy.
