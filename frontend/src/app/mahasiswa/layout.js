@@ -275,7 +275,7 @@ function MahasiswaLayoutInner({ children }) {
   const [checking, setChecking] = useState(true);
   const [showEditor, setShowEditor] = useState(false);
   const [mockMode, setMockMode] = useState(false);
-  const [avatarSrc, setAvatarSrc] = useState("/img/avatar-default.jpg");
+  const [avatarSrc, setAvatarSrc] = useState("/img/avatar.jpg");
   const [notifOpen, setNotifOpen] = useState(false);
   const [notifUnread, setNotifUnread] = useState(0);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -461,7 +461,7 @@ function MahasiswaLayoutInner({ children }) {
       >
         <div className={styles.brand}>
           <div className={styles.logo}>
-            <Image src="/img/logo_isb.png" alt="logo" width={80} height={35} priority style={{ width: "auto", height: "auto" }} />
+            <Image src="/img/Logo_isb.png" alt="logo" width={80} height={35} priority style={{ width: "auto", height: "auto" }} />
           </div>
           <div className={styles.brandText}><strong>SKPI</strong><span>Mahasiswa</span></div>
         </div>

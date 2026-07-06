@@ -448,7 +448,7 @@ export default function AdminLayout({ children }) {
       <aside className={`${styles.sidebar} ${sidebarOpen ? styles.open : ""}`} style={mockMode ? { marginTop: 29 } : {}}>
         <div className={styles.brand}>
           <div className={styles.logo}>
-            <Image src="/img/logo_isb.png" alt="logo" width={80} height={35} priority />
+            <Image src="/img/Logo_isb.png" alt="logo" width={80} height={35} priority />
           </div>
           <div className={styles.brandText}><strong>SKPI</strong><span>Admin Panel</span></div>
         </div>
