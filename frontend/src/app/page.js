@@ -18,7 +18,7 @@ function Toast({ message, onClose }) {
     if (!message) return;
     const t = setTimeout(onClose, 4000);
     return () => clearTimeout(t);
-  }, [message, onClose]);
+  }, [message, onClose]); 
 
   if (!message) return null;
 
