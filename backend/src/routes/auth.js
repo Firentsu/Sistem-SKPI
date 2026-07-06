@@ -9,7 +9,6 @@
  * PATCH  /profile  → update username / email / password
  * POST   /avatar   → upload foto profil
  */
-import { loginLimiter } from "../middleware/rateLimiter.js";
 import { Router } from "express";
 import bcrypt from "bcryptjs";
 import multer from "multer";
@@ -54,7 +53,7 @@ router.get("/cek-akun", async (req, res) => {
   }
 });
 
-router.post("/login", loginLimiter, async (req, res) => {
+router.post("/login", async (req, res) => {
   try {
     const { username, password } = req.body;
 
