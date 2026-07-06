@@ -209,8 +209,24 @@ function StatCard({ icon: Icon, title, value, subtitle, color }) {
 }
 
 /* ── PRODI DISTRIBUTION CHART ── */
-function ProdiDistBar({ data }) {
-  if (!data || data.length === 0) {
+function ProdiDistBar({ data, dist }) {
+  // Utamakan agregat backend `dist` (dihitung dari SELURUH mahasiswa, bukan
+  // per halaman). Fallback: hitung dari baris `data` bila agregat belum ada.
+  let entries;
+  if (dist && dist.length) {
+    entries = dist.map(d => [d.nama_prodi || "-", d.count]);
+  } else {
+    const counts = {};
+    (data || []).forEach(row => {
+      const k = row.nama_prodi || "-";
+      counts[k] = (counts[k] || 0) + 1;
+    });
+    entries = Object.entries(counts);
+  }
+  entries = entries.filter(([, c]) => c > 0).sort((a, b) => b[1] - a[1]);
+  const total = entries.reduce((s, [, c]) => s + c, 0);
+
+  if (total === 0) {
     return (
       <div className={styles.prodiDistCard}>
         <div className={styles.prodiDistHeader}>
@@ -225,13 +241,6 @@ function ProdiDistBar({ data }) {
     );
   }
 
-  const counts = {};
-  data.forEach(row => {
-    const k = row.nama_prodi || "-";
-    counts[k] = (counts[k] || 0) + 1;
-  });
-  const entries = Object.entries(counts).sort((a, b) => b[1] - a[1]);
-  const total = data.length || 1;
   const chartData = entries.map(([nama, count]) => ({ name: nama, value: count }));
 
   const CustomTooltip = ({ active, payload }) => {
@@ -732,6 +741,7 @@ const STATUS_SKPI = ["Semua", "Belum", "Proses", "Selesai"];
 export default function MahasiswaPage() {
   const [data, setData] = useState([]);
   const [total, setTotal] = useState(0);
+  const [stats, setStats] = useState(null);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const [prodiList, setProdiList] = useState([]);
@@ -805,6 +815,7 @@ export default function MahasiswaPage() {
         has_akun: !!m.id_user,
       }));
       setData(rows);
+      setStats(result.stats ?? null);
       setTotal(result.total ?? rows.length);
       setTotalPages(Math.ceil((result.total ?? rows.length) / PER_PAGE) || 1);
     }
@@ -931,10 +942,11 @@ export default function MahasiswaPage() {
     (filterStatus === "Semua" || row.status_skpi === filterStatus)
   );
 
-  const aktifC = data.filter(r => r.aktif).length;
-  const selesaiC = data.filter(r => r.status_skpi === "Selesai").length;
-  const avgICP = data.length
-    ? Math.round(data.reduce((s, r) => s + (r.total_icp || 0), 0) / data.length) : 0;
+  // Utamakan agregat backend (seluruh mahasiswa); fallback ke hitung per-halaman.
+  const aktifC   = stats?.aktif   ?? data.filter(r => r.aktif).length;
+  const selesaiC = stats?.selesai ?? data.filter(r => r.status_skpi === "Selesai").length;
+  const avgICP   = stats?.avgIcp  ?? (data.length
+    ? Math.round(data.reduce((s, r) => s + (r.total_icp || 0), 0) / data.length) : 0);
   const safePage = currentPage;
   const start = (safePage - 1) * PER_PAGE;
 
@@ -974,7 +986,7 @@ export default function MahasiswaPage() {
       </div>
 
       {/* Prodi Distribution */}
-      <ProdiDistBar data={data} />
+      <ProdiDistBar data={data} dist={stats?.prodiDist} />
 
       {/* Toolbar */}
       <div className={styles.toolbar}>

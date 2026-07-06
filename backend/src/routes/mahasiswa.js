@@ -30,7 +30,7 @@ router.get("/", async (req, res) => {
       if (p) where.id_prodi = p.id_prodi;
     }
 
-    const [total, rows] = await Promise.all([
+    const [total, rows, aktif, selesai, icpAgg, grouped, prodiAll] = await Promise.all([
       prisma.mahasiswa.count({ where }),
       prisma.mahasiswa.findMany({
         where,
@@ -44,6 +44,13 @@ router.get("/", async (req, res) => {
         },
         orderBy: { id_mahasiswa: "desc" },
       }),
+      // Agregat di bawah dihitung atas SELURUH data terfilter (bukan per halaman),
+      // supaya kartu statistik & grafik distribusi cocok dengan total mahasiswa.
+      prisma.mahasiswa.count({ where: { ...where, users: { is: { status_akun: "aktif" } } } }),
+      prisma.mahasiswa.count({ where: { ...where, status_skpi: "diterbitkan" } }),
+      prisma.icpmahasiswa.aggregate({ _sum: { total_poin: true }, where: { mahasiswa: { is: where } } }),
+      prisma.mahasiswa.groupBy({ by: ["id_prodi"], where, _count: { _all: true } }),
+      prisma.programstudi.findMany({ select: { id_prodi: true, nama_prodi: true } }),
     ]);
 
     // Hitung total poin ICP per mahasiswa (jumlah semua kategori), lalu buang
@@ -53,7 +60,24 @@ router.get("/", async (req, res) => {
       total_icp: (icpmahasiswa || []).reduce((s, r) => s + (r.total_poin ?? 0), 0),
     }));
 
-    res.json({ total, page: pageNum, pageSize, rows: rowsWithIcp });
+    // Distribusi per prodi atas SELURUH data; gabungkan yang belum punya prodi.
+    const prodiNameById = Object.fromEntries(prodiAll.map(p => [p.id_prodi, p.nama_prodi]));
+    const distMap = {};
+    for (const g of grouped) {
+      const nama = g.id_prodi != null ? (prodiNameById[g.id_prodi] ?? "Belum ada prodi") : "Belum ada prodi";
+      distMap[nama] = (distMap[nama] || 0) + g._count._all;
+    }
+    const prodiDist = Object.entries(distMap).map(([nama_prodi, count]) => ({ nama_prodi, count }));
+
+    const stats = {
+      total,
+      aktif,
+      selesai,
+      avgIcp: total ? Math.round((icpAgg._sum.total_poin || 0) / total) : 0,
+      prodiDist,
+    };
+
+    res.json({ total, page: pageNum, pageSize, rows: rowsWithIcp, stats });
   } catch (err) {
     console.error("GET /mahasiswa error:", err);
     res.status(500).json({ error: "Server error" });
