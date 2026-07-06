@@ -506,11 +506,14 @@ export async function generateSkpiDocx({ mhs, icp = [], kegiatan = [] }) {
 
   const processedXml = preprocessTemplate(docFile.asText());
 
-  // Validate XML balance
-  const openP  = (processedXml.match(/<w:p[ >]/g)  || []).length;
-  const closeP = (processedXml.match(/<\/w:p>/g)   || []).length;
-  const openTc = (processedXml.match(/<w:tc[ >]/g) || []).length;
-  const closeTc= (processedXml.match(/<\/w:tc>/g)  || []).length;
+  // Validate XML balance.
+  // Kecualikan tag self-closing (mis. paragraf kosong `<w:p .../>` yang ditulis
+  // Word) — tag ini valid & seimbang sendiri, tapi tidak punya `</w:p>`. Kalau
+  // ikut dihitung sebagai "buka", akan memicu imbalance palsu (mis. 870/869).
+  const openP  = (processedXml.match(/<w:p\b(?![^>]*\/>)/g)  || []).length;
+  const closeP = (processedXml.match(/<\/w:p>/g)            || []).length;
+  const openTc = (processedXml.match(/<w:tc\b(?![^>]*\/>)/g) || []).length;
+  const closeTc= (processedXml.match(/<\/w:tc>/g)           || []).length;
   if (openP !== closeP || openTc !== closeTc) {
     throw new Error(
       `Preprocessing XML gagal (struktur tidak balance: ` +
