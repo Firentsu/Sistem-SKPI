@@ -1,0 +1,13 @@
+# Jangan salin node_modules lokal (biner Windows) — biar `npm ci` di container
+# yang membuat node_modules Linux yang benar.
+node_modules
+
+# Rahasia & berkas lokal yang tak perlu masuk image.
+.env
+.git
+.gitignore
+
+# Berkas uji & log lokal.
+uji-*.mjs
+log-*.txt
+_diag_*.mjs
