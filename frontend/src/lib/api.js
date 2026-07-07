@@ -105,7 +105,7 @@ export async function login(username, password) {
     });
     const data = await res.json();
     if (res.ok) { _mockMode = false; return { ok: true }; }
-    return { ok: false, error: data.error || "Login gagal" };
+    return { ok: false, error: data.error || "Login gagal", rateLimited: res.status === 429 };
   } catch {
     _mockMode = true;
     if (username === "admin" && password === "admin123") return { ok: true };
@@ -229,7 +229,7 @@ export async function loginMahasiswa(nim, password) {
     });
     const data = await res.json();
     if (res.ok) { _mockMode = false; return { ok: true }; }
-    return { ok: false, error: data.error || "Login mahasiswa gagal" };
+    return { ok: false, error: data.error || "Login mahasiswa gagal", rateLimited: res.status === 429 };
   } catch {
     _mockMode = true;
     if (password === "mhs123") return { ok: true };

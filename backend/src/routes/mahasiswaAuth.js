@@ -20,6 +20,7 @@ import { existsSync } from "fs";
 
 import prisma from "../lib/prisma.js";
 import { requireMahasiswaAuth } from "../middleware/mahasiswaAuth.js";
+import { loginIpLimiter, loginAccountLimiter } from "../middleware/rateLimiter.js";
 import { createNotif } from "../utils/notifikasi.js";
 import { subscribe, unsubscribe } from "../utils/sseManager.js";
 
@@ -56,7 +57,7 @@ router.get("/cek-akun", async (req, res) => {
     }
 });
 
-router.post("/login", async (req, res) => {
+router.post("/login", loginIpLimiter, loginAccountLimiter, async (req, res) => {
     try {
         const { nim, password } = req.body;
 

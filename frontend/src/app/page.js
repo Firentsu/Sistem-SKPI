@@ -88,6 +88,13 @@ export default function Home() {
       // bisa non-numerik (mis. "sicpmhs") sehingga tak keliru dikira admin.
       const isNumeric = /^\d+$/.test(input);
 
+      // Simpan pesan rate limit (429) bila muncul, agar ditampilkan
+      // menggantikan pesan generik "Login gagal".
+      let rateLimitedMsg = "";
+      const record = (r) => {
+        if (r.rateLimited && !rateLimitedMsg) rateLimitedMsg = r.error;
+      };
+
       const tryMahasiswa = async () => {
         const r = await loginMahasiswa(input, password);
         if (r.ok) {
@@ -95,6 +102,7 @@ export default function Home() {
           window.location.href = "/mahasiswa/dashboard";
           return true;
         }
+        record(r);
         return false;
       };
       const tryAdmin = async () => {
@@ -104,6 +112,7 @@ export default function Home() {
           window.location.href = "/admin/dashboard";
           return true;
         }
+        record(r);
         return false;
       };
 
@@ -112,7 +121,7 @@ export default function Home() {
         : (await tryAdmin())     || (await tryMahasiswa());
 
       if (!ok) {
-        triggerError("Login gagal. Periksa username/NIM dan password Anda.");
+        triggerError(rateLimitedMsg || "Login gagal. Periksa username/NIM dan password Anda.");
         if (isMockMode()) setShowDemo(true);
       }
     } finally {
