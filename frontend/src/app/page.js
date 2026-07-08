@@ -210,7 +210,7 @@ export default function Home() {
     {
       id: "about",
       title: "Tentang SKPI",
-      subtitle: "Soal Ujian Magang 8 juli 2026",
+      subtitle: "Surat Keterangan Pendamping Ijazah",
       content: (
         <div className={styles.aboutContent}>
           <div className={styles.aboutCards}>
