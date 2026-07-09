@@ -303,7 +303,7 @@ export default function Home() {
             </div>
             <div className={styles.leftTextGroup}>
               <h1>SKPI ISB</h1>
-              <h2>Surat Keterangan<br /> Ujian Hari ini 9 Juli 2026</h2>
+              <h2>Surat Keterangan<br />Pendamping Ijazah</h2>
             </div>
             <p className={styles.leftDesc}>Dokumen resmi yang menjelaskan capaian akademik,<br />kegiatan, dan kompetensi lulusan<br />Institut Shanti Bhuana.</p>
             <div className={styles.infoBadges}>
