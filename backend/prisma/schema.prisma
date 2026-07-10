@@ -271,6 +271,19 @@ model users {
   notifikasi  notifikasi[]
 }
 
+model Dokumentasi {
+  id          Int       @id @default(autoincrement())
+  judul       String    @db.VarChar(191)
+  kategori    String    @db.VarChar(50)
+  deskripsi   String?   @db.VarChar(500)
+  konten      String?   @db.Text
+  file_url    String?   @db.VarChar(255)
+  diagram_xml String?   @db.Text          // ← untuk menyimpan XML draw.io
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
+}
+
+
 enum periodeakademik_semester {
   Ganjil
   Genap

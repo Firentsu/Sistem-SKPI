@@ -23,6 +23,9 @@ import mahasiswaPengajuanRoutes  from "./src/routes/mahasiswaPengajuan.js";
 import mahasiswaMasterDataRoutes   from "./src/routes/mahasiswaMasterData.js";
 import mahasiswaNotifikasiRoutes   from "./src/routes/mahasiswaNotifikasi.js";
 
+// -- Routes dokumentasi -------
+import dokumentasiRoutes from "./src/routes/dokumentasi.js";
+
 const app  = express();
 const PORT = process.env.PORT || 5000;
 const isProd = process.env.NODE_ENV === "production";
@@ -118,6 +121,9 @@ app.use("/api/mahasiswa/pengajuan",   mahasiswaPengajuanRoutes);
 app.use("/api/mahasiswa/master-data", mahasiswaMasterDataRoutes);
 app.use("/api/mahasiswa",             mahasiswaRoutes);
 
+// Dokumentasi ----------------------------------
+app.use("/api/dokumentasi", dokumentasiRoutes);
+
 // ── Health check ─────────────────────────────────────────────
 app.get("/api/health", (_req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
@@ -133,6 +139,9 @@ app.use((err, _req, res, _next) => {
   console.error("❌ Unhandled error:", err);
   res.status(500).json({ error: "Internal server error" });
 });
+
+
+
 
 // ── Start server ──────────────────────────────────────────────
 app.listen(PORT, '0.0.0.0', () => {
