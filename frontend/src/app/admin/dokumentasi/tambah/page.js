@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Save, X, AlertCircle, CheckCircle2 } from "lucide-react";
 import styles from "../dokumentasi.module.css";
+import { apiFetch } from "@/lib/api";
 
 const KATEGORI_OPTIONS = [
   { value: "usecase", label: "Use Case Diagram" },
@@ -44,10 +45,8 @@ export default function TambahDokumenPage() {
     }
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:5000/api/dokumentasi", {
+      const res = await apiFetch("/api/dokumentasi", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
         body: JSON.stringify(form),
       });
       const data = await res.json();

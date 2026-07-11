@@ -9,6 +9,7 @@ import {
     LayoutGrid, List,
 } from "lucide-react";
 import styles from "./dokumentasi.module.css";
+import { apiFetch } from "@/lib/api";
 
 // ============================================================
 // KONFIGURASI KATEGORI
@@ -96,9 +97,7 @@ export default function DokumentasiPage() {
             if (filterKategori !== "Semua") params.append("kategori", filterKategori);
             if (search) params.append("q", search);
 
-            const res = await fetch(`http://localhost:5000/api/dokumentasi?${params.toString()}`, {
-                credentials: 'include',
-            });
+            const res = await apiFetch(`/api/dokumentasi?${params.toString()}`);
 
             if (!res.ok) {
                 let errMsg = `Gagal memuat data (${res.status})`;
@@ -136,10 +135,7 @@ export default function DokumentasiPage() {
     const handleDelete = async (id, judul) => {
         if (!confirm(`Hapus dokumen "${judul}"?`)) return;
         try {
-            const res = await fetch(`http://localhost:5000/api/dokumentasi/${id}`, {
-                method: "DELETE",
-                credentials: 'include',
-            });
+            const res = await apiFetch(`/api/dokumentasi/${id}`, { method: "DELETE" });
             if (res.ok) {
                 showToast("Dokumen berhasil dihapus", "success");
                 loadDocs();
@@ -366,7 +362,7 @@ export default function DokumentasiPage() {
                                         <td className={styles.aksiCol}>
                                             <div className={styles.actionGroup}>
                                                 <Link
-                                                    href={`/admin/dokumentasi/${doc.id}`}
+                                                    href={`/admin/dokumentasi/view/${doc.id}`}
                                                     className={styles.btnView}
                                                     title="Lihat Detail"
                                                 >
@@ -428,7 +424,7 @@ export default function DokumentasiPage() {
                                 </div>
                                 <div className={styles.gridCardActions}>
                                     <Link
-                                        href={`/admin/dokumentasi/${doc.id}`}
+                                        href={`/admin/dokumentasi/view/${doc.id}`}
                                         className={styles.gridBtnView}
                                     >
                                         <Eye size={14} /> Detail

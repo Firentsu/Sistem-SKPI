@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, RefreshCw, Download } from "lucide-react";
 import styles from "../../dokumentasi.module.css";
+import { apiFetch, getUploadUrl } from "@/lib/api";
 
 export default function ViewDokumenPage() {
   const params = useParams();
@@ -15,7 +16,7 @@ export default function ViewDokumenPage() {
   useEffect(() => {
     const fetchDoc = async () => {
       try {
-        const res = await fetch(`/api/dokumentasi/${id}`);
+        const res = await apiFetch(`/api/dokumentasi/${id}`);
         if (!res.ok) throw new Error("Dokumen tidak ditemukan");
         const data = await res.json();
         setDoc(data);
@@ -48,7 +49,7 @@ export default function ViewDokumenPage() {
         </div>
         <div className={styles.viewActions}>
           {doc.file_url && (
-            <a href={doc.file_url} download className={styles.downloadBtn}>
+            <a href={getUploadUrl(doc.file_url)} download className={styles.downloadBtn}>
               <Download size={14} /> Download File
             </a>
           )}

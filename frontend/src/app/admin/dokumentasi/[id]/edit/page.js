@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { ArrowLeft, Save, X, AlertCircle, CheckCircle2, RefreshCw, ExternalLink } from "lucide-react";
 import styles from "../../dokumentasi.module.css";
+import { apiFetch } from "@/lib/api";
 
 const KATEGORI_OPTIONS = [
   { value: "usecase", label: "Use Case Diagram" },
@@ -44,9 +45,7 @@ export default function EditDokumenPage() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const res = await fetch(`http://localhost:5000/api/dokumentasi/${id}`, {
-          credentials: "include",
-        });
+        const res = await apiFetch(`/api/dokumentasi/${id}`);
         if (!res.ok) throw new Error("Dokumen tidak ditemukan");
         const data = await res.json();
         setForm({
@@ -131,10 +130,8 @@ export default function EditDokumenPage() {
     }
     setLoading(true);
     try {
-      const res = await fetch(`http://localhost:5000/api/dokumentasi/${id}`, {
+      const res = await apiFetch(`/api/dokumentasi/${id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
         body: JSON.stringify(form),
       });
       const data = await res.json();
