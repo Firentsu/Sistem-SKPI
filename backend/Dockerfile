@@ -25,4 +25,6 @@ COPY . .
 RUN npx prisma generate
 
 # Railway menyuntikkan variabel PORT saat runtime; server.js sudah membacanya.
-CMD ["node", "server.js"]
+# `prisma migrate deploy` menerapkan migration yang belum jalan ke database Railway
+# setiap kali container start, jadi schema DB selalu sinkron dengan kode.
+CMD ["sh", "-c", "npx prisma migrate deploy && node server.js"]
