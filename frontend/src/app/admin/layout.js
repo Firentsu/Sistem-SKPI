@@ -9,7 +9,7 @@ import {
   ChevronRight, ChevronDown, Bell, Shield, BookOpen, Award,
   Camera, X, Check, Upload, WifiOff,
   CheckCircle2, AlertTriangle, ClipboardCheck, Send, Clock,
-  Menu, User, RefreshCcw,
+  Menu, User, RefreshCcw, ShieldCheck,
 } from "lucide-react";
 import styles from "./admin.module.css";
 import { useRouter, usePathname } from "next/navigation";
@@ -388,6 +388,7 @@ export default function AdminLayout({ children }) {
     { href: "/admin/template-skpi", label: "Template SKPI", icon: FileText },
     { href: "/admin/generate-skpi", label: "Generate SKPI", icon: Award },
     { href: "/admin/dokumentasi", label: "Dokumentasi", icon: FileText },
+    { href: "/admin/audit", label: "Audit", icon: ShieldCheck },
     { href: "/admin/profile", label: "Profile", icon: User },
   ];
 

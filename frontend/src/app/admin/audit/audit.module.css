@@ -1,0 +1,683 @@
+/* ============================================================
+   CONTAINER
+   ============================================================ */
+.container {
+  padding: 24px 32px;
+  max-width: 1400px;
+  margin: 0 auto;
+  min-height: 100vh;
+  background: #faf7f4;
+  font-family: "Inter", "Segoe UI", sans-serif;
+}
+
+/* ============================================================
+   HEADER
+   ============================================================ */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 22px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 26px;
+  font-weight: 800;
+  color: #3d2006;
+  margin: 0 0 6px;
+  letter-spacing: -0.5px;
+}
+
+.titleIcon {
+  color: #765439;
+}
+
+.subtitle {
+  font-size: 14px;
+  color: #9c7a5e;
+  margin: 0;
+  max-width: 640px;
+  line-height: 1.5;
+}
+
+.subtitle strong {
+  color: #5c3317;
+}
+
+.resetBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 16px;
+  background: #fff;
+  color: #765439;
+  border: 1.5px solid #e5d3c2;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.resetBtn:hover {
+  background: #f7ede4;
+  border-color: #d9bfa8;
+  transform: translateY(-1px);
+}
+
+/* ============================================================
+   KARTU INFO KERANGKA
+   ============================================================ */
+.infoRow {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.infoCard {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #fff;
+  border: 1.5px solid #f0e0d0;
+  border-radius: 14px;
+  padding: 14px 16px;
+  box-shadow: 0 2px 12px rgba(118, 84, 57, 0.05);
+}
+
+.infoIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 11px;
+  flex-shrink: 0;
+}
+
+.infoLabel {
+  display: block;
+  font-size: 11.5px;
+  color: #9c7a5e;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.infoValue {
+  display: block;
+  font-size: 15px;
+  color: #3d2006;
+  font-weight: 800;
+}
+
+/* ============================================================
+   RINGKASAN + RADAR
+   ============================================================ */
+.summaryGrid {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.scoreCard,
+.radarCard {
+  background: #fff;
+  border: 1.5px solid #f0e0d0;
+  border-radius: 18px;
+  padding: 20px 22px;
+  box-shadow: 0 2px 16px rgba(118, 84, 57, 0.06);
+}
+
+.scoreCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.scoreHeader {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #765439;
+  margin-bottom: 6px;
+}
+
+.scoreValue {
+  font-size: 54px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -1.5px;
+  margin: 4px 0 10px;
+}
+
+.scoreLevelBadge {
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 5px 14px;
+  border-radius: 999px;
+  margin-bottom: 16px;
+}
+
+.scoreBarTrack {
+  position: relative;
+  width: 100%;
+  height: 10px;
+  background: #f0e6dc;
+  border-radius: 999px;
+  overflow: visible;
+  margin-bottom: 16px;
+}
+
+.scoreBarFill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.4s ease;
+}
+
+.scoreBarTarget {
+  position: absolute;
+  top: -3px;
+  width: 3px;
+  height: 16px;
+  background: #b91c1c;
+  border-radius: 2px;
+  transform: translateX(-50%);
+}
+
+.scoreMeta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 16px;
+  font-size: 12px;
+  color: #7c6553;
+}
+
+.scoreMeta strong {
+  color: #3d2006;
+}
+
+.scoreGap {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #b45309;
+  font-weight: 700;
+}
+
+.radarCard .cardTitle {
+  font-size: 14px;
+  font-weight: 800;
+  color: #3d2006;
+  margin-bottom: 4px;
+}
+
+.cardTitle {
+  font-size: 14px;
+  font-weight: 800;
+  color: #3d2006;
+}
+
+/* ============================================================
+   RINGKASAN PER PROSES
+   ============================================================ */
+.processSummaryRow {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-bottom: 26px;
+}
+
+.procSummaryCard {
+  background: #fff;
+  border: 1.5px solid #f0e0d0;
+  border-radius: 14px;
+  padding: 16px 18px;
+  box-shadow: 0 2px 12px rgba(118, 84, 57, 0.05);
+}
+
+.procSummaryHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 3px;
+}
+
+.procSummaryId {
+  font-size: 13px;
+  font-weight: 800;
+  color: #765439;
+  letter-spacing: 0.5px;
+}
+
+.procSummaryAvg {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+
+.procSummaryTitle {
+  font-size: 12.5px;
+  color: #7c6553;
+  margin-bottom: 12px;
+  min-height: 32px;
+  line-height: 1.3;
+}
+
+.procBarTrack {
+  position: relative;
+  width: 100%;
+  height: 8px;
+  background: #f0e6dc;
+  border-radius: 999px;
+  margin-bottom: 10px;
+}
+
+.procBarFill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.4s ease;
+}
+
+.procBarTarget {
+  position: absolute;
+  top: -2px;
+  width: 2.5px;
+  height: 12px;
+  background: #b91c1c;
+  border-radius: 2px;
+  transform: translateX(-50%);
+}
+
+.procGap {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.gapOk {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #15803d;
+}
+
+.gapWarn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #b45309;
+}
+
+/* ============================================================
+   SECTION TITLE
+   ============================================================ */
+.sectionTitle {
+  font-size: 17px;
+  font-weight: 800;
+  color: #3d2006;
+  margin: 4px 0 14px;
+  padding-left: 12px;
+  border-left: 4px solid #765439;
+}
+
+/* ============================================================
+   AKORDEON PROSES
+   ============================================================ */
+.procCard {
+  background: #fff;
+  border: 1.5px solid #f0e0d0;
+  border-radius: 16px;
+  margin-bottom: 14px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(118, 84, 57, 0.05);
+}
+
+.procHeader {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 16px 20px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s;
+}
+
+.procHeader:hover {
+  background: #fdf9f5;
+}
+
+.procHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.procBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #765439, #5c3317);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 800;
+  padding: 8px 12px;
+  border-radius: 10px;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+}
+
+.procHeaderText {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.procName {
+  font-size: 15px;
+  font-weight: 700;
+  color: #3d2006;
+}
+
+.procEn {
+  font-size: 12.5px;
+  color: #9c7a5e;
+  font-style: italic;
+}
+
+.procHeaderRight {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-shrink: 0;
+}
+
+.procScorePill {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border: 2px solid;
+  border-radius: 12px;
+  padding: 4px 14px;
+  line-height: 1.15;
+}
+
+.procScorePill span {
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.procScorePill small {
+  font-size: 10px;
+  color: #9c7a5e;
+  font-weight: 600;
+}
+
+.procChevron {
+  color: #9c7a5e;
+  transition: transform 0.25s;
+}
+
+.procChevronOpen {
+  transform: rotate(180deg);
+}
+
+/* ── Body akordeon ── */
+.procBody {
+  padding: 4px 20px 22px;
+  border-top: 1px solid #f4e9de;
+  animation: fadeDown 0.25s ease;
+}
+
+@keyframes fadeDown {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.procPurpose {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  background: #fdf6ef;
+  border: 1px solid #f4e3d3;
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 13px;
+  color: #6b5340;
+  line-height: 1.55;
+  margin: 16px 0 18px;
+}
+
+.procPurpose svg {
+  color: #b45309;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* ============================================================
+   TABEL PRAKTIK
+   ============================================================ */
+.tableWrap {
+  overflow-x: auto;
+  border: 1px solid #f0e0d0;
+  border-radius: 12px;
+  margin-bottom: 18px;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  min-width: 560px;
+}
+
+.table thead th {
+  background: #f7ede4;
+  color: #5c3317;
+  font-weight: 700;
+  text-align: left;
+  padding: 11px 14px;
+  font-size: 12px;
+  border-bottom: 1.5px solid #ecd9c7;
+}
+
+.table tbody td {
+  padding: 11px 14px;
+  border-bottom: 1px solid #f4ece3;
+  color: #4a3b2d;
+  vertical-align: middle;
+}
+
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.table tbody tr:hover {
+  background: #fdf9f5;
+}
+
+.colId {
+  width: 90px;
+  white-space: nowrap;
+}
+
+.colId code {
+  background: #f0e6dc;
+  color: #765439;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 6px;
+  font-family: "SFMono-Regular", Consolas, monospace;
+}
+
+.colLevel {
+  width: 240px;
+}
+
+/* ── Pemilih level ── */
+.levelPicker {
+  display: flex;
+  gap: 5px;
+}
+
+.levelDot {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: 1.5px solid #e0d2c4;
+  background: #fff;
+  color: #9c7a5e;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.levelDot:hover {
+  border-color: #b99878;
+  background: #faf3ec;
+}
+
+.levelDotActive {
+  color: #fff !important;
+  transform: scale(1.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+/* ============================================================
+   TEMUAN & REKOMENDASI
+   ============================================================ */
+.frGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.frCard {
+  background: #fdfbf9;
+  border: 1px solid #f0e6dc;
+  border-radius: 12px;
+  padding: 14px 16px;
+}
+
+.frTitle {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  font-weight: 800;
+  margin-bottom: 10px;
+}
+
+.frList {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.frList li {
+  font-size: 12.5px;
+  color: #5b4839;
+  line-height: 1.5;
+}
+
+/* ============================================================
+   REFERENSI LEVEL
+   ============================================================ */
+.legendGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 22px;
+}
+
+.legendCard {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  background: #fff;
+  border: 1.5px solid #f0e0d0;
+  border-radius: 12px;
+  padding: 13px 15px;
+}
+
+.legendDot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  color: #fff;
+  font-weight: 800;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.legendText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.legendName {
+  font-size: 13px;
+  font-weight: 700;
+  color: #3d2006;
+}
+
+.legendDesc {
+  font-size: 12px;
+  color: #8a7057;
+  line-height: 1.4;
+}
+
+/* ============================================================
+   CATATAN KAKI
+   ============================================================ */
+.footNote {
+  font-size: 12px;
+  color: #a08b76;
+  text-align: center;
+  line-height: 1.6;
+  margin: 0 auto 12px;
+  max-width: 620px;
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 1024px) {
+  .infoRow { grid-template-columns: repeat(2, 1fr); }
+  .summaryGrid { grid-template-columns: 1fr; }
+  .processSummaryRow { grid-template-columns: 1fr; }
+  .legendGrid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 640px) {
+  .container { padding: 18px 16px; }
+  .infoRow { grid-template-columns: 1fr; }
+  .legendGrid { grid-template-columns: 1fr; }
+  .frGrid { grid-template-columns: 1fr; }
+  .procHeaderRight { gap: 8px; }
+  .procName { font-size: 14px; }
+}
