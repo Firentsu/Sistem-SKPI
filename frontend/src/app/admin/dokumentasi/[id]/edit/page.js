@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { ArrowLeft, Save, X, AlertCircle, CheckCircle2, RefreshCw, ExternalLink } from "lucide-react";
+import { ArrowLeft, Save, X, AlertCircle, CheckCircle2, RefreshCw, Info, Link2, DownloadCloud, Loader2 } from "lucide-react";
 import styles from "../../dokumentasi.module.css";
 import { apiFetch } from "@/lib/api";
+import DrawioEditor from "@/components/DrawioEditor";
 
 const KATEGORI_OPTIONS = [
   { value: "usecase", label: "Use Case Diagram" },
@@ -17,16 +18,21 @@ const KATEGORI_OPTIONS = [
   { value: "lainnya", label: "Lainnya" },
 ];
 
+const DIAGRAM_KATEGORI = ["usecase", "activity", "class", "flowchart", "sequence"];
+
+// Deteksi tautan diagram yang bisa di-import otomatis (draw.io / Google Drive).
+const looksLikeDiagramLink = (url = "") =>
+  /diagrams\.net|drive\.google\.com|docs\.google\.com|draw\.io/i.test(url);
+
 export default function EditDokumenPage() {
   const router = useRouter();
   const params = useParams();
   const id = params.id;
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
+  const [importing, setImporting] = useState(false);
   const [toast, setToast] = useState(null);
-  const [diagramXml, setDiagramXml] = useState("");
-  const [iframeError, setIframeError] = useState(false);
-  const iframeRef = useRef(null);
+  const editorRef = useRef(null);
 
   const [form, setForm] = useState({
     judul: "",
@@ -39,7 +45,38 @@ export default function EditDokumenPage() {
 
   const setField = (k, v) => setForm((prev) => ({ ...prev, [k]: v }));
 
-  const isDiagram = ["usecase", "activity", "class", "flowchart", "sequence"].includes(form.kategori);
+  const isDiagram = DIAGRAM_KATEGORI.includes(form.kategori);
+
+  const showToast = useCallback((msg, type = "success") => {
+    setToast({ msg, type });
+    setTimeout(() => setToast(null), 3000);
+  }, []);
+
+  // Tarik diagram dari URL (draw.io/Drive) lewat proxy backend, lalu muat ke editor.
+  const importFromUrl = useCallback(async (url, { silent = false } = {}) => {
+    if (!url || !looksLikeDiagramLink(url)) {
+      if (!silent) showToast("Tempel tautan draw.io / Google Drive yang valid.", "error");
+      return false;
+    }
+    setImporting(true);
+    try {
+      const res = await apiFetch(`/api/dokumentasi/import?url=${encodeURIComponent(url)}`);
+      const data = await res.json();
+      if (!res.ok) {
+        if (!silent) showToast(data.error || "Gagal memuat diagram dari URL.", "error");
+        return false;
+      }
+      setField("diagram_xml", data.xml);
+      editorRef.current?.load(data.xml);
+      if (!silent) showToast("Diagram berhasil dimuat dari URL!", "success");
+      return true;
+    } catch {
+      if (!silent) showToast("Terjadi kesalahan saat memuat diagram.", "error");
+      return false;
+    } finally {
+      setImporting(false);
+    }
+  }, [showToast]);
 
   // Load data dari API
   useEffect(() => {
@@ -56,8 +93,10 @@ export default function EditDokumenPage() {
           file_url: data.file_url || "",
           diagram_xml: data.diagram_xml || "",
         });
-        if (data.diagram_xml) {
-          setDiagramXml(data.diagram_xml);
+        // Auto-load: diagram belum tersimpan tapi ada tautannya → tarik otomatis.
+        const isDiag = DIAGRAM_KATEGORI.includes(data.kategori);
+        if (isDiag && !data.diagram_xml && looksLikeDiagramLink(data.file_url)) {
+          importFromUrl(data.file_url, { silent: true });
         }
       } catch (err) {
         showToast(err.message, "error");
@@ -66,61 +105,12 @@ export default function EditDokumenPage() {
       }
     };
     loadData();
-  }, [id]);
+  }, [id, showToast, importFromUrl]);
 
-  // Listener untuk menerima XML dari draw.io
-  useEffect(() => {
-    const handleMessage = (event) => {
-      if (event.data && event.data.action === "save" && event.data.xml) {
-        setDiagramXml(event.data.xml);
-        setField("diagram_xml", event.data.xml);
-        showToast("Diagram berhasil disimpan!", "success");
-      }
-      if (event.data && event.data.action === "init") {
-        // Kirim XML yang sudah ada ke draw.io
-        if (iframeRef.current && !iframeError) {
-          try {
-            iframeRef.current.contentWindow.postMessage(
-              {
-                action: "load",
-                xml: diagramXml || '<mxGraphModel><root><mxCell id="0"/><mxCell id="1" parent="0"/></mxGraphModel></root>',
-                autosave: 1,
-              },
-              "*"
-            );
-          } catch (e) {
-            setIframeError(true);
-          }
-        }
-      }
-    };
-    window.addEventListener("message", handleMessage);
-    return () => window.removeEventListener("message", handleMessage);
-  }, [diagramXml, iframeError]);
-
-  const loadDiagramToDrawio = () => {
-    if (iframeRef.current && !iframeError) {
-      try {
-        iframeRef.current.contentWindow.postMessage(
-          {
-            action: "load",
-            xml: diagramXml || '<mxGraphModel><root><mxCell id="0"/><mxCell id="1" parent="0"/></mxGraphModel></root>',
-            autosave: 1,
-          },
-          "*"
-        );
-        showToast("Memuat diagram...", "success");
-      } catch (e) {
-        setIframeError(true);
-        showToast("Gagal memuat diagram. Buka di tab baru.", "error");
-      }
-    }
-  };
-
-  const showToast = (msg, type = "success") => {
-    setToast({ msg, type });
-    setTimeout(() => setToast(null), 3000);
-  };
+  // draw.io autosave → sinkronkan ke form (dibungkus useCallback agar stabil)
+  const handleDiagramChange = useCallback((xml) => {
+    setForm((prev) => (prev.diagram_xml === xml ? prev : { ...prev, diagram_xml: xml }));
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -137,7 +127,7 @@ export default function EditDokumenPage() {
       const data = await res.json();
       if (res.ok) {
         showToast("Dokumen berhasil diperbarui!");
-        setTimeout(() => router.push("/admin/dokumentasi"), 1500);
+        setTimeout(() => router.push("/admin/dokumentasi"), 1200);
       } else {
         showToast(data.error || "Gagal menyimpan.", "error");
       }
@@ -182,28 +172,30 @@ export default function EditDokumenPage() {
       </div>
 
       <form onSubmit={handleSubmit} className={styles.formCard}>
-        <div className={styles.formGroup}>
-          <label className={styles.label}>Judul <span className={styles.req}>*</span></label>
-          <input
-            className={styles.input}
-            placeholder="Masukkan judul dokumen"
-            value={form.judul}
-            onChange={(e) => setField("judul", e.target.value)}
-            required
-          />
-        </div>
+        <div className={styles.formRow}>
+          <div className={styles.formGroup}>
+            <label className={styles.label}>Judul <span className={styles.req}>*</span></label>
+            <input
+              className={styles.input}
+              placeholder="Masukkan judul dokumen"
+              value={form.judul}
+              onChange={(e) => setField("judul", e.target.value)}
+              required
+            />
+          </div>
 
-        <div className={styles.formGroup}>
-          <label className={styles.label}>Kategori <span className={styles.req}>*</span></label>
-          <select
-            className={styles.input}
-            value={form.kategori}
-            onChange={(e) => setField("kategori", e.target.value)}
-          >
-            {KATEGORI_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>{opt.label}</option>
-            ))}
-          </select>
+          <div className={styles.formGroup}>
+            <label className={styles.label}>Kategori <span className={styles.req}>*</span></label>
+            <select
+              className={styles.input}
+              value={form.kategori}
+              onChange={(e) => setField("kategori", e.target.value)}
+            >
+              {KATEGORI_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+          </div>
         </div>
 
         <div className={styles.formGroup}>
@@ -217,69 +209,51 @@ export default function EditDokumenPage() {
           />
         </div>
 
-        {/* 🔥 DRAW.IO EDITOR - Hanya untuk diagram */}
+        {/* IMPORT DARI URL — untuk kategori diagram */}
         {isDiagram && (
           <div className={styles.formGroup}>
-            <label className={styles.label}>Edit Diagram (draw.io)</label>
+            <label className={styles.label}>
+              <Link2 size={13} style={{ verticalAlign: "-2px", marginRight: 4 }} />
+              Link Diagram (draw.io / Google Drive)
+            </label>
+            <div className={styles.inputWithBtn}>
+              <input
+                className={styles.input}
+                placeholder="Tempel tautan draw.io atau Google Drive…"
+                value={form.file_url}
+                onChange={(e) => setField("file_url", e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); importFromUrl(form.file_url); } }}
+              />
+              <button
+                type="button"
+                className={styles.loadUrlBtn}
+                onClick={() => importFromUrl(form.file_url)}
+                disabled={importing || !form.file_url}
+              >
+                {importing ? <Loader2 size={15} className={styles.spin} /> : <DownloadCloud size={15} />}
+                {importing ? "Memuat…" : "Muat dari URL"}
+              </button>
+            </div>
+            <p className={styles.hint}>
+              Diagram akan ditarik otomatis dan tampil di editor. Syarat: file Google Drive dibagikan “Anyone with the link”.
+            </p>
+          </div>
+        )}
 
-            {iframeError ? (
-              <div className={styles.drawioErrorBox}>
-                <AlertCircle size={24} />
-                <p>Gagal memuat draw.io di dalam halaman.</p>
-                <div className={styles.drawioFallbackActions}>
-                  <a
-                    href="https://app.diagrams.net/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={styles.drawioFallbackBtn}
-                  >
-                    <ExternalLink size={16} /> Buka draw.io di tab baru
-                  </a>
-                  <p className={styles.hint}>
-                    Buat diagram di draw.io, export sebagai PNG, lalu upload ke server dan masukkan URL-nya di bawah.
-                  </p>
-                </div>
-              </div>
-            ) : (
-              <>
-                <div className={styles.drawioContainer}>
-                  <iframe
-                    ref={iframeRef}
-                    src="https://embed.diagrams.net/?embed=1&ui=min&spin=1&proto=json&noSaveBtn=1"
-                    className={styles.drawioIframe}
-                    onLoad={() => {
-                      // Tunggu sebentar agar draw.io siap, lalu load diagram
-                      setTimeout(loadDiagramToDrawio, 2000);
-                    }}
-                    onError={() => setIframeError(true)}
-                    allow="clipboard-read; clipboard-write"
-                  />
-                </div>
-                <div className={styles.drawioToolbar}>
-                  <button
-                    type="button"
-                    className={styles.drawioLoadBtn}
-                    onClick={loadDiagramToDrawio}
-                  >
-                    <RefreshCw size={14} /> Muat Ulang Diagram
-                  </button>
-                  <span className={styles.drawioStatus}>
-                    {diagramXml ? "✅ Diagram tersedia" : "🔄 Buat diagram baru"}
-                  </span>
-                  <a
-                    href="https://app.diagrams.net/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={styles.drawioExternalLink}
-                  >
-                    <ExternalLink size={14} /> Buka di tab baru
-                  </a>
-                  <p className={styles.hint}>
-                    💡 Edit diagram di atas, lalu klik <strong>Save</strong> di draw.io untuk menyimpan perubahan.
-                  </p>
-                </div>
-              </>
-            )}
+        {/* DRAW.IO EDITOR — hanya untuk kategori diagram */}
+        {isDiagram && (
+          <div className={styles.formGroup}>
+            <label className={styles.label}>Edit Diagram</label>
+            <DrawioEditor
+              ref={editorRef}
+              value={form.diagram_xml}
+              onChange={handleDiagramChange}
+              onSaved={() => showToast("Diagram tersimpan di editor", "success")}
+            />
+            <p className={styles.hintTip}>
+              <Info size={13} />
+              Perubahan diagram tersimpan otomatis. Klik <strong>Perbarui Dokumen</strong> di bawah untuk menyimpan ke database.
+            </p>
           </div>
         )}
 
@@ -294,19 +268,20 @@ export default function EditDokumenPage() {
           />
         </div>
 
-        <div className={styles.formGroup}>
-          <label className={styles.label}>URL File / Gambar</label>
-          <input
-            className={styles.input}
-            placeholder="https://... atau /uploads/..."
-            value={form.file_url}
-            onChange={(e) => setField("file_url", e.target.value)}
-          />
-          <p className={styles.hint}>
-            Jika sudah menggunakan draw.io di atas, URL ini opsional untuk export gambar tambahan.
-            Jika draw.io tidak bisa dimuat, upload gambar diagram di sini.
-          </p>
-        </div>
+        {!isDiagram && (
+          <div className={styles.formGroup}>
+            <label className={styles.label}>URL File / Gambar</label>
+            <input
+              className={styles.input}
+              placeholder="https://... atau /uploads/..."
+              value={form.file_url}
+              onChange={(e) => setField("file_url", e.target.value)}
+            />
+            <p className={styles.hint}>
+              Opsional — gunakan bila ingin melampirkan gambar/berkas ekspor tambahan.
+            </p>
+          </div>
+        )}
 
         <div className={styles.formActions}>
           <button type="button" className={styles.cancelBtn} onClick={() => router.back()}>

@@ -2,9 +2,23 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, RefreshCw, Download } from "lucide-react";
+import { ArrowLeft, RefreshCw, Download, Edit2, Tag, Clock, AlertCircle } from "lucide-react";
 import styles from "../../dokumentasi.module.css";
 import { apiFetch, getUploadUrl } from "@/lib/api";
+import DrawioEditor from "@/components/DrawioEditor";
+
+const KATEGORI_LABEL = {
+  usecase: "Use Case Diagram",
+  activity: "Activity Diagram",
+  class: "Class Diagram",
+  flowchart: "Flowchart",
+  sequence: "Sequence Diagram",
+  laporan: "Laporan",
+  panduan: "Panduan",
+  lainnya: "Lainnya",
+};
+
+const DIAGRAM_KATEGORI = ["usecase", "activity", "class", "flowchart", "sequence"];
 
 export default function ViewDokumenPage() {
   const params = useParams();
@@ -12,6 +26,7 @@ export default function ViewDokumenPage() {
   const id = params.id;
   const [doc, setDoc] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     const fetchDoc = async () => {
@@ -21,7 +36,7 @@ export default function ViewDokumenPage() {
         const data = await res.json();
         setDoc(data);
       } catch (err) {
-        alert(err.message);
+        setError(err.message);
       } finally {
         setLoading(false);
       }
@@ -30,12 +45,27 @@ export default function ViewDokumenPage() {
   }, [id]);
 
   if (loading) {
-    return <div className={styles.loadingRow}><RefreshCw size={24} className={styles.spin} /> Memuat...</div>;
+    return (
+      <div className={styles.loadingRow}>
+        <RefreshCw size={24} className={styles.spin} />
+        <p>Memuat dokumen...</p>
+      </div>
+    );
   }
 
-  if (!doc) return <div>Dokumen tidak ditemukan</div>;
+  if (error || !doc) {
+    return (
+      <div className={styles.emptyState}>
+        <AlertCircle size={44} />
+        <p>{error || "Dokumen tidak ditemukan"}</p>
+        <button className={styles.backBtn} onClick={() => router.push("/admin/dokumentasi")}>
+          <ArrowLeft size={15} /> Kembali ke daftar
+        </button>
+      </div>
+    );
+  }
 
-  const isDiagram = ["usecase", "activity", "class", "flowchart", "sequence"].includes(doc.kategori);
+  const isDiagram = DIAGRAM_KATEGORI.includes(doc.kategori);
 
   return (
     <div className={styles.container}>
@@ -45,7 +75,16 @@ export default function ViewDokumenPage() {
             <ArrowLeft size={15} /> Kembali
           </button>
           <h1 className={styles.title}>{doc.judul}</h1>
-          <p className={styles.sub}>Kategori: {doc.kategori} · Diperbarui: {new Date(doc.updated_at).toLocaleString()}</p>
+          <div className={styles.metaRow}>
+            <span className={styles.metaItem}>
+              <Tag size={13} /> {KATEGORI_LABEL[doc.kategori] || doc.kategori}
+            </span>
+            <span className={styles.metaItem}>
+              <Clock size={13} /> Diperbarui {new Date(doc.updated_at).toLocaleString("id-ID", {
+                day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit",
+              })}
+            </span>
+          </div>
         </div>
         <div className={styles.viewActions}>
           {doc.file_url && (
@@ -54,40 +93,47 @@ export default function ViewDokumenPage() {
             </a>
           )}
           <a href={`/admin/dokumentasi/${doc.id}/edit`} className={styles.editBtn}>
-            Edit
+            <Edit2 size={14} /> Edit
           </a>
         </div>
       </div>
 
+      {doc.deskripsi && (
+        <div className={styles.descBox}>
+          <strong>Deskripsi</strong>
+          <p>{doc.deskripsi}</p>
+        </div>
+      )}
+
       {isDiagram && doc.diagram_xml && (
-        <div className={styles.viewerContainer}>
-          <iframe
-            src={`https://app.diagrams.net/?embed=1&ui=min&spin=1&proto=json&p=view`}
-            className={styles.viewerIframe}
-            onLoad={(e) => {
-              // Kirim XML untuk di-load dalam mode view
-              const iframe = e.target;
-              setTimeout(() => {
-                iframe.contentWindow.postMessage({
-                  action: 'load',
-                  xml: doc.diagram_xml,
-                }, '*');
-              }, 1000);
-            }}
+        <div className={styles.viewerBlock}>
+          <DrawioEditor value={doc.diagram_xml} readOnly height={600} />
+        </div>
+      )}
+
+      {isDiagram && !doc.diagram_xml && !doc.file_url && (
+        <div className={styles.emptyState}>
+          <p>Belum ada diagram tersimpan</p>
+          <span>Buka Edit untuk mulai menggambar diagram.</span>
+        </div>
+      )}
+
+      {doc.file_url && (
+        <div className={styles.viewerImageWrap}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={getUploadUrl(doc.file_url)}
+            alt={doc.judul}
+            className={styles.viewerImage}
+            onError={(e) => { e.currentTarget.style.display = "none"; }}
           />
         </div>
       )}
 
-      {!isDiagram && doc.konten && (
+      {doc.konten && (
         <div className={styles.contentPreview}>
           <h3>Konten</h3>
           <div dangerouslySetInnerHTML={{ __html: doc.konten }} />
-        </div>
-      )}
-
-      {doc.deskripsi && (
-        <div className={styles.descBox}>
-          <strong>Deskripsi:</strong> {doc.deskripsi}
         </div>
       )}
     </div>

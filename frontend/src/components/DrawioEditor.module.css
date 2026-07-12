@@ -1,0 +1,182 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  border: 1.5px solid #e8d5c4;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #faf7f4;
+  width: 100%;
+}
+
+/* Layar penuh */
+.fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  height: 100dvh !important;
+  border-radius: 0;
+  border: none;
+}
+
+/* Toolbar */
+.bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 12px;
+  background: #fdfaf8;
+  border-bottom: 1px solid #f0e6dc;
+  flex-shrink: 0;
+}
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.status[data-state="loading"] { color: #b45309; }
+.status[data-state="ready"]   { color: #15803d; }
+.status[data-state="error"]   { color: #dc2626; }
+
+.barActions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.barBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: #fff;
+  border: 1.5px solid #e8d5c4;
+  border-radius: 8px;
+  color: #765439;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.barBtn:hover {
+  background: #fdf3ec;
+  border-color: #c8945a;
+}
+
+/* Kanvas */
+.canvas {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  background: #faf7f4;
+}
+
+.iframe {
+  width: 100%;
+  height: 100%;
+  min-height: 320px;
+  border: none;
+  display: block;
+}
+
+/* Overlay loading yang kita kontrol */
+.overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: rgba(250, 247, 244, 0.94);
+  color: #9c7a5e;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.overlay p { margin: 0; }
+
+/* Kotak error */
+.errorBox {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 8px;
+  padding: 32px 20px;
+  height: 100%;
+  color: #991b1b;
+}
+
+.errorBox p {
+  margin: 0;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.errorBox span {
+  font-size: 12.5px;
+  color: #b0645c;
+  max-width: 360px;
+}
+
+.errorActions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+.errorBtnPrimary,
+.errorBtnGhost {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 16px;
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+  border: 1.5px solid transparent;
+}
+
+.errorBtnPrimary {
+  background: #765439;
+  color: #fff;
+}
+
+.errorBtnPrimary:hover { background: #5c3317; }
+
+.errorBtnGhost {
+  background: #fff;
+  border-color: #e8d5c4;
+  color: #765439;
+}
+
+.errorBtnGhost:hover { background: #fdf3ec; }
+
+.spin { animation: drawioSpin 0.8s linear infinite; }
+
+@keyframes drawioSpin {
+  to { transform: rotate(360deg); }
+}
+
+/* Responsif: sembunyikan label tombol di layar sempit, sisakan ikon */
+@media (max-width: 560px) {
+  .barBtnLabel { display: none; }
+  .barBtn { padding: 6px 9px; }
+  .bar { padding: 7px 10px; }
+}

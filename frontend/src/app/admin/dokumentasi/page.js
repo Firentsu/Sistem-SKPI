@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import {
     Plus, Search, Edit2, Trash2, Eye, FileText, RefreshCw,
     Filter, X, ChevronDown, AlertCircle, CheckCircle2,
-    LayoutGrid, List,
+    LayoutGrid, List, FolderOpen,
 } from "lucide-react";
 import styles from "./dokumentasi.module.css";
 import { apiFetch } from "@/lib/api";
@@ -170,7 +170,10 @@ export default function DokumentasiPage() {
             {/* HEADER */}
             <div className={styles.header}>
                 <div>
-                    <h1 className={styles.title}>📁 Dokumentasi Sistem</h1>
+                    <h1 className={styles.title}>
+                        <FolderOpen size={24} className={styles.titleIcon} />
+                        Dokumentasi Sistem
+                    </h1>
                     <p className={styles.subtitle}>
                         Kelola semua dokumen proyek SKPI — Use Case, Activity, Class, Flowchart, Sequence, Laporan, Panduan, dan lainnya
                     </p>
