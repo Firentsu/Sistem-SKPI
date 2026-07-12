@@ -49,6 +49,34 @@
   color: #5c3317;
 }
 
+/* ============================================================
+   HEADER ACTIONS - Tombol Import & Reset
+   ============================================================ */
+.headerActions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.importBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: #e0f2fe;
+  color: #0369a1;
+  border: 1px solid #7dd3fc;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+}
+.importBtn:hover {
+  background: #bae6fd;
+  transform: translateY(-1px);
+}
+
 .resetBtn {
   display: inline-flex;
   align-items: center;
@@ -661,6 +689,163 @@
   line-height: 1.6;
   margin: 0 auto 12px;
   max-width: 620px;
+}
+
+/* ============================================================
+   MODAL IMPORT CSV
+   ============================================================ */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.modalBox {
+  background: #fff;
+  border-radius: 20px;
+  max-width: 480px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+  animation: modalFadeIn 0.2s ease;
+}
+
+@keyframes modalFadeIn {
+  from { opacity: 0; transform: scale(0.96) translateY(10px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
+
+.modalTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0;
+}
+
+.modalClose {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #6b7280;
+  padding: 4px;
+  border-radius: 6px;
+  transition: background 0.15s;
+}
+.modalClose:hover {
+  background: #f3f4f6;
+}
+
+.modalBody {
+  padding: 20px;
+}
+
+.modalDesc {
+  font-size: 14px;
+  color: #4b5563;
+  margin-top: 0;
+  margin-bottom: 12px;
+}
+
+.csvFormatBox {
+  background: #f3f4f6;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #1f2937;
+  margin-bottom: 16px;
+}
+.csvFormatBox code {
+  font-weight: 600;
+  background: #fff;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.fileInput {
+  display: block;
+  margin: 12px 0;
+  padding: 8px;
+  border: 1px dashed #d1d5db;
+  border-radius: 8px;
+  width: 100%;
+  cursor: pointer;
+}
+.fileInput:hover {
+  border-color: #765439;
+}
+
+.importStatus {
+  margin-top: 12px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 14px;
+}
+.importSuccess {
+  background: #dcfce7;
+  color: #166534;
+}
+.importError {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.modalFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 20px;
+  border-top: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
+
+.btnCancel {
+  padding: 8px 18px;
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-weight: 600;
+  color: #4b5563;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.btnCancel:hover {
+  background: #e5e7eb;
+}
+
+.btnImport {
+  padding: 8px 22px;
+  background: #765439;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+}
+.btnImport:hover:not(:disabled) {
+  background: #5c3317;
+  transform: translateY(-1px);
+}
+.btnImport:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
 }
 
 /* ============================================================

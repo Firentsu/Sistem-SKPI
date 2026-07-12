@@ -926,6 +926,32 @@ export default function MahasiswaPage() {
     }
   };
 
+  // 🔥 SINKRONISASI SICP
+  const handleSyncSicp = async () => {
+    toast("⏳ Sinkronisasi SICP dimulai...", "info");
+    try {
+      const res = await fetch('http://localhost:5000/api/sicp-sync/both', {
+        method: 'POST',
+        credentials: 'include',
+      });
+      const data = await res.json();
+      if (res.ok) {
+        let msg = '✅ Sinkronisasi SICP berhasil!';
+        if (data.message) msg += ' ' + data.message;
+        if (data.mahasiswa) msg += ` | Mahasiswa: ${data.mahasiswa}`;
+        if (data.icp) msg += ` | ICP: ${data.icp}`;
+        toast(msg, 'success');
+        // Refresh data setelah sync
+        loadData(search, filterProdi, 1);
+      } else {
+        toast(data.error || '❌ Gagal sinkronisasi SICP', 'error');
+      }
+    } catch (err) {
+      console.error('Sync SICP error:', err);
+      toast('❌ Terjadi kesalahan saat sinkronisasi', 'error');
+    }
+  };
+
   const resetFilter = () => {
     setFilterProdi("Semua"); setFilterAngkatan("Semua");
     setFilterStatus("Semua"); setSearch(""); setCurrentPage(1);
@@ -952,6 +978,15 @@ export default function MahasiswaPage() {
 
   const activeProdiCfg = filterProdi !== "Semua" ? getProdiConfig(filterProdi) : null;
 
+  // Tambahkan dukungan untuk toast type "info"
+  // Pastikan CSS untuk .toast_info ada, atau gunakan "warning" sebagai ganti
+  // Jika tidak ada style info, kita fallback ke warning
+  const infoToast = (msg) => {
+    // Coba gunakan type 'warning' jika 'info' tidak didukung
+    // Kita akan menggunakan 'info' dan pastikan CSS-nya ada (bisa ditambahkan di styles)
+    toast(msg, 'info');
+  };
+
   return (
     <div className={styles.page}>
       <Toast toasts={toasts} remove={remove} />
@@ -964,13 +999,25 @@ export default function MahasiswaPage() {
         </div>
       </div>
 
-      {/* ACTION BUTTONS (Template, Import, Tambah) */}
+      {/* ACTION BUTTONS (Template, Import, Sinkronisasi, Tambah) */}
       <div className={styles.actionButtons}>
         <button className={styles.btnOutline} onClick={downloadTemplate}>
           <Download size={14} /> Template
         </button>
         <button className={styles.btnOutline} onClick={() => setModalImport(true)}>
           <Upload size={14} /> Import Excel
+        </button>
+        {/* 🔥 TOMBOL SINKRONISASI SICP */}
+        <button
+          className={styles.btnOutline}
+          onClick={handleSyncSicp}
+          style={{
+            borderColor: '#765439',
+            background: '#fde8cc',
+            fontWeight: 700,
+          }}
+        >
+          <RefreshCw size={14} /> Sinkronisasi SICP
         </button>
         <button className={styles.btnPrimary} onClick={() => setModalAdd(true)}>
           <Plus size={15} /> Tambah Mahasiswa

@@ -5,7 +5,7 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import {
   ClipboardCheck, ShieldCheck, Target, Layers, Gauge,
   ChevronDown, RotateCcw, CheckCircle2, AlertTriangle,
-  Lightbulb, ListChecks, Info, TrendingUp,
+  Lightbulb, ListChecks, Info, TrendingUp, Upload, X,
 } from "lucide-react";
 import {
   Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
@@ -20,7 +20,7 @@ const CAPABILITY_LEVELS = [
   { level: 0, name: "Incomplete",  label: "Tidak Lengkap", color: "#9ca3af", desc: "Proses tidak diterapkan atau gagal mencapai tujuannya." },
   { level: 1, name: "Performed",   label: "Dijalankan",    color: "#f59e0b", desc: "Proses telah dijalankan dan mencapai tujuan dasarnya." },
   { level: 2, name: "Managed",     label: "Dikelola",      color: "#eab308", desc: "Proses direncanakan, dipantau, dan disesuaikan." },
-  { level: 3, name: "Established",  label: "Ditetapkan",    color: "#84cc16", desc: "Proses distandarkan dan didokumentasikan di organisasi." },
+  { level: 3, name: "Established", label: "Ditetapkan",    color: "#84cc16", desc: "Proses distandarkan dan didokumentasikan di organisasi." },
   { level: 4, name: "Predictable", label: "Terprediksi",   color: "#22c55e", desc: "Proses beroperasi dalam batas yang terukur dan konsisten." },
   { level: 5, name: "Optimizing",  label: "Optimasi",      color: "#16a34a", desc: "Proses ditingkatkan secara berkelanjutan." },
 ];
@@ -28,8 +28,7 @@ const CAPABILITY_LEVELS = [
 const TARGET_LEVEL = 4;
 
 // ============================================================
-//  DATA AUDIT — DOMAIN BAI (Build, Acquire and Implement)
-//  Sistem: Aplikasi SKPI Institut Shanti Bhuana
+//  DATA AUDIT — DOMAIN BAI
 // ============================================================
 const PROCESSES = [
   {
@@ -137,6 +136,11 @@ export default function AuditPage() {
   const [expanded, setExpanded] = useState("BAI02");
   const [hydrated, setHydrated] = useState(false);
 
+  // State untuk import CSV
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importFile, setImportFile] = useState(null);
+  const [importStatus, setImportStatus] = useState(null);
+
   // ── Muat penilaian tersimpan (localStorage) ──
   useEffect(() => {
     try {
@@ -188,6 +192,54 @@ export default function AuditPage() {
     [processScores]
   );
 
+  // ── Import CSV ──────────────────────────────────────────────
+  const handleImportCSV = useCallback(() => {
+    if (!importFile) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const text = e.target.result;
+        const lines = text.split("\n").filter(line => line.trim() !== "");
+        if (lines.length < 2) throw new Error("File kosong atau hanya header");
+        const headers = lines[0].split(",").map(h => h.trim());
+        if (headers.length < 2 || headers[0] !== "practice_id" || headers[1] !== "level") {
+          throw new Error("Format header harus: practice_id,level");
+        }
+        const data = lines.slice(1).map(line => {
+          const cols = line.split(",").map(c => c.trim());
+          return {
+            practice_id: cols[0],
+            level: parseInt(cols[1], 10),
+          };
+        });
+
+        const newLevels = {};
+        let valid = true;
+        data.forEach(item => {
+          if (item.practice_id && !isNaN(item.level) && item.level >= 0 && item.level <= 5) {
+            newLevels[item.practice_id] = item.level;
+          } else {
+            valid = false;
+          }
+        });
+
+        if (!valid) {
+          setImportStatus({ type: 'error', msg: 'Format CSV tidak valid. Pastikan kolom: practice_id,level' });
+          return;
+        }
+
+        setLevels(prev => ({ ...prev, ...newLevels }));
+        setImportStatus({ type: 'success', msg: `Berhasil import ${Object.keys(newLevels).length} praktik` });
+        setTimeout(() => setImportStatus(null), 3000);
+        setShowImportModal(false);
+        setImportFile(null);
+      } catch (err) {
+        setImportStatus({ type: 'error', msg: 'Gagal membaca file: ' + err.message });
+      }
+    };
+    reader.readAsText(importFile);
+  }, [importFile]);
+
   return (
     <div className={styles.container}>
       {/* ══════════ HEADER ══════════ */}
@@ -202,9 +254,14 @@ export default function AuditPage() {
             <strong>COBIT 2019</strong> — Domain <strong>BAI (Build, Acquire and Implement)</strong>
           </p>
         </div>
-        <button className={styles.resetBtn} onClick={resetAssessment} title="Kembalikan ke penilaian awal">
-          <RotateCcw size={15} /> Reset Penilaian
-        </button>
+        <div className={styles.headerActions}>
+          <button className={styles.importBtn} onClick={() => setShowImportModal(true)}>
+            <Upload size={15} /> Import Kuesioner
+          </button>
+          <button className={styles.resetBtn} onClick={resetAssessment} title="Kembalikan ke penilaian awal">
+            <RotateCcw size={15} /> Reset Penilaian
+          </button>
+        </div>
       </div>
 
       {/* ══════════ KARTU INFORMASI KERANGKA ══════════ */}
@@ -241,7 +298,6 @@ export default function AuditPage() {
 
       {/* ══════════ RINGKASAN + RADAR ══════════ */}
       <div className={styles.summaryGrid}>
-        {/* Skor keseluruhan */}
         <div className={styles.scoreCard}>
           <div className={styles.scoreHeader}>
             <Gauge size={16} />
@@ -266,7 +322,6 @@ export default function AuditPage() {
           </div>
         </div>
 
-        {/* Radar chart */}
         <div className={styles.radarCard}>
           <div className={styles.cardTitle}>Peta Kapabilitas — Saat Ini vs Target</div>
           <ResponsiveContainer width="100%" height={280}>
@@ -338,7 +393,6 @@ export default function AuditPage() {
                   <Info size={14} /> <span>{p.purpose}</span>
                 </p>
 
-                {/* Tabel praktik manajemen + penilai level */}
                 <div className={styles.tableWrap}>
                   <table className={styles.table}>
                     <thead>
@@ -377,7 +431,6 @@ export default function AuditPage() {
                   </table>
                 </div>
 
-                {/* Temuan & Rekomendasi */}
                 <div className={styles.frGrid}>
                   <div className={styles.frCard}>
                     <div className={styles.frTitle} style={{ color: "#b45309" }}>
@@ -417,9 +470,50 @@ export default function AuditPage() {
       </div>
 
       <p className={styles.footNote}>
-        Penilaian bersifat mandiri (self-assessment) dan tersimpan otomatis di perangkat ini.
+        Penilaian bersifat mandiri (self‑assessment) dan tersimpan otomatis di perangkat ini.
         Skala mengacu pada model kapabilitas proses COBIT 2019 (Level 0 – 5).
       </p>
+
+      {/* ══════════ MODAL IMPORT CSV ══════════ */}
+      {showImportModal && (
+        <div className={styles.modalOverlay} onClick={() => setShowImportModal(false)}>
+          <div className={styles.modalBox} onClick={e => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h3 className={styles.modalTitle}>Import Hasil Kuesioner</h3>
+              <button className={styles.modalClose} onClick={() => setShowImportModal(false)}>
+                <X size={20} />
+              </button>
+            </div>
+            <div className={styles.modalBody}>
+              <p className={styles.modalDesc}>
+                Unggah file CSV dengan format:
+              </p>
+              <div className={styles.csvFormatBox}>
+                <code>practice_id,level</code>
+                <br />
+                <small>Contoh: <br />BAI02.01,3<br />BAI02.02,2</small>
+              </div>
+              <input
+                type="file"
+                accept=".csv"
+                onChange={(e) => setImportFile(e.target.files[0])}
+                className={styles.fileInput}
+              />
+              {importStatus && (
+                <div className={`${styles.importStatus} ${importStatus.type === 'success' ? styles.importSuccess : styles.importError}`}>
+                  {importStatus.msg}
+                </div>
+              )}
+            </div>
+            <div className={styles.modalFooter}>
+              <button className={styles.btnCancel} onClick={() => setShowImportModal(false)}>Batal</button>
+              <button className={styles.btnImport} onClick={handleImportCSV} disabled={!importFile}>
+                Import
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
