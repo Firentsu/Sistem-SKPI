@@ -5,7 +5,7 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import {
   ClipboardCheck, ShieldCheck, Target, Layers, Gauge,
   ChevronDown, RotateCcw, CheckCircle2, AlertTriangle,
-  Lightbulb, ListChecks, Info, TrendingUp, Upload, X,
+  Lightbulb, ListChecks, Info, TrendingUp, Users, Building2,
 } from "lucide-react";
 import {
   Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
@@ -25,96 +25,117 @@ const CAPABILITY_LEVELS = [
   { level: 5, name: "Optimizing",  label: "Optimasi",      color: "#16a34a", desc: "Proses ditingkatkan secara berkelanjutan." },
 ];
 
-const TARGET_LEVEL = 4;
+// ============================================================
+//  IDENTITAS AUDIT — SISTEM SKPI INSTITUT SHANTI BHUANA
+// ============================================================
+const AUDIT_INFO = {
+  framework: "COBIT 2019",
+  domain: "BAI (Build, Acquire and Implement)",
+  auditor: "Tim Audit Penelitian (Peneliti)",
+  auditee: "Unit Sistem Informasi (SISFO)",
+  metode:
+    "Data primer berupa kuesioner dan wawancara kepada pihak SISFO dan Program Studi, didukung observasi terhadap kode dan sistem",
+};
 
 // ============================================================
-//  DATA AUDIT — DOMAIN BAI
+//  DATA AUDIT — DOMAIN BAI (Build, Acquire and Implement)
+//  Sistem : Sistem SKPI Institut Shanti Bhuana
+//
+//  Catatan penyelarasan dengan Laporan Magang:
+//  - Level default mengikuti hasil audit pada laporan:
+//    BAI02 = Level 3, BAI03 = Level 3, BAI07 = Level 2.
+//  - Setiap proses dinilai melalui 4 praktik yang SEJAJAR dengan
+//    butir kuesioner (K1 - K12) yang dibagikan kepada SISFO dan
+//    Program Studi, sehingga rekap kuesioner dapat dipetakan
+//    langsung ke halaman ini.
+//  - Target: BAI02 & BAI03 -> Level 4 (Predictable);
+//    BAI07 -> Level 3 (mengejar gap dokumentasi pengujian
+//    dan penerapan).
 // ============================================================
 const PROCESSES = [
   {
     id: "BAI02",
     title: "Pengelolaan Definisi Kebutuhan",
     en: "Managed Requirements Definition",
+    target: 4,
     purpose:
-      "Memastikan kebutuhan fungsional dan teknis dari sistem SKPI diidentifikasi, dianalisis, dan disetujui pemangku kepentingan (Prodi, BAAK, Mahasiswa) sehingga solusi yang dibangun sesuai dengan kebutuhan bisnis.",
+      "Memastikan kebutuhan fungsional dan non-fungsional Sistem SKPI diidentifikasi, dianalisis, dan disepakati bersama pemangku kepentingan (Unit SISFO dan Program Studi) sehingga solusi yang dibangun sesuai proses bisnis pengelolaan dan penerbitan dokumen SKPI.",
     practices: [
-      { id: "BAI02.01", name: "Menentukan & memelihara kebutuhan bisnis fungsional dan teknis", level: 3 },
-      { id: "BAI02.02", name: "Melakukan studi kelayakan & merumuskan solusi alternatif", level: 2 },
-      { id: "BAI02.03", name: "Mengelola risiko kebutuhan", level: 2 },
-      { id: "BAI02.04", name: "Memperoleh persetujuan atas kebutuhan dan solusi", level: 3 },
+      { id: "BAI02.01", k: "K1", name: "Kebutuhan fungsional & non-fungsional diidentifikasi bersama pemangku kepentingan (SISFO dan Program Studi)", level: 3 },
+      { id: "BAI02.02", k: "K2", name: "Kebutuhan sistem didokumentasikan secara jelas (use case, ERD, daftar kebutuhan)", level: 3 },
+      { id: "BAI02.03", k: "K3", name: "Fitur yang dibangun sesuai proses bisnis pengelolaan dan penerbitan dokumen SKPI", level: 3 },
+      { id: "BAI02.04", k: "K4", name: "Perubahan kebutuhan selama pengembangan dianalisis dan disepakati sebelum diterapkan", level: 3 },
     ],
     findings: [
-      "Kebutuhan fungsional (input kegiatan, verifikasi, generate SKPI) sudah terdokumentasi, namun keterunutan (traceability) ke pengujian belum formal.",
-      "Studi kelayakan dilakukan secara informal tanpa dokumen pembanding solusi alternatif.",
-      "Persetujuan kebutuhan dari pemangku kepentingan belum tercatat dalam berita acara resmi.",
+      "Kebutuhan sistem dikumpulkan melalui observasi dan diskusi dengan pihak SISFO, kemudian didokumentasikan dalam laporan yang mencakup kebutuhan fungsional, non-fungsional, use case, dan ERD.",
+      "Dokumentasi kebutuhan telah tersedia dan konsisten sebagai acuan pengembangan, namun belum dibakukan dalam dokumen SRS (Software Requirement Specification) tersendiri.",
     ],
     recommendations: [
-      "Susun Requirement Traceability Matrix (RTM) yang menautkan kebutuhan ke fitur & pengujian.",
-      "Formalkan proses sign-off kebutuhan oleh Prodi/BAAK dalam dokumen persetujuan.",
-      "Lakukan analisis risiko kebutuhan (mis. perubahan regulasi SKPI) secara berkala.",
+      "Membakukan dokumentasi kebutuhan sistem ke dalam dokumen SRS tersendiri agar menjadi acuan pengembangan yang lebih formal.",
+      "Menautkan setiap kebutuhan ke fitur dan pengujiannya (traceability) untuk memudahkan verifikasi kelengkapan sistem.",
     ],
   },
   {
     id: "BAI03",
     title: "Pengelolaan Identifikasi & Pembangunan Solusi",
     en: "Managed Solutions Identification and Build",
+    target: 4,
     purpose:
-      "Memastikan solusi (aplikasi SKPI berbasis web) dirancang, dikembangkan, dan diuji sesuai desain arsitektur agar mendukung tujuan organisasi secara andal dan mudah dipelihara.",
+      "Memastikan solusi backend Sistem SKPI (RESTful API berbasis Express.js dengan Prisma ORM dan MySQL) dirancang, dikembangkan, dan diuji sesuai rancangan agar andal, modular, dan mudah dipelihara.",
     practices: [
-      { id: "BAI03.01", name: "Merancang solusi tingkat tinggi (arsitektur)", level: 4 },
-      { id: "BAI03.02", name: "Merancang komponen solusi terperinci (ERD, UI)", level: 3 },
-      { id: "BAI03.03", name: "Mengembangkan komponen solusi", level: 4 },
-      { id: "BAI03.04", name: "Memperoleh komponen solusi (library/dependensi)", level: 3 },
-      { id: "BAI03.05", name: "Membangun solusi", level: 4 },
-      { id: "BAI03.06", name: "Melakukan penjaminan mutu (Quality Assurance)", level: 2 },
-      { id: "BAI03.07", name: "Menyiapkan pengujian solusi", level: 2 },
-      { id: "BAI03.08", name: "Melaksanakan pengujian solusi", level: 3 },
-      { id: "BAI03.09", name: "Mengelola perubahan kebutuhan", level: 3 },
-      { id: "BAI03.10", name: "Memelihara solusi", level: 2 },
-      { id: "BAI03.11", name: "Menentukan layanan TI & memelihara portofolio layanan", level: 3 },
-      { id: "BAI03.12", name: "Merancang solusi berdasarkan metodologi pengembangan", level: 3 },
+      { id: "BAI03.01", k: "K5", name: "Sistem dibangun sesuai rancangan yang disepakati (arsitektur, ERD, use case)", level: 3 },
+      { id: "BAI03.03", k: "K6", name: "Perubahan kode & basis data terkelola (version control GitHub, migrasi Prisma tercatat)", level: 3 },
+      { id: "BAI03.05", k: "K7", name: "Fitur utama berfungsi sesuai kebutuhan (data master, kegiatan & bukti, poin ICP dari SICP, generate SKPI per prodi, notifikasi realtime)", level: 3 },
+      { id: "BAI03.08", k: "K8", name: "Keamanan aplikasi diterapkan (autentikasi session, kontrol akses per peran, validasi masukan & unggahan)", level: 3 },
     ],
     findings: [
-      "Desain sistem (arsitektur, ERD, use case) tersedia, konsisten, dan diimplementasikan dengan baik.",
-      "Pengujian dilakukan manual dan belum tersistematis — belum ada test case & prosedur QA terdokumentasi.",
-      "Pemeliharaan solusi masih bersifat reaktif (perbaikan saat ada laporan bug).",
+      "Layanan API dibangun secara modular menggunakan Express.js dan Prisma; endpoint utama, fitur generate dokumen SKPI (.docx) per program studi, notifikasi realtime (SSE), dan migrasi basis data yang terkelola telah berjalan sesuai kebutuhan.",
+      "Dokumentasi API belum disusun secara lengkap dan formal, sehingga berpotensi menyulitkan pemeliharaan dan pengembangan lanjutan oleh pengembang berikutnya.",
     ],
     recommendations: [
-      "Terapkan QA terstruktur dengan test plan dan test case yang terdokumentasi.",
-      "Tambahkan pengujian otomatis (unit/integration test) pada modul kritis.",
-      "Susun jadwal pemeliharaan preventif dan changelog versi aplikasi.",
+      "Menyusun dokumentasi API yang lengkap dan terstruktur (misalnya OpenAPI/Swagger) untuk memudahkan pemeliharaan, integrasi, dan pengembangan lanjutan.",
+      "Menambahkan pengujian otomatis (unit/integration test) pada modul kritis seperti autentikasi dan generate dokumen SKPI.",
     ],
   },
   {
     id: "BAI07",
     title: "Pengelolaan Penerimaan Perubahan & Transisi TI",
     en: "Managed IT Change Acceptance and Transitioning",
+    target: 3,
     purpose:
-      "Memastikan solusi SKPI diterima pengguna (UAT), dirilis ke lingkungan produksi secara terkendali, dan ditinjau pasca-implementasi untuk meminimalkan gangguan layanan.",
+      "Memastikan Sistem SKPI diuji, diterima pengguna, dan dirilis ke lingkungan produksi (frontend pada Vercel, backend pada Railway) secara terkendali sehingga dapat digunakan tanpa gangguan layanan.",
     practices: [
-      { id: "BAI07.01", name: "Menetapkan rencana implementasi", level: 3 },
-      { id: "BAI07.02", name: "Merencanakan konversi proses bisnis, sistem & data", level: 2 },
-      { id: "BAI07.03", name: "Merencanakan pengujian penerimaan (UAT)", level: 2 },
-      { id: "BAI07.04", name: "Menetapkan lingkungan pengujian", level: 2 },
-      { id: "BAI07.05", name: "Melaksanakan pengujian penerimaan", level: 3 },
-      { id: "BAI07.06", name: "Mempromosikan ke produksi & mengelola rilis", level: 3 },
-      { id: "BAI07.07", name: "Menyediakan dukungan produksi awal", level: 2 },
-      { id: "BAI07.08", name: "Melakukan tinjauan pasca-implementasi", level: 1 },
+      { id: "BAI07.01", k: "K9",  name: "Fungsi-fungsi utama sistem diuji terlebih dahulu sebelum digunakan", level: 2 },
+      { id: "BAI07.05", k: "K10", name: "Sistem diterapkan (deploy) ke lingkungan produksi dan dapat diakses secara daring", level: 2 },
+      { id: "BAI07.06", k: "K11", name: "Proses pengujian dan penerapan sistem terdokumentasi dengan baik", level: 2 },
+      { id: "BAI07.08", k: "K12", name: "Sistem yang diterapkan dapat diterima dan digunakan pengguna sesuai kebutuhan", level: 2 },
     ],
     findings: [
-      "Rencana implementasi tersedia, namun hasil UAT belum terdokumentasi dengan kriteria penerimaan yang jelas.",
-      "Lingkungan pengujian belum sepenuhnya terpisah dari lingkungan produksi.",
-      "Belum ada tinjauan pasca-implementasi (post-implementation review) formal setelah rilis.",
+      "Sistem telah diuji secara fungsional dan diterapkan (deploy) ke lingkungan produksi sehingga dapat diakses secara daring.",
+      "Proses pengujian dan penerapan belum didokumentasikan secara formal dan sistematis sebagai acuan pemeliharaan.",
     ],
     recommendations: [
-      "Dokumentasikan rencana & hasil UAT beserta kriteria penerimaan yang terukur.",
-      "Pisahkan lingkungan staging dan produksi untuk mengurangi risiko rilis.",
-      "Lakukan post-implementation review terjadwal untuk mengevaluasi keberhasilan rilis.",
+      "Menyusun dokumentasi pengujian dan penerapan sistem secara sistematis sebagai acuan pemeliharaan dan pengembangan di masa mendatang.",
+      "Mengintegrasikan mekanisme Single Sign-On (SSO) sebagai autentikasi terpusat untuk meningkatkan keamanan dan kemudahan pengelolaan akun.",
     ],
   },
 ];
 
-const STORAGE_KEY = "cobit-audit-skpi-bai";
+// ============================================================
+//  INSTRUMEN KUESIONER (DATA PRIMER)
+//  Dibagikan kepada pihak SISFO dan Program Studi sebagai
+//  validasi (triangulasi) hasil observasi.
+//  Skala 1-4, dipetakan ke level kapabilitas:
+//  1,0-1,4 -> L1 | 1,5-2,4 -> L2 | 2,5-3,4 -> L3 | 3,5-4,0 -> L4
+// ============================================================
+const KUESIONER_SKALA = [
+  { skor: 1, label: "Tidak Ada", desc: "Proses belum dilakukan" },
+  { skor: 2, label: "Minimal",   desc: "Dilakukan sebagian dan belum konsisten" },
+  { skor: 3, label: "Lengkap",   desc: "Dilakukan secara konsisten dan terdokumentasi" },
+  { skor: 4, label: "Terukur",   desc: "Dilakukan, terdokumentasi, dan dievaluasi" },
+];
+
+const STORAGE_KEY = "cobit-audit-skpi-bai-v2";
 
 // ── Bangun peta level default dari data ──────────────────────
 function buildDefaultLevels() {
@@ -135,11 +156,6 @@ export default function AuditPage() {
   const [levels, setLevels] = useState(buildDefaultLevels);
   const [expanded, setExpanded] = useState("BAI02");
   const [hydrated, setHydrated] = useState(false);
-
-  // State untuk import CSV
-  const [showImportModal, setShowImportModal] = useState(false);
-  const [importFile, setImportFile] = useState(null);
-  const [importStatus, setImportStatus] = useState(null);
 
   // ── Muat penilaian tersimpan (localStorage) ──
   useEffect(() => {
@@ -162,6 +178,7 @@ export default function AuditPage() {
 
   const resetAssessment = useCallback(() => {
     setLevels(buildDefaultLevels());
+    try { localStorage.removeItem(STORAGE_KEY); } catch { /* abaikan */ }
   }, []);
 
   // ── Hitung rata-rata kapabilitas per proses ──
@@ -169,13 +186,18 @@ export default function AuditPage() {
     return PROCESSES.map((p) => {
       const vals = p.practices.map((pr) => levels[pr.id] ?? pr.level);
       const avg = vals.reduce((a, b) => a + b, 0) / vals.length;
-      return { id: p.id, title: p.title, avg, gap: TARGET_LEVEL - avg };
+      return { id: p.id, title: p.title, avg, target: p.target, gap: p.target - avg };
     });
   }, [levels]);
 
   const overall = useMemo(() => {
     const avg = processScores.reduce((a, b) => a + b.avg, 0) / processScores.length;
     return Math.round(avg * 100) / 100;
+  }, [processScores]);
+
+  const overallTarget = useMemo(() => {
+    const t = processScores.reduce((a, b) => a + b.target, 0) / processScores.length;
+    return Math.round(t * 100) / 100;
   }, [processScores]);
 
   const totalPractices = useMemo(
@@ -187,58 +209,10 @@ export default function AuditPage() {
     () => processScores.map((s) => ({
       subject: s.id,
       "Kapabilitas Saat Ini": Math.round(s.avg * 100) / 100,
-      "Target": TARGET_LEVEL,
+      "Target": s.target,
     })),
     [processScores]
   );
-
-  // ── Import CSV ──────────────────────────────────────────────
-  const handleImportCSV = useCallback(() => {
-    if (!importFile) return;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const text = e.target.result;
-        const lines = text.split("\n").filter(line => line.trim() !== "");
-        if (lines.length < 2) throw new Error("File kosong atau hanya header");
-        const headers = lines[0].split(",").map(h => h.trim());
-        if (headers.length < 2 || headers[0] !== "practice_id" || headers[1] !== "level") {
-          throw new Error("Format header harus: practice_id,level");
-        }
-        const data = lines.slice(1).map(line => {
-          const cols = line.split(",").map(c => c.trim());
-          return {
-            practice_id: cols[0],
-            level: parseInt(cols[1], 10),
-          };
-        });
-
-        const newLevels = {};
-        let valid = true;
-        data.forEach(item => {
-          if (item.practice_id && !isNaN(item.level) && item.level >= 0 && item.level <= 5) {
-            newLevels[item.practice_id] = item.level;
-          } else {
-            valid = false;
-          }
-        });
-
-        if (!valid) {
-          setImportStatus({ type: 'error', msg: 'Format CSV tidak valid. Pastikan kolom: practice_id,level' });
-          return;
-        }
-
-        setLevels(prev => ({ ...prev, ...newLevels }));
-        setImportStatus({ type: 'success', msg: `Berhasil import ${Object.keys(newLevels).length} praktik` });
-        setTimeout(() => setImportStatus(null), 3000);
-        setShowImportModal(false);
-        setImportFile(null);
-      } catch (err) {
-        setImportStatus({ type: 'error', msg: 'Gagal membaca file: ' + err.message });
-      }
-    };
-    reader.readAsText(importFile);
-  }, [importFile]);
 
   return (
     <div className={styles.container}>
@@ -247,24 +221,19 @@ export default function AuditPage() {
         <div>
           <h1 className={styles.title}>
             <ClipboardCheck size={26} className={styles.titleIcon} />
-            Audit Tata Kelola TI
+            Audit Tata Kelola TI — Sistem SKPI
           </h1>
           <p className={styles.subtitle}>
-            Evaluasi kapabilitas sistem SKPI menggunakan kerangka kerja{" "}
-            <strong>COBIT 2019</strong> — Domain <strong>BAI (Build, Acquire and Implement)</strong>
+            Evaluasi kapabilitas Sistem SKPI Institut Shanti Bhuana menggunakan kerangka kerja{" "}
+            <strong>{AUDIT_INFO.framework}</strong> — Domain <strong>{AUDIT_INFO.domain}</strong>
           </p>
         </div>
-        <div className={styles.headerActions}>
-          <button className={styles.importBtn} onClick={() => setShowImportModal(true)}>
-            <Upload size={15} /> Import Kuesioner
-          </button>
-          <button className={styles.resetBtn} onClick={resetAssessment} title="Kembalikan ke penilaian awal">
-            <RotateCcw size={15} /> Reset Penilaian
-          </button>
-        </div>
+        <button className={styles.resetBtn} onClick={resetAssessment} title="Kembalikan ke hasil penilaian pada laporan">
+          <RotateCcw size={15} /> Reset Penilaian
+        </button>
       </div>
 
-      {/* ══════════ KARTU INFORMASI KERANGKA ══════════ */}
+      {/* ══════════ KARTU INFORMASI AUDIT ══════════ */}
       <div className={styles.infoRow}>
         <div className={styles.infoCard}>
           <div className={styles.infoIcon} style={{ background: "#eef2ff", color: "#4338ca" }}><ShieldCheck size={18} /></div>
@@ -291,13 +260,28 @@ export default function AuditPage() {
           <div className={styles.infoIcon} style={{ background: "#fef2f2", color: "#b91c1c" }}><Target size={18} /></div>
           <div>
             <span className={styles.infoLabel}>Target Kapabilitas</span>
-            <span className={styles.infoValue}>Level {TARGET_LEVEL} — Predictable</span>
+            <span className={styles.infoValue}>BAI02/03: L4 · BAI07: L3</span>
+          </div>
+        </div>
+        <div className={styles.infoCard}>
+          <div className={styles.infoIcon} style={{ background: "#f5f3ff", color: "#6d28d9" }}><Users size={18} /></div>
+          <div>
+            <span className={styles.infoLabel}>Auditor</span>
+            <span className={styles.infoValue}>Tim Audit Penelitian (Peneliti)</span>
+          </div>
+        </div>
+        <div className={styles.infoCard}>
+          <div className={styles.infoIcon} style={{ background: "#ecfeff", color: "#0e7490" }}><Building2 size={18} /></div>
+          <div>
+            <span className={styles.infoLabel}>Auditee</span>
+            <span className={styles.infoValue}>Unit Sistem Informasi (SISFO)</span>
           </div>
         </div>
       </div>
 
       {/* ══════════ RINGKASAN + RADAR ══════════ */}
       <div className={styles.summaryGrid}>
+        {/* Skor keseluruhan */}
         <div className={styles.scoreCard}>
           <div className={styles.scoreHeader}>
             <Gauge size={16} />
@@ -311,17 +295,18 @@ export default function AuditPage() {
           </div>
           <div className={styles.scoreBarTrack}>
             <div className={styles.scoreBarFill} style={{ width: `${(overall / 5) * 100}%`, background: levelColor(overall) }} />
-            <div className={styles.scoreBarTarget} style={{ left: `${(TARGET_LEVEL / 5) * 100}%` }} title={`Target: Level ${TARGET_LEVEL}`} />
+            <div className={styles.scoreBarTarget} style={{ left: `${(overallTarget / 5) * 100}%` }} title={`Rata-rata target: ${overallTarget.toFixed(2)}`} />
           </div>
           <div className={styles.scoreMeta}>
             <span><strong>{PROCESSES.length}</strong> Proses</span>
-            <span><strong>{totalPractices}</strong> Praktik Manajemen</span>
+            <span><strong>{totalPractices}</strong> Praktik Dinilai</span>
             <span className={styles.scoreGap}>
-              <TrendingUp size={12} /> Gap {(TARGET_LEVEL - overall).toFixed(2)}
+              <TrendingUp size={12} /> Gap {(overallTarget - overall).toFixed(2)}
             </span>
           </div>
         </div>
 
+        {/* Radar chart */}
         <div className={styles.radarCard}>
           <div className={styles.cardTitle}>Peta Kapabilitas — Saat Ini vs Target</div>
           <ResponsiveContainer width="100%" height={280}>
@@ -349,12 +334,12 @@ export default function AuditPage() {
             <div className={styles.procSummaryTitle}>{s.title}</div>
             <div className={styles.procBarTrack}>
               <div className={styles.procBarFill} style={{ width: `${(s.avg / 5) * 100}%`, background: levelColor(s.avg) }} />
-              <div className={styles.procBarTarget} style={{ left: `${(TARGET_LEVEL / 5) * 100}%` }} />
+              <div className={styles.procBarTarget} style={{ left: `${(s.target / 5) * 100}%` }} />
             </div>
             <div className={styles.procGap}>
               {s.gap <= 0
                 ? <span className={styles.gapOk}><CheckCircle2 size={12} /> Target tercapai</span>
-                : <span className={styles.gapWarn}><AlertTriangle size={12} /> Gap {s.gap.toFixed(2)} ke target</span>}
+                : <span className={styles.gapWarn}><AlertTriangle size={12} /> Gap {s.gap.toFixed(2)} ke Level {s.target}</span>}
             </div>
           </div>
         ))}
@@ -393,12 +378,13 @@ export default function AuditPage() {
                   <Info size={14} /> <span>{p.purpose}</span>
                 </p>
 
+                {/* Tabel praktik manajemen + penilai level */}
                 <div className={styles.tableWrap}>
                   <table className={styles.table}>
                     <thead>
                       <tr>
                         <th className={styles.colId}>Kode</th>
-                        <th>Praktik Manajemen</th>
+                        <th>Praktik Manajemen (selaras butir kuesioner)</th>
                         <th className={styles.colLevel}>Tingkat Kapabilitas (0 – 5)</th>
                       </tr>
                     </thead>
@@ -407,7 +393,10 @@ export default function AuditPage() {
                         const val = levels[pr.id] ?? pr.level;
                         return (
                           <tr key={pr.id}>
-                            <td className={styles.colId}><code>{pr.id}</code></td>
+                            <td className={styles.colId}>
+                              <code>{pr.id}</code>
+                              <div style={{ marginTop: 4, fontSize: 11, color: "#9c7a5e", fontWeight: 700 }}>{pr.k}</div>
+                            </td>
                             <td>{pr.name}</td>
                             <td className={styles.colLevel}>
                               <div className={styles.levelPicker}>
@@ -431,6 +420,7 @@ export default function AuditPage() {
                   </table>
                 </div>
 
+                {/* Temuan & Rekomendasi */}
                 <div className={styles.frGrid}>
                   <div className={styles.frCard}>
                     <div className={styles.frTitle} style={{ color: "#b45309" }}>
@@ -455,6 +445,42 @@ export default function AuditPage() {
         );
       })}
 
+      {/* ══════════ INSTRUMEN KUESIONER (DATA PRIMER) ══════════ */}
+      <div className={styles.sectionTitle}>Instrumen Pengumpulan Data — Kuesioner (Data Primer)</div>
+      <div className={styles.procCard}>
+        <div className={styles.procBody}>
+          <p className={styles.procPurpose}>
+            <Info size={14} />
+            <span>
+              Kuesioner dibagikan kepada pihak <strong>SISFO</strong> dan <strong>Program Studi</strong> sebagai
+              data primer untuk memvalidasi (triangulasi) hasil observasi audit. Butir K1–K12 selaras dengan
+              praktik yang dinilai pada rincian di atas. Pemetaan rata-rata skor ke level kapabilitas:
+              1,0–1,4 → Level 1; 1,5–2,4 → Level 2; 2,5–3,4 → Level 3; 3,5–4,0 → Level 4.
+            </span>
+          </p>
+          <div className={styles.tableWrap}>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th className={styles.colId}>Skor</th>
+                  <th>Label</th>
+                  <th>Keterangan</th>
+                </tr>
+              </thead>
+              <tbody>
+                {KUESIONER_SKALA.map((k) => (
+                  <tr key={k.skor}>
+                    <td className={styles.colId}><code>{k.skor}</code></td>
+                    <td>{k.label}</td>
+                    <td>{k.desc}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
       {/* ══════════ REFERENSI TINGKAT KAPABILITAS ══════════ */}
       <div className={styles.sectionTitle}>Referensi Tingkat Kapabilitas COBIT 2019</div>
       <div className={styles.legendGrid}>
@@ -470,50 +496,12 @@ export default function AuditPage() {
       </div>
 
       <p className={styles.footNote}>
-        Penilaian bersifat mandiri (self‑assessment) dan tersimpan otomatis di perangkat ini.
+        Auditor: {AUDIT_INFO.auditor} · Auditee: {AUDIT_INFO.auditee}.
+        Metode: {AUDIT_INFO.metode}.
+        Penilaian awal mengikuti hasil audit pada Laporan Magang (BAI02 Level 3, BAI03 Level 3, BAI07 Level 2)
+        dan dapat diperbarui berdasarkan rekap kuesioner; perubahan tersimpan otomatis di perangkat ini.
         Skala mengacu pada model kapabilitas proses COBIT 2019 (Level 0 – 5).
       </p>
-
-      {/* ══════════ MODAL IMPORT CSV ══════════ */}
-      {showImportModal && (
-        <div className={styles.modalOverlay} onClick={() => setShowImportModal(false)}>
-          <div className={styles.modalBox} onClick={e => e.stopPropagation()}>
-            <div className={styles.modalHeader}>
-              <h3 className={styles.modalTitle}>Import Hasil Kuesioner</h3>
-              <button className={styles.modalClose} onClick={() => setShowImportModal(false)}>
-                <X size={20} />
-              </button>
-            </div>
-            <div className={styles.modalBody}>
-              <p className={styles.modalDesc}>
-                Unggah file CSV dengan format:
-              </p>
-              <div className={styles.csvFormatBox}>
-                <code>practice_id,level</code>
-                <br />
-                <small>Contoh: <br />BAI02.01,3<br />BAI02.02,2</small>
-              </div>
-              <input
-                type="file"
-                accept=".csv"
-                onChange={(e) => setImportFile(e.target.files[0])}
-                className={styles.fileInput}
-              />
-              {importStatus && (
-                <div className={`${styles.importStatus} ${importStatus.type === 'success' ? styles.importSuccess : styles.importError}`}>
-                  {importStatus.msg}
-                </div>
-              )}
-            </div>
-            <div className={styles.modalFooter}>
-              <button className={styles.btnCancel} onClick={() => setShowImportModal(false)}>Batal</button>
-              <button className={styles.btnImport} onClick={handleImportCSV} disabled={!importFile}>
-                Import
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

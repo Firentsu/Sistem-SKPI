@@ -628,6 +628,7 @@
 
 .toast_success { background: #f0fdf4; border: 1.5px solid #86efac; color: #15803d; }
 .toast_error   { background: #fff5f5; border: 1.5px solid #fca5a5; color: #dc2626; }
+.toast_info    { background: #fdf3e7; border: 1.5px solid #e8c9a0; color: #9a5b1e; }
 
 .toastClose {
   margin-left: auto; background: none; border: none;

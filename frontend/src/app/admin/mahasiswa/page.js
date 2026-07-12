@@ -88,11 +88,16 @@ const MOCK_MAHASISWA = [
 
 /* ── TOAST ── */
 function Toast({ toasts, remove }) {
+  const toastIcon = (type) => {
+    if (type === "success") return <CheckCircle2 size={15} />;
+    if (type === "info") return <Loader2 size={15} className={styles.spin} />;
+    return <AlertCircle size={15} />;
+  };
   return (
     <div className={styles.toastStack}>
       {toasts.map(t => (
         <div key={t.id} className={`${styles.toast} ${styles[`toast_${t.type}`]}`}>
-          {t.type === "success" ? <CheckCircle2 size={15} /> : <AlertCircle size={15} />}
+          {toastIcon(t.type)}
           <span>{t.msg}</span>
           <button onClick={() => remove(t.id)} className={styles.toastClose}><X size={13} /></button>
         </div>
@@ -926,9 +931,9 @@ export default function MahasiswaPage() {
     }
   };
 
-  // 🔥 SINKRONISASI SICP
+  // SINKRONISASI SICP
   const handleSyncSicp = async () => {
-    toast("⏳ Sinkronisasi SICP dimulai...", "info");
+    toast("Sinkronisasi SICP dimulai…", "info");
     try {
       const res = await fetch('http://localhost:5000/api/sicp-sync/both', {
         method: 'POST',
@@ -936,19 +941,19 @@ export default function MahasiswaPage() {
       });
       const data = await res.json();
       if (res.ok) {
-        let msg = '✅ Sinkronisasi SICP berhasil!';
-        if (data.message) msg += ' ' + data.message;
+        let msg = 'Sinkronisasi SICP berhasil';
+        if (data.message) msg += ` — ${data.message}`;
         if (data.mahasiswa) msg += ` | Mahasiswa: ${data.mahasiswa}`;
         if (data.icp) msg += ` | ICP: ${data.icp}`;
         toast(msg, 'success');
         // Refresh data setelah sync
         loadData(search, filterProdi, 1);
       } else {
-        toast(data.error || '❌ Gagal sinkronisasi SICP', 'error');
+        toast(data.error || 'Gagal sinkronisasi SICP', 'error');
       }
     } catch (err) {
       console.error('Sync SICP error:', err);
-      toast('❌ Terjadi kesalahan saat sinkronisasi', 'error');
+      toast('Terjadi kesalahan saat sinkronisasi', 'error');
     }
   };
 
@@ -977,15 +982,6 @@ export default function MahasiswaPage() {
   const start = (safePage - 1) * PER_PAGE;
 
   const activeProdiCfg = filterProdi !== "Semua" ? getProdiConfig(filterProdi) : null;
-
-  // Tambahkan dukungan untuk toast type "info"
-  // Pastikan CSS untuk .toast_info ada, atau gunakan "warning" sebagai ganti
-  // Jika tidak ada style info, kita fallback ke warning
-  const infoToast = (msg) => {
-    // Coba gunakan type 'warning' jika 'info' tidak didukung
-    // Kita akan menggunakan 'info' dan pastikan CSS-nya ada (bisa ditambahkan di styles)
-    toast(msg, 'info');
-  };
 
   return (
     <div className={styles.page}>

@@ -1,3 +1,5 @@
+console.log("===== SERVER START =====");
+
 import "dotenv/config";
 import express      from "express";
 import cors         from "cors";
