@@ -34,7 +34,7 @@ const AUDIT_INFO = {
   auditor: "Tim Audit Penelitian (Peneliti)",
   auditee: "Unit Sistem Informasi (SISFO)",
   metode:
-    "Data primer berupa kuesioner dan wawancara kepada pihak SISFO dan Program Studi, didukung observasi terhadap kode dan sistem",
+    "Data primer berupa kuesioner dan wawancara kepada pihak SISFO (Unit Sistem Informasi), didukung observasi terhadap kode dan sistem",
 };
 
 // ============================================================
@@ -45,8 +45,8 @@ const AUDIT_INFO = {
 //  - Level default mengikuti hasil audit pada laporan:
 //    BAI02 = Level 3, BAI03 = Level 3, BAI07 = Level 2.
 //  - Setiap proses dinilai melalui 4 praktik yang SEJAJAR dengan
-//    butir kuesioner (K1 - K12) yang dibagikan kepada SISFO dan
-//    Program Studi, sehingga rekap kuesioner dapat dipetakan
+//    butir kuesioner (K1 - K12) yang dibagikan kepada pihak SISFO,
+//    sehingga rekap kuesioner dapat dipetakan
 //    langsung ke halaman ini.
 //  - Target: BAI02 & BAI03 -> Level 4 (Predictable);
 //    BAI07 -> Level 3 (mengejar gap dokumentasi pengujian
@@ -59,9 +59,9 @@ const PROCESSES = [
     en: "Managed Requirements Definition",
     target: 4,
     purpose:
-      "Memastikan kebutuhan fungsional dan non-fungsional Sistem SKPI diidentifikasi, dianalisis, dan disepakati bersama pemangku kepentingan (Unit SISFO dan Program Studi) sehingga solusi yang dibangun sesuai proses bisnis pengelolaan dan penerbitan dokumen SKPI.",
+      "Memastikan kebutuhan fungsional dan non-fungsional Sistem SKPI diidentifikasi, dianalisis, dan disepakati bersama pemangku kepentingan (Unit SISFO dan pengembang sistem) sehingga solusi yang dibangun sesuai proses bisnis pengelolaan dan penerbitan dokumen SKPI.",
     practices: [
-      { id: "BAI02.01", k: "K1", name: "Kebutuhan fungsional & non-fungsional diidentifikasi bersama pemangku kepentingan (SISFO dan Program Studi)", level: 3 },
+      { id: "BAI02.01", k: "K1", name: "Kebutuhan fungsional & non-fungsional diidentifikasi bersama pemangku kepentingan (SISFO dan pengembang sistem)", level: 3 },
       { id: "BAI02.02", k: "K2", name: "Kebutuhan sistem didokumentasikan secara jelas (use case, ERD, daftar kebutuhan)", level: 3 },
       { id: "BAI02.03", k: "K3", name: "Fitur yang dibangun sesuai proses bisnis pengelolaan dan penerbitan dokumen SKPI", level: 3 },
       { id: "BAI02.04", k: "K4", name: "Perubahan kebutuhan selama pengembangan dianalisis dan disepakati sebelum diterapkan", level: 3 },
@@ -123,7 +123,7 @@ const PROCESSES = [
 
 // ============================================================
 //  INSTRUMEN KUESIONER (DATA PRIMER)
-//  Dibagikan kepada pihak SISFO dan Program Studi sebagai
+//  Dibagikan kepada pihak SISFO sebagai
 //  validasi (triangulasi) hasil observasi.
 //  Skala 1-4, dipetakan ke level kapabilitas:
 //  1,0-1,4 -> L1 | 1,5-2,4 -> L2 | 2,5-3,4 -> L3 | 3,5-4,0 -> L4
@@ -452,7 +452,7 @@ export default function AuditPage() {
           <p className={styles.procPurpose}>
             <Info size={14} />
             <span>
-              Kuesioner dibagikan kepada pihak <strong>SISFO</strong> dan <strong>Program Studi</strong> sebagai
+              Kuesioner dibagikan kepada pihak <strong>SISFO</strong> sebagai
               data primer untuk memvalidasi (triangulasi) hasil observasi audit. Butir K1–K12 selaras dengan
               praktik yang dinilai pada rincian di atas. Pemetaan rata-rata skor ke level kapabilitas:
               1,0–1,4 → Level 1; 1,5–2,4 → Level 2; 2,5–3,4 → Level 3; 3,5–4,0 → Level 4.
