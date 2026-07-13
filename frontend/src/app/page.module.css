@@ -554,6 +554,15 @@
   font-size: 13px;
 }
 
+/* Google reCAPTCHA "Saya bukan robot" — wadah agar rapi & tidak meluber */
+.captchaWrapper {
+  display: flex;
+  justify-content: center;
+  margin: 0 0 16px;
+  min-height: 78px;
+  overflow: hidden;
+}
+
 .checkbox {
   display: flex;
   align-items: center;
@@ -1009,6 +1018,8 @@
   .input { padding: 9px 11px; margin-bottom: 6px; }
   .input input { font-size: 13px; }
   .loginOptions { margin-bottom: 8px; font-size: 11px; }
+  /* Perkecil widget reCAPTCHA (lebar tetap 304px) agar muat di layar sempit */
+  .captchaWrapper { transform: scale(0.9); transform-origin: center; margin-bottom: 8px; min-height: 70px; }
   .button { padding: 10px; font-size: 13px; }
   .noteText { font-size: 9px; margin-top: 6px; }
 

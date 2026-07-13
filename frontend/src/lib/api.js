@@ -92,7 +92,7 @@ const MOCK_PROFILE = {
   created_at: "2026-01-01T00:00:00.000Z",
 };
 
-export async function login(username, password) {
+export async function login(username, password, captchaToken = "") {
   if (!API_URL) {
     _mockMode = true;
     if (username === "admin" && password === "admin123") return { ok: true };
@@ -101,7 +101,7 @@ export async function login(username, password) {
   try {
     const res = await apiFetch("/api/auth/login", {
       method: "POST",
-      body: JSON.stringify({ username, password }),
+      body: JSON.stringify({ username, password, captchaToken }),
     });
     const data = await res.json();
     if (res.ok) { _mockMode = false; return { ok: true }; }
@@ -216,7 +216,7 @@ const MOCK_MAHASISWA_PROFILE = {
   created_at: "2026-01-01T00:00:00.000Z",
 };
 
-export async function loginMahasiswa(nim, password) {
+export async function loginMahasiswa(nim, password, captchaToken = "") {
   if (!API_URL) {
     _mockMode = true;
     if (password === "mhs123") return { ok: true };
@@ -225,7 +225,7 @@ export async function loginMahasiswa(nim, password) {
   try {
     const res = await apiFetch("/api/mahasiswa/auth/login", {
       method: "POST",
-      body: JSON.stringify({ nim, password }),
+      body: JSON.stringify({ nim, password, captchaToken }),
     });
     const data = await res.json();
     if (res.ok) { _mockMode = false; return { ok: true }; }

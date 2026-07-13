@@ -11,6 +11,9 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { login, loginMahasiswa, isMockMode } from "@/lib/api";
+import Recaptcha from "@/components/Recaptcha";
+
+const RECAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
 
 // ── Toast Notification ────────────────────────────────────────
 function Toast({ message, onClose }) {
@@ -68,6 +71,8 @@ export default function Home() {
   const [loadingLogin, setLoadingLogin] = useState(false);
   const [message, setMessage] = useState("");
   const [shake, setShake] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState("");
+  const captchaRef = useRef(null);
 
   const triggerError = (msg) => {
     setMessage(msg);
@@ -80,6 +85,11 @@ export default function Home() {
   // ── handleLogin ───────────────────────────────────────────
   const handleLogin = useCallback(async () => {
     clearError();
+    // Wajib centang captcha dulu (hanya bila captcha diaktifkan / site key ada)
+    if (RECAPTCHA_SITE_KEY && !captchaToken) {
+      triggerError('Silakan verifikasi captcha "Saya bukan robot" terlebih dahulu.');
+      return;
+    }
     setLoadingLogin(true);
     try {
       const input = username.trim();
@@ -96,7 +106,7 @@ export default function Home() {
       };
 
       const tryMahasiswa = async () => {
-        const r = await loginMahasiswa(input, password);
+        const r = await loginMahasiswa(input, password, captchaToken);
         if (r.ok) {
           if (isMockMode()) setShowDemo(true);
           window.location.href = "/mahasiswa/dashboard";
@@ -106,7 +116,7 @@ export default function Home() {
         return false;
       };
       const tryAdmin = async () => {
-        const r = await login(input, password);
+        const r = await login(input, password, captchaToken);
         if (r.ok) {
           if (isMockMode()) setShowDemo(true);
           window.location.href = "/admin/dashboard";
@@ -123,11 +133,13 @@ export default function Home() {
       if (!ok) {
         triggerError(rateLimitedMsg || "Login gagal. Periksa username/NIM dan password Anda.");
         if (isMockMode()) setShowDemo(true);
+        // Token reCAPTCHA sekali pakai → minta centang ulang untuk percobaan berikutnya
+        captchaRef.current?.reset();
       }
     } finally {
       setLoadingLogin(false);
     }
-  }, [username, password]);
+  }, [username, password, captchaToken]);
 
   // ── FIX UTAMA: slides sebagai const biasa (bukan useMemo) ─
   // useMemo dengan [] membuat slides hanya dibuat SEKALI saat
@@ -189,6 +201,16 @@ export default function Home() {
               </label>
               <a href="/lupa-password" className={styles.forgotPassword}>Lupa password?</a>
             </div>
+
+            {RECAPTCHA_SITE_KEY && (
+              <div className={styles.captchaWrapper}>
+                <Recaptcha
+                  ref={captchaRef}
+                  siteKey={RECAPTCHA_SITE_KEY}
+                  onChange={setCaptchaToken}
+                />
+              </div>
+            )}
 
             <button
               type="submit"
