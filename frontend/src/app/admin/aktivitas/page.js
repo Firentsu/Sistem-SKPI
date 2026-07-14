@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { getAktivitasList, verifikasiAktivitas, getUploadUrl } from "@/lib/api";
 import styles from "./aktivitas.module.css";
+import AktivitasStatusChart from "@/components/AktivitasStatusChart";
 
 /* ── KONSTANTA ── */
 const STATUS_CFG = {
@@ -328,6 +329,15 @@ export default function AktivitasPage() {
     revisi:    rows.filter(r => r.status_verifikasi === "revisi").length,
   };
 
+  // Data untuk grafik status. Warna = warna status resmi aplikasi (versi pekat
+  // yang dipakai stat cards, kontras baik & lolos cek keterbacaan warna).
+  const statusChartData = [
+    { key: "diproses",  label: "Diproses",  value: stats.diproses,  color: "#d97706" },
+    { key: "disetujui", label: "Disetujui", value: stats.disetujui, color: "#16a34a" },
+    { key: "revisi",    label: "Revisi",    value: stats.revisi,    color: "#7c3aed" },
+    { key: "ditolak",   label: "Ditolak",   value: stats.ditolak,   color: "#dc2626" },
+  ];
+
   const safePage = Math.min(page, totalPages);
 
   return (
@@ -368,6 +378,9 @@ export default function AktivitasPage() {
           );
         })}
       </div>
+
+      {/* Grafik distribusi status */}
+      <AktivitasStatusChart data={statusChartData} accent="#765439" />
 
       {/* Toolbar: search + filter */}
       <div className={styles.toolbar}>

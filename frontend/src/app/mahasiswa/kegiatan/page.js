@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import styles from "./kegiatan.module.css";
 import pStyles from "../pengajuan/pengajuan.module.css";
+import KegiatanKategoriChart from "@/components/KegiatanKategoriChart";
 import {
   getMahasiswaKegiatan,
   deleteKegiatan,
@@ -470,6 +471,13 @@ export default function KegiatanPage() {
               <span className={styles.statLabel}>Kategori SKPI Terisi</span>
             </div>
           </div>
+
+          {/* ═══ GRAFIK PER KATEGORI SKPI ═══ */}
+          <KegiatanKategoriChart
+            kegiatan={kegiatan}
+            categories={KATEGORI_SKPI_MAHASISWA}
+            color={prodiConfig.primary}
+          />
 
           {/* ═══ FILTER BAR ═══ */}
           <div className={styles.filterBar}>
