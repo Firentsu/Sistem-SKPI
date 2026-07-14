@@ -24,5 +24,8 @@ export const syncMahasiswa = () => call("/api/sicp-sync/mahasiswa", "POST");
 /** Tarik & simpan total poin ICP dari SICP (dicocokkan berdasarkan NIM). */
 export const syncIcp = () => call("/api/sicp-sync/icp", "POST");
 
-/** Sinkron keduanya sekaligus: mahasiswa lalu ICP. */
+/** Sinkron keduanya sekaligus: mahasiswa lalu ICP (per kategori). */
 export const syncAll = () => call("/api/sicp-sync/both", "POST");
+
+/** Bersihkan mahasiswa duplikat (NIM sama) yang kosong. Tidak menghubungi SICP. */
+export const cleanupDuplicates = () => call("/api/sicp-sync/cleanup-duplicates", "POST");

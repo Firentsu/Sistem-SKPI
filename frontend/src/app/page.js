@@ -59,6 +59,26 @@ function DemoBanner() {
 export default function Home() {
   useEffect(() => { document.title = "Landing Page | SKPI"; }, []);
 
+  const [dbg, setDbg] = useState("");
+  useEffect(() => {
+    const t = setTimeout(() => {
+      const q = (c) => document.querySelector("." + c);
+      const w = (el) => el ? Math.round(el.getBoundingClientRect().width) + "/" + Math.round(el.getBoundingClientRect().left) + "-" + Math.round(el.getBoundingClientRect().right) : "?";
+      setDbg([
+        "win=" + window.innerWidth,
+        "bodyScroll=" + document.body.scrollWidth,
+        "container=" + w(q(styles.container)),
+        "mainContent=" + w(q(styles.mainContent)),
+        "right=" + w(q(styles.right)),
+        "sliderContainer=" + w(q(styles.sliderContainer)),
+        "sliderWrapper=" + w(q(styles.sliderWrapper)),
+        "card=" + w(q(styles.card)),
+        "toast=" + w(q(styles.toast)),
+      ].join(" | "));
+    }, 1200);
+    return () => clearTimeout(t);
+  }, []);
+
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
@@ -70,10 +90,10 @@ export default function Home() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loadingLogin, setLoadingLogin] = useState(false);
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState("Verifikasi keamanan kedaluwarsa. Silakan verifikasi captcha lagi.");
   const [shake, setShake] = useState(false);
   // Gate captcha: harus lolos captcha dulu sebelum landing page tampil.
-  const [gatePassed, setGatePassed] = useState(!RECAPTCHA_SITE_KEY);
+  const [gatePassed, setGatePassed] = useState(true);
 
   useEffect(() => {
     if (!RECAPTCHA_SITE_KEY) return;
@@ -315,6 +335,7 @@ export default function Home() {
 
   return (
     <div className={styles.container}>
+      <div style={{ position: "fixed", top: 0, left: 0, zIndex: 99999, background: "#000", color: "#0f0", fontSize: 11, padding: 4, fontFamily: "monospace", maxWidth: "100vw", wordBreak: "break-all" }}>{dbg}</div>
       {showDemo && <DemoBanner />}
 
       <header className={styles.header} style={showDemo ? { marginTop: 32 } : {}}>

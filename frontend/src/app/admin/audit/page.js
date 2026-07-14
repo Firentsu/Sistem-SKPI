@@ -135,6 +135,34 @@ const KUESIONER_SKALA = [
   { skor: 4, label: "Terukur",   desc: "Dilakukan, terdokumentasi, dan dievaluasi" },
 ];
 
+// ============================================================
+//  REKAP JAWABAN KUESIONER (DATA PRIMER — HASIL PENGISIAN)
+//  Sumber: Google Form "Kuesioner Audit Sistem SKPI —
+//  COBIT 2019 Domain BAI". Skor tiap butir mengikuti skala
+//  1-4 di atas. Untuk responden > 1, tambahkan skor tiap
+//  responden ke array butir terkait; nilai akan dirata-rata
+//  secara otomatis.
+// ============================================================
+const KUESIONER_RESPONDEN = [
+  { nama: "Angela Eva Permanda", jabatan: "Staff", unit: "PROA", tanggal: "14 Juli 2026" },
+];
+
+// Skor per butir (K1-K12), selaras dengan properti `k` pada PROCESSES.
+const KUESIONER_JAWABAN = {
+  // BAI02 — Pengelolaan Definisi Kebutuhan
+  K1: [4], K2: [4], K3: [3], K4: [4],
+  // BAI03 — Pengelolaan Identifikasi & Pembangunan Solusi
+  K5: [4], K6: [4], K7: [4], K8: [4],
+  // BAI07 — Pengelolaan Penerimaan Perubahan & Transisi TI
+  K9: [4], K10: [4], K11: [3], K12: [4],
+};
+
+// Masukan terbuka (isian bebas) dari responden.
+const KUESIONER_MASUKAN = {
+  kendala: [], // "Kendala atau kekurangan..." — belum ada jawaban
+  saran: ["Dokumen SKPI diperbaiki di bagian tanggalnya."],
+};
+
 const STORAGE_KEY = "cobit-audit-skpi-bai-v2";
 
 // ── Bangun peta level default dari data ──────────────────────
@@ -147,6 +175,17 @@ function buildDefaultLevels() {
 // ── Warna berdasarkan level ──────────────────────────────────
 function levelColor(level) {
   return CAPABILITY_LEVELS[Math.max(0, Math.min(5, Math.round(level)))].color;
+}
+
+// ── Pemetaan rata-rata skor kuesioner (1-4) ke level kapabilitas ──
+//    1,0-1,4 → L1 | 1,5-2,4 → L2 | 2,5-3,4 → L3 | 3,5-4,0 → L4
+function skorKeLevel(avg) {
+  if (avg == null) return null;
+  if (avg >= 3.5) return 4;
+  if (avg >= 2.5) return 3;
+  if (avg >= 1.5) return 2;
+  if (avg >= 1.0) return 1;
+  return 0;
 }
 
 // ============================================================
@@ -213,6 +252,27 @@ export default function AuditPage() {
     })),
     [processScores]
   );
+
+  // ── Rekap skor kuesioner: rata-rata per butir & per proses ──
+  const kuesioner = useMemo(() => {
+    const butir = {};
+    Object.entries(KUESIONER_JAWABAN).forEach(([k, arr]) => {
+      butir[k] = arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : null;
+    });
+    const perProses = PROCESSES.map((p) => {
+      const vals = p.practices.map((pr) => butir[pr.k]).filter((v) => v != null);
+      const avg = vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
+      const assessed = processScores.find((s) => s.id === p.id)?.avg ?? null;
+      return {
+        id: p.id,
+        title: p.title,
+        avg,
+        level: skorKeLevel(avg),
+        assessedLevel: assessed != null ? Math.round(assessed) : null,
+      };
+    });
+    return { butir, perProses };
+  }, [processScores]);
 
   return (
     <div className={styles.container}>
@@ -481,6 +541,130 @@ export default function AuditPage() {
         </div>
       </div>
 
+      {/* ══════════ REKAP JAWABAN KUESIONER (HASIL) ══════════ */}
+      <div className={styles.sectionTitle}>Rekap Jawaban Kuesioner (Hasil Pengisian)</div>
+      <div className={styles.procCard}>
+        <div className={styles.procBody}>
+          <p className={styles.procPurpose}>
+            <Info size={14} />
+            <span>
+              Rekapitulasi jawaban responden atas kuesioner audit COBIT 2019 Domain BAI.
+              Skor tiap butir (skala 1–4) dipetakan ke level kapabilitas sebagai{" "}
+              <strong>data primer pembanding (triangulasi)</strong> terhadap hasil observasi.
+              Rekap ini bersifat pembanding dan <strong>tidak mengubah</strong> level penilaian
+              auditor pada rincian di atas.
+            </span>
+          </p>
+
+          {/* Identitas responden */}
+          <div className={styles.kuesRespondenBar}>
+            <span className={styles.kuesCount}>
+              <Users size={13} /> {KUESIONER_RESPONDEN.length} Responden
+            </span>
+            {KUESIONER_RESPONDEN.map((r, i) => (
+              <span key={i} className={styles.respondenChip}>
+                <strong>{r.nama}</strong>
+                <small>{r.jabatan} · {r.unit} · {r.tanggal}</small>
+              </span>
+            ))}
+          </div>
+
+          {/* Tabel skor per butir */}
+          <div className={styles.tableWrap}>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th className={styles.colId}>Butir</th>
+                  <th>Pertanyaan (praktik yang dinilai)</th>
+                  <th className={styles.colId}>Proses</th>
+                  <th className={styles.colLevelSkor}>Skor (1–4)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {PROCESSES.map((p) =>
+                  p.practices.map((pr) => {
+                    const skor = kuesioner.butir[pr.k];
+                    return (
+                      <tr key={pr.k}>
+                        <td className={styles.colId}><code>{pr.k}</code></td>
+                        <td>{pr.name}</td>
+                        <td className={styles.colId}>
+                          <span className={styles.procTag}>{p.id}</span>
+                        </td>
+                        <td className={styles.colLevelSkor}>
+                          {skor != null ? (
+                            <span
+                              className={styles.skorBadge}
+                              style={{ background: levelColor(skorKeLevel(skor)) }}
+                              title={`Setara Level ${skorKeLevel(skor)}`}
+                            >
+                              {Number.isInteger(skor) ? skor : skor.toFixed(2)}
+                            </span>
+                          ) : (
+                            <span className={styles.skorEmpty}>—</span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Ringkasan per proses: skor kuesioner vs level penilaian auditor */}
+          <div className={styles.kuesProcRow}>
+            {kuesioner.perProses.map((s) => (
+              <div key={s.id} className={styles.kuesProcCard}>
+                <div className={styles.kuesProcHead}>
+                  <span className={styles.procSummaryId}>{s.id}</span>
+                  <span className={styles.kuesProcAvg} style={{ color: levelColor(s.level ?? 0) }}>
+                    {s.avg != null ? s.avg.toFixed(2) : "—"}
+                  </span>
+                </div>
+                <div className={styles.procSummaryTitle}>{s.title}</div>
+                <div className={styles.kuesLevelCompare}>
+                  <span className={styles.kuesLevelPill} style={{ background: levelColor(s.level ?? 0) }}>
+                    Kuesioner: L{s.level}
+                  </span>
+                  <span className={styles.kuesLevelPillGhost}>
+                    Penilaian auditor: L{s.assessedLevel}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Masukan terbuka */}
+          <div className={styles.frGrid} style={{ marginTop: 18 }}>
+            <div className={styles.frCard}>
+              <div className={styles.frTitle} style={{ color: "#b45309" }}>
+                <AlertTriangle size={15} /> Kendala / Kekurangan
+              </div>
+              {KUESIONER_MASUKAN.kendala.length ? (
+                <ul className={styles.frList}>
+                  {KUESIONER_MASUKAN.kendala.map((k, i) => <li key={i}>{k}</li>)}
+                </ul>
+              ) : (
+                <p className={styles.kuesEmptyNote}>Belum ada jawaban untuk pertanyaan ini.</p>
+              )}
+            </div>
+            <div className={styles.frCard}>
+              <div className={styles.frTitle} style={{ color: "#15803d" }}>
+                <Lightbulb size={15} /> Saran Perbaikan / Pengembangan
+              </div>
+              {KUESIONER_MASUKAN.saran.length ? (
+                <ul className={styles.frList}>
+                  {KUESIONER_MASUKAN.saran.map((s, i) => <li key={i}>{s}</li>)}
+                </ul>
+              ) : (
+                <p className={styles.kuesEmptyNote}>Belum ada jawaban untuk pertanyaan ini.</p>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* ══════════ REFERENSI TINGKAT KAPABILITAS ══════════ */}
       <div className={styles.sectionTitle}>Referensi Tingkat Kapabilitas COBIT 2019</div>
       <div className={styles.legendGrid}>
@@ -498,8 +682,9 @@ export default function AuditPage() {
       <p className={styles.footNote}>
         Auditor: {AUDIT_INFO.auditor} · Auditee: {AUDIT_INFO.auditee}.
         Metode: {AUDIT_INFO.metode}.
-        Penilaian awal mengikuti hasil audit pada Laporan Magang (BAI02 Level 3, BAI03 Level 3, BAI07 Level 2)
-        dan dapat diperbarui berdasarkan rekap kuesioner; perubahan tersimpan otomatis di perangkat ini.
+        Penilaian mengikuti hasil audit pada Laporan Magang (BAI02 Level 3, BAI03 Level 3, BAI07 Level 2).
+        Rekap jawaban kuesioner ditampilkan sebagai data primer pembanding (triangulasi) dan tidak mengubah
+        level penilaian auditor; level dapat disesuaikan manual dan perubahan tersimpan otomatis di perangkat ini.
         Skala mengacu pada model kapabilitas proses COBIT 2019 (Level 0 – 5).
       </p>
     </div>

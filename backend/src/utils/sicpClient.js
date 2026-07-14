@@ -119,12 +119,17 @@ async function sicpGet(path, { retryOn401 = true } = {}) {
  * Ambil daftar mahasiswa + total ICP sekaligus dari ranking saldo SICP.
  * Item response SICP: { mahasiswa_id, nama, username, jurusan_id, nama_jurusan, total_icp }
  * → dipetakan ke bentuk netral yang dipakai proses sinkronisasi SKPI.
+ *
+ * Di-DEDUP berdasarkan NIM (username) — bila SICP mengembalikan lebih dari satu
+ * baris untuk NIM yang sama (mis. beberapa data mahasiswa berbagi 1 akun),
+ * hanya SATU yang diambil (total ICP tertinggi) agar tidak dobel di SKPI.
  */
 export async function fetchStudentsWithIcp() {
   const data = await sicpGet(`/icp/balance/ranking?limit=${RANKING_LIMIT}`);
   const rows = Array.isArray(data) ? data : (data?.ranking || []);
-  return rows
+  const mapped = rows
     .map(r => ({
+      sicp_id:      r.mahasiswa_id ?? r.id ?? r.mahasiswaId ?? null,
       nim:          String(r.username ?? r.nim ?? r.user_id ?? "").trim(),
       nama:         String(r.nama ?? r.name ?? r.full_name ?? "").trim(),
       nama_jurusan: r.nama_jurusan ?? r.jurusan ?? null,
@@ -132,6 +137,29 @@ export async function fetchStudentsWithIcp() {
       total_icp:    Number(r.total_icp ?? r.total_poin ?? r.balance ?? r.poin ?? 0) || 0,
     }))
     .filter(r => r.nim);
+
+  const byNim = new Map();
+  for (const s of mapped) {
+    const prev = byNim.get(s.nim);
+    if (!prev || (s.total_icp || 0) > (prev.total_icp || 0)) byNim.set(s.nim, s);
+  }
+  return [...byNim.values()];
+}
+
+/**
+ * Ambil rincian saldo ICP PER KATEGORI untuk satu mahasiswa SICP.
+ * Endpoint SICP (khusus SKPI): GET /icp/balance/by-category/:mahasiswaId
+ * Response item: { kategori_id, kategori, total }  (selalu 6 kategori).
+ */
+export async function fetchIcpByCategory(sicpMahasiswaId) {
+  if (!sicpMahasiswaId) return [];
+  const data = await sicpGet(`/icp/balance/by-category/${sicpMahasiswaId}`);
+  const rows = Array.isArray(data) ? data : (data?.categories || data?.rows || data?.kategori || []);
+  return rows.map(r => ({
+    kategori_id: r.kategori_id ?? r.id ?? null,
+    kategori:    String(r.kategori ?? r.nama_kategori ?? r.nama ?? "").trim(),
+    total:       Number(r.total ?? r.total_icp ?? r.total_poin ?? r.point ?? 0) || 0,
+  }));
 }
 
 /** Cek koneksi + auth ke SICP dan berapa baris data yang terbaca. */

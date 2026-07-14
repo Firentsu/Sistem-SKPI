@@ -10,7 +10,7 @@ import {
   GraduationCap, Filter, MoreVertical,
   Eye, EyeOff, RefreshCw, CheckCircle2,
   TrendingUp, UserCheck, ChevronDown, Loader2,
-  FileText, PieChart as PieChartIcon,
+  FileText, PieChart as PieChartIcon, Trash2,
 } from "lucide-react";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import styles from "./page.module.css";
@@ -941,11 +941,13 @@ export default function MahasiswaPage() {
       });
       const data = await res.json();
       if (res.ok) {
-        let msg = 'Sinkronisasi SICP berhasil';
-        if (data.message) msg += ` — ${data.message}`;
-        if (data.mahasiswa) msg += ` | Mahasiswa: ${data.mahasiswa}`;
-        if (data.icp) msg += ` | ICP: ${data.icp}`;
-        toast(msg, 'success');
+        const m = data.mahasiswa || {};
+        const icp = data.icp || {};
+        const parts = [];
+        if (m.created != null || m.updated != null) parts.push(`Mahasiswa +${m.created ?? 0} baru, ${m.updated ?? 0} update`);
+        if (icp.perKategori != null) parts.push(`ICP per-kategori: ${icp.perKategori}`);
+        if (icp.fallbackSplit) parts.push(`ICP dibagi-rata: ${icp.fallbackSplit}`);
+        toast(`Sinkronisasi SICP berhasil${parts.length ? " — " + parts.join(" · ") : ""}`, 'success');
         // Refresh data setelah sync
         loadData(search, filterProdi, 1);
       } else {
@@ -954,6 +956,31 @@ export default function MahasiswaPage() {
     } catch (err) {
       console.error('Sync SICP error:', err);
       toast('Terjadi kesalahan saat sinkronisasi', 'error');
+    }
+  };
+
+  // BERSIHKAN MAHASISWA DUPLIKAT (NIM sama) — hanya baris kosong yang dihapus
+  const handleCleanupDuplicates = async () => {
+    if (!confirm("Bersihkan mahasiswa duplikat (NIM sama)?\n\nHanya baris duplikat KOSONG (tanpa kegiatan/pengajuan/SKPI) yang dihapus. Tindakan ini tidak bisa dibatalkan.")) return;
+    toast("Membersihkan duplikat…", "info");
+    try {
+      const res = await fetch('https://sistem-skpi-production.up.railway.app/api/sicp-sync/cleanup-duplicates', {
+        method: 'POST',
+        credentials: 'include',
+      });
+      const data = await res.json();
+      if (res.ok) {
+        const c = data.cleanup || {};
+        let msg = `Selesai — ${c.removed || 0} duplikat dihapus dari ${c.dupGroups || 0} NIM`;
+        if (c.keptWithData) msg += ` · ${c.keptWithData} dipertahankan (punya data)`;
+        toast(msg, 'success');
+        loadData(search, filterProdi, 1);
+      } else {
+        toast(data.error || 'Gagal membersihkan duplikat', 'error');
+      }
+    } catch (err) {
+      console.error('Cleanup duplikat error:', err);
+      toast('Terjadi kesalahan saat membersihkan duplikat', 'error');
     }
   };
 
@@ -1014,6 +1041,14 @@ export default function MahasiswaPage() {
           }}
         >
           <RefreshCw size={14} /> Sinkronisasi SICP
+        </button>
+        <button
+          className={styles.btnOutline}
+          onClick={handleCleanupDuplicates}
+          style={{ borderColor: '#dc2626', color: '#b91c1c', fontWeight: 700 }}
+          title="Hapus mahasiswa duplikat (NIM sama) yang kosong"
+        >
+          <Trash2 size={14} /> Bersihkan Duplikat
         </button>
         <button className={styles.btnPrimary} onClick={() => setModalAdd(true)}>
           <Plus size={15} /> Tambah Mahasiswa

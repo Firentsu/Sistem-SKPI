@@ -13,7 +13,7 @@
 import express from "express";
 import prisma from "../lib/prisma.js";
 import { requireAuth } from "../middleware/auth.js";
-import { fetchStudentsWithIcp, testConnection, isSicpConfigured } from "../utils/sicpClient.js";
+import { fetchStudentsWithIcp, fetchIcpByCategory, testConnection, isSicpConfigured } from "../utils/sicpClient.js";
 
 const router = express.Router();
 
@@ -93,32 +93,129 @@ function splitEven(total, n) {
 }
 
 /**
- * Simpan poin ICP per mahasiswa, DIBAGI RATA ke 6 kategori ISB (id_icp 1..6 =
- * Fisik, Iman, Intelektualitas, Kepribadian, Keterampilan, Moral).
- * SICP saat ini hanya memberi TOTAL, jadi dibagi merata sebagai placeholder —
- * begitu endpoint per-kategori SICP live, ganti bagian ini dengan nilai asli.
+ * Resolver nama kategori ICP SICP → id_icp SKPI, DICOCOKKAN BERDASARKAN NAMA
+ * (bukan ID), karena ID kategori kedua sistem TIDAK selaras. Contoh:
+ *   SICP: 4=MORAL, 5=KEPRIBADIAN, 6=KETERAMPILAN
+ *   SKPI: 4=Kepribadian, 5=Keterampilan, 6=Moral
+ */
+async function buildIcpKategoriResolver() {
+  const cats = await prisma.icpkategori.findMany({ orderBy: { id_icp: "asc" } });
+  const norm = (v) => String(v || "").trim().toUpperCase();
+  const map = {};
+  cats.forEach(c => { map[norm(c.nama_indo)] = c.id_icp; });
+  const allIds = cats.map(c => c.id_icp);
+  const resolve = (nama) => {
+    const n = norm(nama);
+    if (!n) return null;
+    if (map[n] !== undefined) return map[n];
+    // Cocokkan sebagian: "INTELEKTUAL" (SICP) ↔ "INTELEKTUALITAS" (SKPI)
+    const key = Object.keys(map).find(k => k.startsWith(n) || n.startsWith(k) || k.includes(n) || n.includes(k));
+    return key ? map[key] : null;
+  };
+  return { resolve, allIds };
+}
+
+/**
+ * Simpan poin ICP per mahasiswa PER KATEGORI dari SICP.
+ * Untuk tiap mahasiswa, ambil rincian /icp/balance/by-category/:sicp_id lalu
+ * petakan nama kategori → id_icp SKPI. Bila rincian tak tersedia (mis. sicp_id
+ * kosong / endpoint gagal), fallback: total dibagi rata ke semua kategori.
  */
 async function runIcpSync(students) {
-  let updated = 0, notFound = 0;
+  const { resolve: resolveKat, allIds } = await buildIcpKategoriResolver();
+
+  let updated = 0, notFound = 0, perKategori = 0, fallbackSplit = 0;
   const errors = [];
 
-  for (const s of students) {
-    try {
-      const mhs = await prisma.mahasiswa.findFirst({ where: { nim: s.nim } });
-      if (!mhs) { notFound++; continue; }
+  const CONC = 6; // batasi konkurensi panggilan ke SICP + tulis DB
+  for (let i = 0; i < students.length; i += CONC) {
+    const chunk = students.slice(i, i + CONC);
+    await Promise.all(chunk.map(async (s) => {
+      try {
+        const mhs = await prisma.mahasiswa.findFirst({ where: { nim: s.nim } });
+        if (!mhs) { notFound++; return; }
 
-      const parts = splitEven(s.total_icp || 0, 6);
-      // Tulis ulang: hapus baris lama, buat 6 baris (satu per kategori).
-      await prisma.icpmahasiswa.deleteMany({ where: { id_mahasiswa: mhs.id_mahasiswa } });
-      await prisma.icpmahasiswa.createMany({
-        data: parts.map((poin, i) => ({ id_mahasiswa: mhs.id_mahasiswa, id_icp: i + 1, total_poin: poin })),
-      });
-      updated++;
-    } catch (e) {
-      errors.push({ nim: s.nim || "?", error: e.message });
+        let data = null;
+        if (s.sicp_id) {
+          const cats = await fetchIcpByCategory(s.sicp_id).catch(() => null);
+          if (Array.isArray(cats) && cats.length) {
+            const rows = [];
+            for (const c of cats) {
+              const id_icp = resolveKat(c.kategori);
+              if (id_icp != null) rows.push({ id_mahasiswa: mhs.id_mahasiswa, id_icp, total_poin: Math.round(Number(c.total) || 0) });
+            }
+            if (rows.length) data = rows;
+          }
+        }
+
+        if (!data) {
+          const parts = splitEven(s.total_icp || 0, allIds.length);
+          data = allIds.map((id_icp, idx) => ({ id_mahasiswa: mhs.id_mahasiswa, id_icp, total_poin: parts[idx] }));
+          fallbackSplit++;
+        } else {
+          perKategori++;
+        }
+
+        // Tulis ulang: hapus baris lama, buat baris baru per kategori.
+        await prisma.icpmahasiswa.deleteMany({ where: { id_mahasiswa: mhs.id_mahasiswa } });
+        await prisma.icpmahasiswa.createMany({ data });
+        updated++;
+      } catch (e) {
+        errors.push({ nim: s.nim || "?", error: e.message });
+      }
+    }));
+  }
+  return { total: students.length, updated, notFound, perKategori, fallbackSplit, failed: errors.length, errors: errors.slice(0, 20) };
+}
+
+/**
+ * Bersihkan mahasiswa DUPLIKAT (NIM sama). Menyisakan SATU baris per NIM
+ * (id terkecil), lalu menghapus duplikat yang BENAR-BENAR KOSONG (tanpa
+ * kegiatan / pengajuan / SKPI / riwayat) beserta baris ICP-nya. Duplikat yang
+ * sudah punya data TIDAK dihapus (dilaporkan agar bisa ditinjau manual).
+ */
+async function runCleanupDuplicates() {
+  const all = await prisma.mahasiswa.findMany({
+    orderBy: { id_mahasiswa: "asc" },
+    select: { id_mahasiswa: true, nim: true },
+  });
+
+  const groups = new Map();
+  for (const m of all) {
+    const key = (m.nim || "").trim();
+    if (!key) continue;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(m.id_mahasiswa);
+  }
+
+  let dupGroups = 0, removed = 0, keptWithData = 0;
+  const errors = [];
+
+  for (const [nim, ids] of groups) {
+    if (ids.length < 2) continue;
+    dupGroups++;
+    const extras = ids.slice(1); // sisakan id terkecil
+    for (const extraId of extras) {
+      try {
+        const [keg, peng, sk, riw] = await Promise.all([
+          prisma.kegiatanmahasiswa.count({ where: { id_mahasiswa: extraId } }),
+          prisma.pengajuanskpi.count({ where: { id_mahasiswa: extraId } }),
+          prisma.skpi.count({ where: { id_mahasiswa: extraId } }),
+          prisma.riwayatskpi.count({ where: { id_mahasiswa: extraId } }),
+        ]);
+        if (keg + peng + sk + riw === 0) {
+          await prisma.icpmahasiswa.deleteMany({ where: { id_mahasiswa: extraId } });
+          await prisma.mahasiswa.delete({ where: { id_mahasiswa: extraId } });
+          removed++;
+        } else {
+          keptWithData++;
+        }
+      } catch (e) {
+        errors.push({ nim, id: extraId, error: e.message });
+      }
     }
   }
-  return { total: students.length, updated, notFound, failed: errors.length, errors: errors.slice(0, 20) };
+  return { dupGroups, removed, keptWithData, failed: errors.length, errors: errors.slice(0, 20) };
 }
 
 function sicpErrorStatus(err) {
@@ -169,11 +266,23 @@ router.post("/both", requireAuth, async (_req, res) => {
   try {
     const students  = await fetchStudentsWithIcp();
     const mahasiswa = await runMahasiswaSync(students);   // buat/update dulu
-    const icp       = await runIcpSync(students);         // baru isi poin ICP
+    const icp       = await runIcpSync(students);         // baru isi poin ICP per kategori
     return res.json({ success: true, mahasiswa, icp });
   } catch (err) {
     console.error("POST /sicp-sync/both:", err.message);
     return res.status(sicpErrorStatus(err)).json({ error: err.message, code: err.code || "SICP_ERROR" });
+  }
+});
+
+// ── POST /cleanup-duplicates ─────────────────────────────────
+// Hapus mahasiswa duplikat (NIM sama) yang kosong. Tidak menghubungi SICP.
+router.post("/cleanup-duplicates", requireAuth, async (_req, res) => {
+  try {
+    const cleanup = await runCleanupDuplicates();
+    return res.json({ success: true, cleanup });
+  } catch (err) {
+    console.error("POST /sicp-sync/cleanup-duplicates:", err.message);
+    return res.status(500).json({ error: err.message, code: "CLEANUP_ERROR" });
   }
 });
 
