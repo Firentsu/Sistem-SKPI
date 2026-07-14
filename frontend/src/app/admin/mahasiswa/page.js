@@ -191,9 +191,9 @@ function MhsAvatar({ row }) {
 function StatusBadge({ status }) {
   const cfg = {
     Selesai: { cls: styles.badgeSelesai, icon: <CheckCircle2 size={11} /> },
-    Proses:  { cls: styles.badgeProses,  icon: <RefreshCw size={11} /> },
-    Revisi:  { cls: styles.badgeRevisi,  icon: <AlertCircle size={11} /> },
-    Belum:   { cls: styles.badgeBelum,   icon: <AlertCircle size={11} /> },
+    Proses: { cls: styles.badgeProses, icon: <RefreshCw size={11} /> },
+    Revisi: { cls: styles.badgeRevisi, icon: <AlertCircle size={11} /> },
+    Belum: { cls: styles.badgeBelum, icon: <AlertCircle size={11} /> },
   };
   const { cls, icon } = cfg[status] || cfg.Belum;
   return <span className={`${styles.badge} ${cls}`}>{icon}{status}</span>;
@@ -935,16 +935,24 @@ export default function MahasiswaPage() {
   const handleSyncSicp = async () => {
     toast("Sinkronisasi SICP dimulai…", "info");
     try {
-      const res = await fetch('https://sistem-skpi-production.up.railway.app/api/sicp-sync/both', {
+      const res = await fetch('/api/proxy/sicp-sync', {
         method: 'POST',
-        credentials: 'include',
+        credentials: 'include', // kirim cookie sesi
       });
       const data = await res.json();
+
       if (res.ok) {
-        let msg = 'Sinkronisasi SICP berhasil';
-        if (data.message) msg += ` — ${data.message}`;
-        if (data.mahasiswa) msg += ` | Mahasiswa: ${data.mahasiswa}`;
-        if (data.icp) msg += ` | ICP: ${data.icp}`;
+        let msg = '✅ Sinkronisasi SICP berhasil';
+        if (data.mahasiswa) {
+          const m = data.mahasiswa;
+          msg += ` | Mahasiswa: ${m.created} baru, ${m.updated} diperbarui`;
+          if (m.failed > 0) msg += `, ${m.failed} gagal`;
+        }
+        if (data.icp) {
+          const i = data.icp;
+          msg += ` | ICP: ${i.updated} diperbarui`;
+          if (i.notFound > 0) msg += `, ${i.notFound} tidak ditemukan`;
+        }
         toast(msg, 'success');
         // Refresh data setelah sync
         loadData(search, filterProdi, 1);
@@ -974,9 +982,9 @@ export default function MahasiswaPage() {
   );
 
   // Utamakan agregat backend (seluruh mahasiswa); fallback ke hitung per-halaman.
-  const aktifC   = stats?.aktif   ?? data.filter(r => r.aktif).length;
+  const aktifC = stats?.aktif ?? data.filter(r => r.aktif).length;
   const selesaiC = stats?.selesai ?? data.filter(r => r.status_skpi === "Selesai").length;
-  const avgICP   = stats?.avgIcp  ?? (data.length
+  const avgICP = stats?.avgIcp ?? (data.length
     ? Math.round(data.reduce((s, r) => s + (r.total_icp || 0), 0) / data.length) : 0);
   const safePage = currentPage;
   const start = (safePage - 1) * PER_PAGE;
@@ -1202,7 +1210,7 @@ export default function MahasiswaPage() {
               .map((p, i) => p === "…"
                 ? <span key={`d${i}`} className={styles.pDots}>…</span>
                 : <button key={p} className={`${styles.pBtn} ${safePage === p ? styles.pBtnActive : ""}`}
-                    onClick={() => setCurrentPage(p)}>{p}</button>
+                  onClick={() => setCurrentPage(p)}>{p}</button>
               )}
             <button className={styles.pBtn} onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={safePage === totalPages}>
               <ChevronRight size={13} />
