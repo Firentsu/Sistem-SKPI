@@ -41,30 +41,30 @@ const AUDIT_INFO = {
 //  DATA AUDIT — DOMAIN BAI (Build, Acquire and Implement)
 //  Sistem : Sistem SKPI Institut Shanti Bhuana
 //
-//  Catatan penyelarasan dengan Laporan Magang:
-//  - Level default mengikuti hasil audit pada laporan:
-//    BAI02 = Level 3, BAI03 = Level 3, BAI07 = Level 2.
-//  - Setiap proses dinilai melalui 4 praktik yang SEJAJAR dengan
-//    butir kuesioner (K1 - K12) yang dibagikan kepada pihak SISFO,
-//    sehingga rekap kuesioner dapat dipetakan
-//    langsung ke halaman ini.
-//  - Target: BAI02 & BAI03 -> Level 4 (Predictable);
-//    BAI07 -> Level 3 (mengejar gap dokumentasi pengujian
-//    dan penerapan).
+//  Dasar penilaian kapabilitas (HASIL AUDIT = REKAP KUESIONER):
+//  - Level tiap praktik DITURUNKAN dari hasil kuesioner (data
+//    primer) yang selaras dengan butir K1 - K12, sehingga hasil
+//    audit dan rekap kuesioner menjadi SATU acuan yang konsisten
+//    di seluruh grafik, gap, dan rata-rata kapabilitas.
+//  - Hasil kuesioner per proses: BAI02 = 3,75 (Level 4);
+//    BAI03 = 4,00 (Level 4); BAI07 = 3,75 (Level 4).
+//  - Target seluruh proses -> Level 5 (Optimizing) sebagai arah
+//    pengembangan berkelanjutan, sehingga tetap terdapat GAP yang
+//    dapat dianalisis sebagai acuan perkembangan Sistem SKPI.
 // ============================================================
 const PROCESSES = [
   {
     id: "BAI02",
     title: "Pengelolaan Definisi Kebutuhan",
     en: "Managed Requirements Definition",
-    target: 4,
+    target: 5,
     purpose:
       "Memastikan kebutuhan fungsional dan non-fungsional Sistem SKPI diidentifikasi, dianalisis, dan disepakati bersama pemangku kepentingan (Unit SISFO dan pengembang sistem) sehingga solusi yang dibangun sesuai proses bisnis pengelolaan dan penerbitan dokumen SKPI.",
     practices: [
-      { id: "BAI02.01", k: "K1", name: "Kebutuhan fungsional & non-fungsional diidentifikasi bersama pemangku kepentingan (SISFO dan pengembang sistem)", level: 3 },
-      { id: "BAI02.02", k: "K2", name: "Kebutuhan sistem didokumentasikan secara jelas (use case, ERD, daftar kebutuhan)", level: 3 },
+      { id: "BAI02.01", k: "K1", name: "Kebutuhan fungsional & non-fungsional diidentifikasi bersama pemangku kepentingan (SISFO dan pengembang sistem)", level: 4 },
+      { id: "BAI02.02", k: "K2", name: "Kebutuhan sistem didokumentasikan secara jelas (use case, ERD, daftar kebutuhan)", level: 4 },
       { id: "BAI02.03", k: "K3", name: "Fitur yang dibangun sesuai proses bisnis pengelolaan dan penerbitan dokumen SKPI", level: 3 },
-      { id: "BAI02.04", k: "K4", name: "Perubahan kebutuhan selama pengembangan dianalisis dan disepakati sebelum diterapkan", level: 3 },
+      { id: "BAI02.04", k: "K4", name: "Perubahan kebutuhan selama pengembangan dianalisis dan disepakati sebelum diterapkan", level: 4 },
     ],
     findings: [
       "Kebutuhan sistem dikumpulkan melalui observasi dan diskusi dengan pihak SISFO, kemudian didokumentasikan dalam laporan yang mencakup kebutuhan fungsional, non-fungsional, use case, dan ERD.",
@@ -79,14 +79,14 @@ const PROCESSES = [
     id: "BAI03",
     title: "Pengelolaan Identifikasi & Pembangunan Solusi",
     en: "Managed Solutions Identification and Build",
-    target: 4,
+    target: 5,
     purpose:
       "Memastikan solusi backend Sistem SKPI (RESTful API berbasis Express.js dengan Prisma ORM dan MySQL) dirancang, dikembangkan, dan diuji sesuai rancangan agar andal, modular, dan mudah dipelihara.",
     practices: [
-      { id: "BAI03.01", k: "K5", name: "Sistem dibangun sesuai rancangan yang disepakati (arsitektur, ERD, use case)", level: 3 },
-      { id: "BAI03.03", k: "K6", name: "Perubahan kode & basis data terkelola (version control GitHub, migrasi Prisma tercatat)", level: 3 },
-      { id: "BAI03.05", k: "K7", name: "Fitur utama berfungsi sesuai kebutuhan (data master, kegiatan & bukti, poin ICP dari SICP, generate SKPI per prodi, notifikasi realtime)", level: 3 },
-      { id: "BAI03.08", k: "K8", name: "Keamanan aplikasi diterapkan (autentikasi session, kontrol akses per peran, validasi masukan & unggahan)", level: 3 },
+      { id: "BAI03.01", k: "K5", name: "Sistem dibangun sesuai rancangan yang disepakati (arsitektur, ERD, use case)", level: 4 },
+      { id: "BAI03.03", k: "K6", name: "Perubahan kode & basis data terkelola (version control GitHub, migrasi Prisma tercatat)", level: 4 },
+      { id: "BAI03.05", k: "K7", name: "Fitur utama berfungsi sesuai kebutuhan (data master, kegiatan & bukti, poin ICP dari SICP, generate SKPI per prodi, notifikasi realtime)", level: 4 },
+      { id: "BAI03.08", k: "K8", name: "Keamanan aplikasi diterapkan (autentikasi session, kontrol akses per peran, validasi masukan & unggahan)", level: 4 },
     ],
     findings: [
       "Layanan API dibangun secara modular menggunakan Express.js dan Prisma; endpoint utama, fitur generate dokumen SKPI (.docx) per program studi, notifikasi realtime (SSE), dan migrasi basis data yang terkelola telah berjalan sesuai kebutuhan.",
@@ -101,14 +101,14 @@ const PROCESSES = [
     id: "BAI07",
     title: "Pengelolaan Penerimaan Perubahan & Transisi TI",
     en: "Managed IT Change Acceptance and Transitioning",
-    target: 3,
+    target: 5,
     purpose:
       "Memastikan Sistem SKPI diuji, diterima pengguna, dan dirilis ke lingkungan produksi (frontend pada Vercel, backend pada Railway) secara terkendali sehingga dapat digunakan tanpa gangguan layanan.",
     practices: [
-      { id: "BAI07.01", k: "K9",  name: "Fungsi-fungsi utama sistem diuji terlebih dahulu sebelum digunakan", level: 2 },
-      { id: "BAI07.05", k: "K10", name: "Sistem diterapkan (deploy) ke lingkungan produksi dan dapat diakses secara daring", level: 2 },
-      { id: "BAI07.06", k: "K11", name: "Proses pengujian dan penerapan sistem terdokumentasi dengan baik", level: 2 },
-      { id: "BAI07.08", k: "K12", name: "Sistem yang diterapkan dapat diterima dan digunakan pengguna sesuai kebutuhan", level: 2 },
+      { id: "BAI07.01", k: "K9",  name: "Fungsi-fungsi utama sistem diuji terlebih dahulu sebelum digunakan", level: 4 },
+      { id: "BAI07.05", k: "K10", name: "Sistem diterapkan (deploy) ke lingkungan produksi dan dapat diakses secara daring", level: 4 },
+      { id: "BAI07.06", k: "K11", name: "Proses pengujian dan penerapan sistem terdokumentasi dengan baik", level: 3 },
+      { id: "BAI07.08", k: "K12", name: "Sistem yang diterapkan dapat diterima dan digunakan pengguna sesuai kebutuhan", level: 4 },
     ],
     findings: [
       "Sistem telah diuji secara fungsional dan diterapkan (deploy) ke lingkungan produksi sehingga dapat diakses secara daring.",
@@ -163,7 +163,8 @@ const KUESIONER_MASUKAN = {
   saran: ["Dokumen SKPI diperbaiki di bagian tanggalnya."],
 };
 
-const STORAGE_KEY = "cobit-audit-skpi-bai-v2";
+// v3: level default kini diturunkan dari hasil kuesioner (unified) & target L5.
+const STORAGE_KEY = "cobit-audit-skpi-bai-v3";
 
 // ── Bangun peta level default dari data ──────────────────────
 function buildDefaultLevels() {
@@ -262,17 +263,17 @@ export default function AuditPage() {
     const perProses = PROCESSES.map((p) => {
       const vals = p.practices.map((pr) => butir[pr.k]).filter((v) => v != null);
       const avg = vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
-      const assessed = processScores.find((s) => s.id === p.id)?.avg ?? null;
       return {
         id: p.id,
         title: p.title,
         avg,
         level: skorKeLevel(avg),
-        assessedLevel: assessed != null ? Math.round(assessed) : null,
+        target: p.target,
+        gap: avg != null ? Math.round((p.target - avg) * 100) / 100 : null,
       };
     });
     return { butir, perProses };
-  }, [processScores]);
+  }, []);
 
   return (
     <div className={styles.container}>
@@ -320,7 +321,7 @@ export default function AuditPage() {
           <div className={styles.infoIcon} style={{ background: "#fef2f2", color: "#b91c1c" }}><Target size={18} /></div>
           <div>
             <span className={styles.infoLabel}>Target Kapabilitas</span>
-            <span className={styles.infoValue}>BAI02/03: L4 · BAI07: L3</span>
+            <span className={styles.infoValue}>Semua Proses: L5 (Optimizing)</span>
           </div>
         </div>
         <div className={styles.infoCard}>
@@ -513,8 +514,8 @@ export default function AuditPage() {
             <Info size={14} />
             <span>
               Kuesioner dibagikan kepada pihak <strong>SISFO</strong> sebagai
-              data primer untuk memvalidasi (triangulasi) hasil observasi audit. Butir K1–K12 selaras dengan
-              praktik yang dinilai pada rincian di atas. Pemetaan rata-rata skor ke level kapabilitas:
+              data primer yang menjadi <strong>dasar penilaian kapabilitas</strong> Sistem SKPI. Butir K1–K12
+              selaras dengan praktik yang dinilai pada rincian di atas. Pemetaan rata-rata skor ke level kapabilitas:
               1,0–1,4 → Level 1; 1,5–2,4 → Level 2; 2,5–3,4 → Level 3; 3,5–4,0 → Level 4.
             </span>
           </p>
@@ -549,10 +550,10 @@ export default function AuditPage() {
             <Info size={14} />
             <span>
               Rekapitulasi jawaban responden atas kuesioner audit COBIT 2019 Domain BAI.
-              Skor tiap butir (skala 1–4) dipetakan ke level kapabilitas sebagai{" "}
-              <strong>data primer pembanding (triangulasi)</strong> terhadap hasil observasi.
-              Rekap ini bersifat pembanding dan <strong>tidak mengubah</strong> level penilaian
-              auditor pada rincian di atas.
+              Skor tiap butir (skala 1–4) menjadi <strong>dasar penilaian kapabilitas</strong> pada
+              halaman ini — sehingga hasil audit dan rekap kuesioner <strong>menjadi satu acuan</strong>{" "}
+              yang konsisten. Setiap proses dibandingkan dengan target <strong>Level 5 (Optimizing)</strong>{" "}
+              untuk memperoleh <strong>gap</strong> sebagai acuan pengembangan Sistem SKPI ke depan.
             </span>
           </p>
 
@@ -612,7 +613,7 @@ export default function AuditPage() {
             </table>
           </div>
 
-          {/* Ringkasan per proses: skor kuesioner vs level penilaian auditor */}
+          {/* Ringkasan per proses: kapabilitas (dari kuesioner) vs target & gap */}
           <div className={styles.kuesProcRow}>
             {kuesioner.perProses.map((s) => (
               <div key={s.id} className={styles.kuesProcCard}>
@@ -625,11 +626,16 @@ export default function AuditPage() {
                 <div className={styles.procSummaryTitle}>{s.title}</div>
                 <div className={styles.kuesLevelCompare}>
                   <span className={styles.kuesLevelPill} style={{ background: levelColor(s.level ?? 0) }}>
-                    Kuesioner: L{s.level}
+                    Kapabilitas: L{s.level}
                   </span>
                   <span className={styles.kuesLevelPillGhost}>
-                    Penilaian auditor: L{s.assessedLevel}
+                    Target: L{s.target}
                   </span>
+                  {s.gap != null && (
+                    <span className={styles.kuesGapPill}>
+                      <TrendingUp size={11} /> Gap {s.gap.toFixed(2)}
+                    </span>
+                  )}
                 </div>
               </div>
             ))}
@@ -682,9 +688,11 @@ export default function AuditPage() {
       <p className={styles.footNote}>
         Auditor: {AUDIT_INFO.auditor} · Auditee: {AUDIT_INFO.auditee}.
         Metode: {AUDIT_INFO.metode}.
-        Penilaian mengikuti hasil audit pada Laporan Magang (BAI02 Level 3, BAI03 Level 3, BAI07 Level 2).
-        Rekap jawaban kuesioner ditampilkan sebagai data primer pembanding (triangulasi) dan tidak mengubah
-        level penilaian auditor; level dapat disesuaikan manual dan perubahan tersimpan otomatis di perangkat ini.
+        Level kapabilitas diturunkan dari hasil kuesioner (data primer), sehingga hasil audit dan rekap
+        kuesioner menjadi satu acuan yang konsisten: BAI02 = 3,75 (L4), BAI03 = 4,00 (L4), BAI07 = 3,75 (L4).
+        Target seluruh proses ditetapkan pada Level 5 (Optimizing) sebagai arah pengembangan berkelanjutan,
+        sehingga tetap terdapat gap yang menjadi acuan analisis perkembangan Sistem SKPI. Level dapat
+        disesuaikan manual dan perubahan tersimpan otomatis di perangkat ini.
         Skala mengacu pada model kapabilitas proses COBIT 2019 (Level 0 – 5).
       </p>
     </div>

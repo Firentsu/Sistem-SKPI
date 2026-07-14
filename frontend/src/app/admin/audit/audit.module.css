@@ -979,6 +979,19 @@
   border-radius: 999px;
 }
 
+.kuesGapPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #b45309;
+  background: #fdf4ec;
+  border: 1px solid #f5d9bd;
+  font-size: 11.5px;
+  font-weight: 800;
+  padding: 4px 11px;
+  border-radius: 999px;
+}
+
 .kuesEmptyNote {
   font-size: 12.5px;
   color: #a08b76;
