@@ -1,24 +1,21 @@
 /**
  * recaptcha.js — Verifikasi Google reCAPTCHA (v2 checkbox) di sisi server.
  *
- * Alur:
- *   1. Frontend menampilkan widget "Saya bukan robot" (site key publik).
- *   2. Setelah dicentang, browser mengirim `captchaToken` bersama request login.
- *   3. Backend memanggil Google siteverify memakai SECRET key (rahasia, di .env).
+ * Alur (gerbang/gate captcha SEBELUM landing page):
+ *   1. Saat membuka web, frontend menampilkan layar captcha "Saya bukan robot".
+ *   2. Setelah dicentang, browser mengirim token ke POST /api/captcha/verify.
+ *   3. Backend memverifikasi token ke Google (SECRET key), lalu MENANDAI sesi
+ *      `captchaVerified = true` — tanda ini bertahan selama sesi (cookie) hidup.
+ *   4. Endpoint login memakai `ensureCaptcha`: bila sesi sudah `captchaVerified`,
+ *      login diloloskan; bila belum (mis. hit API langsung tanpa lewat gate),
+ *      login ditolak. Jadi bot tetap wajib melewati captcha.
  *
- * Catatan penting:
- *   - Token reCAPTCHA hanya SEKALI PAKAI. Halaman login SKPI mencoba dua peran
- *     (admin lalu mahasiswa, atau sebaliknya) dengan satu kali centang, jadi
- *     `ensureCaptcha` memverifikasi token SEKALI lalu menandai sesi lolos captcha
- *     untuk jendela singkat — percobaan peran kedua tidak ikut terblokir.
- *   - Bila `RECAPTCHA_SECRET_KEY` tidak diset (mis. dev/demo tanpa captcha),
+ * Catatan:
+ *   - Bila `RECAPTCHA_SECRET_KEY` tidak diset (dev/demo tanpa captcha),
  *     verifikasi otomatis dilewati agar sistem tetap berjalan.
  */
 
 const SITEVERIFY_URL = "https://www.google.com/recaptcha/api/siteverify";
-
-// Jendela "lolos captcha" per sesi (menjembatani percobaan login dua peran).
-const CAPTCHA_PASS_TTL_MS = 3 * 60 * 1000; // 3 menit
 
 /** Panggil Google siteverify untuk satu token. */
 export async function verifyRecaptchaToken(token, remoteip) {
@@ -50,9 +47,29 @@ export async function verifyRecaptchaToken(token, remoteip) {
 }
 
 /**
- * Pastikan request sudah lolos captcha.
- * - Jika sesi sudah lolos captcha dalam jendela singkat → langsung lolos.
- * - Jika belum → verifikasi token ke Google, lalu tandai sesi lolos.
+ * Verifikasi token gate lalu tandai sesi sudah lolos captcha.
+ * Dipakai oleh endpoint POST /api/captcha/verify.
+ *
+ * @returns {{ ok: boolean, error?: string }}
+ */
+export async function verifyCaptchaGate(req, token) {
+  const secret = process.env.RECAPTCHA_SECRET_KEY;
+  if (!secret) {
+    if (req.session) req.session.captchaVerified = true;
+    return { ok: true }; // captcha nonaktif → langsung loloskan
+  }
+
+  const result = await verifyRecaptchaToken(token, req.ip);
+  if (!result.ok) return { ok: false, error: result.error };
+
+  if (req.session) req.session.captchaVerified = true;
+  return { ok: true };
+}
+
+/**
+ * Pastikan request datang dari sesi yang sudah lolos gate captcha.
+ * Dipakai oleh endpoint login (lapisan pertahanan agar API tak bisa di-hit
+ * langsung oleh bot tanpa melewati captcha).
  *
  * @returns {{ ok: boolean, error?: string }}
  */
@@ -60,15 +77,14 @@ export async function ensureCaptcha(req, token) {
   const secret = process.env.RECAPTCHA_SECRET_KEY;
   if (!secret) return { ok: true }; // captcha nonaktif → lewati
 
-  // Sudah lolos captcha baru-baru ini pada sesi ini?
-  if (req.session?.captchaOkUntil && req.session.captchaOkUntil > Date.now()) {
-    return { ok: true };
-  }
+  // Sudah lolos gate captcha pada sesi ini?
+  if (req.session?.captchaVerified) return { ok: true };
 
+  // Fallback: token dikirim langsung bersama login (mis. gate dilewati).
   const result = await verifyRecaptchaToken(token, req.ip);
-  if (!result.ok) return { ok: false, error: result.error };
-
-  // Tandai sesi lolos captcha untuk jendela singkat.
-  if (req.session) req.session.captchaOkUntil = Date.now() + CAPTCHA_PASS_TTL_MS;
+  if (!result.ok) {
+    return { ok: false, error: result.error || "Verifikasi captcha diperlukan." };
+  }
+  if (req.session) req.session.captchaVerified = true;
   return { ok: true };
 }

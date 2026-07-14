@@ -1,0 +1,111 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background:
+    radial-gradient(1200px 600px at 20% -10%, rgba(118, 84, 57, 0.25), transparent 60%),
+    linear-gradient(135deg, #f6efe8 0%, #efe4d8 100%);
+}
+
+.card {
+  width: 100%;
+  max-width: 420px;
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 32px 28px 22px;
+  box-shadow: 0 24px 60px rgba(76, 47, 20, 0.18);
+  text-align: center;
+  animation: rise 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.logoWrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 14px;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: #f2e7da;
+  color: #6b4616;
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #3f2d1c;
+  margin: 0 0 8px;
+}
+
+.subtitle {
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: #7a6a5b;
+  margin: 0 auto 20px;
+  max-width: 320px;
+}
+
+.captchaBox {
+  display: flex;
+  justify-content: center;
+  min-height: 78px;
+}
+
+.status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 14px;
+  font-size: 13px;
+  color: #6b4616;
+  font-weight: 600;
+}
+
+.spinner {
+  width: 15px;
+  height: 15px;
+  border: 2px solid rgba(107, 70, 22, 0.25);
+  border-top-color: #6b4616;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.error {
+  margin-top: 12px;
+  font-size: 13px;
+  color: #c0392b;
+  font-weight: 500;
+}
+
+.footer {
+  margin: 22px 0 0;
+  font-size: 11px;
+  color: #b0a294;
+}
+
+@media (max-width: 480px) {
+  .card { padding: 26px 18px 18px; border-radius: 16px; }
+  .title { font-size: 18px; }
+  .subtitle { font-size: 12.5px; }
+  /* Perkecil widget reCAPTCHA (lebar tetap 304px) agar muat di layar sempit */
+  .captchaBox { transform: scale(0.92); transform-origin: center top; }
+}

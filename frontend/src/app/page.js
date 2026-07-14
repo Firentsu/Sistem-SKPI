@@ -11,9 +11,10 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { login, loginMahasiswa, isMockMode } from "@/lib/api";
-import Recaptcha from "@/components/Recaptcha";
+import CaptchaGate from "@/components/CaptchaGate";
 
 const RECAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
+const GATE_STORAGE_KEY = "skpi_captcha_passed";
 
 // ── Toast Notification ────────────────────────────────────────
 function Toast({ message, onClose }) {
@@ -71,8 +72,20 @@ export default function Home() {
   const [loadingLogin, setLoadingLogin] = useState(false);
   const [message, setMessage] = useState("");
   const [shake, setShake] = useState(false);
-  const [captchaToken, setCaptchaToken] = useState("");
-  const captchaRef = useRef(null);
+  // Gate captcha: harus lolos captcha dulu sebelum landing page tampil.
+  const [gatePassed, setGatePassed] = useState(!RECAPTCHA_SITE_KEY);
+
+  useEffect(() => {
+    if (!RECAPTCHA_SITE_KEY) return;
+    try {
+      if (sessionStorage.getItem(GATE_STORAGE_KEY) === "1") setGatePassed(true);
+    } catch { /* sessionStorage tak tersedia */ }
+  }, []);
+
+  const handleGateVerified = useCallback(() => {
+    try { sessionStorage.setItem(GATE_STORAGE_KEY, "1"); } catch { /* noop */ }
+    setGatePassed(true);
+  }, []);
 
   const triggerError = (msg) => {
     setMessage(msg);
@@ -85,11 +98,6 @@ export default function Home() {
   // ── handleLogin ───────────────────────────────────────────
   const handleLogin = useCallback(async () => {
     clearError();
-    // Wajib centang captcha dulu (hanya bila captcha diaktifkan / site key ada)
-    if (RECAPTCHA_SITE_KEY && !captchaToken) {
-      triggerError('Silakan verifikasi captcha "Saya bukan robot" terlebih dahulu.');
-      return;
-    }
     setLoadingLogin(true);
     try {
       const input = username.trim();
@@ -99,14 +107,17 @@ export default function Home() {
       const isNumeric = /^\d+$/.test(input);
 
       // Simpan pesan rate limit (429) bila muncul, agar ditampilkan
-      // menggantikan pesan generik "Login gagal".
+      // menggantikan pesan generik "Login gagal". Juga tangkap error captcha
+      // agar bisa menampilkan gate captcha lagi bila sesi kadaluarsa.
       let rateLimitedMsg = "";
+      let captchaMsg = "";
       const record = (r) => {
         if (r.rateLimited && !rateLimitedMsg) rateLimitedMsg = r.error;
+        if (r.error && /captcha/i.test(r.error) && !captchaMsg) captchaMsg = r.error;
       };
 
       const tryMahasiswa = async () => {
-        const r = await loginMahasiswa(input, password, captchaToken);
+        const r = await loginMahasiswa(input, password);
         if (r.ok) {
           if (isMockMode()) setShowDemo(true);
           window.location.href = "/mahasiswa/dashboard";
@@ -116,7 +127,7 @@ export default function Home() {
         return false;
       };
       const tryAdmin = async () => {
-        const r = await login(input, password, captchaToken);
+        const r = await login(input, password);
         if (r.ok) {
           if (isMockMode()) setShowDemo(true);
           window.location.href = "/admin/dashboard";
@@ -131,15 +142,20 @@ export default function Home() {
         : (await tryAdmin())     || (await tryMahasiswa());
 
       if (!ok) {
-        triggerError(rateLimitedMsg || "Login gagal. Periksa username/NIM dan password Anda.");
+        if (captchaMsg) {
+          // Sesi verifikasi habis → minta lolos gate captcha lagi.
+          try { sessionStorage.removeItem(GATE_STORAGE_KEY); } catch { /* noop */ }
+          setGatePassed(false);
+          triggerError("Verifikasi keamanan kedaluwarsa. Silakan verifikasi captcha lagi.");
+        } else {
+          triggerError(rateLimitedMsg || "Login gagal. Periksa username/NIM dan password Anda.");
+        }
         if (isMockMode()) setShowDemo(true);
-        // Token reCAPTCHA sekali pakai → minta centang ulang untuk percobaan berikutnya
-        captchaRef.current?.reset();
       }
     } finally {
       setLoadingLogin(false);
     }
-  }, [username, password, captchaToken]);
+  }, [username, password]);
 
   // ── FIX UTAMA: slides sebagai const biasa (bukan useMemo) ─
   // useMemo dengan [] membuat slides hanya dibuat SEKALI saat
@@ -201,16 +217,6 @@ export default function Home() {
               </label>
               <a href="/lupa-password" className={styles.forgotPassword}>Lupa password?</a>
             </div>
-
-            {RECAPTCHA_SITE_KEY && (
-              <div className={styles.captchaWrapper}>
-                <Recaptcha
-                  ref={captchaRef}
-                  siteKey={RECAPTCHA_SITE_KEY}
-                  onChange={setCaptchaToken}
-                />
-              </div>
-            )}
 
             <button
               type="submit"
@@ -301,6 +307,11 @@ export default function Home() {
     }
     setTranslateX(0);
   }, [isDragging, translateX, currentIndex, slides.length]);
+
+  // Gate captcha: tampilkan layar verifikasi dulu sebelum landing page.
+  if (RECAPTCHA_SITE_KEY && !gatePassed) {
+    return <CaptchaGate siteKey={RECAPTCHA_SITE_KEY} onVerified={handleGateVerified} />;
+  }
 
   return (
     <div className={styles.container}>

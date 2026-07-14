@@ -26,6 +26,9 @@ import mahasiswaNotifikasiRoutes   from "./src/routes/mahasiswaNotifikasi.js";
 // -- Routes dokumentasi -------
 import dokumentasiRoutes from "./src/routes/dokumentasi.js";
 
+// -- Routes captcha (gate sebelum landing page) -------
+import captchaRoutes from "./src/routes/captcha.js";
+
 const app  = express();
 const PORT = process.env.PORT || 5000;
 const isProd = process.env.NODE_ENV === "production";
@@ -126,6 +129,9 @@ app.use("/api/mahasiswa",             mahasiswaRoutes);
 
 // Dokumentasi ----------------------------------
 app.use("/api/dokumentasi", dokumentasiRoutes);
+
+// Captcha gate ----------------------------------
+app.use("/api/captcha", captchaRoutes);
 
 // ── Health check ─────────────────────────────────────────────
 app.get("/api/health", (_req, res) => {

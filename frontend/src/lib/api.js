@@ -92,7 +92,26 @@ const MOCK_PROFILE = {
   created_at: "2026-01-01T00:00:00.000Z",
 };
 
-export async function login(username, password, captchaToken = "") {
+/**
+ * Verifikasi gate captcha (dipanggil di layar captcha sebelum landing page).
+ * Menandai sesi backend `captchaVerified` agar login berikutnya diloloskan.
+ */
+export async function verifyCaptcha(token) {
+  if (!API_URL) return { ok: true }; // mode demo / tanpa backend → lewati
+  try {
+    const res = await apiFetch("/api/captcha/verify", {
+      method: "POST",
+      body: JSON.stringify({ captchaToken: token }),
+    });
+    const data = await res.json().catch(() => ({}));
+    return { ok: res.ok, error: data.error };
+  } catch {
+    // Backend tidak bisa dihubungi → jangan kunci pengguna (fail-open).
+    return { ok: true };
+  }
+}
+
+export async function login(username, password) {
   if (!API_URL) {
     _mockMode = true;
     if (username === "admin" && password === "admin123") return { ok: true };
@@ -101,7 +120,7 @@ export async function login(username, password, captchaToken = "") {
   try {
     const res = await apiFetch("/api/auth/login", {
       method: "POST",
-      body: JSON.stringify({ username, password, captchaToken }),
+      body: JSON.stringify({ username, password }),
     });
     const data = await res.json();
     if (res.ok) { _mockMode = false; return { ok: true }; }
@@ -216,7 +235,7 @@ const MOCK_MAHASISWA_PROFILE = {
   created_at: "2026-01-01T00:00:00.000Z",
 };
 
-export async function loginMahasiswa(nim, password, captchaToken = "") {
+export async function loginMahasiswa(nim, password) {
   if (!API_URL) {
     _mockMode = true;
     if (password === "mhs123") return { ok: true };
@@ -225,7 +244,7 @@ export async function loginMahasiswa(nim, password, captchaToken = "") {
   try {
     const res = await apiFetch("/api/mahasiswa/auth/login", {
       method: "POST",
-      body: JSON.stringify({ nim, password, captchaToken }),
+      body: JSON.stringify({ nim, password }),
     });
     const data = await res.json();
     if (res.ok) { _mockMode = false; return { ok: true }; }
