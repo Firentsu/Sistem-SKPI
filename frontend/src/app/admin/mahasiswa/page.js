@@ -935,7 +935,7 @@ export default function MahasiswaPage() {
   const handleSyncSicp = async () => {
     toast("Sinkronisasi SICP dimulai…", "info");
     try {
-      const res = await fetch('http://localhost:5000/api/sicp-sync/both', {
+      const res = await fetch('https://sistem-skpi-production.up.railway.app/api/sicp-sync/both', {
         method: 'POST',
         credentials: 'include',
       });
