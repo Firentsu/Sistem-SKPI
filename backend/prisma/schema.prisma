@@ -276,9 +276,9 @@ model Dokumentasi {
   judul       String    @db.VarChar(191)
   kategori    String    @db.VarChar(50)
   deskripsi   String?   @db.VarChar(500)
-  konten      String?   @db.Text
+  konten      String?   @db.MediumText
   file_url    String?   @db.VarChar(255)
-  diagram_xml String?   @db.Text          // ← untuk menyimpan XML draw.io
+  diagram_xml String?   @db.MediumText     // MEDIUMTEXT (16MB): XML draw.io hasil import bisa >64KB
   created_at  DateTime  @default(now())
   updated_at  DateTime  @updatedAt
 }

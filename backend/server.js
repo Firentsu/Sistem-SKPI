@@ -80,8 +80,11 @@ app.use(cors({
   },
   credentials: true,
 }));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// Limit dinaikkan dari default 100kb → 15mb: diagram draw.io yang di-IMPORT
+// (XML mentah tak-terkompres, kadang menyertakan gambar base64) mudah melewati
+// 100kb sehingga body-parser melempar PayloadTooLargeError → 500.
+app.use(express.json({ limit: "15mb" }));
+app.use(express.urlencoded({ extended: true, limit: "15mb" }));
 app.use(cookieParser());
 
 app.use(session({
@@ -137,6 +140,10 @@ app.use((_req, res) => {
 // ── Global error handler ──────────────────────────────────────
 app.use((err, _req, res, _next) => {
   console.error("❌ Unhandled error:", err);
+  // Body melebihi limit body-parser → beri pesan jelas (bukan 500 generik).
+  if (err?.type === "entity.too.large" || err?.status === 413) {
+    return res.status(413).json({ error: "Data terlalu besar untuk disimpan. Ukuran diagram melebihi batas." });
+  }
   res.status(500).json({ error: "Internal server error" });
 });
 
