@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import styles from "./page.module.css";
 import {
-  getMahasiswaList, getProdiList, getIcpSummary,
+  getMahasiswaList, getProdiList,
   generateSkpi, publishSkpi, getSkpiList,
 } from "@/lib/api";
 import { getProdiConfig } from "@/lib/prodi-config";
@@ -309,9 +309,7 @@ function PreviewModal({ mhs, onClose, onGenerate, onPublish, generating, publish
    HALAMAN UTAMA
 ══════════════════════════════════════════ */
 export default function GenerateSkpiPage() {
-  const [rows,        setRows]        = useState([]);
-  const [total,       setTotal]       = useState(0);
-  const [totalPages,  setTotalPages]  = useState(1);
+  const [allRows,     setAllRows]     = useState([]);
   const [loading,     setLoading]     = useState(true);
   const [page,        setPage]        = useState(1);
   const [search,      setSearch]      = useState("");
@@ -326,7 +324,6 @@ export default function GenerateSkpiPage() {
   const [publishing,  setPublishing]  = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const { toasts, add: toast, remove } = useToast();
-  const searchTimer = useRef(null);
 
   const angkatanList = getAngkatanList();
 
@@ -337,90 +334,76 @@ export default function GenerateSkpiPage() {
     document.title = "Generate SKPI | Admin";
   }, []);
 
+  // Ambil SELURUH mahasiswa (semua halaman) sekali, lalu filter & paginate di
+  // sisi klien. ICP diambil langsung dari `total_icp` tiap baris (formula sama
+  // dengan /icp/summary) agar akurat & selaras dengan halaman Manajemen Mahasiswa.
   useEffect(() => {
     let cancelled = false;
-    const fetchData = async () => {
+    const fetchAll = async () => {
       setLoading(true);
       try {
-        const [mhsRes, icpRes] = await Promise.all([
-          getMahasiswaList({ q: search, prodi: filterProdi, page }),
-          getIcpSummary({ page }),
-        ]);
+        const first = await getMahasiswaList({ page: 1 });
         if (cancelled) return;
 
-        let mergedRows = [];
-        if (mhsRes?.rows?.length) {
-          const icpById = {};
-          (icpRes?.rows || []).forEach(r => { icpById[r.id_mahasiswa] = r; });
-          mergedRows = mhsRes.rows.map(m => ({
-            id_mahasiswa: m.id_mahasiswa,
-            nim: m.nim,
-            nama: m.nama,
-            prodi: m.programstudi?.nama_prodi || "-",
-            angkatan: m.angkatan || "-",
-            status_skpi: m.status_skpi || "belum",
-            total_poin: icpById[m.id_mahasiswa]?.total_poin || 0,
-            detail_icp: icpById[m.id_mahasiswa]?.detail_icp || [],
-            tempat_lahir: m.tempat_lahir, tgl_lahir: m.tgl_lahir, tgl_masuk: m.tanggal_masuk,
-            tgl_lulus: m.tanggal_lulus, nomor_ijazah: m.nomor_ijazah,
-            gelar: m.gelar, gelar_eng: m.gelar_eng,
-          }));
-        } else {
-          mergedRows = MOCK_MAHASISWA.map(m => ({ ...m }));
+        if (!first?.rows?.length) {
+          setAllRows(MOCK_MAHASISWA.map(m => ({ ...m })));
+          return;
         }
 
-        let filtered = mergedRows
-          .filter(m => {
-            if (filterIcp === "Gold")   return m.total_poin >= 200;
-            if (filterIcp === "Silver") return m.total_poin >= 150 && m.total_poin < 200;
-            if (filterIcp === "Bronze") return m.total_poin >= 100 && m.total_poin < 150;
-            if (filterIcp === "Kurang") return m.total_poin < 100;
-            if (filterIcp === "Siap")   return m.total_poin >= 100;
-            return true;
-          })
-          .filter(m => filterStatus === "Semua" || m.status_skpi === filterStatus)
-          .filter(m => filterAngkatan === "Semua" || String(m.angkatan) === String(filterAngkatan))
-          .filter(m => {
-            if (!search) return true;
-            return m.nim.includes(search) || m.nama.toLowerCase().includes(search.toLowerCase());
-          });
+        const pageSize  = first.pageSize || PER_PAGE;
+        const totalMhs  = first.total ?? first.rows.length;
+        const pageCount = Math.ceil(totalMhs / pageSize) || 1;
 
-        setRows(filtered);
-        setTotal(filtered.length);
-        setTotalPages(Math.ceil(filtered.length / PER_PAGE) || 1);
+        let raw = [...first.rows];
+        if (pageCount > 1) {
+          const rest = await Promise.all(
+            Array.from({ length: pageCount - 1 }, (_, i) => getMahasiswaList({ page: i + 2 }))
+          );
+          if (cancelled) return;
+          rest.forEach(r => { if (r?.rows?.length) raw = raw.concat(r.rows); });
+        }
+
+        const mapped = raw.map(m => ({
+          id_mahasiswa: m.id_mahasiswa,
+          nim: m.nim,
+          nama: m.nama,
+          prodi: m.programstudi?.nama_prodi || "-",
+          angkatan: m.angkatan || "-",
+          status_skpi: m.status_skpi || "belum",
+          total_poin: m.total_icp || 0,
+          detail_icp: [],
+          tempat_lahir: m.tempat_lahir, tgl_lahir: m.tgl_lahir, tgl_masuk: m.tanggal_masuk,
+          tgl_lulus: m.tanggal_lulus, nomor_ijazah: m.nomor_ijazah,
+          gelar: m.gelar, gelar_eng: m.gelar_eng,
+        }));
+        setAllRows(mapped);
       } catch (err) {
         if (!cancelled) {
           console.error(err);
-          setRows(MOCK_MAHASISWA);
-          setTotal(MOCK_MAHASISWA.length);
-          setTotalPages(1);
+          setAllRows(MOCK_MAHASISWA.map(m => ({ ...m })));
         }
       } finally {
         if (!cancelled) setLoading(false);
       }
     };
 
-    fetchData();
+    fetchAll();
     return () => { cancelled = true; };
-  }, [search, filterProdi, page, filterIcp, filterStatus, filterAngkatan, refreshTrigger]);
+  }, [refreshTrigger]);
 
   useEffect(() => {
-    if (rows.length === 0) return;
+    if (allRows.length === 0) return;
     getSkpiList({ page: 1 }).then(res => {
       if (!res) return;
       const map = {};
       (res.rows || []).forEach(s => { map[s.id_mahasiswa] = s; });
       setSkpiMap(map);
     });
-  }, [rows]);
+  }, [allRows]);
 
   const handleSearch = val => {
     setSearch(val);
     setPage(1);
-    clearTimeout(searchTimer.current);
-    searchTimer.current = setTimeout(() => {
-      setRefreshTrigger(t => t + 1);
-    }, 400);
   };
 
   const handleGenerate = async () => {
@@ -433,7 +416,7 @@ export default function GenerateSkpiPage() {
     if (res.ok) {
       toast(`SKPI untuk ${preview.nama} berhasil digenerate!`);
       setSkpiMap(prev => ({ ...prev, [preview.id_mahasiswa]: res.data }));
-      setRows(prev => prev.map(r =>
+      setAllRows(prev => prev.map(r =>
         r.id_mahasiswa === preview.id_mahasiswa ? { ...r, status_skpi: "diajukan" } : r
       ));
       setPreview(prev => ({ ...prev, status_skpi: "diajukan" }));
@@ -451,7 +434,7 @@ export default function GenerateSkpiPage() {
     if (res.ok) {
       toast(`SKPI ${preview.nama} berhasil diterbitkan resmi!`);
       setSkpiMap(prev => ({ ...prev, [preview.id_mahasiswa]: { ...skpi, status: "resmi" } }));
-      setRows(prev => prev.map(r =>
+      setAllRows(prev => prev.map(r =>
         r.id_mahasiswa === preview.id_mahasiswa ? { ...r, status_skpi: "diterbitkan" } : r
       ));
     } else {
@@ -459,15 +442,37 @@ export default function GenerateSkpiPage() {
     }
   };
 
+  // ── Filter (client-side) atas SELURUH mahasiswa ──
+  const filteredRows = allRows
+    .filter(m => filterProdi === "Semua" || m.prodi === filterProdi)
+    .filter(m => {
+      if (filterIcp === "Gold")   return m.total_poin >= 200;
+      if (filterIcp === "Silver") return m.total_poin >= 150 && m.total_poin < 200;
+      if (filterIcp === "Bronze") return m.total_poin >= 100 && m.total_poin < 150;
+      if (filterIcp === "Kurang") return m.total_poin < 100;
+      if (filterIcp === "Siap")   return m.total_poin >= 100;
+      return true;
+    })
+    .filter(m => filterStatus === "Semua" || m.status_skpi === filterStatus)
+    .filter(m => filterAngkatan === "Semua" || String(m.angkatan) === String(filterAngkatan))
+    .filter(m => {
+      if (!search) return true;
+      const q = search.toLowerCase();
+      return String(m.nim).includes(search) || m.nama.toLowerCase().includes(q);
+    });
+
   const stats = {
-    total: rows.length,
-    siap:        rows.filter(r => r.total_poin >= 100).length,
-    diterbitkan: rows.filter(r => r.status_skpi === "diterbitkan").length,
-    rataIcp:     rows.length ? Math.round(rows.reduce((s, r) => s + r.total_poin, 0) / rows.length) : 0,
+    total:       filteredRows.length,
+    siap:        filteredRows.filter(r => r.total_poin >= 100).length,
+    diterbitkan: filteredRows.filter(r => r.status_skpi === "diterbitkan").length,
+    rataIcp:     filteredRows.length ? Math.round(filteredRows.reduce((s, r) => s + r.total_poin, 0) / filteredRows.length) : 0,
   };
-  const safePage = Math.min(page, totalPages);
-  const startIndex = (safePage - 1) * PER_PAGE;
-  const paginatedRows = rows.slice(startIndex, startIndex + PER_PAGE);
+
+  const total         = filteredRows.length;
+  const totalPages    = Math.ceil(total / PER_PAGE) || 1;
+  const safePage      = Math.min(page, totalPages);
+  const startIndex    = (safePage - 1) * PER_PAGE;
+  const paginatedRows = filteredRows.slice(startIndex, startIndex + PER_PAGE);
 
   return (
     <div className={styles.container}>
