@@ -96,6 +96,11 @@ router.post("/login", loginIpLimiter, loginAccountLimiter, async (req, res) => {
         req.session.mahasiswaId = mahasiswa.id_mahasiswa;
         req.session.role = "mahasiswa";
 
+        // Pastikan sesi tersimpan sebelum respons (hindari race saat redirect → /me)
+        await new Promise((resolve, reject) =>
+            req.session.save((e) => (e ? reject(e) : resolve()))
+        );
+
         return res.json({
             ok: true,
             nama: mahasiswa.nama,

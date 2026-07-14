@@ -87,6 +87,11 @@ router.post("/login", loginIpLimiter, loginAccountLimiter, async (req, res) => {
     req.session.userId = user.user_id;
     req.session.role = "admin";
 
+    // Pastikan sesi tersimpan sebelum respons (hindari race saat redirect → /me)
+    await new Promise((resolve, reject) =>
+      req.session.save((e) => (e ? reject(e) : resolve()))
+    );
+
     return res.json({ ok: true });
   } catch (err) {
     console.error("POST /auth/login error:", err);
