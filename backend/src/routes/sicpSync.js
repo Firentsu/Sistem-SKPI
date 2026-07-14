@@ -177,4 +177,9 @@ router.post("/both", requireAuth, async (_req, res) => {
   }
 });
 
+// Tambahkan route test publik (tidak butuh login)
+router.get("/test-public", (_req, res) => {
+  res.json({ status: "ok", message: "Proxy berjalan" });
+});
+
 export default router;
