@@ -46,8 +46,8 @@ const AUDIT_INFO = {
 //    primer) yang selaras dengan butir K1 - K12, sehingga hasil
 //    audit dan rekap kuesioner menjadi SATU acuan yang konsisten
 //    di seluruh grafik, gap, dan rata-rata kapabilitas.
-//  - Hasil kuesioner per proses: BAI02 = 3,75 (Level 4);
-//    BAI03 = 4,00 (Level 4); BAI07 = 3,75 (Level 4).
+//  - Hasil kuesioner per proses: BAI02 = 2,75 (Level 3);
+//    BAI03 = 3,25 (Level 3); BAI07 = 2,75 (Level 3).
 //  - Target seluruh proses -> Level 5 (Optimizing) sebagai arah
 //    pengembangan berkelanjutan, sehingga tetap terdapat GAP yang
 //    dapat dianalisis sebagai acuan perkembangan Sistem SKPI.
@@ -61,10 +61,10 @@ const PROCESSES = [
     purpose:
       "Memastikan kebutuhan fungsional dan non-fungsional Sistem SKPI diidentifikasi, dianalisis, dan disepakati bersama pemangku kepentingan (Unit SISFO dan pengembang sistem) sehingga solusi yang dibangun sesuai proses bisnis pengelolaan dan penerbitan dokumen SKPI.",
     practices: [
-      { id: "BAI02.01", k: "K1", name: "Kebutuhan fungsional & non-fungsional diidentifikasi bersama pemangku kepentingan (SISFO dan pengembang sistem)", level: 4 },
-      { id: "BAI02.02", k: "K2", name: "Kebutuhan sistem didokumentasikan secara jelas (use case, ERD, daftar kebutuhan)", level: 4 },
+      { id: "BAI02.01", k: "K1", name: "Kebutuhan fungsional & non-fungsional diidentifikasi bersama pemangku kepentingan (SISFO dan pengembang sistem)", level: 2 },
+      { id: "BAI02.02", k: "K2", name: "Kebutuhan sistem didokumentasikan secara jelas (use case, ERD, daftar kebutuhan)", level: 3 },
       { id: "BAI02.03", k: "K3", name: "Fitur yang dibangun sesuai proses bisnis pengelolaan dan penerbitan dokumen SKPI", level: 3 },
-      { id: "BAI02.04", k: "K4", name: "Perubahan kebutuhan selama pengembangan dianalisis dan disepakati sebelum diterapkan", level: 4 },
+      { id: "BAI02.04", k: "K4", name: "Perubahan kebutuhan selama pengembangan dianalisis dan disepakati sebelum diterapkan", level: 3 },
     ],
     findings: [
       "Kebutuhan sistem dikumpulkan melalui observasi dan diskusi dengan pihak SISFO, kemudian didokumentasikan dalam laporan yang mencakup kebutuhan fungsional, non-fungsional, use case, dan ERD.",
@@ -84,16 +84,16 @@ const PROCESSES = [
       "Memastikan solusi backend Sistem SKPI (RESTful API berbasis Express.js dengan Prisma ORM dan MySQL) dirancang, dikembangkan, dan diuji sesuai rancangan agar andal, modular, dan mudah dipelihara.",
     practices: [
       { id: "BAI03.01", k: "K5", name: "Sistem dibangun sesuai rancangan yang disepakati (arsitektur, ERD, use case)", level: 4 },
-      { id: "BAI03.03", k: "K6", name: "Perubahan kode & basis data terkelola (version control GitHub, migrasi Prisma tercatat)", level: 4 },
-      { id: "BAI03.05", k: "K7", name: "Fitur utama berfungsi sesuai kebutuhan (data master, kegiatan & bukti, poin ICP dari SICP, generate SKPI per prodi, notifikasi realtime)", level: 4 },
+      { id: "BAI03.03", k: "K6", name: "Perubahan kode & basis data terkelola (version control GitHub, migrasi Prisma tercatat)", level: 3 },
+      { id: "BAI03.05", k: "K7", name: "Fitur utama berfungsi sesuai kebutuhan (data master, kegiatan & bukti, poin ICP dari SICP, generate SKPI per prodi, notifikasi realtime)", level: 2 },
       { id: "BAI03.08", k: "K8", name: "Keamanan aplikasi diterapkan (autentikasi session, kontrol akses per peran, validasi masukan & unggahan)", level: 4 },
     ],
     findings: [
       "Layanan API dibangun secara modular menggunakan Express.js dan Prisma; endpoint utama, fitur generate dokumen SKPI (.docx) per program studi, notifikasi realtime (SSE), dan migrasi basis data yang terkelola telah berjalan sesuai kebutuhan.",
-      "Dokumentasi API belum disusun secara lengkap dan formal, sehingga berpotensi menyulitkan pemeliharaan dan pengembangan lanjutan oleh pengembang berikutnya.",
+      "Dokumentasi API telah tersedia dalam bentuk koleksi Postman; penyempurnaan diarahkan pada pembakuannya ke format standar (misalnya OpenAPI/Swagger) agar lebih mudah dipelihara dan diintegrasikan.",
     ],
     recommendations: [
-      "Menyusun dokumentasi API yang lengkap dan terstruktur (misalnya OpenAPI/Swagger) untuk memudahkan pemeliharaan, integrasi, dan pengembangan lanjutan.",
+      "Membakukan dokumentasi API (koleksi Postman) ke format standar seperti OpenAPI/Swagger untuk memudahkan pemeliharaan, integrasi, dan pengembangan lanjutan.",
       "Menambahkan pengujian otomatis (unit/integration test) pada modul kritis seperti autentikasi dan generate dokumen SKPI.",
     ],
   },
@@ -105,10 +105,10 @@ const PROCESSES = [
     purpose:
       "Memastikan Sistem SKPI diuji, diterima pengguna, dan dirilis ke lingkungan produksi (frontend pada Vercel, backend pada Railway) secara terkendali sehingga dapat digunakan tanpa gangguan layanan.",
     practices: [
-      { id: "BAI07.01", k: "K9",  name: "Fungsi-fungsi utama sistem diuji terlebih dahulu sebelum digunakan", level: 4 },
-      { id: "BAI07.05", k: "K10", name: "Sistem diterapkan (deploy) ke lingkungan produksi dan dapat diakses secara daring", level: 4 },
+      { id: "BAI07.01", k: "K9",  name: "Fungsi-fungsi utama sistem diuji terlebih dahulu sebelum digunakan", level: 2 },
+      { id: "BAI07.05", k: "K10", name: "Sistem diterapkan (deploy) ke lingkungan produksi dan dapat diakses secara daring", level: 3 },
       { id: "BAI07.06", k: "K11", name: "Proses pengujian dan penerapan sistem terdokumentasi dengan baik", level: 3 },
-      { id: "BAI07.08", k: "K12", name: "Sistem yang diterapkan dapat diterima dan digunakan pengguna sesuai kebutuhan", level: 4 },
+      { id: "BAI07.08", k: "K12", name: "Sistem yang diterapkan dapat diterima dan digunakan pengguna sesuai kebutuhan", level: 3 },
     ],
     findings: [
       "Sistem telah diuji secara fungsional dan diterapkan (deploy) ke lingkungan produksi sehingga dapat diakses secara daring.",
@@ -116,6 +116,7 @@ const PROCESSES = [
     ],
     recommendations: [
       "Menyusun dokumentasi pengujian dan penerapan sistem secara sistematis sebagai acuan pemeliharaan dan pengembangan di masa mendatang.",
+      "Menyediakan buku panduan penggunaan (user guide) bagi admin dan staf agar sistem lebih mudah diadopsi, sesuai masukan pengguna pada kuesioner.",
       "Mengintegrasikan mekanisme Single Sign-On (SSO) sebagai autentikasi terpusat untuk meningkatkan keamanan dan kemudahan pengelolaan akun.",
     ],
   },
@@ -123,8 +124,9 @@ const PROCESSES = [
 
 // ============================================================
 //  INSTRUMEN KUESIONER (DATA PRIMER)
-//  Dibagikan kepada pihak SISFO sebagai
-//  validasi (triangulasi) hasil observasi.
+//  Dibagikan kepada pihak SISFO sebagai DASAR PENILAIAN
+//  kapabilitas (data primer), diselaraskan dengan observasi
+//  terhadap kode dan sistem.
 //  Skala 1-4, dipetakan ke level kapabilitas:
 //  1,0-1,4 -> L1 | 1,5-2,4 -> L2 | 2,5-3,4 -> L3 | 3,5-4,0 -> L4
 // ============================================================
@@ -144,27 +146,28 @@ const KUESIONER_SKALA = [
 //  secara otomatis.
 // ============================================================
 const KUESIONER_RESPONDEN = [
-  { nama: "Angela Eva Permanda", jabatan: "Staff", unit: "PROA", tanggal: "14 Juli 2026" },
+  { nama: "Anggela Fernanda", jabatan: "Staf Administrasi", unit: "PROA", tanggal: "15 Juli 2026" },
 ];
 
 // Skor per butir (K1-K12), selaras dengan properti `k` pada PROCESSES.
+// Data real hasil pengisian kuesioner (1 responden).
 const KUESIONER_JAWABAN = {
   // BAI02 — Pengelolaan Definisi Kebutuhan
-  K1: [4], K2: [4], K3: [3], K4: [4],
+  K1: [2], K2: [3], K3: [3], K4: [3],
   // BAI03 — Pengelolaan Identifikasi & Pembangunan Solusi
-  K5: [4], K6: [4], K7: [4], K8: [4],
+  K5: [4], K6: [3], K7: [2], K8: [4],
   // BAI07 — Pengelolaan Penerimaan Perubahan & Transisi TI
-  K9: [4], K10: [4], K11: [3], K12: [4],
+  K9: [2], K10: [3], K11: [3], K12: [3],
 };
 
 // Masukan terbuka (isian bebas) dari responden.
 const KUESIONER_MASUKAN = {
-  kendala: [], // "Kendala atau kekurangan..." — belum ada jawaban
-  saran: ["Dokumen SKPI diperbaiki di bagian tanggalnya."],
+  kendala: ["Sistem sudah baik, namun pihak administrasi masih membutuhkan pendampingan dari mahasiswa pengembang mengenai cara penggunaan sistem."],
+  saran: ["Sebaiknya dibuatkan buku panduan penggunaan Sistem SKPI."],
 };
 
-// v3: level default kini diturunkan dari hasil kuesioner (unified) & target L5.
-const STORAGE_KEY = "cobit-audit-skpi-bai-v3";
+// v4: level default diturunkan dari data kuesioner REAL (Anggela Fernanda) — unified & target L5.
+const STORAGE_KEY = "cobit-audit-skpi-bai-v4";
 
 // ── Bangun peta level default dari data ──────────────────────
 function buildDefaultLevels() {
@@ -689,7 +692,7 @@ export default function AuditPage() {
         Auditor: {AUDIT_INFO.auditor} · Auditee: {AUDIT_INFO.auditee}.
         Metode: {AUDIT_INFO.metode}.
         Level kapabilitas diturunkan dari hasil kuesioner (data primer), sehingga hasil audit dan rekap
-        kuesioner menjadi satu acuan yang konsisten: BAI02 = 3,75 (L4), BAI03 = 4,00 (L4), BAI07 = 3,75 (L4).
+        kuesioner menjadi satu acuan yang konsisten: BAI02 = 2,75 (L3), BAI03 = 3,25 (L3), BAI07 = 2,75 (L3).
         Target seluruh proses ditetapkan pada Level 5 (Optimizing) sebagai arah pengembangan berkelanjutan,
         sehingga tetap terdapat gap yang menjadi acuan analisis perkembangan Sistem SKPI. Level dapat
         disesuaikan manual dan perubahan tersimpan otomatis di perangkat ini.

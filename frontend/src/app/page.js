@@ -70,10 +70,10 @@ export default function Home() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loadingLogin, setLoadingLogin] = useState(false);
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState("Verifikasi keamanan kedaluwarsa. Silakan verifikasi captcha lagi.");
   const [shake, setShake] = useState(false);
   // Gate captcha: harus lolos captcha dulu sebelum landing page tampil.
-  const [gatePassed, setGatePassed] = useState(!RECAPTCHA_SITE_KEY);
+  const [gatePassed, setGatePassed] = useState(true);
 
   useEffect(() => {
     if (!RECAPTCHA_SITE_KEY) return;

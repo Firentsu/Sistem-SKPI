@@ -329,8 +329,11 @@
 }
 
 .slide {
-  min-width: 100%;
-  flex-shrink: 0;
+  /* flex-basis 100% mengikat lebar slide ke lebar sliderWrapper (420px),
+     bukan ke lebar konten. Tanpa ini, flex-basis:auto membuat slide melar
+     sesuai max-content (mis. pesan error 1 baris) → card melewati box-nya. */
+  flex: 0 0 100%;
+  min-width: 0;
 }
 
 /* CARD */
@@ -495,6 +498,9 @@
 
 .toastMessage {
   flex: 1;
+  min-width: 0; /* izinkan menyusut di dalam flex agar teks membungkus, bukan meluber */
+  overflow-wrap: anywhere;
+  word-break: break-word;
   font-size: 12px; /* UBAH: ukuran font dikurangi */
   font-weight: 600;
   color: #c53030;
