@@ -10,7 +10,7 @@ import {
   AlertCircle, X, WifiOff,
 } from "lucide-react";
 import Image from "next/image";
-import { login, loginMahasiswa, isMockMode } from "@/lib/api";
+import { login, loginMahasiswa, isMockMode, getCaptchaStatus } from "@/lib/api";
 import CaptchaGate from "@/components/CaptchaGate";
 
 const RECAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
@@ -70,16 +70,28 @@ export default function Home() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loadingLogin, setLoadingLogin] = useState(false);
-  const [message, setMessage] = useState("Verifikasi keamanan kedaluwarsa. Silakan verifikasi captcha lagi.");
+  const [message, setMessage] = useState("");
   const [shake, setShake] = useState(false);
   // Gate captcha: harus lolos captcha dulu sebelum landing page tampil.
   const [gatePassed, setGatePassed] = useState(true);
 
+  // Selaraskan gerbang captcha dengan status SESI di backend (sumber kebenaran).
+  // sessionStorage saja tidak cukup: nilainya bisa "basi" bila sesi backend sudah
+  // kedaluwarsa/berganti, sehingga login pertama gagal captcha (harus login 2x).
+  // Bila backend melaporkan sesi ini BELUM terverifikasi → tampilkan gate dulu
+  // agar sesi ter-tandai captchaVerified SEBELUM login pertama.
   useEffect(() => {
     if (!RECAPTCHA_SITE_KEY) return;
-    try {
-      if (sessionStorage.getItem(GATE_STORAGE_KEY) === "1") setGatePassed(true);
-    } catch { /* sessionStorage tak tersedia */ }
+    getCaptchaStatus()
+      .then(({ enabled, verified }) => {
+        const passed = !enabled || !!verified;
+        setGatePassed(passed);
+        try {
+          if (passed) sessionStorage.setItem(GATE_STORAGE_KEY, "1");
+          else sessionStorage.removeItem(GATE_STORAGE_KEY);
+        } catch { /* sessionStorage tak tersedia */ }
+      })
+      .catch(() => setGatePassed(true)); // backend tak terjangkau → jangan kunci
   }, []);
 
   const handleGateVerified = useCallback(() => {

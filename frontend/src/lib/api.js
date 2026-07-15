@@ -111,6 +111,24 @@ export async function verifyCaptcha(token) {
   }
 }
 
+/**
+ * Cek status gate captcha untuk SESI ini di backend (sumber kebenaran).
+ * Dipakai saat halaman dibuka agar frontend tahu apakah gate captcha masih
+ * perlu ditampilkan — mencegah desync sessionStorage yang bikin login 2x.
+ * @returns {{ enabled: boolean, verified: boolean }}
+ */
+export async function getCaptchaStatus() {
+  if (!API_URL) return { enabled: false, verified: true }; // tanpa backend → lewati
+  try {
+    const res = await apiFetch("/api/captcha/status");
+    if (res.ok) return res.json();
+    return { enabled: false, verified: true };
+  } catch {
+    // Backend tak terjangkau → jangan kunci pengguna (fail-open).
+    return { enabled: false, verified: true };
+  }
+}
+
 export async function login(username, password) {
   if (!API_URL) {
     _mockMode = true;
