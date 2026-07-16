@@ -2,11 +2,10 @@
 
 import { useState, useEffect, useRef, useCallback, useLayoutEffect } from "react";
 import { createPortal } from "react-dom";
-import * as XLSX from "xlsx";
 import {
-  Search, Plus, Upload, Download, Edit2, KeyRound,
+  Search, Plus, Edit2, KeyRound,
   ToggleLeft, ToggleRight, ChevronLeft, ChevronRight,
-  X, Check, AlertCircle, Users, FileSpreadsheet,
+  X, Check, AlertCircle, Users,
   GraduationCap, Filter, MoreVertical,
   Eye, EyeOff, RefreshCw, CheckCircle2,
   TrendingUp, UserCheck, ChevronDown, Loader2,
@@ -20,7 +19,6 @@ import {
   updateMahasiswa,
   resetMahasiswaPassword,
   toggleMahasiswaAkun,
-  importMahasiswaBulk,
   getProdiList,
   getAvatarUrl,
 } from "@/lib/api";
@@ -571,102 +569,6 @@ function ResetPasswordModal({ mahasiswa, onClose, onDone }) {
   );
 }
 
-/* ── MODAL IMPORT EXCEL ── */
-function ImportExcelModal({ onClose, onDone }) {
-  const [file, setFile] = useState(null);
-  const [dragging, setDragging] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const inputRef = useRef(null);
-
-  const handleFile = f => {
-    if (!f) return;
-    const ext = f.name.split(".").pop().toLowerCase();
-    if (!["xlsx", "xls", "csv"].includes(ext)) { setError("Format harus .xlsx, .xls, atau .csv"); return; }
-    if (f.size > 5 * 1024 * 1024) { setError("Ukuran maksimal 5 MB"); return; }
-    setError(""); setFile(f);
-  };
-
-  const handleImport = async () => {
-    if (!file) return;
-    setLoading(true); setError("");
-    try {
-      const data = await file.arrayBuffer();
-      const workbook = XLSX.read(data);
-      const rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
-      if (rows.length === 0) throw new Error("File kosong");
-      const required = ["Nama", "NIM", "Program Studi", "Angkatan", "Email"];
-      const missing = required.filter(col => !(col in rows[0]));
-      if (missing.length) throw new Error(`Kolom tidak lengkap: ${missing.join(", ")}`);
-      const list = rows.map(row => ({
-        nama: row["Nama"], nim: row["NIM"].toString(),
-        id_prodi: row["Program Studi"], angkatan: row["Angkatan"].toString(),
-        email: row["Email"], password: row["Password"] || row["NIM"].toString(),
-      }));
-      await onDone(list);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div className={styles.modalOverlay} onClick={onClose}>
-      <div className={styles.modalBox} onClick={e => e.stopPropagation()}>
-        <div className={styles.modalHeader}>
-          <div className={styles.modalHeaderLeft}>
-            <div className={styles.modalHeaderIcon}><FileSpreadsheet size={16} /></div>
-            <div>
-              <h3 className={styles.modalTitle}>Import Data Excel</h3>
-              <p className={styles.modalSub}>Unggah file .xlsx, .xls, atau .csv</p>
-            </div>
-          </div>
-          <button className={styles.modalCloseBtn} onClick={onClose}><X size={17} /></button>
-        </div>
-        <div className={styles.modalBody}>
-          <div
-            className={`${styles.dropZone} ${dragging ? styles.dropActive : ""} ${file ? styles.dropFilled : ""}`}
-            onDragOver={e => { e.preventDefault(); setDragging(true); }}
-            onDragLeave={() => setDragging(false)}
-            onDrop={e => { e.preventDefault(); setDragging(false); handleFile(e.dataTransfer.files[0]); }}
-            onClick={() => inputRef.current?.click()}
-            role="button" tabIndex={0}
-          >
-            <input type="file" ref={inputRef} hidden accept=".xlsx,.xls,.csv"
-              onChange={e => handleFile(e.target.files[0])} />
-            {file ? (
-              <>
-                <FileSpreadsheet size={32} color="#16a34a" />
-                <p className={styles.dropFileName}>{file.name}</p>
-                <p className={styles.dropFileSize}>{(file.size / 1024).toFixed(1)} KB</p>
-              </>
-            ) : (
-              <>
-                <Upload size={32} />
-                <p>{dragging ? "Lepaskan file di sini" : "Klik atau seret file ke sini"}</p>
-                <small>.xlsx · .xls · .csv — maks. 5 MB</small>
-              </>
-            )}
-          </div>
-          {error && <p className={styles.errMsg}>{error}</p>}
-          <div className={styles.importNote}>
-            <AlertCircle size={13} />
-            <span>Kolom wajib: Nama, NIM, Program Studi, Angkatan, Email. Password opsional (default = NIM).</span>
-          </div>
-        </div>
-        <div className={styles.modalFooter}>
-          <button className={styles.btnGhost} onClick={onClose}>Batal</button>
-          <button className={styles.btnSave} onClick={handleImport} disabled={!file || loading}>
-            {loading ? <span className={styles.spin} /> : <Upload size={15} />}
-            {loading ? "Mengimport…" : "Import Data"}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 /* ── ROW ACTION DROPDOWN ── */
 function RowActions({ row, onEdit, onResetPw, onToggleActive }) {
   const [open, setOpen] = useState(false);
@@ -760,7 +662,6 @@ export default function MahasiswaPage() {
   const [modalAdd, setModalAdd] = useState(false);
   const [modalEdit, setModalEdit] = useState(null);
   const [modalReset, setModalReset] = useState(null);
-  const [modalImport, setModalImport] = useState(false);
   const { toasts, add: toast, remove } = useToast();
 
   const fetchMockProdi = async () => MOCK_PRODI_LIST;
@@ -833,18 +734,6 @@ export default function MahasiswaPage() {
     return () => clearTimeout(t);
   }, [search]);
 
-  const downloadTemplate = () => {
-    const ws = XLSX.utils.json_to_sheet([{
-      "Nama": "Contoh Mahasiswa", "NIM": "202200001001",
-      "Program Studi": "Teknologi Informasi", "Angkatan": "2024",
-      "Email": "contoh@student.isb.ac.id", "Password": "contoh123",
-    }]);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Template Mahasiswa");
-    XLSX.writeFile(wb, "template_mahasiswa.xlsx");
-    toast("Template berhasil diunduh");
-  };
-
   const handleAddSave = async (form) => {
     if (USE_MOCK) {
       toast("Mock: Mahasiswa berhasil ditambahkan (simulasi)");
@@ -896,39 +785,6 @@ export default function MahasiswaPage() {
     const res = await toggleMahasiswaAkun(row.id);
     if (res.ok) { toast(`Akun ${row.nama} ${row.aktif ? "dinonaktifkan" : "diaktifkan"}`); loadData(); }
     else toast(res.data?.error || "Gagal mengubah status akun", "error");
-  };
-
-  const handleImportDone = async (list) => {
-    if (USE_MOCK) {
-      toast(`Mock: Import selesai, ${list.length} data (simulasi)`);
-      setModalImport(false);
-      setSearch(""); setFilterProdi("Semua"); setFilterAngkatan("Semua"); setFilterStatus("Semua");
-      setCurrentPage(1);
-      loadData("", "Semua", 1);
-      return;
-    }
-    const res = await importMahasiswaBulk(list);
-    if (res.ok) {
-      const successCount = res.data?.success ?? list.length;
-      const skippedCount = res.data?.skipped ?? 0;
-      const failedCount = res.data?.failed ?? 0;
-      const parts = [
-        successCount > 0 ? `${successCount} berhasil` : null,
-        skippedCount > 0 ? `${skippedCount} dilewati (sudah ada)` : null,
-        failedCount > 0 ? `${failedCount} gagal` : null,
-      ].filter(Boolean).join(", ");
-      setSearch(""); setFilterProdi("Semua"); setFilterAngkatan("Semua"); setFilterStatus("Semua");
-      setCurrentPage(1);
-      await loadData("", "Semua", 1);
-      setModalImport(false);
-      toast(
-        `Import selesai: ${parts || "tidak ada data baru"}`,
-        failedCount > 0 && successCount === 0 ? "error" : "success",
-      );
-    } else {
-      setModalImport(false);
-      toast(res.data?.error || "Gagal import data", "error");
-    }
   };
 
   // SINKRONISASI SICP
@@ -1022,14 +878,8 @@ export default function MahasiswaPage() {
         </div>
       </div>
 
-      {/* ACTION BUTTONS (Template, Import, Sinkronisasi, Tambah) */}
+      {/* ACTION BUTTONS (Sinkronisasi, Tambah) */}
       <div className={styles.actionButtons}>
-        <button className={styles.btnOutline} onClick={downloadTemplate}>
-          <Download size={14} /> Template
-        </button>
-        <button className={styles.btnOutline} onClick={() => setModalImport(true)}>
-          <Upload size={14} /> Import Excel
-        </button>
         {/* 🔥 TOMBOL SINKRONISASI SICP */}
         <button
           className={styles.btnOutline}
@@ -1259,9 +1109,6 @@ export default function MahasiswaPage() {
       {modalReset && (
         <ResetPasswordModal mahasiswa={modalReset}
           onClose={() => setModalReset(null)} onDone={handleResetDone} />
-      )}
-      {modalImport && (
-        <ImportExcelModal onClose={() => setModalImport(false)} onDone={handleImportDone} />
       )}
     </div>
   );
